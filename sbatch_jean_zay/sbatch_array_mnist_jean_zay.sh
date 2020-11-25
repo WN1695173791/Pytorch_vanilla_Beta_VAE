@@ -6,8 +6,8 @@
 #SBATCH --gres=gpu:2                # nombre de GPU a reserver
 #SBATCH --cpus-per-task=3          # nombre de coeurs CPU par tache (un quart du noeud ici)
 #SBATCH --time=02:00:00                  # time (DD-HH:MM)
-#SBATCH --output=mnist_Vanilla_VAE_%A_%a.out       # STDOUT
-#SBATCH --error="mnist_Vanilla_VAE_%A_%a.err"       # STDERR
+#SBATCH --output=mnist_%A_%a.out       # STDOUT
+#SBATCH --error="mnist_%A_%a.err"       # STDERR
 
 # /!\ Attention, "multithread" fait reference à l'hyperthreading dans la terminologie Slurm
 #SBATCH --hint=nomultithread        # hyperthreading desactive
@@ -15,7 +15,7 @@
 #BATCH --mail-type=ALL           
 #SBATCH --mail-user=julien.dejasmin@lis-lab.fr
 
-#SBATCH --array=1-2
+#SBATCH --array=1-12
 echo "$SLURM_ARRAY_TASK_ID"
 
 # nettoyage des modules charges en interactif et herites par defaut
