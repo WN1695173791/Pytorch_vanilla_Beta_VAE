@@ -85,14 +85,15 @@ if __name__ == "__main__":
                                                                                      ' all the model')
 
     # --- Params to VAnilla VAE test:
-    parser.add_argument('--Model_VAE_test', default=False, type=str2bool, help='Model_VAE_test')
-    parser.add_argument('--hidden_filters_layer1', type=int, default=16, metavar='integer value',
+    parser.add_argument('--hidden_filters_layer1', type=int, default=32, metavar='integer value',
                         help='hidden_filters_layer1')
     parser.add_argument('--hidden_filters_layer2', type=int, default=32, metavar='integer value',
                         help='hidden_filters_layer2')
-    parser.add_argument('--stride_size', type=int, default=1, metavar='integer value',
+    parser.add_argument('--hidden_filters_layer3', type=int, default=32, metavar='integer value',
+                        help='hidden_filters_layer3')
+    parser.add_argument('--stride_size', type=int, default=2, metavar='integer value',
                         help='stride_size')
-    parser.add_argument('--kernel_size', type=int, default=3, metavar='integer value',
+    parser.add_argument('--kernel_size', type=int, default=4, metavar='integer value',
                         help='kernel_size')
     # ------------------------------------
 

@@ -191,9 +191,9 @@ class Solver(object):
         self.is_perturbed_score = args.is_perturbed_score
         self.zvar_sim_loss_only_for_encoder = args.zvar_sim_loss_only_for_encoder
         self.zvar_sim_loss_for_all_model = args.zvar_sim_loss_for_all_model
-        self.Model_VAE_test = args.Model_VAE_test
         self.hidden_filters_layer1 = args.hidden_filters_layer1
         self.hidden_filters_layer2 = args.hidden_filters_layer2
+        self.hidden_filters_layer3 = args.hidden_filters_layer3
         self.stride_size = args.stride_size
         self.kernel_size = args.kernel_size
 
@@ -327,10 +327,9 @@ class Solver(object):
         net = BetaVAE(self.latent_spec, self.nb_class, self.is_C, device, nc=self.nc, four_conv=self.four_conv,
                       second_layer_C=self.second_layer_C, is_E1=self.is_E1,
                       is_binary_structural_latent=self.is_binary_structural_latent, BN=self.BN, E1_conv=self.E1_conv,
-                      E1_dense=self.E1_dense, Model_VAE_test=self.Model_VAE_test,
-                      hidden_filters_layer1=self.hidden_filters_layer1,
-                      hidden_filters_layer2=self.hidden_filters_layer2, stride_size=self.stride_size,
-                      kernel_size=self.kernel_size)
+                      E1_dense=self.E1_dense, hidden_filters_1=self.hidden_filters_layer1,
+                      hidden_filters_2=self.hidden_filters_layer2, hidden_filters_3=self.hidden_filters_layer3,
+                      stride_size=self.stride_size, kernel_size=self.kernel_size)
 
         # print model characteristics:
         print(net)

@@ -50,8 +50,8 @@ class BetaVAE(nn.Module):
 
     def __init__(self, latent_spec, nb_class, is_C, device, temperature=0.67, nc=3, four_conv=True, 
                  second_layer_C=False, is_E1=False,  is_binary_structural_latent=False, 
-                 BN=False, E1_conv=False, E1_dense=False, batch_size=64, Model_VAE_test=False,
-                 hidden_filters_layer1=16, hidden_filters_layer2=32, stride_size=1, kernel_size=3):
+                 BN=False, E1_conv=False, E1_dense=False, batch_size=64, hidden_filters_1=32,
+                 hidden_filters_2=32, hidden_filters_3=32, stride_size=2, kernel_size=4):
         """
         Class which defines model and forward pass.
         Parameters
@@ -69,7 +69,6 @@ class BetaVAE(nn.Module):
 
         # Parameters
 
-        self.Model_VAE_test = Model_VAE_test
         self.BN = BN
         self.is_binary_structural_latent = is_binary_structural_latent
         self.nc = nc
@@ -123,213 +122,181 @@ class BetaVAE(nn.Module):
         self.nb_class = nb_class
         self.is_C = is_C
 
-        self.hidden_filters = 32
-        self.kernel_size = 4
-        self.stride_size = 2
+        self.hidden_filters_1 = hidden_filters_1
+        self.hidden_filters_2 = hidden_filters_2
+        self.hidden_filters_3 = hidden_filters_3
+        self.kernel_size = kernel_size
+        self.stride_size = stride_size
         self.hidden_dim = 256
+        self.padding = 0
         # Shape required to start transpose convs
-        self.reshape = (self.hidden_filters, self.kernel_size, self.kernel_size)
+        self.reshape = (self.hidden_filters_3, self.kernel_size, self.kernel_size)
 
-        # --------------- Params to tune Vanilla VAE: ------------------------------------
-        if self.Model_VAE_test:
-            self.hidden_filters_layer1 = hidden_filters_layer1
-            self.hidden_filters_layer2 = hidden_filters_layer2
-            self.stride_size = stride_size
-            self.kernel_size = kernel_size
-            self.padding = 0
+        self.width_conv1_size = round(((32-self.kernel_size+(2*self.padding))/self.stride_size)+1)
+        self.height_conv1_size = round(((32 - self.kernel_size + (2 * self.padding)) / self.stride_size) + 1)
 
-            self.width_conv1_size = round(((32-self.kernel_size+(2*self.padding))/self.stride_size)+1)
-            self.height_conv1_size = round(((32 - self.kernel_size + (2 * self.padding)) / self.stride_size) + 1)
+        self.width_conv2_size = round(
+            ((self.width_conv1_size - self.kernel_size + (2 * self.padding)) / self.stride_size) + 1)
+        self.height_conv2_size = round(
+            ((self.height_conv1_size - self.kernel_size + (2 * self.padding)) / self.stride_size) + 1)
 
-            self.width_conv2_size = round(((self.width_conv1_size - self.kernel_size + (2 * self.padding)) / self.stride_size) + 1)
-            self.height_conv2_size = round(((self.height_conv1_size - self.kernel_size + (2 * self.padding)) / self.stride_size) + 1)
+        self.width_conv3_size = round(
+            ((self.width_conv2_size - self.kernel_size + (2 * self.padding)) / self.stride_size) + 1)
+        self.height_conv3_size = round(
+            ((self.width_conv2_size - self.kernel_size + (2 * self.padding)) / self.stride_size) + 1)
 
         # ---------------------------------------- Define encoder E --------------------------------------------------
-        # archi from: https://github.com/screddy1313/VAE/blob/master/vae_mnist_cnn.ipynb
-        if self.Model_VAE_test:
-            self.encoder_conv = [
-                nn.Conv2d(self.nc, self.hidden_filters_layer1, self.kernel_size, stride=self.stride_size),
-                nn.BatchNorm2d(self.hidden_filters_layer1),
-                nn.ReLU(True),
-                nn.Conv2d(self.hidden_filters_layer1, self.hidden_filters_layer2, self.kernel_size, stride=self.stride_size),
-                nn.BatchNorm2d(self.hidden_filters_layer2),
-                nn.ReLU(True),
-                View((self.batch_size, -1)),
-                nn.Linear(self.hidden_filters_layer2*self.width_conv2_size*self.height_conv2_size, 512),  # B, 512
-                nn.ReLU(True),
-                nn.Linear(512, self.hidden_dim),  # B, 256
-                nn.ReLU(True),
-                nn.Linear(self.hidden_dim, self.latent_dim*2),  # B, self.latent_dim*2
-                nn.ReLU(True)
-            ]
-            self.encoder = nn.Sequential(*self.encoder_conv)
-        else:
-            # firsts conv layers
-            self.encoder_conv_layer_1 = [
-                nn.Conv2d(self.nc, self.hidden_filters, self.kernel_size, stride=self.stride_size, padding=1),  # B,  32, 16, 16
-            ]
-            if self.BN:
-                self.encoder_conv_layer_1 += [
-                    nn.BatchNorm2d(self.hidden_filters),
-                    ]
+        # firsts conv layers
+        self.encoder_conv_layer_1 = [
+            nn.Conv2d(self.nc, self.hidden_filters_1, self.kernel_size, stride=self.stride_size, padding=1),
+        ]
+        if self.BN:
             self.encoder_conv_layer_1 += [
-                nn.ReLU(True)
-            ]
-
-            self.encoder_conv_layer_3 = [
-                nn.Conv2d(self.hidden_filters, self.hidden_filters, self.kernel_size, stride=self.stride_size, padding=1),  # B,  32,  8,  8
-            ]
-            if self.BN:
-                self.encoder_conv_layer_3 += [
-                    nn.BatchNorm2d(self.hidden_filters),
+                nn.BatchNorm2d(self.hidden_filters_1),
                 ]
+        self.encoder_conv_layer_1 += [
+            nn.ReLU(True)
+        ]
+
+        self.encoder_conv_layer_3 = [
+            nn.Conv2d(self.hidden_filters_1, self.hidden_filters_2, self.kernel_size, stride=self.stride_size, padding=1),
+        ]
+        if self.BN:
             self.encoder_conv_layer_3 += [
-                nn.ReLU(True)
+                nn.BatchNorm2d(self.hidden_filters_2),
             ]
+        self.encoder_conv_layer_3 += [
+            nn.ReLU(True)
+        ]
 
-            self.encoder_conv_layer_4 = [
-                nn.Conv2d(self.hidden_filters, self.hidden_filters, self.kernel_size, stride=self.stride_size, padding=1),  # B,  32,  4,  4
-            ]
-            if self.BN:
-                self.encoder_conv_layer_4 += [
-                    nn.BatchNorm2d(self.hidden_filters),
-                ]
+        self.encoder_conv_layer_4 = [
+            nn.Conv2d(self.hidden_filters_2, self.hidden_filters_3, self.kernel_size, stride=self.stride_size, padding=1),
+        ]
+        if self.BN:
             self.encoder_conv_layer_4 += [
-                nn.ReLU(True)
+                nn.BatchNorm2d(self.hidden_filters_3),
             ]
+        self.encoder_conv_layer_4 += [
+            nn.ReLU(True)
+        ]
 
-            # Fully connected layers
-            self.encoder_layer_5 = [
-                View((-1, 512)),  # B, 512
-                nn.Linear(np.product(self.reshape), self.hidden_dim),  # B, 256
-                nn.ReLU(True)
-            ]
-            self.encoder_layer_6 = [
-                nn.Linear(self.hidden_dim, self.hidden_dim),  # B, 256
-            ]
+        # Fully connected layers
+        self.encoder_layer_5 = [
+            View((-1, 512)),  # B, 512
+            nn.Linear(np.product(self.reshape), self.hidden_dim),  # B, 256
+            nn.ReLU(True)
+        ]
+        self.encoder_layer_6 = [
+            nn.Linear(self.hidden_dim, self.hidden_dim),  # B, 256
+        ]
 
-            # if we want to use binary value for structural latent representation
-            if self.is_binary_structural_latent:
-                if self.four_conv:
-                    self.encoder_conv_layer_2 = [
-                        nn.Conv2d(self.hidden_filters, self.hidden_filters, self.kernel_size),  # B,  32, 16, 16
-                    ]
-                    if self.BN:
-                        self.encoder_conv_layer_2 += [
-                            nn.BatchNorm2d(self.hidden_filters),
-                        ]
+        # if we want to use binary value for structural latent representation
+        if self.is_binary_structural_latent:
+            if self.four_conv:
+                self.encoder_conv_layer_2 = [
+                    nn.Conv2d(self.hidden_filters_1, self.hidden_filters_1, self.kernel_size),  # B,  32, 16, 16
+                ]
+                if self.BN:
                     self.encoder_conv_layer_2 += [
-                        nn.ReLU(True)
+                        nn.BatchNorm2d(self.hidden_filters_1),
                     ]
-                    self.encoder = nn.Sequential(*self.encoder_conv_layer_1,
-                                                 *self.encoder_conv_layer_2,
-                                                 *self.encoder_conv_layer_3,
-                                                 *self.encoder_conv_layer_4,
-                                                 *self.encoder_layer_5,
-                                                 *self.encoder_layer_6)
-                else:
-                    self.encoder = nn.Sequential(*self.encoder_conv_layer_1,
-                                                 *self.encoder_conv_layer_3,
-                                                 *self.encoder_conv_layer_4,
-                                                 *self.encoder_layer_5,
-                                                 *self.encoder_layer_6)
-                self.output_encoder_variability = [
-                    nn.ReLU(True),
-                    View((-1, self.hidden_dim)),  # B, self.hidden_dim
-                    nn.Linear(self.hidden_dim, self.latent_var_dim * 2)  # B, latent_dim
+                self.encoder_conv_layer_2 += [
+                    nn.ReLU(True)
                 ]
-                self.output_encoder_structural = [
-                    # we binary the conv_layer5 output: dim: self.hidden_dim
-                    DeterministicBinaryActivation(estimator='ST'),
-                    View((-1, self.hidden_dim)),  # B, self.hidden_dim
-                    # after linear layer, the neurons are not binary
-                    nn.Linear(self.hidden_dim, self.latent_struct_dim)  # B, latent_dim
-                ]
-                self.encoder_output_encoder_variability = nn.Sequential(*self.output_encoder_variability)
-                self.encoder_output_encoder_structural = nn.Sequential(*self.output_encoder_structural)
+                self.encoder = nn.Sequential(*self.encoder_conv_layer_1,
+                                             *self.encoder_conv_layer_2,
+                                             *self.encoder_conv_layer_3,
+                                             *self.encoder_conv_layer_4,
+                                             *self.encoder_layer_5,
+                                             *self.encoder_layer_6)
             else:
-                # Fully connected layers for mean and variance
-                self.mu_logvar_gen = [
-                    nn.ReLU(True),
-                    nn.Linear(self.hidden_dim, self.latent_dim_encoder),  # B, latent_dim * 2
+                self.encoder = nn.Sequential(*self.encoder_conv_layer_1,
+                                             *self.encoder_conv_layer_3,
+                                             *self.encoder_conv_layer_4,
+                                             *self.encoder_layer_5,
+                                             *self.encoder_layer_6)
+            self.output_encoder_variability = [
+                nn.ReLU(True),
+                View((-1, self.hidden_dim)),  # B, self.hidden_dim
+                nn.Linear(self.hidden_dim, self.latent_var_dim * 2)  # B, latent_dim
+            ]
+            self.output_encoder_structural = [
+                # we binary the conv_layer5 output: dim: self.hidden_dim
+                DeterministicBinaryActivation(estimator='ST'),
+                View((-1, self.hidden_dim)),  # B, self.hidden_dim
+                # after linear layer, the neurons are not binary
+                nn.Linear(self.hidden_dim, self.latent_struct_dim)  # B, latent_dim
+            ]
+            self.encoder_output_encoder_variability = nn.Sequential(*self.output_encoder_variability)
+            self.encoder_output_encoder_structural = nn.Sequential(*self.output_encoder_structural)
+        else:
+            # Fully connected layers for mean and variance
+            self.mu_logvar_gen = [
+                nn.ReLU(True),
+                nn.Linear(self.hidden_dim, self.latent_dim_encoder),  # B, latent_dim * 2
+            ]
+            if self.four_conv:
+                self.encoder_conv_layer_2 = [
+                    nn.Conv2d(self.hidden_filters_1, self.hidden_filters_1, self.kernel_size, stride=self.stride_size, padding=1),
+                    PrintLayer()
                 ]
-                if self.four_conv:
-                    self.encoder_conv_layer_2 = [
-                        nn.Conv2d(self.hidden_filters, self.hidden_filters, self.kernel_size, stride=self.stride_size, padding=1),
-                        PrintLayer()
-                    ]
-                    if self.BN:
-                        self.encoder_conv_layer_2 += [
-                            nn.BatchNorm2d(self.hidden_filters),
-                        ]
+                if self.BN:
                     self.encoder_conv_layer_2 += [
-                        nn.ReLU(True)
+                        nn.BatchNorm2d(self.hidden_filters_1),
                     ]
-                    self.encoder = nn.Sequential(*self.encoder_conv_layer_1,
-                                                 *self.encoder_conv_layer_2,
-                                                 *self.encoder_conv_layer_3,
-                                                 *self.encoder_conv_layer_4,
-                                                 *self.encoder_layer_5,
-                                                 *self.encoder_layer_6,
-                                                 *self.mu_logvar_gen)
-                else:
-                    self.encoder = nn.Sequential(*self.encoder_conv_layer_1,
-                                                 *self.encoder_conv_layer_3,
-                                                 *self.encoder_conv_layer_4,
-                                                 *self.encoder_layer_5,
-                                                 *self.encoder_layer_6,
-                                                 *self.mu_logvar_gen)
+                self.encoder_conv_layer_2 += [
+                    nn.ReLU(True)
+                ]
+                self.encoder = nn.Sequential(*self.encoder_conv_layer_1,
+                                             *self.encoder_conv_layer_2,
+                                             *self.encoder_conv_layer_3,
+                                             *self.encoder_conv_layer_4,
+                                             *self.encoder_layer_5,
+                                             *self.encoder_layer_6,
+                                             *self.mu_logvar_gen)
+            else:
+                self.encoder = nn.Sequential(*self.encoder_conv_layer_1,
+                                             *self.encoder_conv_layer_3,
+                                             *self.encoder_conv_layer_4,
+                                             *self.encoder_layer_5,
+                                             *self.encoder_layer_6,
+                                             *self.mu_logvar_gen)
         # ---------------------------------------- end encoder E --------------------------------------------------
 
         # ---------------------------------------- Define Decoder D -------------------------------------------------
-        if self.Model_VAE_test:
-            self.decoder_layers = [
-                nn.Linear(self.latent_dim, self.hidden_dim),
-                nn.ReLU(True),
-                nn.Linear(self.hidden_dim, 512),
-                nn.ReLU(True),
-                nn.Linear(512, self.hidden_filters_layer2*self.width_conv2_size*self.height_conv2_size),
-                nn.ReLU(True),
-                View((self.batch_size, self.hidden_filters_layer2, self.width_conv2_size, self.height_conv2_size)),
-                nn.ConvTranspose2d(self.hidden_filters_layer2, self.hidden_filters_layer1, self.kernel_size, stride=self.stride_size),
-                nn.ReLU(True),
-                nn.ConvTranspose2d(self.hidden_filters_layer1, 1, self.kernel_size, stride=self.stride_size),
-                nn.ReLU(True),
-                nn.Sigmoid()
-            ]
-
-            self.decoder = nn.Sequential(*self.decoder_layers)
-        else:
-            self.decoder_list_layer = [
-                # Fully connected layers with ReLu activations
-                nn.Linear(self.latent_dim, self.hidden_dim),  # B, 256
-                # PrintLayer(),
-                nn.ReLU(True),
-                nn.Linear(self.hidden_dim, self.hidden_dim),  # B, 256
-                nn.ReLU(True),
-                nn.Linear(self.hidden_dim, np.product(self.reshape)),  # B, 512
-                nn.ReLU(True),
-                View((-1, *self.reshape)),
-                # Convolutional layers with ReLu activations
-                nn.ConvTranspose2d(self.hidden_filters, self.hidden_filters, self.kernel_size, stride=self.stride_size,  padding=1),  # B, 32, 8, 8
-                nn.ReLU(True),
-                nn.ConvTranspose2d(self.hidden_filters, self.hidden_filters, self.kernel_size, stride=self.stride_size,  padding=1),  # B, 32, 16, 16
-                nn.ReLU(True),
-            ]
-            if self.four_conv:
-                self.decoder_list_layer += [
-                    nn.ConvTranspose2d(self.hidden_filters, self.hidden_filters, self.kernel_size, stride=self.stride_size,  padding=1),
-                    nn.ReLU(True)
-                ]
-            else:
-                # (32, 32) images are supported but do not require an extra layer
-                pass
+        self.decoder_list_layer = [
+            # Fully connected layers with ReLu activations
+            nn.Linear(self.latent_dim, self.hidden_dim),  # B, 256
+            # PrintLayer(),
+            nn.ReLU(True),
+            nn.Linear(self.hidden_dim, self.hidden_dim),  # B, 256
+            nn.ReLU(True),
+            nn.Linear(self.hidden_dim, np.product(self.reshape)),  # B, 512
+            nn.ReLU(True),
+            View((-1, *self.reshape)),
+            # Convolutional layers with ReLu activations
+            nn.ConvTranspose2d(self.hidden_filters_3, self.hidden_filters_2, self.kernel_size, stride=self.stride_size,
+                               padding=1),
+            nn.ReLU(True),
+            nn.ConvTranspose2d(self.hidden_filters_2, self.hidden_filters_1, self.kernel_size, stride=self.stride_size,
+                               padding=1),
+            nn.ReLU(True),
+        ]
+        if self.four_conv:
             self.decoder_list_layer += [
-                nn.ConvTranspose2d(self.hidden_filters, self.nc, self.kernel_size, stride=self.stride_size,  padding=1),  # B, 32, 32, 32
-                nn.Sigmoid()
+                nn.ConvTranspose2d(self.hidden_filters_1, self.hidden_filters_1, self.kernel_size,
+                                   stride=self.stride_size, padding=1),
+                nn.ReLU(True)
             ]
+        else:
+            # (32, 32) images are supported but do not require an extra layer
+            pass
+        self.decoder_list_layer += [
+            nn.ConvTranspose2d(self.hidden_filters_1, self.nc, self.kernel_size, stride=self.stride_size,  padding=1),  # B, 32, 32, 32
+            nn.Sigmoid()
+        ]
 
-            self.decoder = nn.Sequential(*self.decoder_list_layer)
+        self.decoder = nn.Sequential(*self.decoder_list_layer)
         # ---------------------------------------- end Decoder --------------------------------------------------
 
         # ---------------------------------------- Define Classifier C -------------------------------------------------
@@ -347,42 +314,29 @@ class BetaVAE(nn.Module):
         # ---------------------------------------- end Classifier C --------------------------------------------------
 
         # ----------------------------------------Define Encoder E1 --------------------------------------------------
-        if self.Model_VAE_test:
-            if self.is_E1:
-                if self.E1_conv:
-                    self.E1 = nn.Sequential(
-                    )
-                elif self.E1_dense:
-                    self.E1 = nn.Sequential(
-                        # TODO: dense layer like schema
-                    )
-                else:
-                    self.E1 = nn.Sequential(
-                    )
-        else:
-            if self.is_E1:
-                if self.E1_conv:
-                    self.E1 = nn.Sequential(
-                        nn.Conv2d(32, 3, 3, 1, 1),
-                        nn.BatchNorm2d(3),
-                        nn.ReLU(),
-                        nn.MaxPool2d(kernel_size=2, stride=2),  # B, 3, 8, 8
-                        View((-1, 192)),  # B, 192
-                        nn.Linear(192, self.latent_struct_dim * 2)  # B, struct_dim*2
-                    )
-                elif self.E1_dense:
-                    self.E1 = nn.Sequential(
-                        # TODO: dense layer like schema
-                    )
-                else:
-                    self.E1 = nn.Sequential(
-                        View((-1, self.structural_classifier_input_dim)),
-                        nn.Linear(self.structural_classifier_input_dim, 4096),
-                        nn.ReLU(True),
-                        nn.Linear(4096, 1024),
-                        nn.ReLU(True),
-                        nn.Linear(1024, self.latent_struct_dim * 2)
-                    )
+        if self.is_E1:
+            if self.E1_conv:
+                self.E1 = nn.Sequential(
+                    nn.Conv2d(32, 3, 3, 1, 1),
+                    nn.BatchNorm2d(3),
+                    nn.ReLU(),
+                    nn.MaxPool2d(kernel_size=2, stride=2),  # B, 3, 8, 8
+                    View((-1, 192)),  # B, 192
+                    nn.Linear(192, self.latent_struct_dim * 2)  # B, struct_dim*2
+                )
+            elif self.E1_dense:
+                self.E1 = nn.Sequential(
+                    # TODO: dense layer like schema
+                )
+            else:
+                self.E1 = nn.Sequential(
+                    View((-1, self.structural_classifier_input_dim)),
+                    nn.Linear(self.structural_classifier_input_dim, 4096),
+                    nn.ReLU(True),
+                    nn.Linear(4096, 1024),
+                    nn.ReLU(True),
+                    nn.Linear(1024, self.latent_struct_dim * 2)
+                )
         # ---------------------------------------- end Classifier E1 --------------------------------------------------
         self.weight_init()
 

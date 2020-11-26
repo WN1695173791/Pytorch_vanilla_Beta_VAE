@@ -185,6 +185,7 @@ def compute_scores(net, loader, device, latent_spec, nb_data, is_partial_rand_cl
                 else:
                     score_Zc_pert_Zd = 0
                     score_Zc_Zd_pert = 0
+            break  # TODO: remove break
     # loss
     losses['recon_loss'] = recons_loss / nb_data
     losses['classification_loss'] = classification_loss / nb_data
