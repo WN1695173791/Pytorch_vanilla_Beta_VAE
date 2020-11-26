@@ -7,6 +7,8 @@ import torch.optim as optimizer
 import torch.nn.functional as F
 import numpy as np
 
+from torch.autograd import Variable
+
 from model import BetaVAE
 from dataset.dataset_2 import get_dataloaders
 from scores import compute_scores
@@ -124,8 +126,8 @@ def compute_scores_and_loss(net, train_loader, valid_loader, device, latent_spec
                                                      is_E1,
                                                      is_zvar_sim_loss,
                                                      is_C,
-                                                      is_noise_stats,
-                                                      is_perturbed_score)
+                                                     is_noise_stats,
+                                                     is_perturbed_score)
 
     return scores_train, scores_test, loss_train, loss_test, mean_proba_per_class_train, std_proba_per_class_train, \
            mean_proba_per_class_test, std_proba_per_class_test, mean_proba_per_class_noised_train, \
@@ -197,8 +199,9 @@ class Solver(object):
 
         if self.zvar_sim_loss_only_for_encoder or self.zvar_sim_loss_for_all_model:
             list_uniq_choice = [self.zvar_sim_loss_only_for_encoder, self.zvar_sim_loss_for_all_model]
-            assert any(iter(list_uniq_choice)), "We must have only one choice for zvar_sim_loss propagation: in all th emodel," \
-                                                "in only encoder or in encoder and decoder !"
+            assert any(
+                iter(list_uniq_choice)), "We must have only one choice for zvar_sim_loss propagation: in all th emodel," \
+                                         "in only encoder or in encoder and decoder !"
 
         self.normalize_weights = self.W_Lr + self.beta + self.W_Lc + self.W_Kl_var + self.W_Kl_struct
 
@@ -402,6 +405,8 @@ class Solver(object):
             self.load_checkpoint_scores('last')
             self.load_checkpoint('last')
 
+        self.i = 0
+
     def train(self):
         self.net_mode(train=True)
         out = False
@@ -410,11 +415,13 @@ class Solver(object):
         print_bar.update(self.epochs)
         while not out:
             for data, labels in self.train_loader:
+                self.i += 1
                 self.global_iter += 1
                 self.epochs = self.global_iter / len(self.train_loader)
                 print_bar.update(1)
 
                 batch_size = len(data)
+
                 data = data.to(self.device)  # Variable(data.to(self.device))
                 labels = labels.to(self.device)  # Variable(labels.to(self.device))
 
@@ -483,10 +490,12 @@ class Solver(object):
                     self.L_Total += (self.Lm * self.W_Lzvar_sim_normalized)
                     self.L_Total_wt_weights += self.Lm
 
+                # if self.i % 2 == 0:
                 self.optimizer.zero_grad()
                 self.L_Total.backward(retain_graph=True)
-                self.optimizer.step()
+                # self.optimizer.step()
 
+                # else:
                 # Backward gradient only for Encoder with the zvar_sim_loss loss:
                 if self.is_zvar_sim_loss and not self.zvar_sim_loss_for_all_model:
                     # we want to freeze some modules
