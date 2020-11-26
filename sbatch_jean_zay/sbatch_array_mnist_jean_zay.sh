@@ -1,13 +1,13 @@
 #!/bin/bash
 
-#SBATCH --job-name="mnist_Vanilla_VAE"       # Job Name
+#SBATCH --job-name="mnist"       # Job Name
 #SBATCH --partition=gpu_p2             # partition name
 #SBATCH --qos=qos_gpu-t4             # for jean-zay
 #SBATCH --gres=gpu:2                # nombre de GPU a reserver
 #SBATCH --cpus-per-task=3          # nombre de coeurs CPU par tache (un quart du noeud ici)
-#SBATCH --time=02:00:00                  # time (DD-HH:MM)
-#SBATCH --output=mnist_%A_%a.out       # STDOUT
-#SBATCH --error="mnist_%A_%a.err"       # STDERR
+#SBATCH --time=01:00:00                  # time (DD-HH:MM)
+#SBATCH --output=mnist_Zvar_Sim_%A_%a.out       # STDOUT
+#SBATCH --error="mnist_Zvar_Sim_%A_%a.err"       # STDERR
 
 # /!\ Attention, "multithread" fait reference à l'hyperthreading dans la terminologie Slurm
 #SBATCH --hint=nomultithread        # hyperthreading desactive
