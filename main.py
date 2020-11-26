@@ -44,7 +44,7 @@ if __name__ == "__main__":
     parser.add_argument('--seed', default=1, type=int, help='random seed')
     parser.add_argument('--cuda', default=True, type=str2bool, help='enable cuda')
     parser.add_argument('--max_iter', default=1e12, type=float, help='maximum training iteration')
-    parser.add_argument('--batch_size', default=64, type=int, help='batch size')
+    parser.add_argument('--batch_size', default=32, type=int, help='batch size')
     parser.add_argument('--random_percentage', default=0.2, type=float, help='random_percentage')
 
     parser.add_argument('--second_layer_C', default=False, type=str2bool, help='add a linear layer for L3 classidier')

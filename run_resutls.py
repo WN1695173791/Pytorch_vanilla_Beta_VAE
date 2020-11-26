@@ -104,7 +104,11 @@ indx_image = 0
 
 # _______________________________Expe test vanilla VAE + Class + E1 + zvar_sim_____________________________________
 
-mnist_VAE_class_E1_zvar_sim_5_5 = ['VAE_class_E1_MSE_40', 'VAE_class_E1_MSE_41']
+mnist_VAE_class_E1_zvar_sim_5_5 = ['VAE_Cass_E1_Zvarsim_tune_WLr_1', 'VAE_Cass_E1_Zvarsim_tune_WLr_2',
+                                   'VAE_Cass_E1_Zvarsim_tune_WLr_3', 'VAE_Cass_E1_Zvarsim_tune_WLr_4',
+                                   'VAE_Cass_E1_Zvarsim_tune_WLr_5', 'VAE_Cass_E1_Zvarsim_tune_WLr_6',
+                                   'VAE_Cass_E1_Zvarsim_tune_WLr_7', 'VAE_Cass_E1_Zvarsim_tune_WLr_8',
+                                   'VAE_Cass_E1_Zvarsim_tune_WLr_9', 'VAE_Cass_E1_Zvarsim_tune_WLr_10']
 
 is_zvar_sim_loss = True
 is_partial_rand_class = False
@@ -137,6 +141,7 @@ for expe in mnist_VAE_class_E1_zvar_sim_5_5:
               batch=batch, img_size=img_size, path=path, is_partial_rand_class=is_partial_rand_class,
               is_E1=is_E1, z_component_traversal=z_component_traversal, indx_image=indx_image, plot_img_traversal=True)
 
+"""
 # _______________________________Expe test vanilla VAE _____________________________________
 
 mnist_VAE_5_5 = ['VAE_5_5_2']
@@ -446,3 +451,4 @@ for expe in mnist_VAE_class_E1_5_15:
     visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, nb_epochs=nb_epochs,
               batch=batch, img_size=img_size, path=path, is_partial_rand_class=is_partial_rand_class,
               is_E1=is_E1, z_component_traversal=z_component_traversal, indx_image=indx_image, plot_img_traversal=True)
+"""
