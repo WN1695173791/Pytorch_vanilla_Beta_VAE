@@ -6,8 +6,8 @@
 #SBATCH --gres=gpu:2                # nombre de GPU a reserver
 #SBATCH --cpus-per-task=3          # nombre de coeurs CPU par tache (un quart du noeud ici)
 #SBATCH --time=05:00:00                  # time (DD-HH:MM)
-#SBATCH --output=mnist_Zvar_Sim_%A_%a.out       # STDOUT
-#SBATCH --error="mnist_Zvar_Sim_%A_%a.err"       # STDERR
+#SBATCH --output=mnist_%A_%a.out       # STDOUT
+#SBATCH --error="mnist_%A_%a.err"       # STDERR
 
 # /!\ Attention, "multithread" fait reference à l'hyperthreading dans la terminologie Slurm
 #SBATCH --hint=nomultithread        # hyperthreading desactive
