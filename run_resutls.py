@@ -104,11 +104,42 @@ indx_image = 0
 
 # _______________________________Expe test vanilla VAE + Class + E1 + zvar_sim_____________________________________
 
-mnist_VAE_class_E1_zvar_sim_5_5 = ['VAE_Cass_E1_Zvarsim_tune_WLr_1', 'VAE_Cass_E1_Zvarsim_tune_WLr_2',
-                                   'VAE_Cass_E1_Zvarsim_tune_WLr_3', 'VAE_Cass_E1_Zvarsim_tune_WLr_4',
-                                   'VAE_Cass_E1_Zvarsim_tune_WLr_5', 'VAE_Cass_E1_Zvarsim_tune_WLr_6',
-                                   'VAE_Cass_E1_Zvarsim_tune_WLr_7', 'VAE_Cass_E1_Zvarsim_tune_WLr_8',
-                                   'VAE_Cass_E1_Zvarsim_tune_WLr_9', 'VAE_Cass_E1_Zvarsim_tune_WLr_10']
+
+mnist_VAE_class_E1_zvar_sim_5_5 = ['VAE_class_E1_MSE_41']
+
+mnist_VAE_class_E1_zvar_sim_5_5_tune_lr = ['VAE_Cass_E1_Zvarsim_tune_WLr_1', 'VAE_Cass_E1_Zvarsim_tune_WLr_2',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLr_3', 'VAE_Cass_E1_Zvarsim_tune_WLr_4',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLr_5', 'VAE_Cass_E1_Zvarsim_tune_WLr_6',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLr_7', 'VAE_Cass_E1_Zvarsim_tune_WLr_8',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLr_9', 'VAE_Cass_E1_Zvarsim_tune_WLr_10',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLr_11', 'VAE_Cass_E1_Zvarsim_tune_WLr_12',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLr_13', 'VAE_Cass_E1_Zvarsim_tune_WLr_14',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLr_15', 'VAE_Cass_E1_Zvarsim_tune_WLr_16',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLr_17', 'VAE_Cass_E1_Zvarsim_tune_WLr_18',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLr_19', 'VAE_Cass_E1_Zvarsim_tune_WLr_20'
+                                           'VAE_Cass_E1_Zvarsim_tune_WLr_21', 'VAE_Cass_E1_Zvarsim_tune_WLr_22',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLr_23', 'VAE_Cass_E1_Zvarsim_tune_WLr_24',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLr_25', 'VAE_Cass_E1_Zvarsim_tune_WLr_26',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLr_27', 'VAE_Cass_E1_Zvarsim_tune_WLr_28',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLr_29', 'VAE_Cass_E1_Zvarsim_tune_WLr_30'
+                                           'VAE_Cass_E1_Zvarsim_tune_WLr_31', 'VAE_Cass_E1_Zvarsim_tune_WLr_32',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLr_33', 'VAE_Cass_E1_Zvarsim_tune_WLr_34',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLr_35', 'VAE_Cass_E1_Zvarsim_tune_WLr_36',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLr_37', 'VAE_Cass_E1_Zvarsim_tune_WLr_38',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLr_39', 'VAE_Cass_E1_Zvarsim_tune_WLr_40'
+                                           'VAE_Cass_E1_Zvarsim_tune_WLr_41', 'VAE_Cass_E1_Zvarsim_tune_WLr_42',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLr_43', 'VAE_Cass_E1_Zvarsim_tune_WLr_44',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLr_45', 'VAE_Cass_E1_Zvarsim_tune_WLr_46',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLr_47', 'VAE_Cass_E1_Zvarsim_tune_WLr_48',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLr_49', 'VAE_Cass_E1_Zvarsim_tune_WLr_50'
+                                           'VAE_Cass_E1_Zvarsim_tune_WLr_51', 'VAE_Cass_E1_Zvarsim_tune_WLr_52',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLr_53', 'VAE_Cass_E1_Zvarsim_tune_WLr_54',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLr_55', 'VAE_Cass_E1_Zvarsim_tune_WLr_56',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLr_57', 'VAE_Cass_E1_Zvarsim_tune_WLr_58',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLr_59', 'VAE_Cass_E1_Zvarsim_tune_WLr_60',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLr_61', 'VAE_Cass_E1_Zvarsim_tune_WLr_62', 
+                                           'VAE_Cass_E1_Zvarsim_tune_WLr_63', 'VAE_Cass_E1_Zvarsim_tune_WLr_64', 
+                                           'VAE_Cass_E1_Zvarsim_tune_WLr_65']
 
 is_zvar_sim_loss = True
 is_partial_rand_class = False
@@ -127,7 +158,7 @@ net = BetaVAE(latent_spec, nb_class, is_C, device, nc=nc, four_conv=four_conv, s
               is_E1=is_E1, E1_conv=E1_conv, BN=BN)
 
 z_component_traversal = np.arange(latent_spec['cont_var'] + latent_spec['cont_class'])
-for expe in mnist_VAE_class_E1_zvar_sim_5_5:
+for expe in mnist_VAE_class_E1_zvar_sim_5_5_tune_lr:
     expe_name = expe
     net_trained, _, nb_epochs = get_checkpoints(net, path, expe_name)
     visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, path_scores=path_scores,
@@ -144,7 +175,17 @@ for expe in mnist_VAE_class_E1_zvar_sim_5_5:
 """
 # _______________________________Expe test vanilla VAE _____________________________________
 
-mnist_VAE_5_5 = ['VAE_5_5_2']
+mnist_VAE_5_5_32_32_32 = ['TEst_Vanilla_VAE_1_']
+mnist_VAE_5_5_16_16_32 = ['TEst_Vanilla_VAE_2_']
+mnist_VAE_5_5_8_8_32 = ['TEst_Vanilla_VAE_3_']
+mnist_VAE_5_5_64_64_32 = ['TEst_Vanilla_VAE_4_']
+mnist_VAE_5_5_8_16_32 = ['TEst_Vanilla_VAE_5_']
+mnist_VAE_5_5_16_32_32 = ['TEst_Vanilla_VAE_6_']
+mnist_VAE_5_5_32_64_32 = ['TEst_Vanilla_VAE_7_']
+mnist_VAE_5_5_16_64_32 = ['TEst_Vanilla_VAE_8_']
+mnist_VAE_5_5_8_64_32 = ['TEst_Vanilla_VAE_9_']
+mnist_VAE_5_5_32_64_32 = ['TEst_Vanilla_VAE_10_']
+
 mnist_VAE_5_10 = ['VAE_5_10_2']
 mnist_VAE_5_15 = ['VAE_5_15_2']
 mnist_VAE_5_20 = ['VAE_5_20_3']
@@ -158,15 +199,264 @@ is_partial_rand_class = False
 is_E1 = False
 is_C = False
 
-# _____________ VAE 5 5 ________________
+# _____________ VAE 5 5 (32, 32, 32)________________
 latent_spec = {'cont_var': 5, 'cont_class': 5}
 z_component_traversal = np.arange(latent_spec['cont_var'] + latent_spec['cont_class'])
 BN = True
+hidden_filters_1 = 32
+hidden_filters_2 = 32
+hidden_filters_3 = 32
+stride_size = 2
+kernel_size = 4
 
 net = BetaVAE(latent_spec, nb_class, is_C, device, nc=nc, four_conv=four_conv, second_layer_C=second_layer_C,
-              is_E1=is_E1, BN=BN)
+              is_E1=is_E1, BN=BN, hidden_filters_1=hidden_filters_1, hidden_filters_2=hidden_filters_2,
+              hidden_filters_3=hidden_filters_3, stride_size=stride_size, kernel_size=kernel_size)
 
-for expe in mnist_VAE_5_5:
+for expe in mnist_VAE_5_5_32_32_32:
+    expe_name = expe
+    net_trained, _, nb_epochs = get_checkpoints(net, path, expe_name)
+    visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, path_scores=path_scores,
+              is_partial_rand_class=is_partial_rand_class, save=True, scores_and_losses=True, is_E1=is_E1, losses=True,
+              scores=False)
+    visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, nb_epochs=nb_epochs, path=path,
+              save=True, batch=batch, plot_sample=True, FID=True, IS=True, psnr=False)
+    visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, nb_epochs=nb_epochs,
+              batch=batch, img_size=img_size, is_partial_rand_class=is_partial_rand_class,
+              save=True, is_E1=is_E1, reconstruction=True)
+    visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, nb_epochs=nb_epochs,
+              batch=batch, img_size=img_size, path=path, is_partial_rand_class=is_partial_rand_class,
+              is_E1=is_E1, z_component_traversal=z_component_traversal, indx_image=indx_image, plot_img_traversal=True)
+
+# _____________ VAE 5 5 (16, 16, 32)________________
+latent_spec = {'cont_var': 5, 'cont_class': 5}
+z_component_traversal = np.arange(latent_spec['cont_var'] + latent_spec['cont_class'])
+BN = True
+hidden_filters_1 = 16
+hidden_filters_2 = 16
+hidden_filters_3 = 32
+
+net = BetaVAE(latent_spec, nb_class, is_C, device, nc=nc, four_conv=four_conv, second_layer_C=second_layer_C,
+              is_E1=is_E1, BN=BN, hidden_filters_1=hidden_filters_1, hidden_filters_2=hidden_filters_2,
+              hidden_filters_3=hidden_filters_3, stride_size=stride_size, kernel_size=kernel_size)
+
+for expe in mnist_VAE_5_5_16_16_32:
+    expe_name = expe
+    net_trained, _, nb_epochs = get_checkpoints(net, path, expe_name)
+    visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, path_scores=path_scores,
+              is_partial_rand_class=is_partial_rand_class, save=True, scores_and_losses=True, is_E1=is_E1, losses=True,
+              scores=False)
+    visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, nb_epochs=nb_epochs, path=path,
+              save=True, batch=batch, plot_sample=True, FID=True, IS=True, psnr=False)
+    visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, nb_epochs=nb_epochs,
+              batch=batch, img_size=img_size, is_partial_rand_class=is_partial_rand_class,
+              save=True, is_E1=is_E1, reconstruction=True)
+    visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, nb_epochs=nb_epochs,
+              batch=batch, img_size=img_size, path=path, is_partial_rand_class=is_partial_rand_class,
+              is_E1=is_E1, z_component_traversal=z_component_traversal, indx_image=indx_image, plot_img_traversal=True)
+
+# _____________ VAE 5 5 (8, 8, 32)________________
+latent_spec = {'cont_var': 5, 'cont_class': 5}
+z_component_traversal = np.arange(latent_spec['cont_var'] + latent_spec['cont_class'])
+BN = True
+hidden_filters_1 = 8
+hidden_filters_2 = 8
+hidden_filters_3 = 32
+
+net = BetaVAE(latent_spec, nb_class, is_C, device, nc=nc, four_conv=four_conv, second_layer_C=second_layer_C,
+              is_E1=is_E1, BN=BN, hidden_filters_1=hidden_filters_1, hidden_filters_2=hidden_filters_2,
+              hidden_filters_3=hidden_filters_3, stride_size=stride_size, kernel_size=kernel_size)
+
+for expe in mnist_VAE_5_5_8_8_32:
+    expe_name = expe
+    net_trained, _, nb_epochs = get_checkpoints(net, path, expe_name)
+    visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, path_scores=path_scores,
+              is_partial_rand_class=is_partial_rand_class, save=True, scores_and_losses=True, is_E1=is_E1, losses=True,
+              scores=False)
+    visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, nb_epochs=nb_epochs, path=path,
+              save=True, batch=batch, plot_sample=True, FID=True, IS=True, psnr=False)
+    visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, nb_epochs=nb_epochs,
+              batch=batch, img_size=img_size, is_partial_rand_class=is_partial_rand_class,
+              save=True, is_E1=is_E1, reconstruction=True)
+    visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, nb_epochs=nb_epochs,
+              batch=batch, img_size=img_size, path=path, is_partial_rand_class=is_partial_rand_class,
+              is_E1=is_E1, z_component_traversal=z_component_traversal, indx_image=indx_image, plot_img_traversal=True)
+
+# _____________ VAE 5 5 (64, 64, 32)________________
+latent_spec = {'cont_var': 5, 'cont_class': 5}
+z_component_traversal = np.arange(latent_spec['cont_var'] + latent_spec['cont_class'])
+BN = True
+hidden_filters_1 = 64
+hidden_filters_2 = 64
+hidden_filters_3 = 32
+
+net = BetaVAE(latent_spec, nb_class, is_C, device, nc=nc, four_conv=four_conv, second_layer_C=second_layer_C,
+              is_E1=is_E1, BN=BN, hidden_filters_1=hidden_filters_1, hidden_filters_2=hidden_filters_2,
+              hidden_filters_3=hidden_filters_3, stride_size=stride_size, kernel_size=kernel_size)
+
+for expe in mnist_VAE_5_5_64_64_32:
+    expe_name = expe
+    net_trained, _, nb_epochs = get_checkpoints(net, path, expe_name)
+    visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, path_scores=path_scores,
+              is_partial_rand_class=is_partial_rand_class, save=True, scores_and_losses=True, is_E1=is_E1, losses=True,
+              scores=False)
+    visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, nb_epochs=nb_epochs, path=path,
+              save=True, batch=batch, plot_sample=True, FID=True, IS=True, psnr=False)
+    visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, nb_epochs=nb_epochs,
+              batch=batch, img_size=img_size, is_partial_rand_class=is_partial_rand_class,
+              save=True, is_E1=is_E1, reconstruction=True)
+    visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, nb_epochs=nb_epochs,
+              batch=batch, img_size=img_size, path=path, is_partial_rand_class=is_partial_rand_class,
+              is_E1=is_E1, z_component_traversal=z_component_traversal, indx_image=indx_image, plot_img_traversal=True)
+
+# _____________ VAE 5 5 (8, 16, 32)________________
+latent_spec = {'cont_var': 5, 'cont_class': 5}
+z_component_traversal = np.arange(latent_spec['cont_var'] + latent_spec['cont_class'])
+BN = True
+hidden_filters_1 = 8
+hidden_filters_2 = 16
+hidden_filters_3 = 32
+
+net = BetaVAE(latent_spec, nb_class, is_C, device, nc=nc, four_conv=four_conv, second_layer_C=second_layer_C,
+              is_E1=is_E1, BN=BN, hidden_filters_1=hidden_filters_1, hidden_filters_2=hidden_filters_2,
+              hidden_filters_3=hidden_filters_3, stride_size=stride_size, kernel_size=kernel_size)
+
+for expe in mnist_VAE_5_5_8_16_32:
+    expe_name = expe
+    net_trained, _, nb_epochs = get_checkpoints(net, path, expe_name)
+    visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, path_scores=path_scores,
+              is_partial_rand_class=is_partial_rand_class, save=True, scores_and_losses=True, is_E1=is_E1, losses=True,
+              scores=False)
+    visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, nb_epochs=nb_epochs, path=path,
+              save=True, batch=batch, plot_sample=True, FID=True, IS=True, psnr=False)
+    visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, nb_epochs=nb_epochs,
+              batch=batch, img_size=img_size, is_partial_rand_class=is_partial_rand_class,
+              save=True, is_E1=is_E1, reconstruction=True)
+    visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, nb_epochs=nb_epochs,
+              batch=batch, img_size=img_size, path=path, is_partial_rand_class=is_partial_rand_class,
+              is_E1=is_E1, z_component_traversal=z_component_traversal, indx_image=indx_image, plot_img_traversal=True)
+
+# _____________ VAE 5 5 (16, 32, 32)________________
+latent_spec = {'cont_var': 5, 'cont_class': 5}
+z_component_traversal = np.arange(latent_spec['cont_var'] + latent_spec['cont_class'])
+BN = True
+hidden_filters_1 = 16
+hidden_filters_2 = 32
+hidden_filters_3 = 32
+
+net = BetaVAE(latent_spec, nb_class, is_C, device, nc=nc, four_conv=four_conv, second_layer_C=second_layer_C,
+              is_E1=is_E1, BN=BN, hidden_filters_1=hidden_filters_1, hidden_filters_2=hidden_filters_2,
+              hidden_filters_3=hidden_filters_3, stride_size=stride_size, kernel_size=kernel_size)
+
+for expe in mnist_VAE_5_5_16_32_32:
+    expe_name = expe
+    net_trained, _, nb_epochs = get_checkpoints(net, path, expe_name)
+    visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, path_scores=path_scores,
+              is_partial_rand_class=is_partial_rand_class, save=True, scores_and_losses=True, is_E1=is_E1, losses=True,
+              scores=False)
+    visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, nb_epochs=nb_epochs, path=path,
+              save=True, batch=batch, plot_sample=True, FID=True, IS=True, psnr=False)
+    visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, nb_epochs=nb_epochs,
+              batch=batch, img_size=img_size, is_partial_rand_class=is_partial_rand_class,
+              save=True, is_E1=is_E1, reconstruction=True)
+    visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, nb_epochs=nb_epochs,
+              batch=batch, img_size=img_size, path=path, is_partial_rand_class=is_partial_rand_class,
+              is_E1=is_E1, z_component_traversal=z_component_traversal, indx_image=indx_image, plot_img_traversal=True)
+
+# _____________ VAE 5 5 (32, 64, 32)________________
+latent_spec = {'cont_var': 5, 'cont_class': 5}
+z_component_traversal = np.arange(latent_spec['cont_var'] + latent_spec['cont_class'])
+BN = True
+hidden_filters_1 = 32
+hidden_filters_2 = 64
+hidden_filters_3 = 32
+
+net = BetaVAE(latent_spec, nb_class, is_C, device, nc=nc, four_conv=four_conv, second_layer_C=second_layer_C,
+              is_E1=is_E1, BN=BN, hidden_filters_1=hidden_filters_1, hidden_filters_2=hidden_filters_2,
+              hidden_filters_3=hidden_filters_3, stride_size=stride_size, kernel_size=kernel_size)
+
+for expe in mnist_VAE_5_5_32_64_32:
+    expe_name = expe
+    net_trained, _, nb_epochs = get_checkpoints(net, path, expe_name)
+    visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, path_scores=path_scores,
+              is_partial_rand_class=is_partial_rand_class, save=True, scores_and_losses=True, is_E1=is_E1, losses=True,
+              scores=False)
+    visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, nb_epochs=nb_epochs, path=path,
+              save=True, batch=batch, plot_sample=True, FID=True, IS=True, psnr=False)
+    visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, nb_epochs=nb_epochs,
+              batch=batch, img_size=img_size, is_partial_rand_class=is_partial_rand_class,
+              save=True, is_E1=is_E1, reconstruction=True)
+    visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, nb_epochs=nb_epochs,
+              batch=batch, img_size=img_size, path=path, is_partial_rand_class=is_partial_rand_class,
+              is_E1=is_E1, z_component_traversal=z_component_traversal, indx_image=indx_image, plot_img_traversal=True)
+
+# _____________ VAE 5 5 (16, 64, 32)________________
+latent_spec = {'cont_var': 5, 'cont_class': 5}
+z_component_traversal = np.arange(latent_spec['cont_var'] + latent_spec['cont_class'])
+BN = True
+hidden_filters_1 = 16
+hidden_filters_2 = 64
+hidden_filters_3 = 32
+
+net = BetaVAE(latent_spec, nb_class, is_C, device, nc=nc, four_conv=four_conv, second_layer_C=second_layer_C,
+              is_E1=is_E1, BN=BN, hidden_filters_1=hidden_filters_1, hidden_filters_2=hidden_filters_2,
+              hidden_filters_3=hidden_filters_3, stride_size=stride_size, kernel_size=kernel_size)
+
+for expe in mnist_VAE_5_5_16_64_32:
+    expe_name = expe
+    net_trained, _, nb_epochs = get_checkpoints(net, path, expe_name)
+    visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, path_scores=path_scores,
+              is_partial_rand_class=is_partial_rand_class, save=True, scores_and_losses=True, is_E1=is_E1, losses=True,
+              scores=False)
+    visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, nb_epochs=nb_epochs, path=path,
+              save=True, batch=batch, plot_sample=True, FID=True, IS=True, psnr=False)
+    visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, nb_epochs=nb_epochs,
+              batch=batch, img_size=img_size, is_partial_rand_class=is_partial_rand_class,
+              save=True, is_E1=is_E1, reconstruction=True)
+    visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, nb_epochs=nb_epochs,
+              batch=batch, img_size=img_size, path=path, is_partial_rand_class=is_partial_rand_class,
+              is_E1=is_E1, z_component_traversal=z_component_traversal, indx_image=indx_image, plot_img_traversal=True)
+
+# _____________ VAE 5 5 (8, 64, 32)________________
+latent_spec = {'cont_var': 5, 'cont_class': 5}
+z_component_traversal = np.arange(latent_spec['cont_var'] + latent_spec['cont_class'])
+BN = True
+hidden_filters_1 = 8
+hidden_filters_2 = 64
+hidden_filters_3 = 32
+
+net = BetaVAE(latent_spec, nb_class, is_C, device, nc=nc, four_conv=four_conv, second_layer_C=second_layer_C,
+              is_E1=is_E1, BN=BN, hidden_filters_1=hidden_filters_1, hidden_filters_2=hidden_filters_2,
+              hidden_filters_3=hidden_filters_3, stride_size=stride_size, kernel_size=kernel_size)
+
+for expe in mnist_VAE_5_5_8_64_32:
+    expe_name = expe
+    net_trained, _, nb_epochs = get_checkpoints(net, path, expe_name)
+    visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, path_scores=path_scores,
+              is_partial_rand_class=is_partial_rand_class, save=True, scores_and_losses=True, is_E1=is_E1, losses=True,
+              scores=False)
+    visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, nb_epochs=nb_epochs, path=path,
+              save=True, batch=batch, plot_sample=True, FID=True, IS=True, psnr=False)
+    visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, nb_epochs=nb_epochs,
+              batch=batch, img_size=img_size, is_partial_rand_class=is_partial_rand_class,
+              save=True, is_E1=is_E1, reconstruction=True)
+    visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, nb_epochs=nb_epochs,
+              batch=batch, img_size=img_size, path=path, is_partial_rand_class=is_partial_rand_class,
+              is_E1=is_E1, z_component_traversal=z_component_traversal, indx_image=indx_image, plot_img_traversal=True)
+
+# _____________ VAE 5 5 (32, 64, 32)________________
+latent_spec = {'cont_var': 5, 'cont_class': 5}
+z_component_traversal = np.arange(latent_spec['cont_var'] + latent_spec['cont_class'])
+BN = True
+hidden_filters_1 = 32
+hidden_filters_2 = 64
+hidden_filters_3 = 32
+
+net = BetaVAE(latent_spec, nb_class, is_C, device, nc=nc, four_conv=four_conv, second_layer_C=second_layer_C,
+              is_E1=is_E1, BN=BN, hidden_filters_1=hidden_filters_1, hidden_filters_2=hidden_filters_2,
+              hidden_filters_3=hidden_filters_3, stride_size=stride_size, kernel_size=kernel_size)
+
+for expe in mnist_VAE_5_5_32_64_32:
     expe_name = expe
     net_trained, _, nb_epochs = get_checkpoints(net, path, expe_name)
     visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, path_scores=path_scores,

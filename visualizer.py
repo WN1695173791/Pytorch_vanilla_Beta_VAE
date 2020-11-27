@@ -208,7 +208,7 @@ def plot_samples(net, epochs, path, expe_name, latent_spec, img_size, size=(8, 8
     plt.show()
 
     if save:
-        fig.savefig("fig_results/sample/fig_reconstructions_z_" + expe_name + ".png")
+        fig.savefig("fig_results/sample/fig_sample_" + expe_name + ".png")
 
     return
 
@@ -263,7 +263,8 @@ def latent_real_img_traversal(net, nb_epochs, path, expe_name, latent_spec, batc
     viz = Viz(net, img_size, latent_spec)
     viz.save_images = False
 
-    traversals, recons, ori = viz.latent_real_img_traversal(batch, size=size, z_component_traversal=z_component_traversal,
+    traversals, recons, ori, indx_same_composante = viz.latent_real_img_traversal(batch, size=size,
+                                                            z_component_traversal=z_component_traversal,
                                                             both_continue=both_continue, indx_image=indx_image,
                                                             is_partial_rand_class=is_partial_rand_class, is_E1=is_E1)
     fig, ax = plt.subplots(figsize=(15, 10), facecolor='w', edgecolor='k')
@@ -271,10 +272,12 @@ def latent_real_img_traversal(net, nb_epochs, path, expe_name, latent_spec, batc
     ax.set(title=('latent real traversal: {} , for composante: {} (epoch: {})'.format(expe_name,
                                                                                   z_component_traversal,
                                                                                   str(nb_epochs))))
-    size = traversals.shape
+    fig_size = traversals.shape
     plt.imshow(traversals.numpy())
-    ax.axhline(y=(size[0]*(latent_spec['cont_var']/(latent_spec['cont_var']+latent_spec['cont_class']))),
+    ax.axhline(y=(fig_size[0]*(latent_spec['cont_var']/(latent_spec['cont_var']+latent_spec['cont_class']))),
                linewidth=4, color='g')
+    ax.axvline(x=(fig_size[1]//size)*indx_same_composante, linewidth=3, color='orange')
+    ax.axvline(x=(fig_size[1] // size)*(indx_same_composante-1), linewidth=3, color='orange')
     plt.show()
 
     if save:

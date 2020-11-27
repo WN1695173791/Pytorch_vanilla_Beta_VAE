@@ -178,7 +178,7 @@ class Visualizer:
                                                             both_discrete=both_discrete)
         self.latent_traverser.sample_prior = cached_sample_prior
 
-        sample = np.random.normal(size=(size[0]*size[1], self.latent_dim))
+        sample = np.random.normal(size=(size[0] * size[1], self.latent_dim))
         """
         logvar = torch.tensor(np.random.rand(size[0]*size[1], self.latent_dim))
         mu = torch.tensor(np.random.rand(size[0] * size[1], self.latent_dim))
@@ -362,20 +362,22 @@ class Visualizer:
         sample = np.repeat(sample, nb_composante, axis=0)  # shape: (nb_composante, size, z_dim)
 
         # cont_traversal = traversal_values(size)
-        cont_traversal = traversal_values_min_max(np.min(sample)-np.abs(np.min(sample)),
-                                                  np.max(sample)+np.abs(np.max(sample)),
+        cont_traversal = traversal_values_min_max(np.min(sample) - np.abs(np.min(sample)),
+                                                  np.max(sample) + np.abs(np.max(sample)),
                                                   size)  # shape: size
 
+        indx_same_composante = np.argwhere(cont_traversal > 0)[0]
+
         for i, composante in enumerate(z_component_traversal):
-           for j in range(size):
-               sample[i][j, composante] = cont_traversal[j]
+            for j in range(size):
+                sample[i][j, composante] = sample[i][j, composante] + cont_traversal[j]
 
         samples.append(torch.Tensor(sample.reshape((nb_composante * size, self.latent_dim))))
 
         latent_samples.append(torch.cat(samples, dim=1))
         generated = self._decode_latents(torch.cat(latent_samples, dim=0))
 
-        return make_grid(generated.data, nrow=size), x_recons, batch_chairs[indx]
+        return make_grid(generated.data, nrow=size), x_recons, batch_chairs[indx], indx_same_composante
 
     """
     def joint_latent_real_img_traversal(self, batch_chairs, size=8, cont_indx=0, disc_indx=0, nb_samples=5):
@@ -492,4 +494,3 @@ class Visualizer:
         if torch.cuda.is_available():
             latent_samples = latent_samples.cuda()
         return self.model._decode(latent_samples).cpu()
-

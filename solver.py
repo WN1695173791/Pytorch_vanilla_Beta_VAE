@@ -490,53 +490,57 @@ class Solver(object):
                     self.L_Total += (self.Lm * self.W_Lzvar_sim_normalized)
                     self.L_Total_wt_weights += self.Lm
 
-                if self.i % 2 == 0:
+                if self.is_zvar_sim_loss and not self.zvar_sim_loss_for_all_model:
+                    if self.i % 2 == 0:
+                        self.optimizer.zero_grad()
+                        self.L_Total.backward(retain_graph=True)
+                        self.optimizer.step()
+                    else:
+                        # Backward gradient only for Encoder with the zvar_sim_loss loss:
+                        if self.is_zvar_sim_loss and not self.zvar_sim_loss_for_all_model:
+
+                            # we want to freeze some modules
+                            if self.zvar_sim_loss_only_for_encoder:
+                                # we freeze also decoder
+                                for params in self.net.decoder.parameters():
+                                    params.requires_grad = False
+                            if self.is_E1:
+                                for params in self.net.E1.parameters():
+                                    params.requires_grad = False
+                            if self.is_C:
+                                for params in self.net.L3_classifier.parameters():
+                                    params.requires_grad = False
+
+                            # passing only those parameters that explicitly requires grad
+                            self.optimizer = optimizer.Adam(filter(lambda p: p.requires_grad, self.net.parameters()),
+                                                            lr=self.lr)
+                            # backward zvar_sim loss:
+                            self.optimizer.zero_grad()
+                            (self.Lm * self.W_Lzvar_sim_normalized).backward()
+                            self.optimizer.step()
+
+                            # Then unfreeze layers:
+                            if self.zvar_sim_loss_only_for_encoder:
+                                for params in self.net.decoder.parameters():
+                                    params.requires_grad = True
+                            if self.is_E1:
+                                for params in self.net.E1.parameters():
+                                    params.requires_grad = True
+                            if self.is_C:
+                                for params in self.net.L3_classifier.parameters():
+                                    params.requires_grad = True
+
+                            # add the unfrozen weight to the current optimizer
+                            if self.zvar_sim_loss_only_for_encoder:
+                                self.optimizer.add_param_group({'params': self.net.decoder.parameters()})
+                            if self.is_E1:
+                                self.optimizer.add_param_group({'params': self.net.E1.parameters()})
+                            if self.is_C:
+                                self.optimizer.add_param_group({'params': self.net.L3_classifier.parameters()})
+                else:
                     self.optimizer.zero_grad()
                     self.L_Total.backward(retain_graph=True)
                     self.optimizer.step()
-
-                else:
-                    # Backward gradient only for Encoder with the zvar_sim_loss loss:
-                    if self.is_zvar_sim_loss and not self.zvar_sim_loss_for_all_model:
-
-                        # we want to freeze some modules
-                        if self.zvar_sim_loss_only_for_encoder:
-                            # we freeze also decoder
-                            for params in self.net.decoder.parameters():
-                                params.requires_grad = False
-                        if self.is_E1:
-                            for params in self.net.E1.parameters():
-                                params.requires_grad = False
-                        if self.is_C:
-                            for params in self.net.L3_classifier.parameters():
-                                params.requires_grad = False
-
-                        # passing only those parameters that explicitly requires grad
-                        self.optimizer = optimizer.Adam(filter(lambda p: p.requires_grad, self.net.parameters()),
-                                                        lr=self.lr)
-                        # backward zvar_sim loss:
-                        self.optimizer.zero_grad()
-                        (self.Lm * self.W_Lzvar_sim_normalized).backward()
-                        self.optimizer.step()
-
-                        # Then unfreeze layers:
-                        if self.zvar_sim_loss_only_for_encoder:
-                            for params in self.net.decoder.parameters():
-                                params.requires_grad = True
-                        if self.is_E1:
-                            for params in self.net.E1.parameters():
-                                params.requires_grad = True
-                        if self.is_C:
-                            for params in self.net.L3_classifier.parameters():
-                                params.requires_grad = True
-
-                        # add the unfrozen weight to the current optimizer
-                        if self.zvar_sim_loss_only_for_encoder:
-                            self.optimizer.add_param_group({'params': self.net.decoder.parameters()})
-                        if self.is_E1:
-                            self.optimizer.add_param_group({'params': self.net.E1.parameters()})
-                        if self.is_C:
-                            self.optimizer.add_param_group({'params': self.net.L3_classifier.parameters()})
 
                 # display step
                 if self.global_iter % self.display_step == 0:
