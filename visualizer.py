@@ -689,7 +689,7 @@ def plot_bits_stats(net, path, path_scores, expe_name):
 
 def plot_average_z_structural(net_trained, loader, device, nb_class, latent_spec, expe_name,
                               train_test='train', both_continue=True,
-                              return_z_struct_representation=False, is_partial_rand_class=False, is_E1=False,):
+                              return_z_struct_representation=False, is_partial_rand_class=False, is_E1=False):
     """
     We average z_struct for all images of a specific class and decode it.
     We want to visualize the structural prototype for each classes.
@@ -877,7 +877,7 @@ def plot_2d_projection_z_struct(average_representation_z_struct_class, loader, n
 
 
 def plot_struct_fixe_and_z_var_moove(average_representation_z_struct_class, train_test, net_trained,
-                                device, nb_class, latent_spec, expe_name):
+                                device, nb_class, latent_spec, expe_name, save=False):
     """
     Here we see traversal reconstruction of z_struct prototype wirth z_struct fixed and variable z_rand.
     We should observed always the same class (for the same prototype) but with different variability.
@@ -919,11 +919,14 @@ def plot_struct_fixe_and_z_var_moove(average_representation_z_struct_class, trai
                 cmap='gray')
         plt.show()
 
+    if save:
+        fig.savefig("fig_results/struct_fixe_zvar_moove/fig_z_struct_fixe_zvar_moove_" + expe_name + train_test + ".png")
+
     return
 
 
 def plot_var_fixe_and_z_struct_moove(average_representation_z_struct_class, nb_class, latent_spec, device, size,
-                                     net_trained, expe_name):
+                                     net_trained, expe_name, train_test, save=False):
     """
     Here we see traversal reconstruction of z_struct prototype over z_struct with z_var fixed.
     We should observed always the same variability along the generated data but with a class who slightly change
@@ -988,12 +991,16 @@ def plot_var_fixe_and_z_struct_moove(average_representation_z_struct_class, nb_c
                       cmap='gray')
         plt.show()
 
+    if save:
+        fig.savefig("fig_results/var_fixe_zstruct_moove/fig_zvar_fixe_zstruct_moove_" + expe_name + train_test + ".png")
+
+
     return
 
 
 def plot_prototype(net, expe_name, nb_class, latent_spec, device, loader, nb_examples=1, train_test='train',
                    print_per_class=True, print_per_var=False, plot_traversal_struct=False, size=8, bit=0,
-                   print_2d_projection=False, is_partial_rand_class=False, is_E1=False, save=False):
+                   print_2d_projection=False, is_partial_rand_class=False, is_E1=False, save=True):
 
     # TODO: find objective criterion to measure quality image generation and diversity of generate images
 
@@ -1009,15 +1016,16 @@ def plot_prototype(net, expe_name, nb_class, latent_spec, device, loader, nb_exa
 
     if print_2d_projection:
         plot_2d_projection_z_struct(average_representation_z_struct_class, loader, net, device, nb_class, latent_spec,
-                                    expe_name, is_E1=is_E1, is_partial_rand_class=is_partial_rand_class, train_test=train_test)
+                                    expe_name, is_E1=is_E1, is_partial_rand_class=is_partial_rand_class,
+                                    train_test=train_test, save=save)
 
     if print_per_var:
         plot_struct_fixe_and_z_var_moove(average_representation_z_struct_class, train_test, net,
-                                         device, nb_class, latent_spec, expe_name)
+                                         device, nb_class, latent_spec, expe_name, save=save)
 
     if plot_traversal_struct:
         plot_var_fixe_and_z_struct_moove(average_representation_z_struct_class, nb_class, latent_spec, device, size,
-                                         net, expe_name)
+                                         net, expe_name, train_test, save=save)
 
     return
 

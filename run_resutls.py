@@ -21,7 +21,7 @@ def compute_heatmap(net_trained, train_loader, test_loader, latent_spec, device,
 
 def visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, nb_epochs=None,
               path_scores=None, batch=None, img_size=None, indx_image=None, path=None, losses=True,
-              FID=False, IS=False, psnr=False, scores=True,
+              FID=False, IS=False, psnr=False, scores=True, all_prototype=False, copute_average_z_structural=False,
               is_partial_rand_class=False, all_classes_resum=True, save=False, scores_and_losses=False,
               heatmap=False, prototype=False, all_classes_details=False, project_2d=False, is_E1=False,
               reconstruction=False, plot_img_traversal=False, z_component_traversal=None, plot_sample=False):
@@ -74,6 +74,24 @@ def visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_
     if plot_sample:
         plot_samples(net, nb_epochs, path, expe_name, latent_spec, img_size, batch=batch, both_continue=True, save=save,
                      FID=FID, IS=IS, psnr=psnr)
+
+    if all_prototype:
+        plot_prototype(net, expe_name, nb_class, latent_spec, device, train_loader, train_test='train',
+                       print_per_class=True, print_per_var=True,
+                       plot_traversal_struct=True, print_2d_projection=True,
+                       is_partial_rand_class=is_partial_rand_class, is_E1=is_E1)
+        plot_prototype(net, expe_name, nb_class, latent_spec, device, test_loader, train_test='test',
+                       print_per_class=True, print_per_var=True,
+                       plot_traversal_struct=True, print_2d_projection=True,
+                       is_partial_rand_class=is_partial_rand_class, is_E1=is_E1)
+
+    if copute_average_z_structural:
+        plot_average_z_structural(net_trained, train_loader, device, nb_class, latent_spec, expe_name,
+                                  train_test='train', both_continue=True,
+                                  is_partial_rand_class=is_partial_rand_class, is_E1=is_E1, save=save)
+        plot_average_z_structural(net_trained, test_loader, device, nb_class, latent_spec, expe_name,
+                                  train_test='test', both_continue=True,
+                                  is_partial_rand_class=is_partial_rand_class, is_E1=is_E1, save=save)
 
     return
 
@@ -141,6 +159,12 @@ mnist_VAE_class_E1_zvar_sim_5_5_tune_lr = ['VAE_Cass_E1_Zvarsim_tune_WLr_1', 'VA
                                            'VAE_Cass_E1_Zvarsim_tune_WLr_63', 'VAE_Cass_E1_Zvarsim_tune_WLr_64', 
                                            'VAE_Cass_E1_Zvarsim_tune_WLr_65']
 
+mnist_VAE_class_E1_zvar_sim_5_5_tune_lr = ['VAE_Cass_E1_Zvarsim_tune_WLr_111', 'VAE_Cass_E1_Zvarsim_tune_WLr_112',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLr_113']
+
+mnist_VAE_class_E1_zvar_sim_best = ['VAE_class_E1_MSE_41', 'VAE_Cass_E1_Zvarsim_tune_WLr_25',
+                                    'VAE_Cass_E1_Zvarsim_tune_WLr_112']
+
 is_zvar_sim_loss = True
 is_partial_rand_class = False
 is_E1 = True
@@ -158,19 +182,26 @@ net = BetaVAE(latent_spec, nb_class, is_C, device, nc=nc, four_conv=four_conv, s
               is_E1=is_E1, E1_conv=E1_conv, BN=BN)
 
 z_component_traversal = np.arange(latent_spec['cont_var'] + latent_spec['cont_class'])
-for expe in mnist_VAE_class_E1_zvar_sim_5_5_tune_lr:
+for expe in mnist_VAE_class_E1_zvar_sim_best:
     expe_name = expe
     net_trained, _, nb_epochs = get_checkpoints(net, path, expe_name)
-    visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, path_scores=path_scores,
-              is_partial_rand_class=is_partial_rand_class, save=True, scores_and_losses=True, is_E1=is_E1, losses=True)
-    visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, nb_epochs=nb_epochs, path=path,
-              save=True, batch=batch, plot_sample=True, FID=True, IS=True, psnr=False)
-    visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, nb_epochs=nb_epochs,
-              batch=batch, img_size=img_size, is_partial_rand_class=is_partial_rand_class,
-              save=True, is_E1=is_E1, reconstruction=True)
-    visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, nb_epochs=nb_epochs,
-              batch=batch, img_size=img_size, path=path, is_partial_rand_class=is_partial_rand_class,
-              is_E1=is_E1, z_component_traversal=z_component_traversal, indx_image=indx_image, plot_img_traversal=True)
+    # visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, path_scores=path_scores,
+    #           is_partial_rand_class=is_partial_rand_class, save=True, scores_and_losses=True, is_E1=is_E1, losses=True)
+    # visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, nb_epochs=nb_epochs, path=path,
+    #           save=True, batch=batch, plot_sample=True, FID=True, IS=True, psnr=False)
+    # visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, nb_epochs=nb_epochs,
+    #           batch=batch, img_size=img_size, is_partial_rand_class=is_partial_rand_class,
+    #           save=True, is_E1=is_E1, reconstruction=True)
+    # visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, nb_epochs=nb_epochs,
+    #           batch=batch, img_size=img_size, path=path, is_partial_rand_class=is_partial_rand_class,
+    #           is_E1=is_E1, z_component_traversal=z_component_traversal, indx_image=indx_image, plot_img_traversal=True)
+    # visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader,
+    #          copute_average_z_structural=True, is_partial_rand_class=is_partial_rand_class, save=True,
+    #          is_E1=is_E1)
+    visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, all_prototype=True,
+              is_partial_rand_class=is_partial_rand_class, save=True, is_E1=is_E1)
+    break
+
 
 """
 # _______________________________Expe test vanilla VAE _____________________________________
