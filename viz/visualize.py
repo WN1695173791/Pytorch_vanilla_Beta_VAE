@@ -127,10 +127,8 @@ class Visualizer:
         recons_random_class_loss = 0
 
         if partial_reconstruciton:
-            recons_random_variability_loss = F.mse_loss(recons_random_variability, input_data,
-                                                        size_average=False).div(batch_size).div(nb_pixels)
-            recons_random_class_loss = F.mse_loss(recons_random_class, input_data,
-                                                  size_average=False).div(batch_size).div(nb_pixels)
+            recons_random_variability_loss = F.mse_loss(recons_random_variability, input_data)
+            recons_random_class_loss = F.mse_loss(recons_random_class, input_data)
             if return_loss:
                 pass
             else:
@@ -139,7 +137,8 @@ class Visualizer:
                 comparison_random_class = self.build_compare_reconstruction(size, data, input_data,
                                                                             recons_random_class)
 
-        recon_loss = F.mse_loss(x_recon, input_data, size_average=False).div(batch_size).div(nb_pixels)
+        recon_loss = F.mse_loss(x_recon, input_data)
+
         if return_loss:
             pass
         else:
@@ -164,6 +163,38 @@ class Visualizer:
                 else:
                     return make_grid(comparison.data, nrow=size[
                         0]), None, None, x_recon, recon_loss.item(), recons_random_variability_loss, recons_random_class_loss
+
+
+    def zvar_randn_generation(self, data, size=(8, 8), both_continue=False,
+                        both_discrete=False, partial_reconstruciton=False, is_partial_rand_class=False,
+                        return_loss=False, is_E1=False):
+
+        batch_size = data.size(0)
+        nb_pixels = self.img_size[1] * self.img_size[2]
+
+        # Plot reconstructions in test mode, i.e. without sampling from latent
+        self.model.eval()
+        # Pass data through VAE to obtain reconstruction
+        with torch.no_grad():
+            input_data = data
+        if torch.cuda.is_available():
+            input_data = input_data.cuda()
+        x_recon, recons_random_variability, recons_random_class, latent_representation, latent_sample, \
+        latent_sample_variability, latent_sample_class, latent_sample_random_continue, prediction, pred_noised, \
+        prediction_partial_rand_class, prediction_random_variability, prediction_random_class, \
+        prediction_zc_pert_zd, prediction_zc_zd_pert, z_var, \
+        z_var_reconstructed = self.model(input_data,
+                                         reconstruction_rand=True,
+                                         both_continue=both_continue,
+                                         both_discrete=both_discrete,
+                                         is_partial_rand_class=is_partial_rand_class,
+                                         is_E1=is_E1)
+
+        self.model.train()
+
+
+
+        return
 
     def samples(self, size=(8, 8), filename='samples.png', both_continue=False, both_discrete=False):
         """

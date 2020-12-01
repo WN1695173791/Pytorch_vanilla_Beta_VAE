@@ -24,7 +24,8 @@ def visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_
               FID=False, IS=False, psnr=False, scores=True, all_prototype=False, copute_average_z_structural=False,
               is_partial_rand_class=False, all_classes_resum=True, save=False, scores_and_losses=False,
               heatmap=False, prototype=False, all_classes_details=False, project_2d=False, is_E1=False,
-              reconstruction=False, plot_img_traversal=False, z_component_traversal=None, plot_sample=False):
+              reconstruction=False, plot_img_traversal=False, z_component_traversal=None, plot_sample=False,
+              real_distribution=False):
     if scores_and_losses:
         plot_scores_and_loss(net, expe_name, path_scores, save=save, partial_rand=is_partial_rand_class, losses=losses,
                              scores=scores)
@@ -88,10 +89,16 @@ def visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_
     if copute_average_z_structural:
         plot_average_z_structural(net_trained, train_loader, device, nb_class, latent_spec, expe_name,
                                   train_test='train', both_continue=True,
-                                  is_partial_rand_class=is_partial_rand_class, is_E1=is_E1, save=save)
+                                  is_partial_rand_class=is_partial_rand_class, is_E1=is_E1)
         plot_average_z_structural(net_trained, test_loader, device, nb_class, latent_spec, expe_name,
                                   train_test='test', both_continue=True,
-                                  is_partial_rand_class=is_partial_rand_class, is_E1=is_E1, save=save)
+                                  is_partial_rand_class=is_partial_rand_class, is_E1=is_E1)
+
+    if real_distribution:
+        real_distribution_model(net, path, expe_name, train_loader, latent_spec, train_test='train',
+                                is_both_continue=True, is_partial_rand_class=is_partial_rand_class, is_E1=is_E1)
+        real_distribution_model(net, path, expe_name, test_loader, latent_spec, train_test='test',
+                                is_both_continue=True, is_partial_rand_class=is_partial_rand_class, is_E1=is_E1)
 
     return
 
@@ -122,48 +129,90 @@ indx_image = 0
 
 # _______________________________Expe test vanilla VAE + Class + E1 + zvar_sim_____________________________________
 
+mnist_VAE_class_E1_zvar_sim_5_5_tune_lr = ['VAE_Cass_E1_Zvarsim_tune_WLzvar_1',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLzvar_3', 'VAE_Cass_E1_Zvarsim_tune_WLzvar_4',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLzvar_5', 'VAE_Cass_E1_Zvarsim_tune_WLzvar_6',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLzvar_7', 'VAE_Cass_E1_Zvarsim_tune_WLzvar_8',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLzvar_9', 'VAE_Cass_E1_Zvarsim_tune_WLzvar_10',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLzvar_11', 'VAE_Cass_E1_Zvarsim_tune_WLzvar_12',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLzvar_13', 'VAE_Cass_E1_Zvarsim_tune_WLzvar_14',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLzvar_15', 'VAE_Cass_E1_Zvarsim_tune_WLzvar_16',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLzvar_17', 'VAE_Cass_E1_Zvarsim_tune_WLzvar_18',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLzvar_19', 'VAE_Cass_E1_Zvarsim_tune_WLzvar_20',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLzvar_21', 'VAE_Cass_E1_Zvarsim_tune_WLzvar_22',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLzvar_23', 'VAE_Cass_E1_Zvarsim_tune_WLzvar_24',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLzvar_25', 'VAE_Cass_E1_Zvarsim_tune_WLzvar_26',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLzvar_27', 'VAE_Cass_E1_Zvarsim_tune_WLzvar_28',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLzvar_29', 'VAE_Cass_E1_Zvarsim_tune_WLzvar_30',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLzvar_31', 'VAE_Cass_E1_Zvarsim_tune_WLzvar_32',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLzvar_33', 'VAE_Cass_E1_Zvarsim_tune_WLzvar_34',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLzvar_35', 'VAE_Cass_E1_Zvarsim_tune_WLzvar_36',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLzvar_37', 'VAE_Cass_E1_Zvarsim_tune_WLzvar_38',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLzvar_39', 'VAE_Cass_E1_Zvarsim_tune_WLzvar_40',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLzvar_41', 'VAE_Cass_E1_Zvarsim_tune_WLzvar_42',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLzvar_43', 'VAE_Cass_E1_Zvarsim_tune_WLzvar_44',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLzvar_45', 'VAE_Cass_E1_Zvarsim_tune_WLzvar_46',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLzvar_47', 'VAE_Cass_E1_Zvarsim_tune_WLzvar_48',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLzvar_49', 'VAE_Cass_E1_Zvarsim_tune_WLzvar_50',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLzvar_51', 'VAE_Cass_E1_Zvarsim_tune_WLzvar_52',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLzvar_53', 'VAE_Cass_E1_Zvarsim_tune_WLzvar_54',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLzvar_55', 'VAE_Cass_E1_Zvarsim_tune_WLzvar_56',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLzvar_57', 'VAE_Cass_E1_Zvarsim_tune_WLzvar_58',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLzvar_59', 'VAE_Cass_E1_Zvarsim_tune_WLzvar_60',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLzvar_61', 'VAE_Cass_E1_Zvarsim_tune_WLzvar_62', 
+                                           'VAE_Cass_E1_Zvarsim_tune_WLzvar_63', 'VAE_Cass_E1_Zvarsim_tune_WLzvar_64', 
+                                           'VAE_Cass_E1_Zvarsim_tune_WLzvar_65', 'VAE_Cass_E1_Zvarsim_tune_WLzvar_66',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLzvar_67', 'VAE_Cass_E1_Zvarsim_tune_WLzvar_68',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLzvar_69', 'VAE_Cass_E1_Zvarsim_tune_WLzvar_70',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLzvar_71', 'VAE_Cass_E1_Zvarsim_tune_WLzvar_72',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLzvar_73', 'VAE_Cass_E1_Zvarsim_tune_WLzvar_74',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLzvar_75', 'VAE_Cass_E1_Zvarsim_tune_WLzvar_76',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLzvar_77']
 
-mnist_VAE_class_E1_zvar_sim_5_5 = ['VAE_class_E1_MSE_41']
-
-mnist_VAE_class_E1_zvar_sim_5_5_tune_lr = ['VAE_Cass_E1_Zvarsim_tune_WLr_1', 'VAE_Cass_E1_Zvarsim_tune_WLr_2',
-                                           'VAE_Cass_E1_Zvarsim_tune_WLr_3', 'VAE_Cass_E1_Zvarsim_tune_WLr_4',
-                                           'VAE_Cass_E1_Zvarsim_tune_WLr_5', 'VAE_Cass_E1_Zvarsim_tune_WLr_6',
-                                           'VAE_Cass_E1_Zvarsim_tune_WLr_7', 'VAE_Cass_E1_Zvarsim_tune_WLr_8',
-                                           'VAE_Cass_E1_Zvarsim_tune_WLr_9', 'VAE_Cass_E1_Zvarsim_tune_WLr_10',
-                                           'VAE_Cass_E1_Zvarsim_tune_WLr_11', 'VAE_Cass_E1_Zvarsim_tune_WLr_12',
-                                           'VAE_Cass_E1_Zvarsim_tune_WLr_13', 'VAE_Cass_E1_Zvarsim_tune_WLr_14',
-                                           'VAE_Cass_E1_Zvarsim_tune_WLr_15', 'VAE_Cass_E1_Zvarsim_tune_WLr_16',
-                                           'VAE_Cass_E1_Zvarsim_tune_WLr_17', 'VAE_Cass_E1_Zvarsim_tune_WLr_18',
-                                           'VAE_Cass_E1_Zvarsim_tune_WLr_19', 'VAE_Cass_E1_Zvarsim_tune_WLr_20'
-                                           'VAE_Cass_E1_Zvarsim_tune_WLr_21', 'VAE_Cass_E1_Zvarsim_tune_WLr_22',
-                                           'VAE_Cass_E1_Zvarsim_tune_WLr_23', 'VAE_Cass_E1_Zvarsim_tune_WLr_24',
-                                           'VAE_Cass_E1_Zvarsim_tune_WLr_25', 'VAE_Cass_E1_Zvarsim_tune_WLr_26',
-                                           'VAE_Cass_E1_Zvarsim_tune_WLr_27', 'VAE_Cass_E1_Zvarsim_tune_WLr_28',
-                                           'VAE_Cass_E1_Zvarsim_tune_WLr_29', 'VAE_Cass_E1_Zvarsim_tune_WLr_30'
-                                           'VAE_Cass_E1_Zvarsim_tune_WLr_31', 'VAE_Cass_E1_Zvarsim_tune_WLr_32',
-                                           'VAE_Cass_E1_Zvarsim_tune_WLr_33', 'VAE_Cass_E1_Zvarsim_tune_WLr_34',
-                                           'VAE_Cass_E1_Zvarsim_tune_WLr_35', 'VAE_Cass_E1_Zvarsim_tune_WLr_36',
-                                           'VAE_Cass_E1_Zvarsim_tune_WLr_37', 'VAE_Cass_E1_Zvarsim_tune_WLr_38',
-                                           'VAE_Cass_E1_Zvarsim_tune_WLr_39', 'VAE_Cass_E1_Zvarsim_tune_WLr_40'
-                                           'VAE_Cass_E1_Zvarsim_tune_WLr_41', 'VAE_Cass_E1_Zvarsim_tune_WLr_42',
-                                           'VAE_Cass_E1_Zvarsim_tune_WLr_43', 'VAE_Cass_E1_Zvarsim_tune_WLr_44',
-                                           'VAE_Cass_E1_Zvarsim_tune_WLr_45', 'VAE_Cass_E1_Zvarsim_tune_WLr_46',
-                                           'VAE_Cass_E1_Zvarsim_tune_WLr_47', 'VAE_Cass_E1_Zvarsim_tune_WLr_48',
-                                           'VAE_Cass_E1_Zvarsim_tune_WLr_49', 'VAE_Cass_E1_Zvarsim_tune_WLr_50'
-                                           'VAE_Cass_E1_Zvarsim_tune_WLr_51', 'VAE_Cass_E1_Zvarsim_tune_WLr_52',
-                                           'VAE_Cass_E1_Zvarsim_tune_WLr_53', 'VAE_Cass_E1_Zvarsim_tune_WLr_54',
-                                           'VAE_Cass_E1_Zvarsim_tune_WLr_55', 'VAE_Cass_E1_Zvarsim_tune_WLr_56',
-                                           'VAE_Cass_E1_Zvarsim_tune_WLr_57', 'VAE_Cass_E1_Zvarsim_tune_WLr_58',
-                                           'VAE_Cass_E1_Zvarsim_tune_WLr_59', 'VAE_Cass_E1_Zvarsim_tune_WLr_60',
-                                           'VAE_Cass_E1_Zvarsim_tune_WLr_61', 'VAE_Cass_E1_Zvarsim_tune_WLr_62', 
-                                           'VAE_Cass_E1_Zvarsim_tune_WLr_63', 'VAE_Cass_E1_Zvarsim_tune_WLr_64', 
-                                           'VAE_Cass_E1_Zvarsim_tune_WLr_65']
-
-mnist_VAE_class_E1_zvar_sim_5_5_tune_lr = ['VAE_Cass_E1_Zvarsim_tune_WLr_111', 'VAE_Cass_E1_Zvarsim_tune_WLr_112',
-                                           'VAE_Cass_E1_Zvarsim_tune_WLr_113']
+mnist_VAE_class_E1_zvar_sim_5_5_tune_lr_enc_dec = ['VAE_Cass_E1_Zvarsim_tune_WLzvar_enc_dec_1',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLzvar_enc_dec_3', 'VAE_Cass_E1_Zvarsim_tune_WLzvar_enc_dec_4',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLzvar_enc_dec_5', 'VAE_Cass_E1_Zvarsim_tune_WLzvar_enc_dec_6',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLzvar_enc_dec_7', 'VAE_Cass_E1_Zvarsim_tune_WLzvar_enc_dec_8',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLzvar_enc_dec_9', 'VAE_Cass_E1_Zvarsim_tune_WLzvar_enc_dec_10',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLzvar_enc_dec_11', 'VAE_Cass_E1_Zvarsim_tune_WLzvar_enc_dec_12',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLzvar_enc_dec_13', 'VAE_Cass_E1_Zvarsim_tune_WLzvar_enc_dec_14',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLzvar_enc_dec_15', 'VAE_Cass_E1_Zvarsim_tune_WLzvar_enc_dec_16',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLzvar_enc_dec_17', 'VAE_Cass_E1_Zvarsim_tune_WLzvar_enc_dec_18',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLzvar_enc_dec_19', 'VAE_Cass_E1_Zvarsim_tune_WLzvar_enc_dec_20',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLzvar_enc_dec_21', 'VAE_Cass_E1_Zvarsim_tune_WLzvar_enc_dec_22',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLzvar_enc_dec_23', 'VAE_Cass_E1_Zvarsim_tune_WLzvar_enc_dec_24',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLzvar_enc_dec_25', 'VAE_Cass_E1_Zvarsim_tune_WLzvar_enc_dec_26',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLzvar_enc_dec_27', 'VAE_Cass_E1_Zvarsim_tune_WLzvar_enc_dec_28',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLzvar_enc_dec_29', 'VAE_Cass_E1_Zvarsim_tune_WLzvar_enc_dec_30',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLzvar_enc_dec_31', 'VAE_Cass_E1_Zvarsim_tune_WLzvar_enc_dec_32',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLzvar_enc_dec_33', 'VAE_Cass_E1_Zvarsim_tune_WLzvar_enc_dec_34',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLzvar_enc_dec_35', 'VAE_Cass_E1_Zvarsim_tune_WLzvar_enc_dec_36',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLzvar_enc_dec_37', 'VAE_Cass_E1_Zvarsim_tune_WLzvar_enc_dec_38',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLzvar_enc_dec_39', 'VAE_Cass_E1_Zvarsim_tune_WLzvar_enc_dec_40',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLzvar_enc_dec_41', 'VAE_Cass_E1_Zvarsim_tune_WLzvar_enc_dec_42',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLzvar_enc_dec_43', 'VAE_Cass_E1_Zvarsim_tune_WLzvar_enc_dec_44',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLzvar_enc_dec_45', 'VAE_Cass_E1_Zvarsim_tune_WLzvar_enc_dec_46',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLzvar_enc_dec_47', 'VAE_Cass_E1_Zvarsim_tune_WLzvar_enc_dec_48',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLzvar_enc_dec_49', 'VAE_Cass_E1_Zvarsim_tune_WLzvar_enc_dec_50',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLzvar_enc_dec_51', 'VAE_Cass_E1_Zvarsim_tune_WLzvar_enc_dec_52',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLzvar_enc_dec_53', 'VAE_Cass_E1_Zvarsim_tune_WLzvar_enc_dec_54',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLzvar_enc_dec_55', 'VAE_Cass_E1_Zvarsim_tune_WLzvar_enc_dec_56',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLzvar_enc_dec_57', 'VAE_Cass_E1_Zvarsim_tune_WLzvar_enc_dec_58',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLzvar_enc_dec_59', 'VAE_Cass_E1_Zvarsim_tune_WLzvar_enc_dec_60',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLzvar_enc_dec_61', 'VAE_Cass_E1_Zvarsim_tune_WLzvar_enc_dec_62',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLzvar_enc_dec_63', 'VAE_Cass_E1_Zvarsim_tune_WLzvar_enc_dec_64',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLzvar_enc_dec_65', 'VAE_Cass_E1_Zvarsim_tune_WLzvar_enc_dec_66',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLzvar_enc_dec_67', 'VAE_Cass_E1_Zvarsim_tune_WLzvar_enc_dec_68',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLzvar_enc_dec_69', 'VAE_Cass_E1_Zvarsim_tune_WLzvar_enc_dec_70',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLzvar_enc_dec_71', 'VAE_Cass_E1_Zvarsim_tune_WLzvar_enc_dec_72',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLzvar_enc_dec_73', 'VAE_Cass_E1_Zvarsim_tune_WLzvar_enc_dec_74',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLzvar_enc_dec_75', 'VAE_Cass_E1_Zvarsim_tune_WLzvar_enc_dec_76',
+                                           'VAE_Cass_E1_Zvarsim_tune_WLzvar_enc_dec_77']
 
 mnist_VAE_class_E1_zvar_sim_best = ['VAE_class_E1_MSE_41', 'VAE_Cass_E1_Zvarsim_tune_WLr_25',
-                                    'VAE_Cass_E1_Zvarsim_tune_WLr_112']
+                                    'VAE_Cass_E1_Zvarsim_tune_WLr_112', 'VAE_Cass_E1_Zvarsim_tune_WLzvar_44']
+
+mnist_VAE_class_E1_zvar_sim_test = ['VAE_Cass_E1_Zvarsim_tune_WLzvar_1', 'VAE_Cass_E1_Zvarsim_tune_WLzvar_76', 'VAE_Cass_E1_Zvarsim_tune_WLzvar_77']
 
 is_zvar_sim_loss = True
 is_partial_rand_class = False
@@ -174,7 +223,7 @@ is_C = True
 # for traversal real image:
 indx_image = 0
 
-# _____________ VAE 5 5 + class + E1 + zvar_sim________________
+# _____________ VAE 5 5 + class + E1 + zvar_sim (encoder + decoder)________________
 latent_spec = {'cont_var': 5, 'cont_class': 5}
 BN = True
 second_layer_C = False
@@ -182,7 +231,7 @@ net = BetaVAE(latent_spec, nb_class, is_C, device, nc=nc, four_conv=four_conv, s
               is_E1=is_E1, E1_conv=E1_conv, BN=BN)
 
 z_component_traversal = np.arange(latent_spec['cont_var'] + latent_spec['cont_class'])
-for expe in mnist_VAE_class_E1_zvar_sim_best:
+for expe in mnist_VAE_class_E1_zvar_sim_test:
     expe_name = expe
     net_trained, _, nb_epochs = get_checkpoints(net, path, expe_name)
     # visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, path_scores=path_scores,
@@ -198,12 +247,13 @@ for expe in mnist_VAE_class_E1_zvar_sim_best:
     # visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader,
     #          copute_average_z_structural=True, is_partial_rand_class=is_partial_rand_class, save=True,
     #          is_E1=is_E1)
-    visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, all_prototype=True,
-              is_partial_rand_class=is_partial_rand_class, save=True, is_E1=is_E1)
+    # visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, all_prototype=True,
+    #           is_partial_rand_class=is_partial_rand_class, save=True, is_E1=is_E1)
+    visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, path=path,
+              is_partial_rand_class=is_partial_rand_class, is_E1=is_E1, real_distribution=True)
     break
 
 
-"""
 # _______________________________Expe test vanilla VAE _____________________________________
 
 mnist_VAE_5_5_32_32_32 = ['TEst_Vanilla_VAE_1_']
@@ -247,18 +297,25 @@ net = BetaVAE(latent_spec, nb_class, is_C, device, nc=nc, four_conv=four_conv, s
 for expe in mnist_VAE_5_5_32_32_32:
     expe_name = expe
     net_trained, _, nb_epochs = get_checkpoints(net, path, expe_name)
-    visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, path_scores=path_scores,
-              is_partial_rand_class=is_partial_rand_class, save=True, scores_and_losses=True, is_E1=is_E1, losses=True,
-              scores=False)
-    visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, nb_epochs=nb_epochs, path=path,
-              save=True, batch=batch, plot_sample=True, FID=True, IS=True, psnr=False)
-    visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, nb_epochs=nb_epochs,
-              batch=batch, img_size=img_size, is_partial_rand_class=is_partial_rand_class,
-              save=True, is_E1=is_E1, reconstruction=True)
-    visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, nb_epochs=nb_epochs,
-              batch=batch, img_size=img_size, path=path, is_partial_rand_class=is_partial_rand_class,
-              is_E1=is_E1, z_component_traversal=z_component_traversal, indx_image=indx_image, plot_img_traversal=True)
+    # visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, path_scores=path_scores,
+    #           is_partial_rand_class=is_partial_rand_class, save=True, scores_and_losses=True, is_E1=is_E1, losses=True)
+    # visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, nb_epochs=nb_epochs, path=path,
+    #           save=True, batch=batch, plot_sample=True, FID=True, IS=True, psnr=False)
+    # visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, nb_epochs=nb_epochs,
+    #           batch=batch, img_size=img_size, is_partial_rand_class=is_partial_rand_class,
+    #           save=True, is_E1=is_E1, reconstruction=True)
+    # visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, nb_epochs=nb_epochs,
+    #           batch=batch, img_size=img_size, path=path, is_partial_rand_class=is_partial_rand_class,
+    #           is_E1=is_E1, z_component_traversal=z_component_traversal, indx_image=indx_image, plot_img_traversal=True)
+    # visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader,
+    #          copute_average_z_structural=True, is_partial_rand_class=is_partial_rand_class, save=True,
+    #          is_E1=is_E1)
+    # visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, all_prototype=True,
+    #           is_partial_rand_class=is_partial_rand_class, save=True, is_E1=is_E1)
+    visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, path=path,
+              is_partial_rand_class=is_partial_rand_class, is_E1=is_E1, real_distribution=True)
 
+"""
 # _____________ VAE 5 5 (16, 16, 32)________________
 latent_spec = {'cont_var': 5, 'cont_class': 5}
 z_component_traversal = np.arange(latent_spec['cont_var'] + latent_spec['cont_class'])

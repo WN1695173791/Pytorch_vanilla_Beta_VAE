@@ -348,7 +348,7 @@ class BetaVAE(nn.Module):
     def forward(self, x, reconstruction_rand=False, is_perturbed_score=False, is_noise_stats=False,
                 is_prediction=False, both_continue=False,
                 both_discrete=False, is_partial_rand_class=False, random_percentage=0.2, is_E1=False,
-                is_zvar_sim_loss=False):
+                is_zvar_sim_loss=False, var_rand=False, normal=False, change_zvar=False):
         """
         Forward pass of model.
         Parameters
@@ -469,14 +469,57 @@ class BetaVAE(nn.Module):
         # zvar_sim_loss:
         z_var = 0
         z_var_reconstructed = 0
+        z_var_reconstructed_z1 = 0
+        z_var_reconstructed_z2 = 0
         if is_zvar_sim_loss:
-            recons_random_variability = self._decode(latent_sample_random_continue)
-            latent_representation_recons_random_class = self._encode(recons_random_variability,
-                                                                     both_continue=both_continue)
-            z_var_reconstructed = latent_representation_recons_random_class['cont_var']
-            z_var_reconstructed = torch.cat(z_var_reconstructed, dim=1)
-            z_var = latent_representation['cont_var']
-            z_var = torch.cat(z_var, dim=1)
+            if var_rand:
+                recons_random_variability = self._decode(latent_sample_random_continue)
+                latent_representation_recons_random_class = self._encode(recons_random_variability,
+                                                                         both_continue=both_continue, is_E1=is_E1)
+                if is_E1:
+                    z_var_reconstructed = latent_representation_recons_random_class
+                else:
+                    z_var_reconstructed = latent_representation_recons_random_class['cont_var']
+                z_var_reconstructed = torch.cat(z_var_reconstructed, dim=1)
+                z_var = latent_representation['cont_var']
+                z_var = torch.cat(z_var, dim=1)
+            elif normal:
+                recons = x_recon
+                latent_representation_recons = self._encode(recons, both_continue=both_continue, is_E1=is_E1)
+                if is_E1:
+                    z_var_reconstructed = latent_representation_recons
+                else:
+                    z_var_reconstructed = latent_representation_recons['cont_var']
+                z_var_reconstructed = torch.cat(z_var_reconstructed, dim=1)
+                z_var = latent_representation['cont_var']
+                z_var = torch.cat(z_var, dim=1)
+            elif change_zvar:
+                z1 = []
+                z2 = []
+                latent_sample_change = []
+                middle = int(len(latent_sample_variability)/2)
+                latent_sample_variability_1 = latent_sample_variability[:middle]
+                latent_sample_class_1 = latent_sample_class[:middle]
+                latent_sample_variability_2 = latent_sample_variability[middle:]
+                latent_sample_class_2 = latent_sample_class[middle:]
+                z1.append(latent_sample_variability_2)
+                z1.append(latent_sample_class_1)
+                z1 = torch.cat(z1, dim=1)
+                z2.append(latent_sample_variability_1)
+                z2.append(latent_sample_class_2)
+                z2 = torch.cat(z2, dim=1)
+                latent_sample_change.append(z1)
+                latent_sample_change.append(z2)
+                latent_sample_change = torch.cat(latent_sample_change, dim=0)
+                recons = self._decode(latent_sample_change)
+                latent_representation_recons = self._encode(recons, both_continue=both_continue, is_E1=is_E1)
+                if is_E1:
+                    z_var_reconstructed = latent_representation_recons
+                else:
+                    z_var_reconstructed = latent_representation_recons['cont_var']
+                z_var_reconstructed = torch.cat(z_var_reconstructed, dim=1)
+                z_var = latent_representation['cont_var']
+                z_var = torch.cat(z_var, dim=1)
 
         # Classification:
         prediction = 0

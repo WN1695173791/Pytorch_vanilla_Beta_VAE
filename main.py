@@ -99,15 +99,25 @@ if __name__ == "__main__":
 
     parser.add_argument('--is_perturbed_score', default=False, type=str2bool, help='Compute stat with z perturbed '
                                                                                                 'during score')
-    parser.add_argument('--W_Lzvar_sim', default=1, type=float, help='W_zvar_sim_loss parameter for zvar_sim_loss loss')
+    # strategie zvar sim:
+    parser.add_argument('--zvar_sim_var_rand', default=False, type=str2bool, help='zvar_sim_var_rand strategie for'
+                                                                                  ' zvar sim loss')
+    parser.add_argument('--zvar_sim_normal', default=False, type=str2bool, help='zvar_sim_normal strategie for'
+                                                                                  ' zvar sim loss')
+    parser.add_argument('--zvar_sim_change_zvar', default=False, type=str2bool, help='zvar_sim_change_zvar strategie for'
+                                                                                  ' zvar sim loss')
+    # ---------- Weights for the loss -----------------
+    parser.add_argument('--lambda_zvar_sim', default=1, type=float, help='lambda_zvar_sim_loss parameter for zvar_sim_loss loss')
     parser.add_argument('--beta', default=1, type=float, help='beta parameter for KL-term in original beta-VAE')
-    parser.add_argument('--W_Lc', default=1, type=float, help='W_L3 parameter for classification loss')
-    parser.add_argument('--W_Lr', default=1, type=float, help='Wreconstruction parameter for reconstruction loss')
-    parser.add_argument('--W_recon_wt_rand', default=1, type=float,
-                        help='W_recon_wt_rand parameter for reconstruction loss')
-    parser.add_argument('--W_Kl_var', default=1, type=float, help='W_Kl_cont parameter for Kl_cont loss')
-    parser.add_argument('--W_Kl_struct', default=1, type=float, help='W_Kl_disc parameter for Kl_disc loss')
-    parser.add_argument('--W_Lpc', default=1, type=float, help='W_class_partial_rand parameter for loss')
+    parser.add_argument('--lambda_class', default=1, type=float, help='lambda_L3 parameter for classification loss')
+    parser.add_argument('--lambda_recons', default=1, type=float, help='Wreconstruction parameter for reconstruction loss')
+    parser.add_argument('--lambda_recon_wt_rand', default=1, type=float,
+                        help='lambda_recon_wt_rand parameter for reconstruction loss')
+    parser.add_argument('--lambda_Kl_var', default=1, type=float, help='lambda_Kl_cont parameter for Kl_cont loss')
+    parser.add_argument('--lambda_Kl_struct', default=1, type=float, help='lambda_Kl_disc parameter for Kl_disc loss')
+    parser.add_argument('--lambda_partial_class', default=1, type=float, help='lambda_class_partial_rand parameter for loss')
+    parser.add_argument('--lambda_AE', default=1, type=float, help='lambda for autoencoder parameter for loss')
+    # ---------------------------------------------------
     parser.add_argument('--gamma', default=1000, type=float, help='gamma parameter for KL-term in understanding '
                                                                   'beta-VAE')
     parser.add_argument('--C_max', default=25, type=float, help='capacity parameter(C) of bottleneck channel')

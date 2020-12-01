@@ -6,6 +6,7 @@ import torch
 import torch.optim as optimizer
 import torch.nn.functional as F
 import numpy as np
+from torch.distributions.distribution import Distribution as D
 
 from torch.autograd import Variable
 
@@ -22,10 +23,10 @@ def reconstruction_loss(x, x_recon, distribution):
     assert batch_size != 0
 
     if distribution == 'bernoulli':
-        recon_loss = F.binary_cross_entropy_with_logits(x_recon, x, size_average=False).div(batch_size)
+        recon_loss = F.binary_cross_entropy_with_logits(x_recon, x)
     elif distribution == 'gaussian':
-        x_recon = F.sigmoid(x_recon)
-        recon_loss = F.mse_loss(x_recon, x, size_average=False).div(batch_size)
+        # x_recon = F.sigmoid(x_recon)
+        recon_loss = F.mse_loss(x_recon, x)
     else:
         recon_loss = None
 
@@ -41,10 +42,22 @@ def kl_divergence(mu, logvar):
     if logvar.data.ndimension() == 4:
         logvar = logvar.view(logvar.size(0), logvar.size(1))
 
-    klds = -0.5 * (1 + logvar - mu.pow(2) - logvar.exp())
-    total_kld = klds.sum(1).mean(0, True)
+    # KLD is Kullback–Leibler divergence -- how much does one learned
+    # distribution deviate from another, in this specific case the
+    # learned distribution from the unit Gaussian
 
-    return total_kld
+    # see Appendix B from VAE paper:
+    # Kingma and Welling. Auto-Encoding Variational Bayes. ICLR, 2014
+    # https://arxiv.org/abs/1312.6114
+    # - D_{KL} = 0.5 * sum(1 + log(sigma^2) - mu^2 - sigma^2)
+    # note the negative D_{KL} in appendix B of the paper
+    KLD = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp(), dim=1)
+    KLD = torch.mean(KLD, dim=0)
+    # Normalise by same number of elements as in reconstruction
+    # KLD /= nb_pixels
+    # BCE tries to make our reconstruction as accurate as possible
+    # KLD tries to push the distributions as close as possible to unit Gaussian
+    return KLD
 
 
 def _kl_multiple_discrete_loss(alphas):
@@ -93,7 +106,8 @@ def _kl_discrete_loss(alpha):
 
 def compute_scores_and_loss(net, train_loader, valid_loader, device, latent_spec, train_loader_size,
                             test_loader_size, is_partial_rand_class, random_percentage, is_E1, is_zvar_sim_loss, is_C,
-                            is_noise_stats, is_perturbed_score):
+                            is_noise_stats, is_perturbed_score, zvar_sim_var_rand, zvar_sim_normal,
+                            zvar_sim_change_zvar):
     """
     compute some sample_scores and loss on data train and data set and save it for plot after training
     :return:
@@ -113,7 +127,10 @@ def compute_scores_and_loss(net, train_loader, valid_loader, device, latent_spec
                                                       is_zvar_sim_loss,
                                                       is_C,
                                                       is_noise_stats,
-                                                      is_perturbed_score)
+                                                      is_perturbed_score,
+                                                      zvar_sim_var_rand,
+                                                      zvar_sim_normal,
+                                                      zvar_sim_change_zvar)
     # print("Test:")
     scores_test, loss_test, mean_proba_per_class_test, std_proba_per_class_test, \
     mean_proba_per_class_noised_test, \
@@ -127,7 +144,10 @@ def compute_scores_and_loss(net, train_loader, valid_loader, device, latent_spec
                                                      is_zvar_sim_loss,
                                                      is_C,
                                                      is_noise_stats,
-                                                     is_perturbed_score)
+                                                     is_perturbed_score,
+                                                     zvar_sim_var_rand,
+                                                     zvar_sim_normal,
+                                                     zvar_sim_change_zvar)
 
     return scores_train, scores_test, loss_train, loss_test, mean_proba_per_class_train, std_proba_per_class_train, \
            mean_proba_per_class_test, std_proba_per_class_test, mean_proba_per_class_noised_train, \
@@ -167,12 +187,14 @@ class Solver(object):
         self.beta2 = args.beta2
         self.is_C = args.is_C
         self.second_layer_C = args.second_layer_C
-        self.W_Lr = args.W_Lr
-        self.W_Lc = args.W_Lc
-        self.W_Kl_var = args.W_Kl_var
-        self.W_Kl_struct = args.W_Kl_struct
-        self.W_Lpc = args.W_Lpc
-        self.W_Lzvar_sim = args.W_Lzvar_sim
+        # Lambda:
+        self.lambda_recons = args.lambda_recons
+        self.lambda_class = args.lambda_class
+        self.lambda_Kl_var = args.lambda_Kl_var
+        self.lambda_Kl_struct = args.lambda_Kl_struct
+        self.lambda_partial_class = args.lambda_partial_class
+        self.lambda_zvar_sim = args.lambda_zvar_sim
+        self.lambda_AE = args.lambda_AE
         self.display_step = args.display_step
         self.save_step = args.save_step
         self.dset_dir = args.dset_dir
@@ -196,22 +218,31 @@ class Solver(object):
         self.hidden_filters_layer3 = args.hidden_filters_layer3
         self.stride_size = args.stride_size
         self.kernel_size = args.kernel_size
+        self.zvar_sim_var_rand = args.zvar_sim_var_rand
+        self.zvar_sim_normal = args.zvar_sim_normal
+        self.zvar_sim_change_zvar = args.zvar_sim_change_zvar
 
         if self.zvar_sim_loss_only_for_encoder or self.zvar_sim_loss_for_all_model:
             list_uniq_choice = [self.zvar_sim_loss_only_for_encoder, self.zvar_sim_loss_for_all_model]
             assert any(
-                iter(list_uniq_choice)), "We must have only one choice for zvar_sim_loss propagation: in all th emodel," \
-                                         "in only encoder or in encoder and decoder !"
+                iter(list_uniq_choice)), "We must have only one choice for zvar_sim_loss propagation: in all the " \
+                                         "model, in only encoder or in encoder and decoder !"
 
-        self.normalize_weights = self.W_Lr + self.beta + self.W_Lc + self.W_Kl_var + self.W_Kl_struct
+        list_uniq_choice_zvar_strategie = [self.zvar_sim_var_rand, self.zvar_sim_normal, self.zvar_sim_change_zvar]
+        assert any(
+            iter(list_uniq_choice_zvar_strategie)), "We must have only one choice for zvar_sim_loss strategie: zvar " \
+                                                    "rand normal or change zvar !"
 
-        self.W_Kl_var_normalized = self.W_Kl_var / self.normalize_weights
-        self.W_Kl_struct_normalized = self.W_Kl_struct / self.normalize_weights
-        self.W_Lr_normalized = self.W_Lr / self.normalize_weights
+        self.normalize_weights = self.beta + self.lambda_class + self.lambda_AE
+
+        self.lambda_Kl_var_normalized = self.lambda_Kl_var / self.normalize_weights
+        self.lambda_Kl_struct_normalized = self.lambda_Kl_struct / self.normalize_weights
+        self.lambda_recons_normalized = self.lambda_recons / self.normalize_weights
         self.beta_normalized = self.beta / self.normalize_weights
-        self.W_Lc_normalized = self.W_Lc / self.normalize_weights
-        self.W_Lpc_normalized = self.W_Lpc / self.normalize_weights
-        self.W_Lzvar_sim_normalized = self.W_Lzvar_sim / self.normalize_weights
+        self.lambda_class_normalized = self.lambda_class / self.normalize_weights
+        self.lambda_partial_class_normalized = self.lambda_partial_class / self.normalize_weights
+        self.lambda_zvar_sim_normalized = self.lambda_zvar_sim  # we didn't normalize it because this loss is used alone
+        self.lambda_AE_normalized = self.lambda_AE / self.normalize_weights
 
         self.four_conv = True
         if args.dataset.lower() == 'dsprites':
@@ -292,6 +323,10 @@ class Solver(object):
         self.L_KL = 0
         self.Lr = 0
         self.L_Total = 0
+        self.L_AE = 0
+        self.L_Total_wt_weights = 0
+        self.Lm_1 = 0
+        self.Lm_2 = 0
 
         list_condition = [self.is_continuous, self.is_discrete, self.is_both_continue, self.is_both_discrete]
         assert any(iter(list_condition)), "only one condition may be True"
@@ -308,7 +343,7 @@ class Solver(object):
         # dataset:
         # PREPARES DATA
         self.train_loader, self.valid_loader, self.test_loader = get_dataloaders(args.dataset,
-                                                                                 batch_size=args.batch_size,
+                                                                                 batch_size=self.batch_size,
                                                                                  logger=logger)
 
         self.train_loader_size = len(self.train_loader.dataset)
@@ -421,7 +456,6 @@ class Solver(object):
                 self.epochs = self.global_iter / len(self.train_loader)
                 print_bar.update(1)
 
-                batch_size = len(data)
                 data = data.to(self.device)  # Variable(data.to(self.device))
                 labels = labels.to(self.device)  # Variable(labels.to(self.device))
 
@@ -429,28 +463,35 @@ class Solver(object):
                 pred_noised, prediction_partial_rand_class, prediction_random_variability, _, _, \
                 prediction_zc_zd_pert, z_var, \
                 z_var_reconstructed = self.net(data,
-                                               both_continue=self.is_both_continue,
-                                               both_discrete=self.is_both_discrete,
-                                               is_partial_rand_class=self.is_partial_rand_class,
-                                               random_percentage=self.random_percentage,
-                                               is_E1=self.is_E1,
-                                               is_zvar_sim_loss=self.is_zvar_sim_loss)
+                                                  both_continue=self.is_both_continue,
+                                                  both_discrete=self.is_both_discrete,
+                                                  is_partial_rand_class=self.is_partial_rand_class,
+                                                  random_percentage=self.random_percentage,
+                                                  is_E1=self.is_E1,
+                                                  is_zvar_sim_loss=self.is_zvar_sim_loss,
+                                                  var_rand=self.zvar_sim_var_rand,
+                                                  normal=self.zvar_sim_normal,
+                                                  change_zvar=self.zvar_sim_change_zvar)
 
                 # Reconstruction and Classification losses
-                # self.Lr = F.mse_loss(x_recon, data, size_average=False).div(batch_size).div(self.nb_pixels)
-                self.Lr = F.mse_loss(x_recon, data, size_average=False).div(batch_size)
+                # self.Lr = F.mse_loss(x_recon, data)
+                self.Lr = F.mse_loss(x_recon, data)  # pytorch default: size_average=True: averages over "each atomic
+                # element for which loss is computed for"
                 if self.is_C:
                     # classificatino loss
-                    self.Lc = F.nll_loss(prediction_random_variability, labels, size_average=False).div(
-                        batch_size)  # averaged over each loss element in the batch
+                    self.Lc = F.nll_loss(prediction_random_variability, labels)  # averaged over each loss element in the batch
                 if self.is_partial_rand_class:
-                    self.Lpc = F.nll_loss(prediction_partial_rand_class, labels,
-                                          size_average=False).div(batch_size)
+                    self.Lpc = F.nll_loss(prediction_partial_rand_class, labels)
 
                 # zvar_sim_loss loss:
                 if self.is_zvar_sim_loss:
-                    self.Lm = F.mse_loss(z_var, z_var_reconstructed, size_average=False).div(
-                        batch_size)
+                    self.Lm = F.mse_loss(z_var_reconstructed, z_var)
+
+                print(self.Lm)
+
+                # print(z_var[0])
+                # print(z_var_reconstructed[0])
+                # print(self.Lm)
 
                 if self.is_both_continue:
                     mu_var, logvar_var = latent_representation['cont_var']
@@ -476,71 +517,79 @@ class Solver(object):
                         self.L_KL_struct = kl_disc_loss
 
                 # Calculate total kl value to record it
-                self.L_KL = (self.W_Kl_var_normalized * self.L_KL_var.item()) + \
-                            (self.W_Kl_struct_normalized * self.L_KL_struct.item())
+                self.L_KL = self.beta_normalized * (self.L_KL_var.item() + self.L_KL_struct.item())
+                self.L_AE = self.L_KL + self.Lr
 
-                self.L_Total = (self.W_Lr_normalized * self.Lr) + \
-                               (self.beta_normalized * self.L_KL) + \
-                               (self.W_Lc_normalized * self.Lc) + \
-                               (self.W_Lpc_normalized * self.Lpc)
-
-                self.L_Total_wt_weights = self.Lr + self.L_KL_var.item() + self.L_KL_struct.item() + self.Lc + self.Lpc
+                # Warning: if we add a new lambda: update normalize weight !!!!
+                self.L_Total = (self.lambda_AE_normalized * self.L_AE) + (self.lambda_class_normalized * self.Lc)
+                self.L_Total_wt_weights = self.Lr + self.L_KL_var.item() + self.L_KL_struct.item() + self.Lc
 
                 if self.is_zvar_sim_loss and self.zvar_sim_loss_for_all_model:
-                    self.L_Total += (self.Lm * self.W_Lzvar_sim_normalized)
+                    self.L_Total += (self.Lm * self.lambda_zvar_sim_normalized)
                     self.L_Total_wt_weights += self.Lm
+
+                # plot parameters:
+                # print('-----------::::::::::::Before:::::::-----------------:', self.i)
+                # print(self.net.encoder[0].weight[0][0])
+                # print(self.net.decoder[0].weight[0])
+                # print(self.net.E1[0].weight[0][0])
+                # print(self.net.L3_classifier[0].weight[0])
 
                 if self.is_zvar_sim_loss and not self.zvar_sim_loss_for_all_model:
                     if self.i % 2 == 0:
                         self.optimizer.zero_grad()
-                        self.L_Total.backward(retain_graph=True)
+                        self.L_Total.backward()  # retain_graph=True: if I use an another one backward
                         self.optimizer.step()
                     else:
                         # Backward gradient only for Encoder with the zvar_sim_loss loss:
-                        if self.is_zvar_sim_loss and not self.zvar_sim_loss_for_all_model:
+                        # we want to freeze some modules
+                        if self.zvar_sim_loss_only_for_encoder:
+                            # we freeze also decoder
+                            for params in self.net.decoder.parameters():
+                                params.requires_grad = False
+                        if self.is_E1:
+                            for params in self.net.E1.parameters():
+                                params.requires_grad = False
+                        if self.is_C:
+                            for params in self.net.L3_classifier.parameters():
+                                params.requires_grad = False
 
-                            # we want to freeze some modules
-                            if self.zvar_sim_loss_only_for_encoder:
-                                # we freeze also decoder
-                                for params in self.net.decoder.parameters():
-                                    params.requires_grad = False
-                            if self.is_E1:
-                                for params in self.net.E1.parameters():
-                                    params.requires_grad = False
-                            if self.is_C:
-                                for params in self.net.L3_classifier.parameters():
-                                    params.requires_grad = False
+                        # passing only those parameters that explicitly requires grad
+                        self.optimizer = optimizer.Adam(filter(lambda p: p.requires_grad, self.net.parameters()),
+                                                        lr=self.lr)
+                        # backward zvar_sim loss:
+                        self.optimizer.zero_grad()
+                        (self.Lm * self.lambda_zvar_sim_normalized).backward()
+                        self.optimizer.step()
 
-                            # passing only those parameters that explicitly requires grad
-                            self.optimizer = optimizer.Adam(filter(lambda p: p.requires_grad, self.net.parameters()),
-                                                            lr=self.lr)
-                            # backward zvar_sim loss:
-                            self.optimizer.zero_grad()
-                            (self.Lm * self.W_Lzvar_sim_normalized).backward()
-                            self.optimizer.step()
+                        # Then unfreeze layers:
+                        if self.zvar_sim_loss_only_for_encoder:
+                            for params in self.net.decoder.parameters():
+                                params.requires_grad = True
+                        if self.is_E1:
+                            for params in self.net.E1.parameters():
+                                params.requires_grad = True
+                        if self.is_C:
+                            for params in self.net.L3_classifier.parameters():
+                                params.requires_grad = True
 
-                            # Then unfreeze layers:
-                            if self.zvar_sim_loss_only_for_encoder:
-                                for params in self.net.decoder.parameters():
-                                    params.requires_grad = True
-                            if self.is_E1:
-                                for params in self.net.E1.parameters():
-                                    params.requires_grad = True
-                            if self.is_C:
-                                for params in self.net.L3_classifier.parameters():
-                                    params.requires_grad = True
-
-                            # add the unfrozen weight to the current optimizer
-                            if self.zvar_sim_loss_only_for_encoder:
-                                self.optimizer.add_param_group({'params': self.net.decoder.parameters()})
-                            if self.is_E1:
-                                self.optimizer.add_param_group({'params': self.net.E1.parameters()})
-                            if self.is_C:
-                                self.optimizer.add_param_group({'params': self.net.L3_classifier.parameters()})
+                        # add the unfrozen weight to the current optimizer
+                        if self.zvar_sim_loss_only_for_encoder:
+                            self.optimizer.add_param_group({'params': self.net.decoder.parameters()})
+                        if self.is_E1:
+                            self.optimizer.add_param_group({'params': self.net.E1.parameters()})
+                        if self.is_C:
+                            self.optimizer.add_param_group({'params': self.net.L3_classifier.parameters()})
                 else:
                     self.optimizer.zero_grad()
-                    self.L_Total.backward(retain_graph=True)
+                    self.L_Total.backward()  # retain_graph=True: if I use an another one backward
                     self.optimizer.step()
+
+                print('-----------::::::::::::After:::::::-----------------:')
+                # print(self.net.encoder[0].weight[0][0])
+                # print(self.net.decoder[0].weight[0])
+                # print(self.net.E1[0].weight[0][0])
+                # print(self.net.L3_classifier[0].weight[0])
 
                 # display step
                 if self.global_iter % self.display_step == 0:
@@ -581,7 +630,10 @@ class Solver(object):
                                                                                        self.is_zvar_sim_loss,
                                                                                        self.is_C,
                                                                                        self.is_noise_stats,
-                                                                                       self.is_perturbed_score)
+                                                                                       self.is_perturbed_score,
+                                                                                       self.zvar_sim_var_rand,
+                                                                                       self.zvar_sim_normal,
+                                                                                       self.zvar_sim_change_zvar)
                         self.save_checkpoint_scores_loss()
                         self.net_mode(train=True)
 

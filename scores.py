@@ -6,7 +6,9 @@ EPS = 1e-12
 
 
 def compute_scores(net, loader, device, latent_spec, nb_data, is_partial_rand_class, random_percentage, is_E1,
-                   is_zvar_sim_loss, is_C, is_noise_stats, is_perturbed_score):
+                   is_zvar_sim_loss, is_C, is_noise_stats, is_perturbed_score, zvar_sim_var_rand, zvar_sim_normal,
+                   zvar_sim_change_zvar):
+
     """
     compute all sample_scores
     :param
@@ -76,38 +78,36 @@ def compute_scores(net, loader, device, latent_spec, nb_data, is_partial_rand_cl
             prediction_partial_rand_class, prediction_random_variability, prediction_random_class, \
             prediction_zc_pert_zd, prediction_zc_zd_pert, z_var, \
             z_var_reconstructed = net(data,
-                                      is_perturbed_score=is_perturbed_score,
-                                      is_noise_stats=is_noise_stats,
-                                      is_prediction=is_prediction,
-                                      both_continue=is_both_continue,
-                                      both_discrete=is_both_discrete,
-                                      is_partial_rand_class=is_partial_rand_class,
-                                      random_percentage=random_percentage,
-                                      is_E1=is_E1,
-                                      is_zvar_sim_loss=is_zvar_sim_loss)
+                                         is_perturbed_score=is_perturbed_score,
+                                         is_noise_stats=is_noise_stats,
+                                         is_prediction=is_prediction,
+                                         both_continue=is_both_continue,
+                                         both_discrete=is_both_discrete,
+                                         is_partial_rand_class=is_partial_rand_class,
+                                         random_percentage=random_percentage,
+                                         is_E1=is_E1,
+                                         is_zvar_sim_loss=is_zvar_sim_loss,
+                                         var_rand=zvar_sim_var_rand,
+                                         normal=zvar_sim_normal,
+                                         change_zvar=zvar_sim_change_zvar)
 
             # reconstruction loss
-            recons_loss_iter = (F.mse_loss(x_recon, data, size_average=False).div(
-                batch_size))
+            recons_loss_iter = F.mse_loss(x_recon, data)
 
             classification_loss_iter = 0
             if is_C:
                 # classification loss:
-                classification_loss_iter = F.nll_loss(prediction, labels, size_average=False).div(
-                    batch_size)
+                classification_loss_iter = F.nll_loss(prediction, labels)
 
             # zvar_sim_loss loss:
             zvar_sim_loss_iter = 0
             if is_zvar_sim_loss:
-                zvar_sim_loss_iter = F.mse_loss(z_var, z_var_reconstructed, size_average=False).div(
-                    batch_size)
+                zvar_sim_loss_iter = F.mse_loss(z_var_reconstructed, z_var)
 
             # partial classification:
             classification_partial_rand_loss_iter = 0
             if is_partial_rand_class:
-                classification_partial_rand_loss_iter = (F.nll_loss(prediction_partial_rand_class, labels,
-                                                                    size_average=False).div(
-                    batch_size))
+                classification_partial_rand_loss_iter = F.nll_loss(prediction_partial_rand_class, labels)
             if is_both_continue:
                 mu_var, logvar_var = latent_representation['cont_var']
                 kl_cont_loss_var = kl_divergence(mu_var, logvar_var)
@@ -129,7 +129,7 @@ def compute_scores(net, loader, device, latent_spec, nb_data, is_partial_rand_cl
                     kl_disc_loss = _kl_multiple_discrete_loss(latent_representation['disc'])
                     kl_class_loss_iter = kl_disc_loss
 
-            total_kld_iter = (kl_var_loss_iter + kl_class_loss_iter)
+            total_kld_iter = kl_var_loss_iter + kl_class_loss_iter
 
             beta_vae_loss_iter = recons_loss_iter + total_kld_iter + classification_loss_iter + \
                                  classification_partial_rand_loss_iter + zvar_sim_loss_iter
@@ -321,10 +321,22 @@ def kl_divergence(mu, logvar):
     if logvar.data.ndimension() == 4:
         logvar = logvar.view(logvar.size(0), logvar.size(1))
 
-    klds = -0.5 * (1 + logvar - mu.pow(2) - logvar.exp())
-    total_kld = klds.sum(1).mean(0, True)
+    # KLD is Kullback–Leibler divergence -- how much does one learned
+    # distribution deviate from another, in this specific case the
+    # learned distribution from the unit Gaussian
 
-    return total_kld
+    # see Appendix B from VAE paper:
+    # Kingma and Welling. Auto-Encoding Variational Bayes. ICLR, 2014
+    # https://arxiv.org/abs/1312.6114
+    # - D_{KL} = 0.5 * sum(1 + log(sigma^2) - mu^2 - sigma^2)
+    # note the negative D_{KL} in appendix B of the paper
+    KLD = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp(), dim=1)
+    KLD = torch.mean(KLD, dim=0)
+    # Normalise by same number of elements as in reconstruction
+    # KLD /= nb_pixels
+    # BCE tries to make our reconstruction as accurate as possible
+    # KLD tries to push the distributions as close as possible to unit Gaussian
+    return KLD
 
 
 def _kl_multiple_discrete_loss(alphas):

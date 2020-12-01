@@ -114,9 +114,7 @@ def viz_reconstruction(net, nb_epochs, expe_name, batch, latent_spec, img_size, 
         # grid with originals data
         recon_grid = recon_grid.permute(1, 2, 0)
         fig, ax = plt.subplots(figsize=(10, 10), facecolor='w', edgecolor='k')
-        ax.set(title=('model: {}: reconstruction with originals data: nb_epochs: {}, MSE: {}'.format(expe_name,
-                                                                                                     nb_epochs,
-                                                                                               recon_loss_arounded)))
+        ax.set(title=('model: {}: original data reconstruction: MSE: {}'.format(expe_name, recon_loss_arounded)))
 
         ax.imshow(recon_grid.numpy())
         ax.axhline(y=size[0] // 2, linewidth=4, color='r')
@@ -127,9 +125,7 @@ def viz_reconstruction(net, nb_epochs, expe_name, batch, latent_spec, img_size, 
         # grid with random var data
         recon_grid_random_var = recon_grid_random_var.permute(1, 2, 0)
         fig, ax = plt.subplots(figsize=(10, 10), facecolor='w', edgecolor='k')
-        ax.set(title=('model: {}: reconstruction with random var data: nb_epochs: {}, MSE: {}'.format(expe_name,
-                                                                                                      nb_epochs,
-                                                                                        recon_loss_arounded_rand_var)))
+        ax.set(title=('model: {}: random var reconstruction: MSE: {}'.format(expe_name, recon_loss_arounded)))
 
         ax.imshow(recon_grid_random_var.numpy())
         ax.axhline(y=size[0]//2, linewidth=4, color='r')
@@ -140,9 +136,7 @@ def viz_reconstruction(net, nb_epochs, expe_name, batch, latent_spec, img_size, 
         # grid with random classes data
         recon_grid_random_classe = recon_grid_random_classe.permute(1, 2, 0)
         fig, ax = plt.subplots(figsize=(10, 10), facecolor='w', edgecolor='k')
-        ax.set(title=('model: {}: reconstruction with random classes data: nb_epochs: {}, MSE: {}'.format(expe_name,
-                                                                                                          nb_epochs,
-                                                                                    recon_loss_arounded_rand_classe)))
+        ax.set(title=('model: {}: random struct reconstruction: MSE: {}'.format(expe_name, recon_loss_arounded)))
         ax.imshow(recon_grid_random_classe.numpy())
         ax.axhline(y=size[0]//2, linewidth=4, color='r')
         plt.show()
@@ -153,8 +147,7 @@ def viz_reconstruction(net, nb_epochs, expe_name, batch, latent_spec, img_size, 
         recon_loss_arounded = np.around(recon_loss, 2)
         plt.figure(figsize=(10, 10))
         recon_grid = recon_grid.permute(1, 2, 0)
-        plt.title('reconstruction: model: {}, nb_epochs trained: {}, MSE: {}'.format(expe_name, nb_epochs,
-                                                                                              recon_loss_arounded))
+        plt.title('reconstruction: model: {}, MSE: {}'.format(expe_name, recon_loss_arounded))
         plt.imshow(recon_grid.numpy())
         plt.show()
 
@@ -199,8 +192,7 @@ def plot_samples(net, epochs, path, expe_name, latent_spec, img_size, size=(8, 8
         psnr_value = np.around(psnr_value.item(), 3)
 
     samples = samples.permute(1, 2, 0)
-    ax.set(title=('samples: {}, epochs: {}. Scores: FID(\u2193): {}, IS(\u2191): {}, PSNR(\u2193): {}'.format(expe_name,
-                                                                                            str(epochs),
+    ax.set(title=('samples: {}. Scores: FID(\u2193): {}, IS(\u2191): {}, PSNR(\u2193): {}'.format(expe_name,
                                                                                             fid_value,
                                                                                             IS_value,
                                                                                             psnr_value)))
@@ -269,15 +261,14 @@ def latent_real_img_traversal(net, nb_epochs, path, expe_name, latent_spec, batc
                                                             is_partial_rand_class=is_partial_rand_class, is_E1=is_E1)
     fig, ax = plt.subplots(figsize=(15, 10), facecolor='w', edgecolor='k')
     traversals = traversals.permute(1, 2, 0)
-    ax.set(title=('latent real traversal: {} , for composante: {} (epoch: {})'.format(expe_name,
-                                                                                  z_component_traversal,
-                                                                                  str(nb_epochs))))
+    ax.set(title=('latent real traversal: {} , for composante: {}'.format(expe_name,
+                                                                                  z_component_traversal)))
     fig_size = traversals.shape
     plt.imshow(traversals.numpy())
     ax.axhline(y=(fig_size[0]*(latent_spec['cont_var']/(latent_spec['cont_var']+latent_spec['cont_class']))),
                linewidth=4, color='g')
     ax.axvline(x=(fig_size[1]//size)*indx_same_composante, linewidth=3, color='orange')
-    ax.axvline(x=(fig_size[1] // size)*(indx_same_composante-1), linewidth=3, color='orange')
+    ax.axvline(x=(fig_size[1] // size)*(indx_same_composante+1), linewidth=3, color='orange')
     plt.show()
 
     if save:
@@ -346,6 +337,10 @@ def plot_loss_results(epochs, recon_loss_train_train, kl_disc_loss_train, kl_con
                       is_both_continuous, save, partial_rand=False):
     fig, ax = plt.subplots(figsize=(15, 10), facecolor='w', edgecolor='k')
 
+    last_zvar_sim_value_train = zvar_sim_loss_train[-1]
+    last_zvar_sim_value_test = zvar_sim_loss_test[-1]
+    x_ann = epochs[-1]
+
     ax.set(xlabel='nb_iter', ylabel='Loss',
            title=('MNIST loss: ' + expe_name))  # ylim=(0,1))
 
@@ -384,6 +379,17 @@ def plot_loss_results(epochs, recon_loss_train_train, kl_disc_loss_train, kl_con
     ax.plot(epochs, zvar_sim_loss_test, label='zvar_sim test', color='darkgreen')
 
     ax.legend(loc=1)
+
+    string = 'Zvar_sim value: ' + str(last_zvar_sim_value_train.detach().numpy())
+    ax.annotate(string,
+                xy=(x_ann, last_zvar_sim_value_train), xycoords='data',
+                xytext=(x_ann - 20, last_zvar_sim_value_train + 0.3), textcoords='data',
+                size=20, va="center", ha="center",
+                bbox=dict(boxstyle="round4", fc="w"),
+                arrowprops=dict(arrowstyle="-|>",
+                                connectionstyle="arc3,rad=+0.2",
+                                fc="w"),
+                )
 
     plt.show()
 
@@ -464,6 +470,94 @@ def plot_all(net, expe_name, path, path_scores, bacth, latent_spec, both_continu
         latent_real_img_traversal(net, path, expe_name, latent_spec, batch_mnist, indx=indx, nb_samples=nb_samples,
                                   both_continue=both_continue)
     """
+
+
+def real_distribution_model(net, path_expe, expe_name, loader, latent_spec, train_test, is_both_continue=False,
+                            is_both_discrete=False, is_partial_rand_class=False, is_E1=False, is_zvar_sim_loss=False):
+
+    path = 'Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test + '_mu_var.npy'
+
+    if not os.path.exists(path):
+        file_path = os.path.join(path_expe, expe_name, 'last')
+        checkpoint = torch.load(file_path, map_location=torch.device('cpu'))
+        net.load_state_dict(checkpoint['net'])
+
+        mu_var = torch.zeros(latent_spec['cont_var'])
+        mu_struct = torch.zeros(latent_spec['cont_class'])
+
+        sigma_var = torch.zeros(latent_spec['cont_var'])
+        sigma_struct = torch.zeros(latent_spec['cont_class'])
+
+        device = 'cuda' if torch.cuda.is_available() else 'cpu'
+
+        nb_batch = 0
+        with torch.no_grad():
+            for x in loader:
+                nb_batch += 1
+
+                data = x[0]
+                labels = x[1]
+                data = data.to(device)  # Variable(data.to(device))
+
+                # compute loss:
+                x_recon, _, _, latent_representation, latent_sample, \
+                latent_sample_variability, latent_sample_class, latent_sample_random_continue, prediction, pred_noised, \
+                prediction_partial_rand_class, prediction_random_variability, prediction_random_class, \
+                prediction_zc_pert_zd, prediction_zc_zd_pert, z_var, \
+                z_var_reconstructed = net(data,
+                                          is_perturbed_score=False,
+                                          is_noise_stats=False,
+                                          is_prediction=False,
+                                          both_continue=is_both_continue,
+                                          both_discrete=is_both_discrete,
+                                          is_partial_rand_class=is_partial_rand_class,
+                                          random_percentage=False,
+                                          is_E1=is_E1,
+                                          is_zvar_sim_loss=is_zvar_sim_loss)
+
+                mu_var_iter = latent_representation['cont_var'][0]
+                mu_struct_iter = latent_representation['cont_class'][0]
+                sigma_var_iter = latent_representation['cont_var'][1]
+                sigma_struct_iter = latent_representation['cont_class'][1]
+
+                mu_var += torch.mean(mu_var_iter, dim=0)
+                mu_struct += torch.mean(mu_struct_iter, dim=0)
+                sigma_var += torch.mean(sigma_var_iter, dim=0)
+                sigma_struct += torch.mean(sigma_struct_iter, dim=0)
+
+        mu_var /= nb_batch
+        mu_struct /= nb_batch
+        sigma_var /= nb_batch
+        sigma_struct /= nb_batch
+
+        np.save('Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test +
+                '_mu_var.npy', mu_var)
+        np.save('Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test +
+                'mu_struct.npy', mu_struct)
+        np.save('Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test +
+                'sigma_var.npy', sigma_var)
+        np.save('Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test +
+                'sigma_struct.npy', sigma_struct)
+
+    else:
+        mu_var = np.load('Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test +
+                         '_mu_var.npy', allow_pickle=True)
+        mu_struct = np.load('Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test +
+                         'mu_struct.npy', allow_pickle=True)
+        sigma_var = np.load('Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test +
+                         'sigma_var.npy', allow_pickle=True)
+        sigma_struct = np.load('Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test +
+                         'sigma_struct.npy', allow_pickle=True)
+
+    print(mu_var, mu_struct, sigma_var, sigma_struct)
+
+    return mu_var, mu_struct, sigma_var, sigma_struct
+
+
+def generate_img_real_distribution():
+
+
+    return
 
 
 def plot_Acc_each_class(one_bit_rand_mean_pred_train, one_bit_rand_std_pred_train, one_bit_rand_mean_pred_test,
@@ -877,7 +971,7 @@ def plot_2d_projection_z_struct(average_representation_z_struct_class, loader, n
 
 
 def plot_struct_fixe_and_z_var_moove(average_representation_z_struct_class, train_test, net_trained,
-                                device, nb_class, latent_spec, expe_name, save=False):
+                                     device, nb_class, latent_spec, expe_name, save=True):
     """
     Here we see traversal reconstruction of z_struct prototype wirth z_struct fixed and variable z_rand.
     We should observed always the same class (for the same prototype) but with different variability.
@@ -909,9 +1003,9 @@ def plot_struct_fixe_and_z_var_moove(average_representation_z_struct_class, trai
         images_arr_all_classes.append(images_arr)
 
     for k in range(nb_class):
-        fig = plt.figure(figsize=(10, 2))
-        plt.title('z_struct fix with variational rand z_var for class {}: {} {}'.format(k, expe_name, train_test))
-        plt.axis('off')
+        fig, ax = plt.subplots(figsize=(10, 2), facecolor='w', edgecolor='k')
+        ax.set(title=('z_struct fix with variational rand z_var for class {}: {} {}'.format(k, expe_name, train_test)))
+        ax.axis('off')
         for t in range(nb_examples):
             ax = fig.add_subplot(1, nb_examples, t + 1, xticks=[], yticks=[])
             ax.imshow(
@@ -926,7 +1020,7 @@ def plot_struct_fixe_and_z_var_moove(average_representation_z_struct_class, trai
 
 
 def plot_var_fixe_and_z_struct_moove(average_representation_z_struct_class, nb_class, latent_spec, device, size,
-                                     net_trained, expe_name, train_test, save=False):
+                                     net_trained, expe_name, train_test, save=True):
     """
     Here we see traversal reconstruction of z_struct prototype over z_struct with z_var fixed.
     We should observed always the same variability along the generated data but with a class who slightly change
