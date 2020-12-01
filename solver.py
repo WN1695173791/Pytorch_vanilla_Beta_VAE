@@ -487,8 +487,6 @@ class Solver(object):
                 if self.is_zvar_sim_loss:
                     self.Lm = F.mse_loss(z_var_reconstructed, z_var)
 
-                print(self.Lm)
-
                 # print(z_var[0])
                 # print(z_var_reconstructed[0])
                 # print(self.Lm)
@@ -585,7 +583,7 @@ class Solver(object):
                     self.L_Total.backward()  # retain_graph=True: if I use an another one backward
                     self.optimizer.step()
 
-                print('-----------::::::::::::After:::::::-----------------:')
+                # print('-----------::::::::::::After:::::::-----------------:')
                 # print(self.net.encoder[0].weight[0][0])
                 # print(self.net.decoder[0].weight[0])
                 # print(self.net.E1[0].weight[0][0])
