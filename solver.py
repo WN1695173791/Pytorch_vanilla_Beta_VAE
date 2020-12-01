@@ -7,7 +7,6 @@ import torch.optim as optimizer
 import torch.nn.functional as F
 import numpy as np
 from torch.distributions.distribution import Distribution as D
-
 from torch.autograd import Variable
 
 from model import BetaVAE
@@ -463,23 +462,24 @@ class Solver(object):
                 pred_noised, prediction_partial_rand_class, prediction_random_variability, _, _, \
                 prediction_zc_zd_pert, z_var, \
                 z_var_reconstructed = self.net(data,
-                                                  both_continue=self.is_both_continue,
-                                                  both_discrete=self.is_both_discrete,
-                                                  is_partial_rand_class=self.is_partial_rand_class,
-                                                  random_percentage=self.random_percentage,
-                                                  is_E1=self.is_E1,
-                                                  is_zvar_sim_loss=self.is_zvar_sim_loss,
-                                                  var_rand=self.zvar_sim_var_rand,
-                                                  normal=self.zvar_sim_normal,
-                                                  change_zvar=self.zvar_sim_change_zvar)
+                                               both_continue=self.is_both_continue,
+                                               both_discrete=self.is_both_discrete,
+                                               is_partial_rand_class=self.is_partial_rand_class,
+                                               random_percentage=self.random_percentage,
+                                               is_E1=self.is_E1,
+                                               is_zvar_sim_loss=self.is_zvar_sim_loss,
+                                               var_rand=self.zvar_sim_var_rand,
+                                               normal=self.zvar_sim_normal,
+                                               change_zvar=self.zvar_sim_change_zvar)
 
                 # Reconstruction and Classification losses
                 # self.Lr = F.mse_loss(x_recon, data)
                 self.Lr = F.mse_loss(x_recon, data)  # pytorch default: size_average=True: averages over "each atomic
-                # element for which loss is computed for"
+                                                     # element for which loss is computed for"
                 if self.is_C:
                     # classificatino loss
-                    self.Lc = F.nll_loss(prediction_random_variability, labels)  # averaged over each loss element in the batch
+                    self.Lc = F.nll_loss(prediction_random_variability,
+                                         labels)  # averaged over each loss element in the batch
                 if self.is_partial_rand_class:
                     self.Lpc = F.nll_loss(prediction_partial_rand_class, labels)
 
@@ -520,7 +520,7 @@ class Solver(object):
 
                 # Warning: if we add a new lambda: update normalize weight !!!!
                 self.L_Total = (self.lambda_AE_normalized * self.L_AE) + (self.lambda_class_normalized * self.Lc)
-                self.L_Total_wt_weights = self.Lr + self.L_KL_var.item() + self.L_KL_struct.item() + self.Lc
+                self.L_Total_wt_weights = self.Lr + self.L_KL_var.item() + self.L_KL_struct.item() + self.Lc + self.L_AE
 
                 if self.is_zvar_sim_loss and self.zvar_sim_loss_for_all_model:
                     self.L_Total += (self.Lm * self.lambda_zvar_sim_normalized)
@@ -593,15 +593,15 @@ class Solver(object):
                 if self.global_iter % self.display_step == 0:
                     print_bar.write('epoch: [{:.1f}], vae_loss:{:.2f}, Lr:{:.2f}, L_kl:{:.2f}, L_kl_var:{:.2f}, '
                                     'L_kl_struct:{:.2f}, L_c:{:.2f}, L_pc:{:.2f}, L_m:{:.2f}'.format(
-                                     self.epochs,
-                                     self.L_Total_wt_weights.item(),
-                                     self.Lr,
-                                     self.L_KL_var.item() + self.L_KL_struct.item(),
-                                     self.L_KL_var.item(),
-                                     self.L_KL_struct.item(),
-                                     self.Lc,
-                                     self.Lpc,
-                                     self.Lm))
+                        self.epochs,
+                        self.L_Total_wt_weights.item(),
+                        self.Lr,
+                        self.L_KL_var.item() + self.L_KL_struct.item(),
+                        self.L_KL_var.item(),
+                        self.L_KL_struct.item(),
+                        self.Lc,
+                        self.Lpc,
+                        self.Lm))
 
                 # save step
                 if not self.just_train:

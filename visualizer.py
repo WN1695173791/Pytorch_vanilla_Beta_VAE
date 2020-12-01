@@ -383,7 +383,7 @@ def plot_loss_results(epochs, recon_loss_train_train, kl_disc_loss_train, kl_con
     string = 'Zvar_sim value: ' + str(last_zvar_sim_value_train.detach().numpy())
     ax.annotate(string,
                 xy=(x_ann, last_zvar_sim_value_train), xycoords='data',
-                xytext=(x_ann - 20, last_zvar_sim_value_train + 0.3), textcoords='data',
+                xytext=(x_ann - 20, last_zvar_sim_value_train + 0.03), textcoords='data',
                 size=20, va="center", ha="center",
                 bbox=dict(boxstyle="round4", fc="w"),
                 arrowprops=dict(arrowstyle="-|>",

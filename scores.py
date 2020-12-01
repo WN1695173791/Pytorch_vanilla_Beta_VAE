@@ -65,8 +65,6 @@ def compute_scores(net, loader, device, latent_spec, nb_data, is_partial_rand_cl
         for x in loader:
             i += 1
             # print("Dataset : compute sample_scores and loss: batch {}/{}".format(batch, len(loader)))
-            batch_size = len(x[0])
-
             data = x[0]
             labels = x[1]
             data = data.to(device)  # Variable(data.to(device))
@@ -186,14 +184,14 @@ def compute_scores(net, loader, device, latent_spec, nb_data, is_partial_rand_cl
                     score_Zc_pert_Zd = 0
                     score_Zc_Zd_pert = 0
     # loss
-    losses['recon_loss'] = recons_loss / nb_data
-    losses['classification_loss'] = classification_loss / nb_data
-    losses['classification_partial_rand_loss'] = classification_partial_rand_loss / nb_data
-    losses['kl_var_loss'] = kl_var_loss / nb_data
-    losses['kl_class_loss'] = kl_class_loss / nb_data
-    losses['total_kld'] = total_kld / nb_data
-    losses['beta_vae_loss'] = beta_vae_loss / nb_data
-    losses['zvar_sim_loss'] = zvar_sim_loss / nb_data
+    losses['recon_loss'] = recons_loss / i
+    losses['classification_loss'] = classification_loss / i
+    losses['classification_partial_rand_loss'] = classification_partial_rand_loss / i
+    losses['kl_var_loss'] = kl_var_loss / i
+    losses['kl_class_loss'] = kl_class_loss / i
+    losses['total_kld'] = total_kld / i
+    losses['beta_vae_loss'] = beta_vae_loss / i
+    losses['zvar_sim_loss'] = zvar_sim_loss / i
 
     mean_proba_per_class = 0
     std_proba_per_class = 0
