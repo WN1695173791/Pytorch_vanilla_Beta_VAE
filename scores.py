@@ -7,7 +7,7 @@ EPS = 1e-12
 
 def compute_scores(net, loader, device, latent_spec, nb_data, is_partial_rand_class, random_percentage, is_E1,
                    is_zvar_sim_loss, is_C, is_noise_stats, is_perturbed_score, zvar_sim_var_rand, zvar_sim_normal,
-                   zvar_sim_change_zvar):
+                   zvar_sim_change_zvar, old_weighted):
 
     """
     compute all sample_scores
@@ -90,17 +90,27 @@ def compute_scores(net, loader, device, latent_spec, nb_data, is_partial_rand_cl
                                          change_zvar=zvar_sim_change_zvar)
 
             # reconstruction loss
-            recons_loss_iter = F.mse_loss(x_recon, data)
+            if old_weighted:
+                recons_loss_iter = F.mse_loss(x_recon, data, size_average=False).div(len(data))
+            else:
+                recons_loss_iter = F.mse_loss(x_recon,
+                                     data)  # pytorch default: size_average=True: averages over "each atomic
 
             classification_loss_iter = 0
             if is_C:
-                # classification loss:
-                classification_loss_iter = F.nll_loss(prediction, labels)
+                if old_weighted:
+                    classification_loss_iter = F.nll_loss(prediction, labels, size_average=False).div(len(data))
+                else:
+                    # classification loss:
+                    classification_loss_iter = F.nll_loss(prediction, labels)
 
             # zvar_sim_loss loss:
             zvar_sim_loss_iter = 0
             if is_zvar_sim_loss:
-                zvar_sim_loss_iter = F.mse_loss(z_var_reconstructed, z_var)
+                if old_weighted:
+                    zvar_sim_loss_iter = F.mse_loss(z_var_reconstructed, z_var, size_average=False).div(len(data))
+                else:
+                    zvar_sim_loss_iter = F.mse_loss(z_var_reconstructed, z_var)
 
             # partial classification:
             classification_partial_rand_loss_iter = 0

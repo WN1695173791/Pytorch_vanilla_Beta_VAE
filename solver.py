@@ -106,7 +106,7 @@ def _kl_discrete_loss(alpha):
 def compute_scores_and_loss(net, train_loader, valid_loader, device, latent_spec, train_loader_size,
                             test_loader_size, is_partial_rand_class, random_percentage, is_E1, is_zvar_sim_loss, is_C,
                             is_noise_stats, is_perturbed_score, zvar_sim_var_rand, zvar_sim_normal,
-                            zvar_sim_change_zvar):
+                            zvar_sim_change_zvar, old_weighted):
     """
     compute some sample_scores and loss on data train and data set and save it for plot after training
     :return:
@@ -129,7 +129,8 @@ def compute_scores_and_loss(net, train_loader, valid_loader, device, latent_spec
                                                       is_perturbed_score,
                                                       zvar_sim_var_rand,
                                                       zvar_sim_normal,
-                                                      zvar_sim_change_zvar)
+                                                      zvar_sim_change_zvar,
+                                                      old_weighted)
     # print("Test:")
     scores_test, loss_test, mean_proba_per_class_test, std_proba_per_class_test, \
     mean_proba_per_class_noised_test, \
@@ -146,7 +147,8 @@ def compute_scores_and_loss(net, train_loader, valid_loader, device, latent_spec
                                                      is_perturbed_score,
                                                      zvar_sim_var_rand,
                                                      zvar_sim_normal,
-                                                     zvar_sim_change_zvar)
+                                                     zvar_sim_change_zvar,
+                                                     old_weighted)
 
     return scores_train, scores_test, loss_train, loss_test, mean_proba_per_class_train, std_proba_per_class_train, \
            mean_proba_per_class_test, std_proba_per_class_test, mean_proba_per_class_noised_train, \
@@ -220,6 +222,7 @@ class Solver(object):
         self.zvar_sim_var_rand = args.zvar_sim_var_rand
         self.zvar_sim_normal = args.zvar_sim_normal
         self.zvar_sim_change_zvar = args.zvar_sim_change_zvar
+        self.old_weighted = args.old_weighted
 
         if self.zvar_sim_loss_only_for_encoder or self.zvar_sim_loss_for_all_model:
             list_uniq_choice = [self.zvar_sim_loss_only_for_encoder, self.zvar_sim_loss_for_all_model]
@@ -233,6 +236,9 @@ class Solver(object):
                                                     "rand normal or change zvar !"
 
         self.normalize_weights = self.beta + self.lambda_class + self.lambda_AE
+        if self.old_weighted:
+            self.normalize_weights = self.beta + self.lambda_class + self.lambda_Kl_var + self.lambda_Kl_struct + \
+                                     self.lambda_recons
 
         self.lambda_Kl_var_normalized = self.lambda_Kl_var / self.normalize_weights
         self.lambda_Kl_struct_normalized = self.lambda_Kl_struct / self.normalize_weights
@@ -474,18 +480,29 @@ class Solver(object):
 
                 # Reconstruction and Classification losses
                 # self.Lr = F.mse_loss(x_recon, data)
-                self.Lr = F.mse_loss(x_recon, data)  # pytorch default: size_average=True: averages over "each atomic
-                                                     # element for which loss is computed for"
+                if self.old_weighted:
+                    self.Lr = F.mse_loss(x_recon, data, size_average=False).div(self.batch_size)
+                else:
+                    self.Lr = F.mse_loss(x_recon,
+                                         data)  # pytorch default: size_average=True: averages over "each atomic
+                    # element for which loss is computed for"
                 if self.is_C:
-                    # classificatino loss
-                    self.Lc = F.nll_loss(prediction_random_variability,
-                                         labels)  # averaged over each loss element in the batch
+                    if self.old_weighted:
+                        self.Lc = F.nll_loss(prediction_random_variability,
+                                             labels, size_average=False).div(self.batch_size)
+                    else:
+                        # classificatino loss
+                        self.Lc = F.nll_loss(prediction_random_variability,
+                                             labels)  # averaged over each loss element in the batch
                 if self.is_partial_rand_class:
                     self.Lpc = F.nll_loss(prediction_partial_rand_class, labels)
 
                 # zvar_sim_loss loss:
                 if self.is_zvar_sim_loss:
-                    self.Lm = F.mse_loss(z_var_reconstructed, z_var)
+                    if self.old_weighted:
+                        self.Lm = F.mse_loss(z_var_reconstructed, z_var, size_average=False).div(self.batch_size)
+                    else:
+                        self.Lm = F.mse_loss(z_var_reconstructed, z_var)
 
                 # print(z_var[0])
                 # print(z_var_reconstructed[0])
@@ -631,7 +648,8 @@ class Solver(object):
                                                                                        self.is_perturbed_score,
                                                                                        self.zvar_sim_var_rand,
                                                                                        self.zvar_sim_normal,
-                                                                                       self.zvar_sim_change_zvar)
+                                                                                       self.zvar_sim_change_zvar,
+                                                                                       self.old_weighted)
                         self.save_checkpoint_scores_loss()
                         self.net_mode(train=True)
 

@@ -335,6 +335,7 @@ def plot_loss_results(epochs, recon_loss_train_train, kl_disc_loss_train, kl_con
                       classification_random_continue_loss_test, classification_partial_rand_loss_train,
                       classification_partial_rand_loss_test, zvar_sim_loss_train, zvar_sim_loss_test, expe_name, is_wt_random,
                       is_both_continuous, save, partial_rand=False):
+
     fig, ax = plt.subplots(figsize=(15, 10), facecolor='w', edgecolor='k')
 
     last_zvar_sim_value_train = zvar_sim_loss_train[-1]
@@ -348,10 +349,10 @@ def plot_loss_results(epochs, recon_loss_train_train, kl_disc_loss_train, kl_con
     ax.plot(epochs, recon_loss_train_test, label='recon_loss_train_test', color='cornflowerblue')
 
     if is_both_continuous:
-        ax.plot(epochs, kl_disc_loss_train, label='kl_cont_var_train', color='gold')
+        ax.plot(epochs, kl_disc_loss_train, label='kl_cont_struct_train', color='gold')
         ax.plot(epochs, kl_cont_loss_train, label='kl_cont_var_train', color='burlywood')
         ax.plot(epochs, kl_disc_loss_test, label='kl_cont_struct_test', color='goldenrod')
-        ax.plot(epochs, kl_cont_loss_test, label='kl_cont_struct_test', color='tan')
+        ax.plot(epochs, kl_cont_loss_test, label='kl_cont_var_test', color='tan')
     else:
         ax.plot(epochs, kl_disc_loss_train, label='kl_disc_loss_train')
         ax.plot(epochs, kl_cont_loss_train, label='kl_cont_loss_train')
@@ -394,7 +395,54 @@ def plot_loss_results(epochs, recon_loss_train_train, kl_disc_loss_train, kl_con
     plt.show()
 
     if save:
-        fig.savefig("fig_results/losses/fig_losses_Test_Mnist_L3_Classifier_" + expe_name + ".png")
+       fig.savefig("fig_results/losses/fig_losses_Test_Mnist_L3_Classifier_" + expe_name + ".png")
+
+    fig, ax = plt.subplots(figsize=(15, 10), facecolor='w', edgecolor='k')
+    ax.set(xlabel='nb_iter', ylabel='Loss',
+           title=('MNIST loss: ' + expe_name))  # ylim=(0,1))
+
+    ax.plot(epochs, recon_loss_train_train, label='recon_loss_train_train', color='royalblue')
+    ax.plot(epochs, recon_loss_train_test, label='recon_loss_train_test', color='cornflowerblue')
+
+    ax.plot(epochs, classification_random_continue_loss_train, label='classification_random_continue_loss_train',
+            color='dodgerblue')
+    ax.plot(epochs, classification_random_continue_loss_test, label='classification_random_continue_loss_test',
+            color='deepskyblue')
+
+    ax.plot(epochs, zvar_sim_loss_train, label='zvar_sim train', color='green')
+    ax.plot(epochs, zvar_sim_loss_test, label='zvar_sim test', color='darkgreen')
+
+    ax.legend(loc=1)
+    plt.show()
+
+    if save:
+        fig.savefig("fig_results/losses/fig_losses_Test_Mnist_L3_Classifier_zvar_recons_" + expe_name + ".png")
+
+    fig, ax = plt.subplots(figsize=(15, 10), facecolor='w', edgecolor='k')
+    ax.set(xlabel='nb_iter', ylabel='Loss',
+           title=('MNIST loss: ' + expe_name))  # ylim=(0,1))
+
+    ax.plot(epochs, zvar_sim_loss_train, label='zvar_sim train', color='green')
+    ax.plot(epochs, zvar_sim_loss_test, label='zvar_sim test', color='darkgreen')
+
+    ax.legend(loc=1)
+    plt.show()
+
+    if save:
+        fig.savefig("fig_results/losses/fig_losses_Test_Mnist_L3_Classifier_zvar_" + expe_name + ".png")
+
+    fig, ax = plt.subplots(figsize=(15, 10), facecolor='w', edgecolor='k')
+    ax.set(xlabel='nb_iter', ylabel='Loss',
+           title=('MNIST loss: ' + expe_name))  # ylim=(0,1))
+
+    ax.plot(epochs, recon_loss_train_train, label='recon_loss_train_train', color='royalblue')
+    ax.plot(epochs, recon_loss_train_test, label='recon_loss_train_test', color='cornflowerblue')
+
+    ax.legend(loc=1)
+    plt.show()
+
+    if save:
+        fig.savefig("fig_results/losses/fig_losses_Test_Mnist_L3_Classifier_recons_" + expe_name + ".png")
 
     return
 

@@ -83,6 +83,7 @@ if __name__ == "__main__":
                                                                                      'and decoder')
     parser.add_argument('--zvar_sim_loss_for_all_model', default=False, type=str2bool, help='If the zvar_sim_loss loss is propagate in'
                                                                                      ' all the model')
+    parser.add_argument('--old_weighted', default=False, type=str2bool, help='If the old_weighted')
 
     # --- Params to VAnilla VAE test:
     parser.add_argument('--hidden_filters_layer1', type=int, default=32, metavar='integer value',
