@@ -10,6 +10,8 @@ import matplotlib
 from captum.attr import LayerConductance
 from sample_scores.FID_score.fid_score import calculate_fid_given_paths
 from sample_scores.inception_score import inception_score
+import math
+
 
 
 def psnr_metric(mse):
@@ -277,6 +279,35 @@ def latent_real_img_traversal(net, nb_epochs, path, expe_name, latent_spec, batc
     return
 
 
+def joint_latent_traversal(net, nb_epochs, path, expe_name, latent_spec, batch, img_size, indx_image=None,
+                                  both_continue=True, is_partial_rand_class=False, is_E1=False,
+                                  size_struct=8, size_var=8, save=False, real_img=False):
+
+    file_path = os.path.join(path, expe_name, 'last')
+    checkpoint = torch.load(file_path, map_location=torch.device('cpu'))
+    net.load_state_dict(checkpoint['net'])
+
+    viz = Viz(net, img_size, latent_spec)
+    viz.save_images = False
+
+    traversals  = viz.joint_latent_traversal(batch, size_struct=size_struct, size_var=size_var,
+                                                            both_continue=both_continue, indx_image=indx_image,
+                                                            is_partial_rand_class=is_partial_rand_class, is_E1=is_E1,
+                                             real_img=real_img)
+    fig, ax = plt.subplots(figsize=(15, 10), facecolor='w', edgecolor='k')
+    traversals = traversals.permute(1, 2, 0)
+    ax.set(title=('both latent (real img={}) traversal: {}'.format(real_img, expe_name)))
+    fig_size = traversals.shape
+    plt.imshow(traversals.numpy())
+
+    plt.show()
+
+    if save:
+        fig.savefig("fig_results/traversal_latent/fig_both_traversal_latent_" + "_" + expe_name + ".png")
+
+    return
+
+
 def plot_traversal_joint(net, path, expe_name, latent_spec, cont_idx, disc_idx, img_size, batch=None, real_im=False,
                          nb_samples=1, size=(10, 10)):
     file_path = os.path.join(path, expe_name, 'last')
@@ -521,7 +552,8 @@ def plot_all(net, expe_name, path, path_scores, bacth, latent_spec, both_continu
 
 
 def real_distribution_model(net, path_expe, expe_name, loader, latent_spec, train_test, is_both_continue=False,
-                            is_both_discrete=False, is_partial_rand_class=False, is_E1=False, is_zvar_sim_loss=False):
+                            is_both_discrete=False, is_partial_rand_class=False, is_E1=False, is_zvar_sim_loss=False,
+                            plot_gaussian=False, save=False):
 
     path = 'Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test + '_mu_var.npy'
 
@@ -587,25 +619,57 @@ def real_distribution_model(net, path_expe, expe_name, loader, latent_spec, trai
         np.save('Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test +
                 'sigma_struct.npy', sigma_struct)
 
-    else:
-        mu_var = np.load('Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test +
-                         '_mu_var.npy', allow_pickle=True)
-        mu_struct = np.load('Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test +
-                         'mu_struct.npy', allow_pickle=True)
-        sigma_var = np.load('Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test +
-                         'sigma_var.npy', allow_pickle=True)
-        sigma_struct = np.load('Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test +
-                         'sigma_struct.npy', allow_pickle=True)
+    mu_var = np.load('Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test +
+                     '_mu_var.npy', allow_pickle=True)
+    mu_struct = np.load('Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test +
+                     'mu_struct.npy', allow_pickle=True)
+    sigma_var = np.load('Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test +
+                     'sigma_var.npy', allow_pickle=True)
+    sigma_struct = np.load('Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test +
+                     'sigma_struct.npy', allow_pickle=True)
 
-    print(mu_var, mu_struct, sigma_var, sigma_struct)
+    if plot_gaussian:
+        mu = 0
+        variance = 1
+        sigma = math.sqrt(variance)
+        x = np.linspace(mu - 3 * sigma, mu + 3 * sigma, 100)
+
+        mu_mean_real_var = np.mean(mu_var, axis=0)
+        variance_mean_real_var = np.mean(sigma_var, axis=0)
+        sigma_mean_real_var = math.sqrt(np.abs(variance_mean_real_var))
+        x_mean_real_var = np.linspace(mu_mean_real_var - 3 * sigma_mean_real_var,
+                                      mu_mean_real_var + 3 * sigma_mean_real_var, 100)
+
+        mu_mean_real_struct = np.mean(mu_struct, axis=0)
+        variance_mean_real_struct = np.mean(sigma_struct, axis=0)
+        sigma_mean_real_struct = math.sqrt(np.abs(variance_mean_real_struct))
+        x_mean_real_struct = np.linspace(mu_mean_real_struct - 3 * sigma_mean_real_struct,
+                                         mu_mean_real_struct + 3 * sigma_mean_real_struct, 100)
+
+        mu_mean_real = (mu_mean_real_var + mu_mean_real_struct)/2
+        variance_mean_real = (variance_mean_real_var + variance_mean_real_struct)/2
+        sigma_mean_real = math.sqrt(np.abs(variance_mean_real))
+        x_mean_real = np.linspace(mu_mean_real - 3 * sigma_mean_real,
+                                  mu_mean_real + 3 * sigma_mean_real, 100)
+
+        fig, ax = plt.subplots(figsize=(15, 10), facecolor='w', edgecolor='k')
+        ax.set(title=('Gaussian: ' + expe_name + "_" + train_test))
+
+        ax.plot(x_mean_real_var, stats.norm.pdf(x_mean_real_var, mu_mean_real_var, sigma_mean_real_var),
+                label='mean real zvar', color='blue')
+        ax.plot(x_mean_real_struct, stats.norm.pdf(x_mean_real_struct, mu_mean_real_struct, sigma_mean_real_struct),
+                label='mean real zstruct', color='green')
+        ax.plot(x_mean_real, stats.norm.pdf(x_mean_real, mu_mean_real, sigma_mean_real),
+                label='mean real zstruct', color='orange')
+        ax.plot(x, stats.norm.pdf(x, mu, sigma), label='Gaussian (0, I)', color='red')
+
+        ax.legend(loc=1)
+        plt.show()
+
+        if save:
+            fig.savefig("fig_results/plot_distribution/fig_tplot_distribution_" + expe_name + "_" + train_test + ".png")
 
     return mu_var, mu_struct, sigma_var, sigma_struct
-
-
-def generate_img_real_distribution():
-
-
-    return
 
 
 def plot_Acc_each_class(one_bit_rand_mean_pred_train, one_bit_rand_std_pred_train, one_bit_rand_mean_pred_test,

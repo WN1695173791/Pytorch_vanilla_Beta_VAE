@@ -164,10 +164,9 @@ class Visualizer:
                     return make_grid(comparison.data, nrow=size[
                         0]), None, None, x_recon, recon_loss.item(), recons_random_variability_loss, recons_random_class_loss
 
-
     def zvar_randn_generation(self, data, size=(8, 8), both_continue=False,
-                        both_discrete=False, partial_reconstruciton=False, is_partial_rand_class=False,
-                        return_loss=False, is_E1=False):
+                              both_discrete=False, partial_reconstruciton=False, is_partial_rand_class=False,
+                              return_loss=False, is_E1=False):
 
         batch_size = data.size(0)
         nb_pixels = self.img_size[1] * self.img_size[2]
@@ -191,8 +190,6 @@ class Visualizer:
                                          is_E1=is_E1)
 
         self.model.train()
-
-
 
         return
 
@@ -409,6 +406,70 @@ class Visualizer:
         generated = self._decode_latents(torch.cat(latent_samples, dim=0))
 
         return make_grid(generated.data, nrow=size), x_recons, batch_chairs[indx], indx_same_composante
+
+    def joint_latent_traversal(self, batch_chairs, size_struct=8, size_var=8,
+                               both_continue=False, indx_image=None,
+                               both_discrete=False, is_partial_rand_class=False, is_E1=False, real_img=False):
+
+        if real_img:
+            samples = []
+
+            self.model.eval()
+            # Pass data through VAE to obtain reconstruction
+            with torch.no_grad():
+                input_data = batch_chairs
+            if torch.cuda.is_available():
+                input_data = input_data.cuda()
+
+            x_recon, recons_random_variability, recons_random_class, latent_dist, latent_sample, \
+            latent_sample_variability, latent_sample_class, latent_sample_random_continue, prediction, pred_noised, \
+            prediction_partial_rand_class, prediction_random_variability, prediction_random_class, \
+            prediction_zc_pert_zd, prediction_zc_zd_pert, z_var, \
+            z_var_reconstructed = self.model(input_data,
+                                             reconstruction_rand=True,
+                                             both_continue=both_continue,
+                                             both_discrete=both_discrete,
+                                             is_partial_rand_class=is_partial_rand_class,
+                                             is_E1=is_E1)
+            self.model.train()
+
+            for i in range(size_struct):
+                sample = []
+                indx = np.random.randint(0, len(latent_sample))
+                img_latent = latent_sample[indx]
+                z_struct = img_latent[self.latent_class_dim:].unsqueeze(dim=0)
+                z_struct_fixe = torch.tensor(np.expand_dims(np.repeat(z_struct.detach().numpy(), size_var, axis=0),
+                                                            axis=0))  # shape: (1, size_var, latent_class_dim)
+                z_var_rand = torch.randn((1, size_var, self.latent_var_dim))
+
+                sample.append(z_var_rand)
+                sample.append(z_struct_fixe)
+                sample = torch.cat(sample, dim=2)  # shape: (1, size, latent_dim)
+                samples.append(sample)
+
+            samples = torch.cat(samples, dim=0)
+            samples = torch.Tensor(samples.reshape((size_var * size_struct, self.latent_dim)))
+            generated = self._decode_latents(samples.unsqueeze(dim=0))
+
+        else:
+            samples = []
+            for i in range(size_struct):
+                sample = []
+                z_struct = torch.randn(size=(1, self.latent_class_dim))
+                z_struct_fixe = torch.tensor(np.expand_dims(np.repeat(z_struct.detach().numpy(), size_var, axis=0),
+                                        axis=0))  # shape: (1, size_var, latent_class_dim)
+                z_var_rand = torch.randn((1, size_var, self.latent_var_dim))
+
+                sample.append(z_var_rand)
+                sample.append(z_struct_fixe)
+                sample = torch.cat(sample, dim=2)  # shape: (1, size, latent_dim)
+                samples.append(sample)
+
+            samples = torch.cat(samples, dim=0)
+            samples = torch.Tensor(samples.reshape((size_var*size_struct, self.latent_dim)))
+            generated = self._decode_latents(samples.unsqueeze(dim=0))
+
+        return make_grid(generated.data, nrow=size_var)
 
     """
     def joint_latent_real_img_traversal(self, batch_chairs, size=8, cont_indx=0, disc_indx=0, nb_samples=5):

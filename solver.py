@@ -50,13 +50,13 @@ def kl_divergence(mu, logvar):
     # https://arxiv.org/abs/1312.6114
     # - D_{KL} = 0.5 * sum(1 + log(sigma^2) - mu^2 - sigma^2)
     # note the negative D_{KL} in appendix B of the paper
-    KLD = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp(), dim=1)
-    KLD = torch.mean(KLD, dim=0)
+    klds = -0.5 * (1 + logvar - mu.pow(2) - logvar.exp())
+    total_kld = klds.sum(1).mean(0, True)
     # Normalise by same number of elements as in reconstruction
     # KLD /= nb_pixels
     # BCE tries to make our reconstruction as accurate as possible
     # KLD tries to push the distributions as close as possible to unit Gaussian
-    return KLD
+    return total_kld
 
 
 def _kl_multiple_discrete_loss(alphas):
@@ -246,7 +246,7 @@ class Solver(object):
         self.beta_normalized = self.beta / self.normalize_weights
         self.lambda_class_normalized = self.lambda_class / self.normalize_weights
         self.lambda_partial_class_normalized = self.lambda_partial_class / self.normalize_weights
-        self.lambda_zvar_sim_normalized = self.lambda_zvar_sim  # we didn't normalize it because this loss is used alone
+        self.lambda_zvar_sim_normalized = self.lambda_zvar_sim / self.normalize_weights
         self.lambda_AE_normalized = self.lambda_AE / self.normalize_weights
 
         self.four_conv = True
