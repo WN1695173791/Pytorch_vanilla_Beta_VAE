@@ -6,8 +6,6 @@ import torch
 import torch.optim as optimizer
 import torch.nn.functional as F
 import numpy as np
-from torch.distributions.distribution import Distribution as D
-from torch.autograd import Variable
 
 from model import BetaVAE
 from dataset.dataset_2 import get_dataloaders
@@ -532,12 +530,23 @@ class Solver(object):
                         self.L_KL_struct = kl_disc_loss
 
                 # Calculate total kl value to record it
-                self.L_KL = self.beta_normalized * (self.L_KL_var.item() + self.L_KL_struct.item())
-                self.L_AE = self.L_KL + self.Lr
+                if self.old_weighted:
+                    self.L_KL = (self.lambda_Kl_var_normalized * self.L_KL_var.item()) + \
+                                (self.lambda_Kl_struct_normalized * self.L_KL_struct.item())
 
-                # Warning: if we add a new lambda: update normalize weight !!!!
-                self.L_Total = (self.lambda_AE_normalized * self.L_AE) + (self.lambda_class_normalized * self.Lc)
-                self.L_Total_wt_weights = self.Lr + self.L_KL_var.item() + self.L_KL_struct.item() + self.Lc + self.L_AE
+                    self.L_Total = (self.lambda_recons_normalized * self.Lr) + \
+                                   (self.beta_normalized * self.L_KL) + \
+                                   (self.lambda_class_normalized * self.Lc) + \
+                                   (self.lambda_partial_class_normalized * self.Lpc)
+
+                    self.L_Total_wt_weights = self.Lr + self.L_KL_var.item() + self.L_KL_struct.item() + self.Lc + self.Lpc
+                else:
+                    self.L_KL = self.beta_normalized * (self.L_KL_var.item() + self.L_KL_struct.item())
+                    self.L_AE = self.L_KL + self.Lr
+
+                    # Warning: if we add a new lambda: update normalize weight !!!!
+                    self.L_Total = (self.lambda_AE_normalized * self.L_AE) + (self.lambda_class_normalized * self.Lc)
+                    self.L_Total_wt_weights = self.Lr + self.L_KL_var.item() + self.L_KL_struct.item() + self.Lc + self.L_AE
 
                 if self.is_zvar_sim_loss and self.zvar_sim_loss_for_all_model:
                     self.L_Total += (self.Lm * self.lambda_zvar_sim_normalized)
