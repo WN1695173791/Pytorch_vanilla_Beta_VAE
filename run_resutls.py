@@ -140,18 +140,28 @@ indx_image = 0
 mnist_VAE_class_E1_zvar_sim_best = ['VAE_class_E1_MSE_41', 'VAE_Cass_E1_Zvarsim_tune_WLr_25',
                                     'VAE_Cass_E1_Zvarsim_tune_WLr_112', 'VAE_Cass_E1_Zvarsim_tune_WLzvar_44']
 
-mnist_VAE_class_E1_zvar_test_strat_1 = ['VAE_full_zvar_sim_strategie_1_expe_21',
-                                        'VAE_full_zvar_sim_strategie_1_expe_22']
-
-mnist_VAE_class_E1_zvar_test_strat_2 = ['VAE_full_zvar_sim_strategie_2_expe_21',
-                                        'VAE_full_zvar_sim_strategie_2_expe_22']
-
-mnist_VAE_class_E1_zvar_test_strat_3 = ['VAE_full_zvar_sim_strategie_3_expe_21',
-                                        'VAE_full_zvar_sim_strategie_3_expe_22']
-
-mnist_VAE_class_E1_zvar_test_strat_1_old_w = ['VAE_full_zvar_sim_strategie_1_old_w_expe_1',
+mnist_VAE_class_E1_zvar_test_strat_old_w = ['VAE_full_zvar_sim_strategie_1_old_w_expe_1',
+                                              'VAE_full_zvar_sim_strategie_1_old_w_expe_2',
+                                              'VAE_full_zvar_sim_strategie_1_old_w_expe_3',
+                                              'VAE_full_zvar_sim_strategie_1_old_w_expe_4',
+                                              'VAE_full_zvar_sim_strategie_1_old_w_expe_5',
+                                              'VAE_full_zvar_sim_strategie_1_old_w_expe_6',
                                               'VAE_full_zvar_sim_strategie_2_old_w_expe_1',
-                                              'VAE_full_zvar_sim_strategie_3_old_w_expe_1']
+                                              'VAE_full_zvar_sim_strategie_2_old_w_expe_2',
+                                              'VAE_full_zvar_sim_strategie_2_old_w_expe_3',
+                                              'VAE_full_zvar_sim_strategie_2_old_w_expe_4',
+                                              'VAE_full_zvar_sim_strategie_2_old_w_expe_5',
+                                              'VAE_full_zvar_sim_strategie_2_old_w_expe_6',
+                                              'VAE_full_zvar_sim_strategie_3_old_w_expe_1',
+                                              'VAE_full_zvar_sim_strategie_3_old_w_expe_2',
+                                              'VAE_full_zvar_sim_strategie_3_old_w_expe_3',
+                                              'VAE_full_zvar_sim_strategie_3_old_w_expe_4',
+                                              'VAE_full_zvar_sim_strategie_3_old_w_expe_5',
+                                              'VAE_full_zvar_sim_strategie_3_old_w_expe_6']
+
+mnist_VAE_class_E1_zvar_test_strat_old_w_to_compare = ['VAE_full_zvar_sim_strategie_1_old_w_expe_5',
+                                                       'VAE_full_zvar_sim_strategie_2_old_w_expe_5',
+                                                       'VAE_full_zvar_sim_strategie_3_old_w_expe_5']
 
 is_zvar_sim_loss = True
 is_partial_rand_class = False
@@ -170,11 +180,11 @@ net = BetaVAE(latent_spec, nb_class, is_C, device, nc=nc, four_conv=four_conv, s
               is_E1=is_E1, E1_conv=E1_conv, BN=BN)
 
 z_component_traversal = np.arange(latent_spec['cont_var'] + latent_spec['cont_class'])
-for expe in mnist_VAE_class_E1_zvar_test_strat_1:
+for expe in mnist_VAE_class_E1_zvar_test_strat_old_w_to_compare:
     expe_name = expe
     net_trained, _, nb_epochs = get_checkpoints(net, path, expe_name)
-    # visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, path_scores=path_scores,
-    #          is_partial_rand_class=is_partial_rand_class, save=True, scores_and_losses=True, is_E1=is_E1, losses=True)
+    visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, path_scores=path_scores,
+             is_partial_rand_class=is_partial_rand_class, save=True, scores_and_losses=True, is_E1=is_E1, losses=True)
     # visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, nb_epochs=nb_epochs, path=path,
     #           save=True, batch=batch, plot_sample=True, FID=True, IS=True, psnr=False)
     # visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, nb_epochs=nb_epochs,
@@ -188,13 +198,12 @@ for expe in mnist_VAE_class_E1_zvar_test_strat_1:
     #          is_E1=is_E1)
     # visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, all_prototype=True,
     #           is_partial_rand_class=is_partial_rand_class, save=True, is_E1=is_E1)
-    visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, path=path, save=True,
-              is_partial_rand_class=is_partial_rand_class, is_E1=is_E1, real_distribution=True, plot_gaussian=True)
+    # visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, path=path, save=True,
+    #           is_partial_rand_class=is_partial_rand_class, is_E1=is_E1, real_distribution=True, plot_gaussian=True)
     # visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, batch=batch,
     #           path=path, real_img=False, size_struct=10, size_var=8,
     #           is_partial_rand_class=is_partial_rand_class, save=True, is_E1=is_E1,
     #           plot_img_traversal=True, both_latent_traversal=True)
-    break
 
 """
 # _____________ VAE 5 5 + class + E1 + zvar_sim ________________

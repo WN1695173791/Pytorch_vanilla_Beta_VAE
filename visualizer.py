@@ -369,6 +369,13 @@ def plot_loss_results(epochs, recon_loss_train_train, kl_disc_loss_train, kl_con
 
     fig, ax = plt.subplots(figsize=(15, 10), facecolor='w', edgecolor='k')
 
+    # beta_vae_loss_train = np.array(beta_vae_loss_train)
+    # beta_vae_loss_test = np.array(beta_vae_loss_test)
+    # zvar_sim_loss_train = np.array(zvar_sim_loss_train)
+    # zvar_sim_loss_test = np.array(zvar_sim_loss_test)
+    # beta_vae_loss_train = beta_vae_loss_train - zvar_sim_loss_train
+    # beta_vae_loss_test = beta_vae_loss_test - zvar_sim_loss_test
+
     last_zvar_sim_value_train = zvar_sim_loss_train[-1]
     last_zvar_sim_value_test = zvar_sim_loss_test[-1]
     x_ann = epochs[-1]
@@ -412,7 +419,7 @@ def plot_loss_results(epochs, recon_loss_train_train, kl_disc_loss_train, kl_con
 
     ax.legend(loc=1)
 
-    string = 'Zvar_sim value: ' + str(last_zvar_sim_value_train.detach().numpy())
+    string = 'Zvar_sim value: ' + str(last_zvar_sim_value_train)  # last_zvar_sim_value_train.detach().numpy())
     ax.annotate(string,
                 xy=(x_ann, last_zvar_sim_value_train), xycoords='data',
                 xytext=(x_ann - 20, last_zvar_sim_value_train + 0.03), textcoords='data',

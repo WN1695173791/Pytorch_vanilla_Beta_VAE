@@ -583,6 +583,8 @@ class Solver(object):
                                                         lr=self.lr)
                         # backward zvar_sim loss:
                         self.optimizer.zero_grad()
+                        # print('lmmmmmmmmmmmmmmmmmmmmmm', self.Lm)
+                        # print('lmmwwwwwwwwwwwwwwwwwwwwwwwwwwww', self.Lm * self.lambda_zvar_sim_normalized)
                         (self.Lm * self.lambda_zvar_sim_normalized).backward()
                         self.optimizer.step()
 
@@ -788,7 +790,7 @@ class Solver(object):
             self.global_iter = checkpoint['iter']
             self.epochs = checkpoint['epochs']
             self.net.load_state_dict(checkpoint['net'])
-            self.optimizer.load_state_dict(checkpoint['optimizer'])
+            # self.optimizer.load_state_dict(checkpoint['optimizer'])
             print("=> loaded checkpoint '{} (iter {})'".format(file_path, self.global_iter))
         else:
             print("=> no checkpoint found at '{}'".format(file_path))
