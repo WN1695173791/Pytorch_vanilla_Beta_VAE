@@ -228,10 +228,11 @@ class Solver(object):
                 iter(list_uniq_choice)), "We must have only one choice for zvar_sim_loss propagation: in all the " \
                                          "model, in only encoder or in encoder and decoder !"
 
-        list_uniq_choice_zvar_strategie = [self.zvar_sim_var_rand, self.zvar_sim_normal, self.zvar_sim_change_zvar]
-        assert any(
-            iter(list_uniq_choice_zvar_strategie)), "We must have only one choice for zvar_sim_loss strategie: zvar " \
-                                                    "rand normal or change zvar !"
+        if self.zvar_sim_var_rand or self.zvar_sim_normal or self.zvar_sim_change_zvar:
+            list_uniq_choice_zvar_strategie = [self.zvar_sim_var_rand, self.zvar_sim_normal, self.zvar_sim_change_zvar]
+            assert any(
+                iter(list_uniq_choice_zvar_strategie)), "We must have only one choice for zvar_sim_loss strategie: zvar " \
+                                                        "rand normal or change zvar !"
 
         self.normalize_weights = self.beta + self.lambda_class + self.lambda_AE
         if self.old_weighted:

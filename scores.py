@@ -138,9 +138,8 @@ def compute_scores(net, loader, device, latent_spec, nb_data, is_partial_rand_cl
                     kl_class_loss_iter = kl_disc_loss
 
             total_kld_iter = kl_var_loss_iter + kl_class_loss_iter
-
             beta_vae_loss_iter = recons_loss_iter + total_kld_iter + classification_loss_iter + \
-                                 classification_partial_rand_loss_iter + zvar_sim_loss_iter
+                                 classification_partial_rand_loss_iter
 
             recons_loss += recons_loss_iter.item()
             classification_loss += classification_loss_iter
