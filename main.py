@@ -43,7 +43,7 @@ if __name__ == "__main__":
     parser.add_argument('--train', default=True, type=str2bool, help='train or traverse')
     parser.add_argument('--seed', default=1, type=int, help='random seed')
     parser.add_argument('--cuda', default=True, type=str2bool, help='enable cuda')
-    parser.add_argument('--max_iter', default=1e12, type=float, help='maximum training iteration')
+    parser.add_argument('--max_iter', default=500, type=float, help='maximum training iteration')
     parser.add_argument('--batch_size', default=64, type=int, help='batch size')
     parser.add_argument('--random_percentage', default=0.2, type=float, help='random_percentage')
 
@@ -96,6 +96,8 @@ if __name__ == "__main__":
                         help='stride_size')
     parser.add_argument('--kernel_size', type=int, default=4, metavar='integer value',
                         help='kernel_size')
+    parser.add_argument('--adapt_lr', default=False, type=str2bool, help='if we multily lr by element number (to adapt'
+                                                                         ' expes with old expes)')
     # ------------------------------------
 
     parser.add_argument('--is_perturbed_score', default=False, type=str2bool, help='Compute stat with z perturbed '
@@ -123,7 +125,7 @@ if __name__ == "__main__":
                                                                   'beta-VAE')
     parser.add_argument('--C_max', default=25, type=float, help='capacity parameter(C) of bottleneck channel')
     parser.add_argument('--C_stop_iter', default=1e5, type=float, help='when to stop increasing the capacity')
-    parser.add_argument('--lr', default=1e-5, type=float, help='learning rate')
+    parser.add_argument('--lr', default=1e-3, type=float, help='learning rate')
     parser.add_argument('--beta1', default=0.9, type=float, help='Adam optimizer beta1')
     parser.add_argument('--beta2', default=0.999, type=float, help='Adam optimizer beta2')
 

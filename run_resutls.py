@@ -4,10 +4,6 @@ from dataset.dataset_2 import get_dataloaders
 
 from visualizer import *
 
-import sys
-sys.path.insert(0, "captum/captum/insights/lenses")
-import lenses
-
 
 def compute_heatmap(net_trained, train_loader, test_loader, latent_spec, device, expe_name):
     compute_heatmap_avg(train_loader, net_trained, latent_spec, device, expe_name, 'train', save=True, captum=False,
@@ -194,7 +190,7 @@ for expe in mnist_VAE_class_E1_5_5:
     #           save=True, batch=batch, plot_sample=True, FID=True, IS=True, psnr=False, sample_real=True)
 
 """
-"""
+
 # _______________________________Expe test vanilla VAE + Class + E1 + zvar_sim_____________________________________
 
 mnist_VAE_class_E1_zvar_sim_best = ['VAE_class_E1_MSE_41', 'VAE_Cass_E1_Zvarsim_tune_WLr_25',
@@ -282,7 +278,7 @@ for expe in mnist_VAE_class_E1_zvar_old_w:
     # visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, nb_epochs=nb_epochs, path=path,
     #           save=True, batch=batch, plot_sample=True, FID=True, IS=True, psnr=False, sample_real=True)
 
-
+"""
 # _____________ VAE 5 5 + class + E1 + zvar_sim ________________
 latent_spec = {'cont_var': 5, 'cont_class': 5}
 BN = True

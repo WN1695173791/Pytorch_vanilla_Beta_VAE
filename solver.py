@@ -221,6 +221,7 @@ class Solver(object):
         self.zvar_sim_normal = args.zvar_sim_normal
         self.zvar_sim_change_zvar = args.zvar_sim_change_zvar
         self.old_weighted = args.old_weighted
+        self.adapt_lr = args.adapt_lr
 
         if self.zvar_sim_loss_only_for_encoder or self.zvar_sim_loss_for_all_model:
             list_uniq_choice = [self.zvar_sim_loss_only_for_encoder, self.zvar_sim_loss_for_all_model]
@@ -238,7 +239,8 @@ class Solver(object):
             self.normalize_weights = self.beta + self.lambda_class + self.lambda_Kl_var + self.lambda_Kl_struct + \
                                      self.lambda_recons
         else:
-            self.normalize_weights = self.beta + self.lambda_class + self.lambda_VAE
+            self.normalize_weights = (self.lambda_VAE * self.lambda_Kl_var) + (self.lambda_VAE * self.lambda_Kl_struct)\
+                                     + self.lambda_class
 
         self.lambda_Kl_var_normalized = self.lambda_Kl_var / self.normalize_weights
         self.lambda_Kl_struct_normalized = self.lambda_Kl_struct / self.normalize_weights
@@ -246,7 +248,7 @@ class Solver(object):
         self.beta_normalized = self.beta / self.normalize_weights
         self.lambda_class_normalized = self.lambda_class / self.normalize_weights
         self.lambda_partial_class_normalized = self.lambda_partial_class / self.normalize_weights
-        self.lambda_zvar_sim_normalized = self.lambda_zvar_sim / self.normalize_weights
+        self.lambda_zvar_sim_normalized = self.lambda_zvar_sim
         self.lambda_VAE_normalized = self.lambda_VAE / self.normalize_weights
 
         self.four_conv = True
@@ -445,6 +447,11 @@ class Solver(object):
             self.load_checkpoint('last')
 
         self.loop = 0
+        self.i = 0
+
+        if not self.old_weighted and self.adapt_lr:
+            self.lr = self.lr * self.nb_pixels  # we adapt lr to compare with old expe: indeed, in new expe we compute
+            # loss by element, but before we commputed loss by image (1024 mroe big).
 
     def train(self):
         self.net_mode(train=True)
@@ -692,7 +699,7 @@ class Solver(object):
                                                                   self.scores_train['Zc_Zd_pert'],
                                                                   self.scores_test['Zc_Zd_pert']))
 
-                if self.global_iter >= self.max_iter:
+                if self.epochs >= self.max_iter:
                     out = True
                     break
 
