@@ -117,7 +117,7 @@ if __name__ == "__main__":
     parser.add_argument('--lambda_Kl_var', default=1, type=float, help='lambda_Kl_cont parameter for Kl_cont loss')
     parser.add_argument('--lambda_Kl_struct', default=1, type=float, help='lambda_Kl_disc parameter for Kl_disc loss')
     parser.add_argument('--lambda_partial_class', default=1, type=float, help='lambda_class_partial_rand parameter for loss')
-    parser.add_argument('--lambda_AE', default=1, type=float, help='lambda for autoencoder parameter for loss')
+    parser.add_argument('--lambda_VAE', default=1, type=float, help='lambda for autoencoder parameter for loss')
     # ---------------------------------------------------
     parser.add_argument('--gamma', default=1000, type=float, help='gamma parameter for KL-term in understanding '
                                                                   'beta-VAE')

@@ -193,7 +193,8 @@ class Visualizer:
 
         return
 
-    def samples(self, size=(8, 8), filename='samples.png', both_continue=False, both_discrete=False):
+    def samples(self, size=(8, 8), filename='samples.png', both_continue=False, both_discrete=False,
+                real_distribution=False, mu=None, var=None):
         """
         Generates samples from learned distribution by sampling prior and
         decoding.
@@ -206,7 +207,10 @@ class Visualizer:
                                                             both_discrete=both_discrete)
         self.latent_traverser.sample_prior = cached_sample_prior
 
-        sample = np.random.normal(size=(size[0] * size[1], self.latent_dim))
+        if real_distribution:
+            sample = np.random.normal(mu, var, size=(size[0] * size[1], self.latent_dim))
+        else:
+            sample = np.random.normal(size=(size[0] * size[1], self.latent_dim))
         """
         logvar = torch.tensor(np.random.rand(size[0]*size[1], self.latent_dim))
         mu = torch.tensor(np.random.rand(size[0] * size[1], self.latent_dim))

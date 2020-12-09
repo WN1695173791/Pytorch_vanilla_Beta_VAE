@@ -193,7 +193,7 @@ class Solver(object):
         self.lambda_Kl_struct = args.lambda_Kl_struct
         self.lambda_partial_class = args.lambda_partial_class
         self.lambda_zvar_sim = args.lambda_zvar_sim
-        self.lambda_AE = args.lambda_AE
+        self.lambda_VAE = args.lambda_VAE
         self.display_step = args.display_step
         self.save_step = args.save_step
         self.dset_dir = args.dset_dir
@@ -234,10 +234,11 @@ class Solver(object):
                 iter(list_uniq_choice_zvar_strategie)), "We must have only one choice for zvar_sim_loss strategie: zvar " \
                                                         "rand normal or change zvar !"
 
-        self.normalize_weights = self.beta + self.lambda_class + self.lambda_AE
         if self.old_weighted:
             self.normalize_weights = self.beta + self.lambda_class + self.lambda_Kl_var + self.lambda_Kl_struct + \
                                      self.lambda_recons
+        else:
+            self.normalize_weights = self.beta + self.lambda_class + self.lambda_VAE
 
         self.lambda_Kl_var_normalized = self.lambda_Kl_var / self.normalize_weights
         self.lambda_Kl_struct_normalized = self.lambda_Kl_struct / self.normalize_weights
@@ -246,7 +247,7 @@ class Solver(object):
         self.lambda_class_normalized = self.lambda_class / self.normalize_weights
         self.lambda_partial_class_normalized = self.lambda_partial_class / self.normalize_weights
         self.lambda_zvar_sim_normalized = self.lambda_zvar_sim / self.normalize_weights
-        self.lambda_AE_normalized = self.lambda_AE / self.normalize_weights
+        self.lambda_VAE_normalized = self.lambda_VAE / self.normalize_weights
 
         self.four_conv = True
         if args.dataset.lower() == 'dsprites':
@@ -443,7 +444,7 @@ class Solver(object):
             self.load_checkpoint_scores('last')
             self.load_checkpoint('last')
 
-        self.i = 0
+        self.loop = 0
 
     def train(self):
         self.net_mode(train=True)
@@ -452,6 +453,11 @@ class Solver(object):
         print_bar = tqdm(total=self.max_iter)
         print_bar.update(self.epochs)
         while not out:
+            self.loop += 1
+            if self.loop % 2 == 0:  # if pair loop
+                self.i = 0
+            else:  # if impair loop
+                self.i = 1
             for data, labels in self.train_loader:
                 torch.autograd.set_detect_anomaly(True)
 
@@ -546,7 +552,7 @@ class Solver(object):
                     self.L_AE = self.L_KL + self.Lr
 
                     # Warning: if we add a new lambda: update normalize weight !!!!
-                    self.L_Total = (self.lambda_AE_normalized * self.L_AE) + (self.lambda_class_normalized * self.Lc)
+                    self.L_Total = (self.lambda_VAE_normalized * self.L_AE) + (self.lambda_class_normalized * self.Lc)
                     self.L_Total_wt_weights = self.Lr + self.L_KL_var.item() + self.L_KL_struct.item() + self.Lc + self.L_AE
 
                 if self.is_zvar_sim_loss and self.zvar_sim_loss_for_all_model:

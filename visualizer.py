@@ -679,6 +679,75 @@ def real_distribution_model(net, path_expe, expe_name, loader, latent_spec, trai
     return mu_var, mu_struct, sigma_var, sigma_struct
 
 
+def sample_real_distribution(net, path, expe_name, latent_spec, img_size, train_test, size=(8, 8), batch=None,
+                             both_continue=False, save=False, FID=False, IS=False, psnr=True,
+                             is_partial_rand_class=False, is_E1=False, is_zvar_sim_loss=False):
+
+    file_path = os.path.join(path, expe_name, 'last')
+    checkpoint = torch.load(file_path, map_location=torch.device('cpu'))
+    net.load_state_dict(checkpoint['net'])
+
+    loader = None
+    mu_var, mu_struct, sigma_var, sigma_struct = real_distribution_model(net,
+                                                                         path,
+                                                                         expe_name,
+                                                                         loader,
+                                                                         latent_spec,
+                                                                         train_test,
+                                                                         is_both_continue=True,
+                                                                         is_partial_rand_class=is_partial_rand_class,
+                                                                         is_E1=is_E1,
+                                                                         is_zvar_sim_loss=is_zvar_sim_loss)
+    mu_mean_real_var = np.mean(mu_var, axis=0)
+    variance_mean_real_var = np.mean(sigma_var, axis=0)
+    mu_mean_real_struct = np.mean(mu_struct, axis=0)
+    variance_mean_real_struct = np.mean(sigma_struct, axis=0)
+    mu = (mu_mean_real_var + mu_mean_real_struct) / 2
+    var = np.abs((variance_mean_real_var + variance_mean_real_struct) / 2)
+
+    viz = Viz(net, img_size, latent_spec)
+    viz.save_images = False
+
+    fig, ax = plt.subplots(figsize=(10, 10), facecolor='w', edgecolor='k')
+    samples, generated = viz.samples(size=size, both_continue=both_continue, real_distribution=True,
+                                     mu=mu, var=var)
+
+    fid_value = 0
+    IS_value = 0
+    psnr_value = 0
+    if FID:
+        fid_value = calculate_fid_given_paths(batch,
+                                              generated[:32],
+                                              batch_size=32,
+                                              cuda='',
+                                              dims=2048)
+        fid_value = np.around(fid_value, 3)
+    if IS:
+        IS_value = inception_score(generated,
+                                   batch_size=32,
+                                   resize=True)
+        IS_value = np.around(IS_value[0], 3)
+    if psnr:
+        for i in range(len(batch)):
+            psnr_value += psnr_metric(batch[i], generated[i])
+        psnr_value /= len(batch)
+        psnr_value = np.around(psnr_value.item(), 3)
+    samples = samples.permute(1, 2, 0)
+    ax.set(title=('samples: {}. Scores: FID(\u2193): {}, IS(\u2191): {}, PSNR(\u2193): {}'.format(expe_name,
+                                                                                            fid_value,
+                                                                                            IS_value,
+                                                                                            psnr_value)))
+    ax.imshow(samples.numpy())
+    plt.show()
+
+    if save:
+        fig.savefig("fig_results/sample/fig_sample_" + expe_name + ".png")
+
+
+
+    return
+
+
 def plot_Acc_each_class(one_bit_rand_mean_pred_train, one_bit_rand_std_pred_train, one_bit_rand_mean_pred_test,
                         one_bit_rand_std_pred_test, epochs, nb_epochs, expe_name):
     """
