@@ -683,33 +683,33 @@ def real_distribution_model(net, path_expe, expe_name, loader, latent_spec, trai
         sigma = math.sqrt(variance)
         x = np.linspace(mu - 3 * sigma, mu + 3 * sigma, 100)
 
-        mu_mean_real_var = np.mean(mu_var, axis=0)
-        variance_mean_real_var = np.mean(sigma_var, axis=0)
-        sigma_mean_real_var = math.sqrt(np.abs(variance_mean_real_var))
-        x_mean_real_var = np.linspace(mu_mean_real_var - 3 * sigma_mean_real_var,
-                                      mu_mean_real_var + 3 * sigma_mean_real_var, 100)
+        # mu_mean_real_var = np.mean(mu_var, axis=0)
+        # variance_mean_real_var = np.mean(sigma_var, axis=0)
+        sigma_mean_real_var = np.sqrt(np.abs(sigma_var))
+        x_mean_real_var = np.linspace(mu_var - 3 * sigma_mean_real_var,
+                                      mu_var + 3 * sigma_mean_real_var, 100)
 
-        mu_mean_real_struct = np.mean(mu_struct, axis=0)
-        variance_mean_real_struct = np.mean(sigma_struct, axis=0)
-        sigma_mean_real_struct = math.sqrt(np.abs(variance_mean_real_struct))
-        x_mean_real_struct = np.linspace(mu_mean_real_struct - 3 * sigma_mean_real_struct,
-                                         mu_mean_real_struct + 3 * sigma_mean_real_struct, 100)
+        # mu_mean_real_struct = np.mean(mu_struct, axis=0)
+        # variance_mean_real_struct = np.mean(sigma_struct, axis=0)
+        sigma_mean_real_struct = np.sqrt(np.abs(sigma_struct))
+        x_mean_real_struct = np.linspace(mu_struct - 3 * sigma_mean_real_struct,
+                                         mu_struct + 3 * sigma_mean_real_struct, 100)
 
-        mu_mean_real = (mu_mean_real_var + mu_mean_real_struct)/2
-        variance_mean_real = (variance_mean_real_var + variance_mean_real_struct)/2
-        sigma_mean_real = math.sqrt(np.abs(variance_mean_real))
-        x_mean_real = np.linspace(mu_mean_real - 3 * sigma_mean_real,
-                                  mu_mean_real + 3 * sigma_mean_real, 100)
+        # mu_mean_real = (mu_mean_real_var + mu_mean_real_struct)/2
+        # variance_mean_real = (variance_mean_real_var + variance_mean_real_struct)/2
+        # sigma_mean_real = math.sqrt(np.abs(variance_mean_real))
+        # x_mean_real = np.linspace(mu_mean_real - 3 * sigma_mean_real,
+        #                           mu_mean_real + 3 * sigma_mean_real, 100)
 
         fig, ax = plt.subplots(figsize=(15, 10), facecolor='w', edgecolor='k')
         ax.set(title=('Gaussian: ' + expe_name + "_" + train_test))
 
-        ax.plot(x_mean_real_var, stats.norm.pdf(x_mean_real_var, mu_mean_real_var, sigma_mean_real_var),
-                label='mean real zvar', color='blue')
-        ax.plot(x_mean_real_struct, stats.norm.pdf(x_mean_real_struct, mu_mean_real_struct, sigma_mean_real_struct),
-                label='mean real zstruct', color='green')
-        ax.plot(x_mean_real, stats.norm.pdf(x_mean_real, mu_mean_real, sigma_mean_real),
-                label='mean real zstruct', color='orange')
+        ax.plot(x_mean_real_var, stats.norm.pdf(x_mean_real_var, mu_var, sigma_mean_real_var),
+                label='real zvar', color='blue')
+        ax.plot(x_mean_real_struct, stats.norm.pdf(x_mean_real_struct, mu_struct, sigma_mean_real_struct),
+                label='real zstruct', color='green')
+        # ax.plot(x_mean_real, stats.norm.pdf(x_mean_real, mu_mean_real, sigma_mean_real),
+        #         label='mean real', color='orange')
         ax.plot(x, stats.norm.pdf(x, mu, sigma), label='Gaussian (0, I)', color='red')
 
         ax.legend(loc=1)
@@ -740,12 +740,14 @@ def sample_real_distribution(net, path, expe_name, latent_spec, img_size, train_
                                                                          is_partial_rand_class=is_partial_rand_class,
                                                                          is_E1=is_E1,
                                                                          is_zvar_sim_loss=is_zvar_sim_loss)
-    mu_mean_real_var = np.mean(mu_var, axis=0)
-    variance_mean_real_var = np.mean(sigma_var, axis=0)
-    mu_mean_real_struct = np.mean(mu_struct, axis=0)
-    variance_mean_real_struct = np.mean(sigma_struct, axis=0)
-    mu = (mu_mean_real_var + mu_mean_real_struct) / 2
-    var = np.abs((variance_mean_real_var + variance_mean_real_struct) / 2)
+    # mu_mean_real_var = np.mean(mu_var, axis=0)
+    # variance_mean_real_var = np.mean(sigma_var, axis=0)
+    # mu_mean_real_struct = np.mean(mu_struct, axis=0)
+    # variance_mean_real_struct = np.mean(sigma_struct, axis=0)
+    # mu = (mu_mean_real_var + mu_mean_real_struct) / 2
+    # var = np.abs((variance_mean_real_var + variance_mean_real_struct) / 2)
+    mu = [mu_var, mu_struct]
+    var = [sigma_var, sigma_struct]
 
     viz = Viz(net, img_size, latent_spec)
     viz.save_images = False
@@ -774,6 +776,7 @@ def sample_real_distribution(net, path, expe_name, latent_spec, img_size, train_
             psnr_value += psnr_metric(batch[i], generated[i])
         psnr_value /= len(batch)
         psnr_value = np.around(psnr_value.item(), 3)
+
     samples = samples.permute(1, 2, 0)
     ax.set(title=('samples: {}. Scores: FID(\u2193): {}, IS(\u2191): {}, PSNR(\u2193): {}'.format(expe_name,
                                                                                             fid_value,
@@ -783,9 +786,7 @@ def sample_real_distribution(net, path, expe_name, latent_spec, img_size, train_
     plt.show()
 
     if save:
-        fig.savefig("fig_results/sample/fig_sample_" + expe_name + ".png")
-
-
+        fig.savefig("fig_results/sample/fig_sample_real_distribution_" + expe_name + ".png")
 
     return
 
@@ -1128,8 +1129,9 @@ def plot_prototyoe_z_struct_per_class(nb_examples, average_representation_z_stru
         # plot:
         images_arr = []
         labels_arr = np.arange(nb_class)
-        z_var_rand = torch.randn(latent_spec['cont_var'])
-        z_var_rand = z_var_rand.to(device)
+        # z_var_rand = torch.randn(latent_spec['cont_var'])
+        z_var_zeros = torch.zeros(latent_spec['cont_var'])
+        z_var_rand = z_var_zeros.to(device)
 
         for j in range(nb_class):
             latent = []
@@ -1216,6 +1218,13 @@ def plot_struct_fixe_and_z_var_moove(average_representation_z_struct_class, trai
     samples = []
     for i in range(nb_class):
         z_struct_prototype = torch.tensor(average_representation_z_struct_class[i]).to(device)
+        z_var_rand = torch.zeros(latent_spec['cont_var'])
+        z_var_rand = z_var_rand.to(device)
+        latent = []
+        latent.append(z_var_rand)
+        latent.append(z_struct_prototype)
+        latent = torch.cat(latent, dim=0)
+        all_latent.append(torch.tensor(latent))
         for j in range(nb_examples):
             z_var_rand = torch.randn(latent_spec['cont_var'])
             z_var_rand = z_var_rand.to(device)
@@ -1227,11 +1236,11 @@ def plot_struct_fixe_and_z_var_moove(average_representation_z_struct_class, trai
             all_latent.append(torch.tensor(latent))
 
     all_latent = np.array([t.numpy() for t in all_latent])
-    samples.append(torch.Tensor(all_latent.reshape((nb_class*nb_examples, latent_spec['cont_var'] +
+    samples.append(torch.Tensor(all_latent.reshape((nb_class*(nb_examples+1), latent_spec['cont_var'] +
                                                           latent_spec['cont_class']))))
     latent_samples.append(torch.cat(samples, dim=1))
     generated = net_trained._decode(torch.cat(latent_samples, dim=0))
-    prototype = make_grid(generated.data, nrow=nb_examples)
+    prototype = make_grid(generated.data, nrow=nb_examples+1)
 
     fig, ax = plt.subplots(figsize=(15, 10), facecolor='w', edgecolor='k')
     traversals = prototype.permute(1, 2, 0)

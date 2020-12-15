@@ -236,11 +236,11 @@ class Solver(object):
                                                         "rand normal or change zvar !"
 
         if self.old_weighted:
-            self.normalize_weights = self.beta + self.lambda_class + self.lambda_Kl_var + self.lambda_Kl_struct + \
+            self.normalize_weights = (self.beta * (self.lambda_Kl_var + self.lambda_Kl_struct)) + self.lambda_class + \
                                      self.lambda_recons
         else:
-            self.normalize_weights = (self.lambda_VAE * self.lambda_Kl_var) + (self.lambda_VAE * self.lambda_Kl_struct)\
-                                     + self.lambda_class
+            self.normalize_weights = (self.lambda_VAE * (self.beta * (self.lambda_Kl_struct + self.lambda_Kl_var))) + \
+                                     (self.lambda_VAE * self.lambda_recons) + self.lambda_class
 
         self.lambda_Kl_var_normalized = self.lambda_Kl_var / self.normalize_weights
         self.lambda_Kl_struct_normalized = self.lambda_Kl_struct / self.normalize_weights

@@ -196,13 +196,16 @@ for expe in mnist_VAE_class_E1_test:
     #          copute_average_z_structural=True, is_partial_rand_class=is_partial_rand_class, save=True,
     #          is_E1=is_E1)
     # visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, all_prototype=True,
-    #           is_partial_rand_class=is_partial_rand_class, save=True, is_E1=is_E1)
+    #          is_partial_rand_class=is_partial_rand_class, save=True, is_E1=is_E1)
     # visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, path=path, save=True,
     #           is_partial_rand_class=is_partial_rand_class, is_E1=is_E1, real_distribution=True, plot_gaussian=True)
-    visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, batch=batch,
-              path=path, real_img=False, size_struct=10, size_var=8,
-              is_partial_rand_class=is_partial_rand_class, save=True, is_E1=is_E1,
-              plot_img_traversal=True, both_latent_traversal=True)
+    # visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, batch=batch,
+    #           path=path, real_img=False, size_struct=10, size_var=8,
+    #           is_partial_rand_class=is_partial_rand_class, save=True, is_E1=is_E1,
+    #           plot_img_traversal=True, both_latent_traversal=True)
+    visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, plot_sample=True,
+              sample_real=True, batch=batch, path=path,
+              save=True, FID=False, IS=False, psnr=False, is_partial_rand_class=is_partial_rand_class, is_E1=is_E1)
 
 """
 # _____________ VAE 5 5 + class + E1 ________________
@@ -326,13 +329,17 @@ for expe in mnist_VAE_class_E1_zvar_test:
     #          copute_average_z_structural=True, is_partial_rand_class=is_partial_rand_class, save=True,
     #          is_E1=is_E1)
     # visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, all_prototype=True,
-    #           is_partial_rand_class=is_partial_rand_class, save=True, is_E1=is_E1)
+    #          is_partial_rand_class=is_partial_rand_class, save=True, is_E1=is_E1)
     # visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, path=path, save=True,
     #           is_partial_rand_class=is_partial_rand_class, is_E1=is_E1, real_distribution=True, plot_gaussian=True)
-    visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, batch=batch,
-              path=path, real_img=False, size_struct=10, size_var=8,
-              is_partial_rand_class=is_partial_rand_class, save=True, is_E1=is_E1,
-              plot_img_traversal=True, both_latent_traversal=True)
+    # visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, batch=batch,
+    #           path=path, real_img=False, size_struct=10, size_var=8,
+    #           is_partial_rand_class=is_partial_rand_class, save=True, is_E1=is_E1,
+    #           plot_img_traversal=True, both_latent_traversal=True)
+    visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, plot_sample=True,
+              sample_real=True, batch=batch,
+              save=True, FID=False, IS=False, psnr=False, is_partial_rand_class=is_partial_rand_class, is_E1=is_E1)
+
 
 """
 # _____________ VAE 5 5 + class + E1 + zvar_sim ________________
