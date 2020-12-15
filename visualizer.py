@@ -11,7 +11,7 @@ from captum.attr import LayerConductance
 from sample_scores.FID_score.fid_score import calculate_fid_given_paths
 from sample_scores.inception_score import inception_score
 import math
-
+from torchvision.utils import make_grid
 
 
 def psnr_metric(mse):
@@ -52,7 +52,14 @@ def get_checkpoints_scores(net, path_scores, expe_name):
     kl_disc_loss_train = checkpoints_scores['kl_class_loss_train']
     kl_cont_loss_train = checkpoints_scores['kl_var_loss_train']
     total_kl_train = checkpoints_scores['total_kld_train']
-    beta_vae_loss_train = checkpoints_scores['beta_vae_loss_train']
+    if 'vae_loss_train' in checkpoints_scores:
+        vae_loss_train = checkpoints_scores['vae_loss_train']
+    else:
+        vae_loss_train = checkpoints_scores['beta_vae_loss_train']
+    if 'vae_loss_train' in checkpoints_scores:
+        vae_loss_test = checkpoints_scores['vae_loss_test']
+    else:
+        vae_loss_test = checkpoints_scores['beta_vae_loss_test']
     classification_random_continue_loss_train = checkpoints_scores['classification_loss_train']
     classification_partial_rand_loss_train = checkpoints_scores['classification_partial_rand_loss_train']
     if 'zvar_sim_loss_train' in checkpoints_scores:
@@ -64,7 +71,6 @@ def get_checkpoints_scores(net, path_scores, expe_name):
     kl_disc_loss_test = checkpoints_scores['kl_class_loss_test']
     kl_cont_loss_test = checkpoints_scores['kl_var_loss_test']
     total_kl_test = checkpoints_scores['total_kld_test']
-    beta_vae_loss_test = checkpoints_scores['beta_vae_loss_test']
     classification_random_continue_loss_test = checkpoints_scores['classification_loss_test']
     classification_partial_rand_loss_test = checkpoints_scores['classification_partial_rand_loss_test']
     if 'zvar_sim_loss_test' in checkpoints_scores:
@@ -83,9 +89,9 @@ def get_checkpoints_scores(net, path_scores, expe_name):
 
     return net, global_iter, epochs, Zc_Zd_train, Zc_random_Zd_train, Zc_Zd_random_train, Zc_pert_Zd_train, Zc_Zd_pert_train, \
            Zc_Zd_test, Zc_random_Zd_test, Zc_Zd_random_test, Zc_pert_Zd_test, Zc_Zd_pert_test, recon_loss_train_train, \
-           kl_disc_loss_train, kl_cont_loss_train, total_kl_train, beta_vae_loss_train, \
+           kl_disc_loss_train, kl_cont_loss_train, total_kl_train, vae_loss_train, \
            classification_random_continue_loss_train, recon_loss_train_test, kl_disc_loss_test, kl_cont_loss_test, \
-           total_kl_test, beta_vae_loss_test, classification_random_continue_loss_test, classification_partial_rand_loss_train, \
+           total_kl_test, vae_loss_test, classification_random_continue_loss_test, classification_partial_rand_loss_train, \
            classification_partial_rand_loss_test, zvar_sim_loss_train, zvar_sim_loss_test, one_bit_rand_mean_pred_train, one_bit_rand_mean_pred_test, \
            one_bit_rand_std_pred_train, one_bit_rand_std_pred_test, one_bit_rand_noised_mean_pred_train, one_bit_rand_noised_mean_pred_test, \
            one_bit_rand_noised_std_pred_train, one_bit_rand_noised_std_pred_test
@@ -303,7 +309,10 @@ def joint_latent_traversal(net, nb_epochs, path, expe_name, latent_spec, batch, 
     plt.show()
 
     if save:
-        fig.savefig("fig_results/traversal_latent/fig_both_traversal_latent_" + "_" + expe_name + ".png")
+        if real_img:
+            fig.savefig("fig_results/traversal_latent/fig_both_traversal_latent_real_image_" + "_" + expe_name + ".png")
+        else:
+            fig.savefig("fig_results/traversal_latent/fig_both_traversal_latent_all_randn_" + "_" + expe_name + ".png")
 
     return
 
@@ -361,68 +370,100 @@ def plot_scores_results(epochs, Zc_Zd_train, Zc_random_Zd_train, Zc_Zd_random_tr
 
 
 def plot_loss_results(epochs, recon_loss_train_train, kl_disc_loss_train, kl_cont_loss_train, total_kl_train,
-                      beta_vae_loss_train, classification_random_continue_loss_train, recon_loss_train_test,
-                      kl_disc_loss_test, kl_cont_loss_test, total_kl_test, beta_vae_loss_test,
+                      vae_loss_train, classification_random_continue_loss_train, recon_loss_train_test,
+                      kl_disc_loss_test, kl_cont_loss_test, total_kl_test, vae_loss_test,
                       classification_random_continue_loss_test, classification_partial_rand_loss_train,
                       classification_partial_rand_loss_test, zvar_sim_loss_train, zvar_sim_loss_test, expe_name, is_wt_random,
                       is_both_continuous, save, partial_rand=False):
 
-    fig, ax = plt.subplots(figsize=(15, 10), facecolor='w', edgecolor='k')
+    facteur_loss_reconstruction_train = int(vae_loss_train[-1] / recon_loss_train_train[-1])
+    facteur_loss_classification_train = int(vae_loss_train[-1] / classification_random_continue_loss_train[-1])
+    facteur_loss_reconstruction_test = int(vae_loss_test[-1] / recon_loss_train_test[-1])
+    facteur_loss_classification_test = int(vae_loss_test[-1] / classification_random_continue_loss_test[-1])
 
-    # beta_vae_loss_train = np.array(beta_vae_loss_train)
-    # beta_vae_loss_test = np.array(beta_vae_loss_test)
+    max_vae_loss_train = np.max(vae_loss_train)
+    max_vae_loss_test = np.max(vae_loss_test)
+    max_vae = np.max([max_vae_loss_train, max_vae_loss_test])
+    recon_loss_train_train = np.array(recon_loss_train_train) * facteur_loss_reconstruction_train
+    classification_random_continue_loss_train = np.array(classification_random_continue_loss_train) * facteur_loss_classification_train
+    recon_loss_train_test = np.array(recon_loss_train_test) * facteur_loss_reconstruction_test
+    classification_random_continue_loss_test = np.array(classification_random_continue_loss_test) * facteur_loss_classification_test
+
+    # vae_loss_train = np.array(vae_loss_train)
+    # vae_loss_test = np.array(vae_loss_test)
     # zvar_sim_loss_train = np.array(zvar_sim_loss_train)
     # zvar_sim_loss_test = np.array(zvar_sim_loss_test)
-    # beta_vae_loss_train = beta_vae_loss_train - zvar_sim_loss_train
-    # beta_vae_loss_test = beta_vae_loss_test - zvar_sim_loss_test
+    # vae_loss_train = vae_loss_train - zvar_sim_loss_train
+    # vae_loss_test = vae_loss_test - zvar_sim_loss_test
 
     last_zvar_sim_value_train = zvar_sim_loss_train[-1]
     last_zvar_sim_value_test = zvar_sim_loss_test[-1]
     x_ann = epochs[-1]
 
-    ax.set(xlabel='nb_iter', ylabel='Loss',
-           title=('MNIST loss: ' + expe_name))  # ylim=(0,1))
+    fig, ax = plt.subplots(4,
+                           figsize=(15, 15),
+                           gridspec_kw={'height_ratios': [3, 1, 1, 2]},
+                           facecolor='w',
+                           edgecolor='k')
+    fig.suptitle('MNIST loss: ' + expe_name, fontsize=14)
+    plt.subplots_adjust(left=0.05, bottom=0.035, right=0.99, top=.95, wspace=None, hspace=None)
 
-    ax.plot(epochs, recon_loss_train_train, label='recon_loss_train_train', color='royalblue')
-    ax.plot(epochs, recon_loss_train_test, label='recon_loss_train_test', color='cornflowerblue')
+    ax[3].set(xlabel='nb_iter', ylabel='Loss')
+    ax[0].set(ylabel='Loss')
+    ax[1].set(ylabel='Loss')
+    ax[2].set(ylabel='Loss')
+    ax[0].set(title='Total')
+    ax[1].set(title='Reconstruction (MSE)')
+    ax[2].set(title='Classification (NLL)')
+    ax[3].set(title='Zvar (MSE)')
+
+    ax[1].plot(epochs, recon_loss_train_train, label='recon_loss_train_train', color='royalblue')
+    ax[1].plot(epochs, recon_loss_train_test, label='recon_loss_train_test', color='cornflowerblue')
 
     if is_both_continuous:
-        ax.plot(epochs, kl_disc_loss_train, label='kl_cont_struct_train', color='gold')
-        ax.plot(epochs, kl_cont_loss_train, label='kl_cont_var_train', color='burlywood')
-        ax.plot(epochs, kl_disc_loss_test, label='kl_cont_struct_test', color='goldenrod')
-        ax.plot(epochs, kl_cont_loss_test, label='kl_cont_var_test', color='tan')
+        ax[0].plot(epochs, kl_disc_loss_train, label='kl_cont_struct_train', color='gold')
+        ax[0].plot(epochs, kl_cont_loss_train, label='kl_cont_var_train', color='burlywood')
+        ax[0].plot(epochs, kl_disc_loss_test, label='kl_cont_struct_test', color='goldenrod')
+        ax[0].plot(epochs, kl_cont_loss_test, label='kl_cont_var_test', color='tan')
     else:
-        ax.plot(epochs, kl_disc_loss_train, label='kl_disc_loss_train')
-        ax.plot(epochs, kl_cont_loss_train, label='kl_cont_loss_train')
-        ax.plot(epochs, kl_disc_loss_test, label='kl_disc_loss_test')
-        ax.plot(epochs, kl_cont_loss_test, label='kl_cont_loss_test')
+        ax[0].plot(epochs, kl_disc_loss_train, label='kl_disc_loss_train')
+        ax[0].plot(epochs, kl_cont_loss_train, label='kl_cont_loss_train')
+        ax[0].plot(epochs, kl_disc_loss_test, label='kl_disc_loss_test')
+        ax[0].plot(epochs, kl_cont_loss_test, label='kl_cont_loss_test')
 
-    ax.plot(epochs, total_kl_train, label='total_kl_train', color='orange')
-    ax.plot(epochs, total_kl_test, label='total_kl_test', color='darkorange')
+    ax[0].plot(epochs, total_kl_train, label='total_kl_train', color='orange')
+    ax[0].plot(epochs, total_kl_test, label='total_kl_test', color='darkorange')
 
     if not is_wt_random:
-        ax.plot(epochs, classification_random_continue_loss_train, label='classification_random_continue_loss_train',
-                color='dodgerblue')
-        ax.plot(epochs, classification_random_continue_loss_test, label='classification_random_continue_loss_test',
-                color='deepskyblue')
+        ax[2].plot(epochs, classification_random_continue_loss_train,
+                label='classification_random_continue_loss_train', color='dodgerblue')
+        ax[2].plot(epochs, classification_random_continue_loss_test,
+                label='classification_random_continue_loss_test', color='deepskyblue')
 
     if partial_rand:
-        ax.plot(epochs, classification_partial_rand_loss_train, label='class partial rand train',
-                color='mediumturquoise')
-        ax.plot(epochs, classification_partial_rand_loss_test, label='class partial rand train', color='lightseagreen')
+        ax[2].plot(epochs, classification_partial_rand_loss_train,
+                   label='class partial rand train',
+                   color='mediumturquoise')
+        ax[2].plot(epochs, classification_partial_rand_loss_test,
+                   label='class partial rand train',
+                   color='lightseagreen')
 
-    ax.plot(epochs, beta_vae_loss_train, label='beta_vae_loss_train', color='red')
-    ax.plot(epochs, beta_vae_loss_test, label='beta_vae_loss_test', color='darkred')
+    ax[0].plot(epochs, vae_loss_train, label='vae_loss_train', color='red')
+    ax[0].plot(epochs, vae_loss_test, label='vae_loss_test', color='darkred')
 
-    ax.plot(epochs, zvar_sim_loss_train, label='zvar_sim train', color='green')
-    ax.plot(epochs, zvar_sim_loss_test, label='zvar_sim test', color='darkgreen')
+    ax[3].plot(epochs, zvar_sim_loss_train, label='zvar_sim train', color='green')
+    ax[3].plot(epochs, zvar_sim_loss_test, label='zvar_sim test', color='darkgreen')
 
-    ax.legend(loc=1)
+    ax[0].legend(loc=1)
+    ax[1].legend(loc=1)
+    ax[2].legend(loc=1)
+    ax[3].legend(loc=1)
 
     string = 'Zvar_sim value: ' + str(last_zvar_sim_value_train)  # last_zvar_sim_value_train.detach().numpy())
-    ax.annotate(string,
+    max_zvar_train = np.max(zvar_sim_loss_train)
+    ax[3].annotate(string,
                 xy=(x_ann, last_zvar_sim_value_train), xycoords='data',
-                xytext=(x_ann - 20, last_zvar_sim_value_train + 0.03), textcoords='data',
+                xytext=(x_ann - 50, last_zvar_sim_value_train + (max_zvar_train//2)), textcoords='data',
                 size=20, va="center", ha="center",
                 bbox=dict(boxstyle="round4", fc="w"),
                 arrowprops=dict(arrowstyle="-|>",
@@ -433,8 +474,9 @@ def plot_loss_results(epochs, recon_loss_train_train, kl_disc_loss_train, kl_con
     plt.show()
 
     if save:
-       fig.savefig("fig_results/losses/fig_losses_Test_Mnist_L3_Classifier_" + expe_name + ".png")
+       fig.savefig("fig_results/losses/fig_losses_Test_Mnist_" + expe_name + ".png")
 
+    """
     fig, ax = plt.subplots(figsize=(15, 10), facecolor='w', edgecolor='k')
     ax.set(xlabel='nb_iter', ylabel='Loss',
            title=('MNIST loss: ' + expe_name))  # ylim=(0,1))
@@ -454,7 +496,7 @@ def plot_loss_results(epochs, recon_loss_train_train, kl_disc_loss_train, kl_con
     plt.show()
 
     if save:
-        fig.savefig("fig_results/losses/fig_losses_Test_Mnist_L3_Classifier_zvar_recons_" + expe_name + ".png")
+        fig.savefig("fig_results/losses/fig_losses_Test_Mnist_zvar_recons_" + expe_name + ".png")
 
     fig, ax = plt.subplots(figsize=(15, 10), facecolor='w', edgecolor='k')
     ax.set(xlabel='nb_iter', ylabel='Loss',
@@ -480,8 +522,8 @@ def plot_loss_results(epochs, recon_loss_train_train, kl_disc_loss_train, kl_con
     plt.show()
 
     if save:
-        fig.savefig("fig_results/losses/fig_losses_Test_Mnist_L3_Classifier_recons_" + expe_name + ".png")
-
+        fig.savefig("fig_results/losses/fig_losses_Test_Mnist__recons_" + expe_name + ".png")
+    """
     return
 
 
@@ -490,9 +532,9 @@ def plot_scores_and_loss(net, expe_name, path_scores, is_wt_random=False, is_bot
     # net, nb_iter, epochs = get_checkpoints(net, path, expe_name)
     net, global_iter, epochs, Zc_Zd_train, Zc_random_Zd_train, Zc_Zd_random_train, Zc_pert_Zd_train, Zc_Zd_pert_train, \
     Zc_Zd_test, Zc_random_Zd_test, Zc_Zd_random_test, Zc_pert_Zd_test, Zc_Zd_pert_test, recon_loss_train_train, \
-    kl_disc_loss_train, kl_cont_loss_train, total_kl_train, beta_vae_loss_train, \
+    kl_disc_loss_train, kl_cont_loss_train, total_kl_train, vae_loss_train, \
     classification_random_continue_loss_train, recon_loss_train_test, kl_disc_loss_test, kl_cont_loss_test, \
-    total_kl_test, beta_vae_loss_test, classification_random_continue_loss_test, classification_partial_rand_loss_train, \
+    total_kl_test, vae_loss_test, classification_random_continue_loss_test, classification_partial_rand_loss_train, \
     classification_partial_rand_loss_test, zvar_sim_loss_train, zvar_sim_loss_test, one_bit_rand_mean_pred_train, one_bit_rand_mean_pred_test, \
     one_bit_rand_std_pred_train, one_bit_rand_std_pred_test, one_bit_rand_noised_mean_pred_train, one_bit_rand_noised_mean_pred_test, \
     one_bit_rand_noised_std_pred_train, one_bit_rand_noised_std_pred_test = \
@@ -500,8 +542,8 @@ def plot_scores_and_loss(net, expe_name, path_scores, is_wt_random=False, is_bot
 
     if losses:
         plot_loss_results(epochs, recon_loss_train_train, kl_disc_loss_train, kl_cont_loss_train, total_kl_train,
-                          beta_vae_loss_train, classification_random_continue_loss_train, recon_loss_train_test,
-                          kl_disc_loss_test, kl_cont_loss_test, total_kl_test, beta_vae_loss_test,
+                          vae_loss_train, classification_random_continue_loss_train, recon_loss_train_test,
+                          kl_disc_loss_test, kl_cont_loss_test, total_kl_test, vae_loss_test,
                           classification_random_continue_loss_test, classification_partial_rand_loss_train,
                           classification_partial_rand_loss_test, zvar_sim_loss_train, zvar_sim_loss_test, expe_name, is_wt_random,
                           is_both_continuous, save, partial_rand=partial_rand)
@@ -518,9 +560,9 @@ def plot_all(net, expe_name, path, path_scores, bacth, latent_spec, both_continu
     net, nb_iter, epochs = get_checkpoints(net, path, expe_name)
     net, global_iter, epochs, Zc_Zd_train, Zc_random_Zd_train, Zc_Zd_random_train, Zc_pert_Zd_train, Zc_Zd_pert_train, \
     Zc_Zd_test, Zc_random_Zd_test, Zc_Zd_random_test, Zc_pert_Zd_test, Zc_Zd_pert_test, recon_loss_train_train, \
-    kl_disc_loss_train, kl_cont_loss_train, total_kl_train, beta_vae_loss_train, \
+    kl_disc_loss_train, kl_cont_loss_train, total_kl_train, vae_loss_train, \
     classification_random_continue_loss_train, recon_loss_train_test, kl_disc_loss_test, kl_cont_loss_test, \
-    total_kl_test, beta_vae_loss_test, classification_random_continue_loss_test = \
+    total_kl_test, vae_loss_test, classification_random_continue_loss_test = \
         get_checkpoints_scores(net, path_scores, expe_name)
 
     viz_reconstruction(net, epochs, expe_name, bacth, latent_spec, both_continue)
@@ -530,8 +572,8 @@ def plot_all(net, expe_name, path, path_scores, bacth, latent_spec, both_continu
                         Zc_Zd_pert_test, expe_name)
 
     plot_loss_results(epochs, recon_loss_train_train, kl_disc_loss_train, kl_cont_loss_train,
-                      total_kl_train, beta_vae_loss_train, classification_random_continue_loss_train,
-                      recon_loss_train_test, kl_disc_loss_test, kl_cont_loss_test, total_kl_test, beta_vae_loss_test,
+                      total_kl_train, vae_loss_train, classification_random_continue_loss_train,
+                      recon_loss_train_test, kl_disc_loss_test, kl_cont_loss_test, total_kl_test, vae_loss_test,
                       classification_random_continue_loss_test, expe_name)
 
     plot_samples(net, epochs, path, expe_name, latent_spec, bacth, both_continue=both_continue)
@@ -954,9 +996,9 @@ def plot_bits_stats(net, path, path_scores, expe_name):
 
     net, global_iter, epochs, Zc_Zd_train, Zc_random_Zd_train, Zc_Zd_random_train, Zc_pert_Zd_train, Zc_Zd_pert_train, \
     Zc_Zd_test, Zc_random_Zd_test, Zc_Zd_random_test, Zc_pert_Zd_test, Zc_Zd_pert_test, recon_loss_train_train, \
-    kl_disc_loss_train, kl_cont_loss_train, total_kl_train, beta_vae_loss_train, \
+    kl_disc_loss_train, kl_cont_loss_train, total_kl_train, vae_loss_train, \
     classification_random_continue_loss_train, recon_loss_train_test, kl_disc_loss_test, kl_cont_loss_test, \
-    total_kl_test, beta_vae_loss_test, classification_random_continue_loss_test, classification_partial_rand_loss_train, \
+    total_kl_test, vae_loss_test, classification_random_continue_loss_test, classification_partial_rand_loss_train, \
     classification_partial_rand_loss_test, zvar_sim_loss_train, zvar_sim_loss_test, one_bit_rand_mean_pred_train, one_bit_rand_mean_pred_test, \
     one_bit_rand_std_pred_train, one_bit_rand_std_pred_test, one_bit_rand_noised_mean_pred_train, one_bit_rand_noised_mean_pred_test, \
     one_bit_rand_noised_std_pred_train, one_bit_rand_noised_std_pred_test = get_checkpoints_scores(net, path_scores,
@@ -981,8 +1023,7 @@ def plot_average_z_structural(net_trained, loader, device, nb_class, latent_spec
     # 2) get z_struct and label associated for all data
     # 3) average representation z_struct per different classes
     # 4) decode each average representation with D (with random z_var)
-
-    path = 'structural_representation/average_representation_z_struct_class_' + expe_name + '_' + train_test + '.npy'
+    path = "fig_results/z_struct_2D_projections/fig_z_struct_2d_projection_per_classes_" + expe_name + train_test + ".png"
 
     if not os.path.exists(path) or return_z_struct_representation:
         # latent representation dimension:
@@ -1041,7 +1082,7 @@ def plot_average_z_structural(net_trained, loader, device, nb_class, latent_spec
                                                         '/average_representation_z_struct_class_' + expe_name + '_' +
                                                         train_test + '.npy', allow_pickle=True)
         print('load average z_struct per class: {}'.format(average_representation_z_struct_class.shape))
-
+    """
     # Decode:
     # build z with z_var rand and prototype:
     z_var_rand = torch.randn(latent_spec['cont_var'])
@@ -1071,6 +1112,7 @@ def plot_average_z_structural(net_trained, loader, device, nb_class, latent_spec
         ax.set_title("({})".format(labels_arr[i]))
 
     plt.show()
+    """
 
     return
 
@@ -1123,6 +1165,8 @@ def plot_2d_projection_z_struct(average_representation_z_struct_class, loader, n
     we project z_struct per class in 2d dimension to see repartition:
     :return:
     """
+    fig_path = "fig_results/z_struct_2D_projections/fig_z_struct_2d_projection_per_classes_" + expe_name + train_test + ".png"
+
     pca = PCA(n_components=2)
     reduced_average = pca.fit_transform(average_representation_z_struct_class)
     t_average = reduced_average.transpose()
@@ -1167,14 +1211,11 @@ def plot_struct_fixe_and_z_var_moove(average_representation_z_struct_class, trai
     """
 
     nb_examples = 8
-    images_arr_all_classes = []
-    # plot same class with different var:
+    latent_samples = []
+    all_latent = []
+    samples = []
     for i in range(nb_class):
-        # plot:
-        images_arr = []
-        labels_arr = np.arange(nb_class)
         z_struct_prototype = torch.tensor(average_representation_z_struct_class[i]).to(device)
-
         for j in range(nb_examples):
             z_var_rand = torch.randn(latent_spec['cont_var'])
             z_var_rand = z_var_rand.to(device)
@@ -1182,24 +1223,26 @@ def plot_struct_fixe_and_z_var_moove(average_representation_z_struct_class, trai
             latent = []
             latent.append(z_var_rand)
             latent.append(z_struct_prototype)
-
             latent = torch.cat(latent, dim=0)
+            all_latent.append(torch.tensor(latent))
 
-            prototype = net_trained._decode(latent).detach().numpy()
-            images_arr.append(prototype[0][0])
+    all_latent = np.array([t.numpy() for t in all_latent])
+    samples.append(torch.Tensor(all_latent.reshape((nb_class*nb_examples, latent_spec['cont_var'] +
+                                                          latent_spec['cont_class']))))
+    latent_samples.append(torch.cat(samples, dim=1))
+    generated = net_trained._decode(torch.cat(latent_samples, dim=0))
+    prototype = make_grid(generated.data, nrow=nb_examples)
 
-        images_arr_all_classes.append(images_arr)
+    fig, ax = plt.subplots(figsize=(15, 10), facecolor='w', edgecolor='k')
+    traversals = prototype.permute(1, 2, 0)
+    ax.set(title=('Prototype per classes with rand zvar examples: {}'.format(expe_name)))
 
-    for k in range(nb_class):
-        fig, ax = plt.subplots(figsize=(10, 2), facecolor='w', edgecolor='k')
-        ax.set(title=('z_struct fix with variational rand z_var for class {}: {} {}'.format(k, expe_name, train_test)))
-        ax.axis('off')
-        for t in range(nb_examples):
-            ax = fig.add_subplot(1, nb_examples, t + 1, xticks=[], yticks=[])
-            ax.imshow(
-                np.reshape(images_arr_all_classes[k][t], (1, prototype[0].shape[-1], prototype[0].shape[-2]))[0],
-                cmap='gray')
-        plt.show()
+    fig_size = prototype.shape
+    plt.imshow(traversals.numpy())
+
+    ax.axvline(x=1.5, linewidth=3, color='orange')
+    ax.axvline(x=(fig_size[1] // nb_class), linewidth=3, color='orange')
+    plt.show()
 
     if save:
         fig.savefig("fig_results/struct_fixe_zvar_moove/fig_z_struct_fixe_zvar_moove_" + expe_name + train_test + ".png")
@@ -1221,15 +1264,12 @@ def plot_var_fixe_and_z_struct_moove(average_representation_z_struct_class, nb_c
     z_var_rand = torch.tensor(np.repeat(z_var_rand, size, axis=0))  # shape: (size, z_var_dim)
     z_var_rand = z_var_rand.to(device)
 
-    indx = 5
-
+    indx = 0
     for c in range(nb_class):
         class_n = c
 
         images_arr = []
-        latent_samples = []
         latent = []
-        latent_ori = []
 
         average_representation_z_struct = average_representation_z_struct_class[class_n].reshape(1, z_struct_dim)   # shape: (1, z_struct_dim)
         z_struct_prototype = torch.tensor(np.repeat(average_representation_z_struct, size, axis=0))   # shape: (size, z_struct_dim)
@@ -1275,8 +1315,6 @@ def plot_var_fixe_and_z_struct_moove(average_representation_z_struct_class, nb_c
 
     if save:
         fig.savefig("fig_results/var_fixe_zstruct_moove/fig_zvar_fixe_zstruct_moove_" + expe_name + train_test + ".png")
-
-
     return
 
 

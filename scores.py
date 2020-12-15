@@ -41,7 +41,7 @@ def compute_scores(net, loader, device, latent_spec, nb_data, is_partial_rand_cl
     kl_var_loss = 0
     kl_class_loss = 0
     total_kld = 0
-    beta_vae_loss = 0
+    vae_loss = 0
     zvar_sim_loss = 0
 
     scores_Zc_Zd = 0
@@ -138,7 +138,7 @@ def compute_scores(net, loader, device, latent_spec, nb_data, is_partial_rand_cl
                     kl_class_loss_iter = kl_disc_loss
 
             total_kld_iter = kl_var_loss_iter + kl_class_loss_iter
-            beta_vae_loss_iter = recons_loss_iter + total_kld_iter + classification_loss_iter + \
+            vae_loss_iter = recons_loss_iter + total_kld_iter + classification_loss_iter + \
                                  classification_partial_rand_loss_iter
 
             recons_loss += recons_loss_iter.item()
@@ -147,7 +147,7 @@ def compute_scores(net, loader, device, latent_spec, nb_data, is_partial_rand_cl
             kl_var_loss += kl_var_loss_iter
             kl_class_loss += kl_class_loss_iter
             total_kld += total_kld_iter
-            beta_vae_loss += beta_vae_loss_iter.item()
+            vae_loss += vae_loss_iter.item()
             zvar_sim_loss += zvar_sim_loss_iter
 
             if is_C:
@@ -200,7 +200,7 @@ def compute_scores(net, loader, device, latent_spec, nb_data, is_partial_rand_cl
     losses['kl_var_loss'] = kl_var_loss / i
     losses['kl_class_loss'] = kl_class_loss / i
     losses['total_kld'] = total_kld / i
-    losses['beta_vae_loss'] = beta_vae_loss / i
+    losses['vae_loss'] = vae_loss / i
     losses['zvar_sim_loss'] = zvar_sim_loss / i
 
     mean_proba_per_class = 0

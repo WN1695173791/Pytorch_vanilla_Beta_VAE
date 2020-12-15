@@ -428,8 +428,8 @@ class Solver(object):
                                           'kl_class_loss_test': [],
                                           'total_kld_train': [],
                                           'total_kld_test': [],
-                                          'beta_vae_loss_train': [],
-                                          'beta_vae_loss_test': [],
+                                          'vae_loss_train': [],
+                                          'vae_loss_test': [],
                                           'one_bit_rand_mean_pred_train': [],
                                           'one_bit_rand_std_pred_train': [],
                                           'one_bit_rand_mean_pred_test': [],
@@ -760,8 +760,8 @@ class Solver(object):
         self.checkpoint_scores['total_kld_test'].append(self.loss_test['total_kld'])
         self.checkpoint_scores['zvar_sim_loss_train'].append(self.loss_train['zvar_sim_loss'])
         self.checkpoint_scores['zvar_sim_loss_test'].append(self.loss_test['zvar_sim_loss'])
-        self.checkpoint_scores['beta_vae_loss_train'].append(self.loss_train['beta_vae_loss'])
-        self.checkpoint_scores['beta_vae_loss_test'].append(self.loss_test['beta_vae_loss'])
+        self.checkpoint_scores['vae_loss_train'].append(self.loss_train['vae_loss'])
+        self.checkpoint_scores['vae_loss_test'].append(self.loss_test['vae_loss'])
 
         with open(self.file_path_checkpoint_scores, mode='wb+') as f:
             torch.save(self.checkpoint_scores, f)
