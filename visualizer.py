@@ -296,7 +296,7 @@ def joint_latent_traversal(net, nb_epochs, path, expe_name, latent_spec, batch, 
     viz = Viz(net, img_size, latent_spec)
     viz.save_images = False
 
-    traversals  = viz.joint_latent_traversal(batch, size_struct=size_struct, size_var=size_var,
+    traversals = viz.joint_latent_traversal(batch, size_struct=size_struct, size_var=size_var,
                                                             both_continue=both_continue, indx_image=indx_image,
                                                             is_partial_rand_class=is_partial_rand_class, is_E1=is_E1,
                                              real_img=real_img)

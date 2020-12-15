@@ -207,22 +207,22 @@ class Visualizer:
                                                             both_discrete=both_discrete)
         self.latent_traverser.sample_prior = cached_sample_prior
 
-        self.latent_var_dim
-        self.latent_class_dim
-
-
         if real_distribution:
             mu_var = mu[0]
             mu_struct = mu[1]
-            sigma_var = var[0]
-            sigma_struct = var[1]
-            for i in range(len(self.latent_var_dim)):
-                sample_var = np.random.normal(mu_var, sigma_var, size=(size[0] * size[1], self.latent_dim))
-            sample_struct = np.random.normal(mu_struct, sigma_struct, size=(size[0] * size[1], self.latent_dim))
+            sigma_var = np.abs(var[0])
+            sigma_struct = np.abs(var[1])
             sample = []
-            sample.append(sample_var)
-            sample.append(sample_struct)
-            sample = torch.cat(torch.tensor(sample), dim=0)
+            for i in range(self.latent_var_dim):
+                sample_var = np.random.normal(mu_var[i], sigma_var[i], (size[0] * size[1]))
+                sample.append(sample_var)
+
+            for i in range(self.latent_class_dim):
+                sample_struct = np.random.normal(mu_struct[i], sigma_struct[i], (size[0] * size[1]))
+                sample.append(sample_struct)
+
+            sample = torch.tensor(sample)
+            sample = sample.permute(1, 0)
 
         else:
             sample = np.random.normal(size=(size[0] * size[1], self.latent_dim))
