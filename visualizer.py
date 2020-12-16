@@ -376,18 +376,18 @@ def plot_loss_results(epochs, recon_loss_train_train, kl_disc_loss_train, kl_con
                       classification_partial_rand_loss_test, zvar_sim_loss_train, zvar_sim_loss_test, expe_name, is_wt_random,
                       is_both_continuous, save, partial_rand=False):
 
-    facteur_loss_reconstruction_train = int(vae_loss_train[-1] / recon_loss_train_train[-1])
-    facteur_loss_classification_train = int(vae_loss_train[-1] / classification_random_continue_loss_train[-1])
-    facteur_loss_reconstruction_test = int(vae_loss_test[-1] / recon_loss_train_test[-1])
-    facteur_loss_classification_test = int(vae_loss_test[-1] / classification_random_continue_loss_test[-1])
+    # facteur_loss_reconstruction_train = int(vae_loss_train[-1] / recon_loss_train_train[-1])
+    # facteur_loss_classification_train = int(vae_loss_train[-1] / classification_random_continue_loss_train[-1])
+    # facteur_loss_reconstruction_test = int(vae_loss_test[-1] / recon_loss_train_test[-1])
+    # facteur_loss_classification_test = int(vae_loss_test[-1] / classification_random_continue_loss_test[-1])
 
-    max_vae_loss_train = np.max(vae_loss_train)
-    max_vae_loss_test = np.max(vae_loss_test)
-    max_vae = np.max([max_vae_loss_train, max_vae_loss_test])
-    recon_loss_train_train = np.array(recon_loss_train_train) * facteur_loss_reconstruction_train
-    classification_random_continue_loss_train = np.array(classification_random_continue_loss_train) * facteur_loss_classification_train
-    recon_loss_train_test = np.array(recon_loss_train_test) * facteur_loss_reconstruction_test
-    classification_random_continue_loss_test = np.array(classification_random_continue_loss_test) * facteur_loss_classification_test
+    # max_vae_loss_train = np.max(vae_loss_train)
+    # max_vae_loss_test = np.max(vae_loss_test)
+    # max_vae = np.max([max_vae_loss_train, max_vae_loss_test])
+    # recon_loss_train_train = np.array(recon_loss_train_train) * facteur_loss_reconstruction_train
+    # classification_random_continue_loss_train = np.array(classification_random_continue_loss_train) * facteur_loss_classification_train
+    # recon_loss_train_test = np.array(recon_loss_train_test) * facteur_loss_reconstruction_test
+    # classification_random_continue_loss_test = np.array(classification_random_continue_loss_test) * facteur_loss_classification_test
 
     # vae_loss_train = np.array(vae_loss_train)
     # vae_loss_test = np.array(vae_loss_test)
