@@ -173,6 +173,20 @@ mnist_VAE_Class_E1_old_w_expe_beta_3 = [# 'VAE_Class_E1_old_w_expe_beta_3_1',
                                         'VAE_Class_E1_old_w_expe_beta_3_14',
                                         'VAE_Class_E1_old_w_expe_beta_3_15']
 
+mnist_VAE_Class_E1_old_w_expe = ['VAE_Class_E1_old_w_expe_beta_2_11_1',
+                                        'VAE_Class_E1_old_w_expe_beta_2_11_2',
+                                        'VAE_Class_E1_old_w_expe_beta_2_11_3',
+                                        'VAE_Class_E1_old_w_expe_beta_2_11_4',
+                                        'VAE_Class_E1_old_w_expe_beta_2_11_5',
+                                        'VAE_Class_E1_old_w_expe_beta_2_11_6',
+                                        'VAE_Class_E1_old_w_expe_beta_2_11_7',
+                                        'VAE_Class_E1_old_w_expe_beta_2_11_8',
+                                        'VAE_Class_E1_old_w_expe_beta_2_11_9',
+                                        'VAE_Class_E1_old_w_expe_beta_2_11_10',
+                                        'VAE_Class_E1_old_w_expe_beta_2_11_11',
+                                        'VAE_Class_E1_old_w_expe_beta_2_11_12',
+                                        'VAE_Class_E1_old_w_expe_beta_2_11_13']
+
 is_zvar_sim_loss = False
 is_partial_rand_class = False
 is_C = True
@@ -188,8 +202,7 @@ net = BetaVAE(latent_spec, nb_class, is_C, device, nc=nc, four_conv=four_conv, s
               is_E1=is_E1, E1_conv=E1_conv, BN=BN)
 
 z_component_traversal = np.arange(latent_spec['cont_var'] + latent_spec['cont_class'])
-"""
-for expe in mnist_VAE_Class_E1_old_w_expe_beta_2:
+for expe in mnist_VAE_Class_E1_old_w_expe:
     expe_name = expe
     net_trained, _, nb_epochs = get_checkpoints(net, path, expe_name)
     visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, path_scores=path_scores,
@@ -217,6 +230,8 @@ for expe in mnist_VAE_Class_E1_old_w_expe_beta_2:
     visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, plot_sample=True,
               sample_real=True, batch=batch, path=path,
               save=True, FID=False, IS=False, psnr=False, is_partial_rand_class=is_partial_rand_class, is_E1=is_E1)
+
+
 """
 for expe in mnist_VAE_Class_E1_old_w_expe_beta_3:
     expe_name = expe
@@ -255,7 +270,6 @@ is_zvar_sim_loss = False
 is_partial_rand_class = False
 is_C = True
 
-"""
 # _____________ VAE 5 10 + class + E1 old weights ________________
 latent_spec = {'cont_var': 5, 'cont_class': 10}
 BN = True
@@ -528,7 +542,7 @@ mnist_VAE_5_5_16_64_32 = ['TEst_Vanilla_VAE_8_']
 mnist_VAE_5_5_8_64_32 = ['TEst_Vanilla_VAE_9_']
 mnist_VAE_5_5_32_64_32 = ['TEst_Vanilla_VAE_10_']
 
-mnist_VAE_5_5 = ['VAE_5_5_2']
+mnist_VAE_5_5 = ['VAE_5-5']
 mnist_VAE_5_10 = ['VAE_5_10_2']
 mnist_VAE_5_15 = ['VAE_5_15_2']
 mnist_VAE_5_20 = ['VAE_5_20_3']
@@ -560,7 +574,7 @@ for expe in mnist_VAE_5_5:
     expe_name = expe
     net_trained, _, nb_epochs = get_checkpoints(net, path, expe_name)
     visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, path_scores=path_scores,
-            is_partial_rand_class=is_partial_rand_class, save=True, scores_and_losses=True, is_E1=is_E1, losses=True)
+            is_partial_rand_class=is_partial_rand_class, save=True, scores_and_losses=False, is_E1=is_E1, losses=True)
     visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, nb_epochs=nb_epochs, path=path,
               save=True, batch=batch, plot_sample=True, FID=True, IS=True, psnr=False)
     visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, nb_epochs=nb_epochs,
