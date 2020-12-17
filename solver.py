@@ -222,6 +222,7 @@ class Solver(object):
         self.zvar_sim_change_zvar = args.zvar_sim_change_zvar
         self.old_weighted = args.old_weighted
         self.adapt_lr = args.adapt_lr
+        self.E1_second_conv = args.E1_second_conv
 
         if self.zvar_sim_loss_only_for_encoder or self.zvar_sim_loss_for_all_model:
             list_uniq_choice = [self.zvar_sim_loss_only_for_encoder, self.zvar_sim_loss_for_all_model]
@@ -371,7 +372,7 @@ class Solver(object):
                       is_binary_structural_latent=self.is_binary_structural_latent, BN=self.BN, E1_conv=self.E1_conv,
                       E1_dense=self.E1_dense, hidden_filters_1=self.hidden_filters_layer1,
                       hidden_filters_2=self.hidden_filters_layer2, hidden_filters_3=self.hidden_filters_layer3,
-                      stride_size=self.stride_size, kernel_size=self.kernel_size)
+                      stride_size=self.stride_size, kernel_size=self.kernel_size, E1_second_conv=self.E1_second_conv)
 
         # print model characteristics:
         print(net)

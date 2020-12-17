@@ -1216,6 +1216,7 @@ def plot_struct_fixe_and_z_var_moove(average_representation_z_struct_class, trai
     latent_samples = []
     all_latent = []
     samples = []
+    """
     for i in range(nb_class):
         z_struct_prototype = torch.tensor(average_representation_z_struct_class[i]).to(device)
         z_var_rand = torch.zeros(latent_spec['cont_var'])
@@ -1234,10 +1235,35 @@ def plot_struct_fixe_and_z_var_moove(average_representation_z_struct_class, trai
             latent.append(z_struct_prototype)
             latent = torch.cat(latent, dim=0)
             all_latent.append(torch.tensor(latent))
+    """
+    z_struct_prototype = torch.tensor(average_representation_z_struct_class).to(device)  # shape: (nb_class, struct_dim)
+    z_struct_prototype = np.expand_dims(z_struct_prototype, axis=0)  # shape: (1, nb_class, struct_dim)
+    z_struct_prototype = torch.tensor(np.repeat(z_struct_prototype, nb_examples+1, axis=0))
+    # shape: (nb_example+1, nb_class, struct_dim)
+    z_var_zeros = torch.zeros((1, nb_class, latent_spec['cont_var']))  # shape: (1, nb_class, var_dim)
+    z_var_zeros = z_var_zeros.to(device)
 
-    all_latent = np.array([t.numpy() for t in all_latent])
-    samples.append(torch.Tensor(all_latent.reshape((nb_class*(nb_examples+1), latent_spec['cont_var'] +
-                                                          latent_spec['cont_class']))))
+    z_var_rand = torch.randn((1, nb_examples, latent_spec['cont_var']))  # shape: (nb_examples, var_dim)
+    z_var_rand = torch.tensor(np.repeat(z_var_rand, nb_class, axis=0))  # shape: (nb_class, nb_examples, struct_dim)
+    z_var_rand = z_var_rand.permute(1, 0, 2)  # shape: (nb_examples, nb_class, struct_dim)
+    z_var_rand = z_var_rand.to(device)
+
+    latent_zeros = []
+    latent_zeros.append(z_var_zeros[0])
+    latent_zeros.append(z_struct_prototype[0, :])
+    latent_zeros = torch.cat(latent_zeros, dim=1)  # shape: (nb_classes, z_dim)
+    all_latent.append(torch.tensor(latent_zeros))  # we add the first column: original z_struct with zeros z_var
+
+    for i in range(nb_examples):
+        latent_rand = []
+        latent_rand.append(z_var_rand[i])
+        latent_rand.append(z_struct_prototype[i+1])
+        latent_rand = torch.cat(latent_rand, dim=1)
+        all_latent.append(torch.tensor(latent_rand))
+
+    all_latent = torch.Tensor(np.array([t.numpy() for t in all_latent])).permute(1, 0, 2)
+    samples.append(all_latent.reshape((nb_class*(nb_examples+1), latent_spec['cont_var'] +
+                                                          latent_spec['cont_class'])))
     latent_samples.append(torch.cat(samples, dim=1))
     generated = net_trained._decode(torch.cat(latent_samples, dim=0))
     prototype = make_grid(generated.data, nrow=nb_examples+1)

@@ -51,7 +51,7 @@ class BetaVAE(nn.Module):
     def __init__(self, latent_spec, nb_class, is_C, device, temperature=0.67, nc=3, four_conv=True, 
                  second_layer_C=False, is_E1=False,  is_binary_structural_latent=False, 
                  BN=False, E1_conv=False, E1_dense=False, batch_size=64, hidden_filters_1=32,
-                 hidden_filters_2=32, hidden_filters_3=32, stride_size=2, kernel_size=4):
+                 hidden_filters_2=32, hidden_filters_3=32, stride_size=2, kernel_size=4, E1_second_conv=False):
         """
         Class which defines model and forward pass.
         Parameters
@@ -68,7 +68,7 @@ class BetaVAE(nn.Module):
         super(BetaVAE, self).__init__()
 
         # Parameters
-
+        self.E1_second_conv = E1_second_conv
         self.BN = BN
         self.is_binary_structural_latent = is_binary_structural_latent
         self.nc = nc
@@ -316,14 +316,26 @@ class BetaVAE(nn.Module):
         # ----------------------------------------Define Encoder E1 --------------------------------------------------
         if self.is_E1:
             if self.E1_conv:
-                self.E1 = nn.Sequential(
-                    nn.Conv2d(32, 3, 3, 1, 1),
-                    nn.BatchNorm2d(3),
-                    nn.ReLU(),
-                    nn.MaxPool2d(kernel_size=2, stride=2),  # B, 3, 8, 8
-                    View((-1, 192)),  # B, 192
-                    nn.Linear(192, self.latent_struct_dim * 2)  # B, struct_dim*2
-                )
+                if self.E1_second_conv:
+                    self.E1 = nn.Sequential(
+                        nn.Conv2d(32, 3, 3, 1, 1),
+                        # PrintLayer(),
+                        nn.BatchNorm2d(3),
+                        nn.ReLU(),
+                        nn.MaxPool2d(kernel_size=2, stride=2),  # B, 3, 8, 8
+                        # PrintLayer(),
+                        View((-1, 48)),  # B, 192
+                        nn.Linear(48, self.latent_struct_dim * 2)  # B, struct_dim*2
+                    )
+                else:
+                    self.E1 = nn.Sequential(
+                        nn.Conv2d(32, 3, 3, 1, 1),
+                        nn.BatchNorm2d(3),
+                        nn.ReLU(),
+                        nn.MaxPool2d(kernel_size=2, stride=2),  # B, 3, 8, 8
+                        View((-1, 192)),  # B, 192
+                        nn.Linear(192, self.latent_struct_dim * 2)  # B, struct_dim*2
+                    )
             elif self.E1_dense:
                 self.E1 = nn.Sequential(
                     # TODO: dense layer like schema
@@ -386,7 +398,8 @@ class BetaVAE(nn.Module):
             latent_representation_var = self._encode(x, both_continue=both_continue,
                                                      is_E1=is_E1)
             # for z_struct we use only the first conv layer: [mu, logvar]
-            latent_representation_structural_layer_1 = self._encode_layer1(x, both_continue=both_continue)
+            latent_representation_structural_layer_1 = self._encode_layer1(x, both_continue=both_continue,
+                                                                           E1_second_conv=self.E1_second_conv)
 
             latent_representation['cont_var'] = latent_representation_var
             latent_representation['cont_class'] = latent_representation_structural_layer_1
@@ -647,11 +660,15 @@ class BetaVAE(nn.Module):
 
         return latent_dist
 
-    def _encode_layer1(self, x, both_continue=False, both_discrete=False):
+    def _encode_layer1(self, x, both_continue=False, E1_second_conv=False):
 
         if both_continue:
-            output_layer_1 = self.encoder[:1](x)
-            output_structure_classifier = self.E1(output_layer_1)
+            if E1_second_conv:
+                output_layer = self.encoder[:5](x)
+            else:
+                output_layer = self.encoder[:3](x)
+
+            output_structure_classifier = self.E1(output_layer)
 
             mu = output_structure_classifier[:, :self.latent_struct_dim]
             logvar = output_structure_classifier[:, self.latent_struct_dim:]
