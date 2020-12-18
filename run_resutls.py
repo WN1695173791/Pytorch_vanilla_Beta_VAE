@@ -158,7 +158,7 @@ net = BetaVAE(latent_spec, nb_class, is_C, device, nc=nc, four_conv=four_conv, s
               is_E1=is_E1, E1_conv=E1_conv, BN=BN, E1_second_conv=E1_second_conv)
 
 z_component_traversal = np.arange(latent_spec['cont_var'] + latent_spec['cont_class'])
-for expe in list_expe:
+for expe in VAE_Class_E1_old_w_expe_beta_E1_second_new:
     expe_name = expe
     net_trained, _, nb_epochs = get_checkpoints(net, path, expe_name)
     # scores and losses:
