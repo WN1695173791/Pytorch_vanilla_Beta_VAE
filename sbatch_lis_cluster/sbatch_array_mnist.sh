@@ -10,16 +10,16 @@
 #SBATCH --mail-user=julien.dejasmin@lis-lab.fr
 
 #SBATCH --array=1-2  # -171
-echo "$SLURM_ARRAY_TASK_ID"
+# echo "$SLURM_ARRAY_TASK_ID"
 
-LINE=$(sed -n "$SLURM_ARRAY_TASK_ID"p parameters_combinations/mnist_expes.txt)
-echo $LINE
+# LINE=$(sed -n "$SLURM_ARRAY_TASK_ID"p parameters_combinations/mnist_expes.txt)
+# echo $LINE
 
-/data1/home/julien.dejasmin/anaconda3/envs/pytorch/bin/python -u main.py $LINE
+# /data1/home/julien.dejasmin/anaconda3/envs/pytorch/bin/python -u main.py $LINE
 
 echo "pass to run"
 
-/data1/home/julien.dejasmin/anaconda3/envs/pytorch/bin/python -u run_resutls.py
-
 echo "All Done!"
 wait      # Wait for the end of the "child" processes (Steps) before finishing the parent process (Job).
+
+srun /data1/home/julien.dejasmin/anaconda3/envs/pytorch/bin/python -u run_resutls.py
