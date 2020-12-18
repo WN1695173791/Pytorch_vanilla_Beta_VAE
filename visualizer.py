@@ -13,6 +13,7 @@ from sample_scores.inception_score import inception_score
 import math
 from torchvision.utils import make_grid
 
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 def psnr_metric(mse):
     # mse = torch.mean((img1 - img2) ** 2)
@@ -21,7 +22,7 @@ def psnr_metric(mse):
 
 def get_checkpoints(net, path, expe_name):
     file_path = os.path.join(path, expe_name, 'last')
-    checkpoint = torch.load(file_path, map_location=torch.device('cpu'))
+    checkpoint = torch.load(file_path, map_location=torch.device(device))
     net.load_state_dict(checkpoint['net'])
     nb_iter = checkpoint['iter']
     # nb_epochs = checkpoint['epochs']
@@ -32,7 +33,7 @@ def get_checkpoints(net, path, expe_name):
 
 def get_checkpoints_scores(net, path_scores, expe_name):
     file_path = os.path.join(path_scores, expe_name, 'last')
-    checkpoints_scores = torch.load(file_path, map_location=torch.device('cpu'))
+    checkpoints_scores = torch.load(file_path, map_location=torch.device(device))
 
     global_iter = checkpoints_scores['iter']
     epochs = checkpoints_scores['epochs']
@@ -169,7 +170,7 @@ def plot_samples(net, epochs, path, expe_name, latent_spec, img_size, size=(8, 8
                  save=False, FID=False, IS=False, psnr=True):
 
     file_path = os.path.join(path, expe_name, 'last')
-    checkpoint = torch.load(file_path, map_location=torch.device('cpu'))
+    checkpoint = torch.load(file_path, map_location=torch.device(device))
     net.load_state_dict(checkpoint['net'])
 
     viz = Viz(net, img_size, latent_spec)
@@ -216,7 +217,7 @@ def plot_samples(net, epochs, path, expe_name, latent_spec, img_size, size=(8, 8
 def plot_all_traversal(net, epochs, path, expe_name, latent_spec, img_size, size=8, both_continue=False):
 
     file_path = os.path.join(path, expe_name, 'last')
-    checkpoint = torch.load(file_path, map_location=torch.device('cpu'))
+    checkpoint = torch.load(file_path, map_location=torch.device(device))
     net.load_state_dict(checkpoint['net'])
 
     viz = Viz(net, img_size, latent_spec)
@@ -235,7 +236,7 @@ def latent_random_traversal(net, epochs, path, expe_name, latent_spec, img_size,
                             both_continue=False):
 
     file_path = os.path.join(path, expe_name, 'last')
-    checkpoint = torch.load(file_path, map_location=torch.device('cpu'))
+    checkpoint = torch.load(file_path, map_location=torch.device(device))
     net.load_state_dict(checkpoint['net'])
 
     viz = Viz(net, img_size, latent_spec)
@@ -257,7 +258,7 @@ def latent_real_img_traversal(net, nb_epochs, path, expe_name, latent_spec, batc
                                   size=None, save=False):
 
     file_path = os.path.join(path, expe_name, 'last')
-    checkpoint = torch.load(file_path, map_location=torch.device('cpu'))
+    checkpoint = torch.load(file_path, map_location=torch.device(device))
     net.load_state_dict(checkpoint['net'])
 
     viz = Viz(net, img_size, latent_spec)
@@ -290,7 +291,7 @@ def joint_latent_traversal(net, nb_epochs, path, expe_name, latent_spec, batch, 
                                   size_struct=8, size_var=8, save=False, real_img=False):
 
     file_path = os.path.join(path, expe_name, 'last')
-    checkpoint = torch.load(file_path, map_location=torch.device('cpu'))
+    checkpoint = torch.load(file_path, map_location=torch.device(device))
     net.load_state_dict(checkpoint['net'])
 
     viz = Viz(net, img_size, latent_spec)
@@ -320,7 +321,7 @@ def joint_latent_traversal(net, nb_epochs, path, expe_name, latent_spec, batch, 
 def plot_traversal_joint(net, path, expe_name, latent_spec, cont_idx, disc_idx, img_size, batch=None, real_im=False,
                          nb_samples=1, size=(10, 10)):
     file_path = os.path.join(path, expe_name, 'last')
-    checkpoint = torch.load(file_path, map_location=torch.device('cpu'))
+    checkpoint = torch.load(file_path, map_location=torch.device(device))
     net.load_state_dict(checkpoint['net'])
 
     viz = Viz(net, img_size, latent_spec)
@@ -605,10 +606,11 @@ def real_distribution_model(net, path_expe, expe_name, loader, latent_spec, trai
                             plot_gaussian=False, save=False):
 
     path = 'Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test + '_mu_var.npy'
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
     if not os.path.exists(path):
         file_path = os.path.join(path_expe, expe_name, 'last')
-        checkpoint = torch.load(file_path, map_location=torch.device('cpu'))
+        checkpoint = torch.load(file_path, map_location=torch.device(device))
         net.load_state_dict(checkpoint['net'])
 
         mu_var = torch.zeros(latent_spec['cont_var'])
@@ -726,7 +728,7 @@ def sample_real_distribution(net, path, expe_name, latent_spec, img_size, train_
                              is_partial_rand_class=False, is_E1=False, is_zvar_sim_loss=False):
 
     file_path = os.path.join(path, expe_name, 'last')
-    checkpoint = torch.load(file_path, map_location=torch.device('cpu'))
+    checkpoint = torch.load(file_path, map_location=torch.device(device))
     net.load_state_dict(checkpoint['net'])
 
     loader = None
