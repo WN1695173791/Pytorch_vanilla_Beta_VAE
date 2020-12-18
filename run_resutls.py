@@ -141,75 +141,7 @@ indx_image = 0
 
 # _______________________________Expe test VAE + class + E1_____________________________________
 
-VAE_Class_E1_old_w_expe_beta_E1_second_2 = ['VAE_Class_E1_old_w_expe_beta_E1_second_2_1',
-                                            'VAE_Class_E1_old_w_expe_beta_E1_second_2_2',
-                                            'VAE_Class_E1_old_w_expe_beta_E1_second_2_3',
-                                            'VAE_Class_E1_old_w_expe_beta_E1_second_2_4',
-                                            'VAE_Class_E1_old_w_expe_beta_E1_second_2_5',
-                                            'VAE_Class_E1_old_w_expe_beta_E1_second_2_6',
-                                            'VAE_Class_E1_old_w_expe_beta_E1_second_2_7',
-                                            'VAE_Class_E1_old_w_expe_beta_E1_second_2_8',
-                                            'VAE_Class_E1_old_w_expe_beta_E1_second_2_9',
-                                            'VAE_Class_E1_old_w_expe_beta_E1_second_2_10',
-                                            'VAE_Class_E1_old_w_expe_beta_E1_second_2_11',
-                                            'VAE_Class_E1_old_w_expe_beta_E1_second_2_12',
-                                            'VAE_Class_E1_old_w_expe_beta_E1_second_2_13',
-                                            'VAE_Class_E1_old_w_expe_beta_E1_second_2_14',
-                                            'VAE_Class_E1_old_w_expe_beta_E1_second_2_15']
-
-VAE_Class_E1_old_w_expe_beta_E1_second_3 = ['VAE_Class_E1_old_w_expe_beta_E1_second_3_1',
-                                            'VAE_Class_E1_old_w_expe_beta_E1_second_3_2',
-                                            'VAE_Class_E1_old_w_expe_beta_E1_second_3_3',
-                                            'VAE_Class_E1_old_w_expe_beta_E1_second_3_4',
-                                            'VAE_Class_E1_old_w_expe_beta_E1_second_3_5',
-                                            'VAE_Class_E1_old_w_expe_beta_E1_second_3_6',
-                                            'VAE_Class_E1_old_w_expe_beta_E1_second_3_7',
-                                            'VAE_Class_E1_old_w_expe_beta_E1_second_3_8',
-                                            'VAE_Class_E1_old_w_expe_beta_E1_second_3_9',
-                                            'VAE_Class_E1_old_w_expe_beta_E1_second_3_10',
-                                            'VAE_Class_E1_old_w_expe_beta_E1_second_3_11',
-                                            'VAE_Class_E1_old_w_expe_beta_E1_second_3_12',
-                                            'VAE_Class_E1_old_w_expe_beta_E1_second_3_13',
-                                            'VAE_Class_E1_old_w_expe_beta_E1_second_3_14',
-                                            'VAE_Class_E1_old_w_expe_beta_E1_second_3_15']
-
-VAE_Class_E1_old_w_expe_beta_E1_new_2 = ['VAE_Class_E1_old_w_expe_beta_E1_new_2_1',
-                                         'VAE_Class_E1_old_w_expe_beta_E1_new_2_2',
-                                         'VAE_Class_E1_old_w_expe_beta_E1_new_2_3',
-                                         'VAE_Class_E1_old_w_expe_beta_E1_new_2_4',
-                                         'VAE_Class_E1_old_w_expe_beta_E1_new_2_5',
-                                         'VAE_Class_E1_old_w_expe_beta_E1_new_2_6',
-                                         'VAE_Class_E1_old_w_expe_beta_E1_new_2_7',
-                                         'VAE_Class_E1_old_w_expe_beta_E1_new_2_8',
-                                         'VAE_Class_E1_old_w_expe_beta_E1_new_2_9',
-                                         'VAE_Class_E1_old_w_expe_beta_E1_new_2_10',
-                                         'VAE_Class_E1_old_w_expe_beta_E1_new_2_11',
-                                         'VAE_Class_E1_old_w_expe_beta_E1_new_2_12',
-                                         'VAE_Class_E1_old_w_expe_beta_E1_new_2_13',
-                                         'VAE_Class_E1_old_w_expe_beta_E1_new_2_14',
-                                         'VAE_Class_E1_old_w_expe_beta_E1_new_2_15']
-
-VAE_Class_E1_old_w_expe_beta_E1_new_3 = ['VAE_Class_E1_old_w_expe_beta_E1_new_3_1',
-                                         'VAE_Class_E1_old_w_expe_beta_E1_new_3_2',
-                                         'VAE_Class_E1_old_w_expe_beta_E1_new_3_3',
-                                         'VAE_Class_E1_old_w_expe_beta_E1_new_3_4',
-                                         'VAE_Class_E1_old_w_expe_beta_E1_new_3_5',
-                                         'VAE_Class_E1_old_w_expe_beta_E1_new_3_6',
-                                         'VAE_Class_E1_old_w_expe_beta_E1_new_3_7',
-                                         'VAE_Class_E1_old_w_expe_beta_E1_new_3_8',
-                                         'VAE_Class_E1_old_w_expe_beta_E1_new_3_9',
-                                         'VAE_Class_E1_old_w_expe_beta_E1_new_3_10',
-                                         'VAE_Class_E1_old_w_expe_beta_E1_new_3_11',
-                                         'VAE_Class_E1_old_w_expe_beta_E1_new_3_12',
-                                         'VAE_Class_E1_old_w_expe_beta_E1_new_3_13',
-                                         'VAE_Class_E1_old_w_expe_beta_E1_new_3_14',
-                                         'VAE_Class_E1_old_w_expe_beta_E1_new_3_15']
-
-list_of_list_E1_second = [VAE_Class_E1_old_w_expe_beta_E1_second_2,
-                          VAE_Class_E1_old_w_expe_beta_E1_second_3]
-
-list_of_list_E1_new = [VAE_Class_E1_old_w_expe_beta_E1_new_2,
-                       VAE_Class_E1_old_w_expe_beta_E1_new_3]
+VAE_Class_E1_old_w_expe_beta_E1_second_new = ['VAE_Class_E1_old_w_E1_new_expe_beta_2_1']
 
 is_zvar_sim_loss = False
 is_partial_rand_class = False
@@ -221,97 +153,51 @@ BN = True
 is_E1 = True
 E1_conv = True
 second_layer_C = False
-E1_second_conv = True
-
-net = BetaVAE(latent_spec, nb_class, is_C, device, nc=nc, four_conv=four_conv, second_layer_C=second_layer_C,
-              is_E1=is_E1, E1_conv=E1_conv, BN=BN, E1_second_conv=E1_second_conv)
-
-z_component_traversal = np.arange(latent_spec['cont_var'] + latent_spec['cont_class'])
-for list_expe in list_of_list_E1_second:
-    for expe in list_expe:
-        expe_name = expe
-        net_trained, _, nb_epochs = get_checkpoints(net, path, expe_name)
-        # scores and losses:
-        visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, path_scores=path_scores,
-                is_partial_rand_class=is_partial_rand_class, save=True, scores_and_losses=True, is_E1=is_E1, losses=True)
-        # sample:
-        visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, nb_epochs=nb_epochs, path=path,
-                  save=True, batch=batch, plot_sample=True, FID=True, IS=False, psnr=False)
-        # reconstruction:
-        visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, nb_epochs=nb_epochs,
-                  batch=batch, img_size=img_size, is_partial_rand_class=is_partial_rand_class,
-                  save=True, is_E1=is_E1, reconstruction=True)
-        # Traversal:
-        visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, nb_epochs=nb_epochs,
-                  batch=batch, img_size=img_size, path=path, is_partial_rand_class=is_partial_rand_class,
-                  is_E1=is_E1, z_component_traversal=z_component_traversal, indx_image=indx_image, plot_img_traversal=True)
-        # prototype
-        visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader,
-                 copute_average_z_structural=True, is_partial_rand_class=is_partial_rand_class, save=True,
-                 is_E1=is_E1)
-        # projection 2d:
-        visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, all_prototype=True,
-                 is_partial_rand_class=is_partial_rand_class, save=True, is_E1=is_E1)
-        # gaussian real distribution:
-        visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, path=path, save=True,
-                  is_partial_rand_class=is_partial_rand_class, is_E1=is_E1, real_distribution=True, plot_gaussian=True)
-        # traversal image with struct fixe and var fixe:
-        visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, batch=batch,
-                  path=path, real_img=False, size_struct=10, size_var=8,
-                  is_partial_rand_class=is_partial_rand_class, save=True, is_E1=is_E1,
-                  plot_img_traversal=True, both_latent_traversal=True)
-        # sample from real distribution:
-        visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, plot_sample=True,
-                  sample_real=True, batch=batch, path=path,
-                  save=True, FID=False, IS=False, psnr=False, is_partial_rand_class=is_partial_rand_class, is_E1=is_E1)
-
-
 E1_second_conv = False
 net = BetaVAE(latent_spec, nb_class, is_C, device, nc=nc, four_conv=four_conv, second_layer_C=second_layer_C,
               is_E1=is_E1, E1_conv=E1_conv, BN=BN, E1_second_conv=E1_second_conv)
 
 z_component_traversal = np.arange(latent_spec['cont_var'] + latent_spec['cont_class'])
-for list_expe in list_of_list_E1_new:
-    for expe in list_expe:
-        expe_name = expe
-        net_trained, _, nb_epochs = get_checkpoints(net, path, expe_name)
-        # scores and losses:
-        visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, path_scores=path_scores,
-                is_partial_rand_class=is_partial_rand_class, save=True, scores_and_losses=True, is_E1=is_E1, losses=True)
-        # sample:
-        visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, nb_epochs=nb_epochs, path=path,
-                  save=True, batch=batch, plot_sample=True, FID=True, IS=False, psnr=False)
-        # reconstruction:
-        visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, nb_epochs=nb_epochs,
-                  batch=batch, img_size=img_size, is_partial_rand_class=is_partial_rand_class,
-                  save=True, is_E1=is_E1, reconstruction=True)
-        # Traversal:
-        visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, nb_epochs=nb_epochs,
-                  batch=batch, img_size=img_size, path=path, is_partial_rand_class=is_partial_rand_class,
-                  is_E1=is_E1, z_component_traversal=z_component_traversal, indx_image=indx_image, plot_img_traversal=True)
-        # prototype
-        visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader,
-                 copute_average_z_structural=True, is_partial_rand_class=is_partial_rand_class, save=True,
-                 is_E1=is_E1)
-        # projection 2d:
-        visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, all_prototype=True,
-                 is_partial_rand_class=is_partial_rand_class, save=True, is_E1=is_E1)
-        # gaussian real distribution:
-        visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, path=path, save=True,
-                  is_partial_rand_class=is_partial_rand_class, is_E1=is_E1, real_distribution=True, plot_gaussian=True)
-        # traversal image with struct fixe and var fixe:
-        visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, batch=batch,
-                  path=path, real_img=False, size_struct=10, size_var=8,
-                  is_partial_rand_class=is_partial_rand_class, save=True, is_E1=is_E1,
-                  plot_img_traversal=True, both_latent_traversal=True)
-        # sample from real distribution:
-        visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, plot_sample=True,
-                  sample_real=True, batch=batch, path=path,
-                  save=True, FID=False, IS=False, psnr=False, is_partial_rand_class=is_partial_rand_class, is_E1=is_E1)
+for expe in list_expe:
+    expe_name = expe
+    net_trained, _, nb_epochs = get_checkpoints(net, path, expe_name)
+    # scores and losses:
+    visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, path_scores=path_scores,
+            is_partial_rand_class=is_partial_rand_class, save=True, scores_and_losses=True, is_E1=is_E1, losses=True)
+    # sample:
+    visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, nb_epochs=nb_epochs, path=path,
+              save=True, batch=batch, plot_sample=True, FID=True, IS=False, psnr=False)
+    # reconstruction:
+    visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, nb_epochs=nb_epochs,
+              batch=batch, img_size=img_size, is_partial_rand_class=is_partial_rand_class,
+              save=True, is_E1=is_E1, reconstruction=True)
+    # Traversal:
+    visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, nb_epochs=nb_epochs,
+              batch=batch, img_size=img_size, path=path, is_partial_rand_class=is_partial_rand_class,
+              is_E1=is_E1, z_component_traversal=z_component_traversal, indx_image=indx_image, plot_img_traversal=True)
+    # prototype
+    visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader,
+             copute_average_z_structural=True, is_partial_rand_class=is_partial_rand_class, save=True,
+             is_E1=is_E1)
+    # projection 2d:
+    visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, all_prototype=True,
+             is_partial_rand_class=is_partial_rand_class, save=True, is_E1=is_E1)
+    # gaussian real distribution:
+    visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, path=path, save=True,
+              is_partial_rand_class=is_partial_rand_class, is_E1=is_E1, real_distribution=True, plot_gaussian=True)
+    # traversal image with struct fixe and var fixe:
+    visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, batch=batch,
+              path=path, real_img=False, size_struct=10, size_var=8,
+              is_partial_rand_class=is_partial_rand_class, save=True, is_E1=is_E1,
+              plot_img_traversal=True, both_latent_traversal=True)
+    # sample from real distribution:
+    visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, plot_sample=True,
+              sample_real=True, batch=batch, path=path,
+              save=True, FID=False, IS=False, psnr=False, is_partial_rand_class=is_partial_rand_class, is_E1=is_E1)
 
-"""
+
 # -------------------------------- 5 10 -----------------------------------------------
-VAE_Class_E1_old_w_expe_5_10_1 = ['VAE_Class_E1_old_w_expe_5_10_1']
+VAE_Class_E1_old_w_expe_5_10_1 = ['VAE_Class_E1_old_w_E1_new_expe_beta_2_1_struct_10']
 
 is_zvar_sim_loss = False
 is_partial_rand_class = False
@@ -331,37 +217,48 @@ z_component_traversal = np.arange(latent_spec['cont_var'] + latent_spec['cont_cl
 for expe in VAE_Class_E1_old_w_expe_5_10_1:
     expe_name = expe
     net_trained, _, nb_epochs = get_checkpoints(net, path, expe_name)
+    # scores and losses:
     visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, path_scores=path_scores,
             is_partial_rand_class=is_partial_rand_class, save=True, scores_and_losses=True, is_E1=is_E1, losses=True)
+    # sample:
     visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, nb_epochs=nb_epochs, path=path,
-              save=True, batch=batch, plot_sample=True, FID=True, IS=True, psnr=False)
+              save=True, batch=batch, plot_sample=True, FID=True, IS=False, psnr=False)
+    # reconstruction:
     visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, nb_epochs=nb_epochs,
               batch=batch, img_size=img_size, is_partial_rand_class=is_partial_rand_class,
               save=True, is_E1=is_E1, reconstruction=True)
-
+    # Traversal:
     visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, nb_epochs=nb_epochs,
               batch=batch, img_size=img_size, path=path, is_partial_rand_class=is_partial_rand_class,
               is_E1=is_E1, z_component_traversal=z_component_traversal, indx_image=indx_image, plot_img_traversal=True)
+    # prototype
     visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader,
              copute_average_z_structural=True, is_partial_rand_class=is_partial_rand_class, save=True,
              is_E1=is_E1)
+    # projection 2d:
     visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, all_prototype=True,
              is_partial_rand_class=is_partial_rand_class, save=True, is_E1=is_E1)
+    # gaussian real distribution:
     visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, path=path, save=True,
               is_partial_rand_class=is_partial_rand_class, is_E1=is_E1, real_distribution=True, plot_gaussian=True)
+    # traversal image with struct fixe and var fixe:
     visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, batch=batch,
               path=path, real_img=False, size_struct=10, size_var=8,
               is_partial_rand_class=is_partial_rand_class, save=True, is_E1=is_E1,
               plot_img_traversal=True, both_latent_traversal=True)
+    # sample from real distribution:
     visualize(net, nb_class, expe_name, device, latent_spec, train_loader, test_loader, plot_sample=True,
               sample_real=True, batch=batch, path=path,
               save=True, FID=False, IS=False, psnr=False, is_partial_rand_class=is_partial_rand_class, is_E1=is_E1)
 
+
+"""
 VAE_Class_E1_old_w_expe_5_15_1 = ['VAE_Class_E1_old_w_expe_5_15_1']
 
 is_zvar_sim_loss = False
 is_partial_rand_class = False
 is_C = True
+
 
 # _____________ VAE 5 15 + class + E1 old weights ________________
 latent_spec = {'cont_var': 5, 'cont_class': 15}
