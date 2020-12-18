@@ -7,7 +7,7 @@ from scipy import stats
 from sklearn.decomposition import PCA
 from matplotlib import cm
 import matplotlib
-from captum.attr import LayerConductance
+#  from captum.attr import LayerConductance
 from sample_scores.FID_score.fid_score import calculate_fid_given_paths
 from sample_scores.inception_score import inception_score
 import math
