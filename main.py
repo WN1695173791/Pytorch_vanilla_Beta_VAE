@@ -85,6 +85,11 @@ if __name__ == "__main__":
                                                                                      ' all the model')
     parser.add_argument('--old_weighted', default=False, type=str2bool, help='If the old_weighted')
     parser.add_argument('--E1_second_conv', default=False, type=str2bool, help='If E1_second_conv')
+    parser.add_argument('--E1_second_conv_adapt', default=False, type=str2bool, help='If E1_second_conv_adapt')
+    parser.add_argument('--L1_norm', default=False, type=str2bool, help='If L1_norm')
+    parser.add_argument('--E1_VAE', default=False, type=str2bool, help='If E1_VAE')
+    parser.add_argument('--E1_AE', default=False, type=str2bool, help='If E1_AE')
+    parser.add_argument('--two_encoder', default=False, type=str2bool, help='If two_encoder')
 
     # --- Params to VAnilla VAE test:
     parser.add_argument('--hidden_filters_layer1', type=int, default=32, metavar='integer value',

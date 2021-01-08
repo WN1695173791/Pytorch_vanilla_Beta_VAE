@@ -51,7 +51,8 @@ class BetaVAE(nn.Module):
     def __init__(self, latent_spec, nb_class, is_C, device, temperature=0.67, nc=3, four_conv=True, 
                  second_layer_C=False, is_E1=False,  is_binary_structural_latent=False, 
                  BN=False, E1_conv=False, E1_dense=False, batch_size=64, hidden_filters_1=32,
-                 hidden_filters_2=32, hidden_filters_3=32, stride_size=2, kernel_size=4, E1_second_conv=False):
+                 hidden_filters_2=32, hidden_filters_3=32, stride_size=2, kernel_size=4, E1_second_conv=False,
+                 E1_second_conv_adapt=False, E1_VAE=False, E1_AE=False, two_encoder=False):
         """
         Class which defines model and forward pass.
         Parameters
@@ -68,7 +69,11 @@ class BetaVAE(nn.Module):
         super(BetaVAE, self).__init__()
 
         # Parameters
+        self.two_encoder = two_encoder
+        self.E1_VAE = E1_VAE
+        self.E1_AE = E1_AE
         self.E1_second_conv = E1_second_conv
+        self.E1_second_conv_adapt = E1_second_conv_adapt
         self.BN = BN
         self.is_binary_structural_latent = is_binary_structural_latent
         self.nc = nc
@@ -125,12 +130,19 @@ class BetaVAE(nn.Module):
         self.hidden_filters_1 = hidden_filters_1
         self.hidden_filters_2 = hidden_filters_2
         self.hidden_filters_3 = hidden_filters_3
+        if self.E1_VAE:
+            self.hidden_filters_E1 = self.latent_spec['cont_class'] * 2
+            self.output_E1_dim = self.latent_struct_dim * 2
+        elif self.E1_AE:
+            self.hidden_filters_E1 = self.latent_spec['cont_class']
+            self.output_E1_dim = self.latent_struct_dim
         self.kernel_size = kernel_size
         self.stride_size = stride_size
         self.hidden_dim = 256
-        self.padding = 0
+        self.padding = 1
         # Shape required to start transpose convs
-        self.reshape = (self.hidden_filters_3, self.kernel_size, self.kernel_size)
+        self.reshape = (self.hidden_filters_3, 4, 4)
+        # (self.hidden_filters_3, self.kernel_size, self.kernel_size)
 
         self.width_conv1_size = round(((32-self.kernel_size+(2*self.padding))/self.stride_size)+1)
         self.height_conv1_size = round(((32 - self.kernel_size + (2 * self.padding)) / self.stride_size) + 1)
@@ -148,53 +160,60 @@ class BetaVAE(nn.Module):
         # ---------------------------------------- Define encoder E --------------------------------------------------
         # firsts conv layers
         self.encoder_conv_layer_1 = [
-            nn.Conv2d(self.nc, self.hidden_filters_1, self.kernel_size, stride=self.stride_size, padding=1),
+            nn.Conv2d(self.nc, self.hidden_filters_1, self.kernel_size, stride=self.stride_size, padding=self.padding),
+            # shape: (Batch, hidden_filters_1, 15, 15)
         ]
         if self.BN:
             self.encoder_conv_layer_1 += [
                 nn.BatchNorm2d(self.hidden_filters_1),
                 ]
         self.encoder_conv_layer_1 += [
-            nn.ReLU(True)
+            nn.ReLU(True),
+            # PrintLayer()
         ]
 
         self.encoder_conv_layer_3 = [
-            nn.Conv2d(self.hidden_filters_1, self.hidden_filters_2, self.kernel_size, stride=self.stride_size, padding=1),
+            nn.Conv2d(self.hidden_filters_1, self.hidden_filters_2, self.kernel_size, stride=self.stride_size, padding=self.padding),
+            # shape: (Batch, hidden_filters_1, 6, 6)
         ]
         if self.BN:
             self.encoder_conv_layer_3 += [
                 nn.BatchNorm2d(self.hidden_filters_2),
             ]
         self.encoder_conv_layer_3 += [
-            nn.ReLU(True)
+            nn.ReLU(True),
+            # PrintLayer()
         ]
 
         self.encoder_conv_layer_4 = [
-            nn.Conv2d(self.hidden_filters_2, self.hidden_filters_3, self.kernel_size, stride=self.stride_size, padding=1),
+            nn.Conv2d(self.hidden_filters_2, self.hidden_filters_3, self.kernel_size, stride=self.stride_size, padding=self.padding),
+            # shape: (Batch, hidden_filters_1, 2, 2)
         ]
         if self.BN:
             self.encoder_conv_layer_4 += [
                 nn.BatchNorm2d(self.hidden_filters_3),
             ]
         self.encoder_conv_layer_4 += [
-            nn.ReLU(True)
+            nn.ReLU(True),
+            # PrintLayer()
         ]
 
         # Fully connected layers
         self.encoder_layer_5 = [
-            View((-1, 512)),  # B, 512
-            nn.Linear(np.product(self.reshape), self.hidden_dim),  # B, 256
-            nn.ReLU(True)
+            View((-1, np.product(self.reshape))),  # B, 512
+            nn.Linear(np.product(self.reshape), self.hidden_dim),  # shape: (Batch, 256)
+            nn.ReLU(True),
+            # PrintLayer()
         ]
-        self.encoder_layer_6 = [
-            nn.Linear(self.hidden_dim, self.hidden_dim),  # B, 256
-        ]
+        # self.encoder_layer_6 = [
+        #     nn.Linear(self.hidden_dim, self.hidden_dim),  # B, 256
+        # ]
 
         # if we want to use binary value for structural latent representation
         if self.is_binary_structural_latent:
             if self.four_conv:
                 self.encoder_conv_layer_2 = [
-                    nn.Conv2d(self.hidden_filters_1, self.hidden_filters_1, self.kernel_size),  # B,  32, 16, 16
+                    nn.Conv2d(self.hidden_filters_1, self.hidden_filters_1, self.kernel_size),  # B,  32, 15, 15
                 ]
                 if self.BN:
                     self.encoder_conv_layer_2 += [
@@ -232,13 +251,14 @@ class BetaVAE(nn.Module):
         else:
             # Fully connected layers for mean and variance
             self.mu_logvar_gen = [
-                nn.ReLU(True),
-                nn.Linear(self.hidden_dim, self.latent_dim_encoder),  # B, latent_dim * 2
+                # nn.ReLU(True),
+                nn.Linear(self.hidden_dim, self.latent_dim_encoder),  # shape: (Batch, latent_dim_encoder)
+                # PrintLayer(),
             ]
             if self.four_conv:
                 self.encoder_conv_layer_2 = [
-                    nn.Conv2d(self.hidden_filters_1, self.hidden_filters_1, self.kernel_size, stride=self.stride_size, padding=1),
-                    PrintLayer()
+                    nn.Conv2d(self.hidden_filters_1, self.hidden_filters_1, self.kernel_size, stride=self.stride_size, padding=self.padding),
+                    # PrintLayer()
                 ]
                 if self.BN:
                     self.encoder_conv_layer_2 += [
@@ -252,47 +272,51 @@ class BetaVAE(nn.Module):
                                              *self.encoder_conv_layer_3,
                                              *self.encoder_conv_layer_4,
                                              *self.encoder_layer_5,
-                                             *self.encoder_layer_6,
+                                             # *self.encoder_layer_6,
                                              *self.mu_logvar_gen)
             else:
                 self.encoder = nn.Sequential(*self.encoder_conv_layer_1,
                                              *self.encoder_conv_layer_3,
                                              *self.encoder_conv_layer_4,
                                              *self.encoder_layer_5,
-                                             *self.encoder_layer_6,
+                                             # *self.encoder_layer_6,
                                              *self.mu_logvar_gen)
         # ---------------------------------------- end encoder E --------------------------------------------------
 
         # ---------------------------------------- Define Decoder D -------------------------------------------------
         self.decoder_list_layer = [
             # Fully connected layers with ReLu activations
-            nn.Linear(self.latent_dim, self.hidden_dim),  # B, 256
+            nn.Linear(self.latent_dim, self.hidden_dim),  # B, 128
             # PrintLayer(),
-            nn.ReLU(True),
-            nn.Linear(self.hidden_dim, self.hidden_dim),  # B, 256
+            # nn.ReLU(True),
+            # nn.Linear(self.hidden_dim, self.hidden_dim),  # B, 256
             nn.ReLU(True),
             nn.Linear(self.hidden_dim, np.product(self.reshape)),  # B, 512
             nn.ReLU(True),
-            View((-1, *self.reshape)),
+            View((-1, *self.reshape)),  # View((-1, *self.reshape)),
+            # PrintLayer(),
             # Convolutional layers with ReLu activations
             nn.ConvTranspose2d(self.hidden_filters_3, self.hidden_filters_2, self.kernel_size, stride=self.stride_size,
-                               padding=1),
+                               padding=self.padding),
+            # PrintLayer(),
             nn.ReLU(True),
             nn.ConvTranspose2d(self.hidden_filters_2, self.hidden_filters_1, self.kernel_size, stride=self.stride_size,
-                               padding=1),
+                               padding=self.padding),
+            # PrintLayer(),
             nn.ReLU(True),
         ]
         if self.four_conv:
             self.decoder_list_layer += [
                 nn.ConvTranspose2d(self.hidden_filters_1, self.hidden_filters_1, self.kernel_size,
-                                   stride=self.stride_size, padding=1),
+                                   stride=self.stride_size, padding=self.padding),
                 nn.ReLU(True)
             ]
         else:
             # (32, 32) images are supported but do not require an extra layer
             pass
         self.decoder_list_layer += [
-            nn.ConvTranspose2d(self.hidden_filters_1, self.nc, self.kernel_size, stride=self.stride_size,  padding=1),  # B, 32, 32, 32
+            nn.ConvTranspose2d(self.hidden_filters_1, self.nc, self.kernel_size, stride=self.stride_size,  padding=self.padding),  # B, 32, 32, 32
+            # PrintLayer(),
             nn.Sigmoid()
         ]
 
@@ -316,25 +340,50 @@ class BetaVAE(nn.Module):
         # ----------------------------------------Define Encoder E1 --------------------------------------------------
         if self.is_E1:
             if self.E1_conv:
-                if self.E1_second_conv:
+                if self.E1_second_conv_adapt:
                     self.E1 = nn.Sequential(
-                        nn.Conv2d(32, 3, 3, 1, 1),
+                        nn.Conv2d(32, self.hidden_filters_E1, 3, 1, 1),  # B, latent_cont_classe, 15, 15
                         # PrintLayer(),
-                        nn.BatchNorm2d(3),
+                        nn.BatchNorm2d(self.hidden_filters_E1),
                         nn.ReLU(),
-                        nn.MaxPool2d(kernel_size=2, stride=2),  # B, 3, 8, 8
+                        nn.AdaptiveAvgPool2d((1, 1)),  # B, latent_cont_classe, 1, 1
+                        # Applies a 2D adaptive average pooling over an input signal
+                        # composed of several input planes.
+                        # The output is of size H x W, for any input size. The number of output features is equal to
+                        # the number of input planes.
+                        #  param: output_size: here: (1, 1) to make a GAP.
                         # PrintLayer(),
-                        View((-1, 48)),  # B, 192
-                        nn.Linear(48, self.latent_struct_dim * 2)  # B, struct_dim*2
+                        View((-1, self.output_E1_dim)),  # B, latent_spec['cont_class']
+                        # We will add the L1 sparsity constraint to the activations of the neuron after the ReLU
+                        # function. This will make some of the weights to be zero which will add a sparsity effect
+                        # to the weights.
+                        # L1 regularization: The L1 norm encourages sparsity, e.g. allows some activations to become
+                        # zero. A hyperparameter must be specified that indicates the amount or degree that the loss
+                        # function will weight or pay attention to the penalty
+                        # PrintLayer()
+                    )
+                elif self.two_encoder:
+                    self.E1 = nn.Sequential(
+                        nn.Conv2d(self.nc, self.hidden_filters_1, self.kernel_size, stride=self.stride_size,
+                                  padding=self.padding),
+                        nn.BatchNorm2d(self.hidden_filters_1),
+                        nn.ReLU(True),
+                        nn.Conv2d(32, self.hidden_filters_E1, 3, 1, 1),  # B, latent_cont_classe, 15, 15
+                        nn.BatchNorm2d(self.hidden_filters_E1),
+                        nn.ReLU(),
+                        nn.AdaptiveAvgPool2d((1, 1)),  # B, latent_cont_classe, 1, 1
+                        View((-1, self.output_E1_dim)),  # B, latent_spec['cont_class']
                     )
                 else:
                     self.E1 = nn.Sequential(
                         nn.Conv2d(32, 3, 3, 1, 1),
+                        # PrintLayer(),
                         nn.BatchNorm2d(3),
                         nn.ReLU(),
-                        nn.MaxPool2d(kernel_size=2, stride=2),  # B, 3, 8, 8
-                        View((-1, 192)),  # B, 192
-                        nn.Linear(192, self.latent_struct_dim * 2)  # B, struct_dim*2
+                        nn.MaxPool2d(kernel_size=2, stride=2),  # B, 3, 6, 6
+                        # PrintLayer(),
+                        View((-1, 48)),  # B, 192
+                        nn.Linear(48, self.latent_struct_dim * 2)  # B, struct_dim*2
                     )
             elif self.E1_dense:
                 self.E1 = nn.Sequential(
@@ -408,13 +457,17 @@ class BetaVAE(nn.Module):
             latent_sample_variability = self.reparameterization(latent_representation_var, both_continue=both_continue,
                                                            is_E1=is_E1)
             # reparametrize var:
-            latent_sample_class = self.reparameterization(latent_representation_structural_layer_1,
-                                                          both_continue=both_continue,
-                                                          is_E1=is_E1)
+            if self.E1_VAE:
+                latent_sample_class = self.reparameterization(latent_representation_structural_layer_1,
+                                                              both_continue=both_continue,
+                                                              is_E1=is_E1)
+            elif self.E1_AE:
+                latent_sample_class = torch.cat(latent_representation_structural_layer_1, dim=-1)
 
             latent_sample.append(latent_sample_variability)
-
+            # print(latent_sample_variability.shape)
             latent_sample.append(latent_sample_class)
+            # print(latent_sample_class.shape)
             latent_sample = torch.cat(latent_sample, dim=1)
 
             latent_sample_random_continue = self.representation_random_continue(latent_sample_class,
@@ -662,18 +715,24 @@ class BetaVAE(nn.Module):
 
     def _encode_layer1(self, x, both_continue=False, E1_second_conv=False):
 
-        if both_continue:
-            if E1_second_conv:
-                output_layer = self.encoder[:5](x)
-            else:
-                output_layer = self.encoder[:3](x)
+        if self.two_encoder:
+            output_structure_classifier = self.E1(x)
+        else:
+            if both_continue:
+                if E1_second_conv:
+                    output_layer = self.encoder[:6](x)
+                else:
+                    output_layer = self.encoder[:3](x)
 
-            output_structure_classifier = self.E1(output_layer)
+                output_structure_classifier = self.E1(output_layer)
 
-            mu = output_structure_classifier[:, :self.latent_struct_dim]
-            logvar = output_structure_classifier[:, self.latent_struct_dim:]
+        mu = output_structure_classifier[:, :self.latent_struct_dim]
+        logvar = output_structure_classifier[:, self.latent_struct_dim:]
 
+        if self.E1_VAE:
             latent_dist_structural = [mu, logvar]
+        else:
+            latent_dist_structural = [mu]
 
         return latent_dist_structural
 

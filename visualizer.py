@@ -613,17 +613,20 @@ def real_distribution_model(net, path_expe, expe_name, loader, latent_spec, trai
         checkpoint = torch.load(file_path, map_location=torch.device(device))
         net.load_state_dict(checkpoint['net'])
 
-        mu_var = torch.zeros(latent_spec['cont_var'])
-        mu_struct = torch.zeros(latent_spec['cont_class'])
+        mu_var = torch.zeros(0, latent_spec['cont_var'])
+        mu_struct = torch.zeros(0, latent_spec['cont_class'])
+        z = torch.zeros(0, latent_spec['cont_var'] + latent_spec['cont_class'])
 
-        sigma_var = torch.zeros(latent_spec['cont_var'])
-        sigma_struct = torch.zeros(latent_spec['cont_class'])
+        sigma_var = torch.zeros(0, latent_spec['cont_var'])
+        sigma_struct = torch.zeros(0, latent_spec['cont_class'])
 
         device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
         nb_batch = 0
+        nb_images = 0
         with torch.no_grad():
             for x in loader:
+                nb_images += len(x)
                 nb_batch += 1
 
                 data = x[0]
@@ -651,15 +654,20 @@ def real_distribution_model(net, path_expe, expe_name, loader, latent_spec, trai
                 sigma_var_iter = latent_representation['cont_var'][1]
                 sigma_struct_iter = latent_representation['cont_class'][1]
 
-                mu_var += torch.mean(mu_var_iter, dim=0)
-                mu_struct += torch.mean(mu_struct_iter, dim=0)
-                sigma_var += torch.mean(sigma_var_iter, dim=0)
-                sigma_struct += torch.mean(sigma_struct_iter, dim=0)
+                mu_var = torch.cat((mu_var, mu_var_iter), 0)
+                mu_struct = torch.cat((mu_struct, mu_struct_iter), 0)
+                sigma_var = torch.cat((sigma_var, sigma_var_iter), 0)
+                sigma_struct = torch.cat((sigma_struct, sigma_struct_iter), 0)
 
-        mu_var /= nb_batch
-        mu_struct /= nb_batch
-        sigma_var /= nb_batch
-        sigma_struct /= nb_batch
+                z = torch.cat((z, latent_sample), 0)
+
+        z_mean = torch.mean(z, axis=0)
+        z_var = torch.std(z, axis=0)
+
+        mu_var = torch.mean(mu_var, axis=0)
+        mu_struct = torch.mean(mu_struct, axis=0)
+        sigma_var = torch.mean(sigma_var, axis=0)
+        sigma_struct = torch.mean(sigma_struct, axis=0)
 
         np.save('Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test +
                 '_mu_var.npy', mu_var)
@@ -669,6 +677,10 @@ def real_distribution_model(net, path_expe, expe_name, loader, latent_spec, trai
                 'sigma_var.npy', sigma_var)
         np.save('Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test +
                 'sigma_struct.npy', sigma_struct)
+        np.save('Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test +
+                '_z_mean.npy', z_mean)
+        np.save('Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test +
+                '_z_var.npy', z_var)
 
     mu_var = np.load('Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test +
                      '_mu_var.npy', allow_pickle=True)
@@ -678,6 +690,10 @@ def real_distribution_model(net, path_expe, expe_name, loader, latent_spec, trai
                      'sigma_var.npy', allow_pickle=True)
     sigma_struct = np.load('Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test +
                      'sigma_struct.npy', allow_pickle=True)
+    z_mean = np.load('Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test +
+                '_z_mean.npy', allow_pickle=True)
+    z_var = np.load('Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test +
+                '_z_var.npy', allow_pickle=True)
 
     if plot_gaussian:
         mu = 0
@@ -697,6 +713,9 @@ def real_distribution_model(net, path_expe, expe_name, loader, latent_spec, trai
         x_mean_real_struct = np.linspace(mu_struct - 3 * sigma_mean_real_struct,
                                          mu_struct + 3 * sigma_mean_real_struct, 100)
 
+        sigma_z = np.sqrt(np.abs(z_var))
+        x_mean_z = np.linspace(z_mean - 3 * sigma_z, z_mean + 3 * sigma_z, 100)
+
         # mu_mean_real = (mu_mean_real_var + mu_mean_real_struct)/2
         # variance_mean_real = (variance_mean_real_var + variance_mean_real_struct)/2
         # sigma_mean_real = math.sqrt(np.abs(variance_mean_real))
@@ -714,13 +733,15 @@ def real_distribution_model(net, path_expe, expe_name, loader, latent_spec, trai
         #         label='mean real', color='orange')
         ax.plot(x, stats.norm.pdf(x, mu, sigma), label='Gaussian (0, I)', color='red')
 
+        ax.plot(x_mean_z, stats.norm.pdf(x_mean_z, z_mean, sigma_z), label='Gaussian after variational', color='black')
+
         ax.legend(loc=1)
         plt.show()
 
         if save:
-            fig.savefig("fig_results/plot_distribution/fig_tplot_distribution_" + expe_name + "_" + train_test + ".png")
+            fig.savefig("fig_results/plot_distribution/fig_plot_distribution_" + expe_name + "_" + train_test + ".png")
 
-    return mu_var, mu_struct, sigma_var, sigma_struct
+    return mu_var, mu_struct, sigma_var, sigma_struct, z_mean, z_var
 
 
 def sample_real_distribution(net, path, expe_name, latent_spec, img_size, train_test, size=(8, 8), batch=None,
@@ -732,24 +753,21 @@ def sample_real_distribution(net, path, expe_name, latent_spec, img_size, train_
     net.load_state_dict(checkpoint['net'])
 
     loader = None
-    mu_var, mu_struct, sigma_var, sigma_struct = real_distribution_model(net,
-                                                                         path,
-                                                                         expe_name,
-                                                                         loader,
-                                                                         latent_spec,
-                                                                         train_test,
-                                                                         is_both_continue=True,
-                                                                         is_partial_rand_class=is_partial_rand_class,
-                                                                         is_E1=is_E1,
-                                                                         is_zvar_sim_loss=is_zvar_sim_loss)
-    # mu_mean_real_var = np.mean(mu_var, axis=0)
-    # variance_mean_real_var = np.mean(sigma_var, axis=0)
-    # mu_mean_real_struct = np.mean(mu_struct, axis=0)
-    # variance_mean_real_struct = np.mean(sigma_struct, axis=0)
-    # mu = (mu_mean_real_var + mu_mean_real_struct) / 2
-    # var = np.abs((variance_mean_real_var + variance_mean_real_struct) / 2)
-    mu = [mu_var, mu_struct]
-    var = [sigma_var, sigma_struct]
+    mu_var, mu_struct, sigma_var, sigma_struct, z_mean, z_var = real_distribution_model(net,
+                                                                                        path,
+                                                                                        expe_name,
+                                                                                        loader,
+                                                                                        latent_spec,
+                                                                                        train_test,
+                                                                                        is_both_continue=True,
+                                                                                        is_partial_rand_class=is_partial_rand_class,
+                                                                                        is_E1=is_E1,
+                                                                                        is_zvar_sim_loss=is_zvar_sim_loss)
+
+    # mu = [mu_var, mu_struct]
+    # var = [sigma_var, sigma_struct]
+    mu = [z_mean[:latent_spec['cont_var']], z_mean[latent_spec['cont_class']:]]
+    var = [z_var[:latent_spec['cont_var']], z_var[latent_spec['cont_class']:]]
 
     viz = Viz(net, img_size, latent_spec)
     viz.save_images = False

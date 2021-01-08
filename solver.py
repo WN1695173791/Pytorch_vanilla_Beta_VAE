@@ -104,7 +104,7 @@ def _kl_discrete_loss(alpha):
 def compute_scores_and_loss(net, train_loader, valid_loader, device, latent_spec, train_loader_size,
                             test_loader_size, is_partial_rand_class, random_percentage, is_E1, is_zvar_sim_loss, is_C,
                             is_noise_stats, is_perturbed_score, zvar_sim_var_rand, zvar_sim_normal,
-                            zvar_sim_change_zvar, old_weighted):
+                            zvar_sim_change_zvar, old_weighted, E1_VAE, E1_AE):
     """
     compute some sample_scores and loss on data train and data set and save it for plot after training
     :return:
@@ -128,7 +128,9 @@ def compute_scores_and_loss(net, train_loader, valid_loader, device, latent_spec
                                                       zvar_sim_var_rand,
                                                       zvar_sim_normal,
                                                       zvar_sim_change_zvar,
-                                                      old_weighted)
+                                                      old_weighted,
+                                                      E1_VAE,
+                                                      E1_AE)
     # print("Test:")
     scores_test, loss_test, mean_proba_per_class_test, std_proba_per_class_test, \
     mean_proba_per_class_noised_test, \
@@ -146,7 +148,9 @@ def compute_scores_and_loss(net, train_loader, valid_loader, device, latent_spec
                                                      zvar_sim_var_rand,
                                                      zvar_sim_normal,
                                                      zvar_sim_change_zvar,
-                                                     old_weighted)
+                                                     old_weighted,
+                                                     E1_VAE,
+                                                     E1_AE)
 
     return scores_train, scores_test, loss_train, loss_test, mean_proba_per_class_train, std_proba_per_class_train, \
            mean_proba_per_class_test, std_proba_per_class_test, mean_proba_per_class_noised_train, \
@@ -223,6 +227,11 @@ class Solver(object):
         self.old_weighted = args.old_weighted
         self.adapt_lr = args.adapt_lr
         self.E1_second_conv = args.E1_second_conv
+        self.E1_second_conv_adapt = args.E1_second_conv_adapt
+        self.L1_norm = args.L1_norm
+        self.E1_VAE = args.E1_VAE
+        self.E1_AE = args.E1_AE
+        self.two_encoder = args.two_encoder
 
         if self.zvar_sim_loss_only_for_encoder or self.zvar_sim_loss_for_all_model:
             list_uniq_choice = [self.zvar_sim_loss_only_for_encoder, self.zvar_sim_loss_for_all_model]
@@ -372,7 +381,9 @@ class Solver(object):
                       is_binary_structural_latent=self.is_binary_structural_latent, BN=self.BN, E1_conv=self.E1_conv,
                       E1_dense=self.E1_dense, hidden_filters_1=self.hidden_filters_layer1,
                       hidden_filters_2=self.hidden_filters_layer2, hidden_filters_3=self.hidden_filters_layer3,
-                      stride_size=self.stride_size, kernel_size=self.kernel_size, E1_second_conv=self.E1_second_conv)
+                      stride_size=self.stride_size, kernel_size=self.kernel_size, E1_second_conv=self.E1_second_conv,
+                      E1_second_conv_adapt=self.E1_second_conv_adapt, E1_VAE=self.E1_VAE, E1_AE=self.E1_AE,
+                      two_encoder=self.two_encoder)
 
         # print model characteristics:
         print(net)
@@ -524,10 +535,14 @@ class Solver(object):
                 if self.is_both_continue:
                     mu_var, logvar_var = latent_representation['cont_var']
                     kl_cont_loss_var = kl_divergence(mu_var, logvar_var)
-                    mu_class, logvar_class = latent_representation['cont_class']
-                    kl_cont_loss_class = kl_divergence(mu_class, logvar_class)
+                    # print(latent_representation['cont_class'][1].shape)
+                    if self.E1_VAE:
+                        mu_class, logvar_class = latent_representation['cont_class']
+                        kl_cont_loss_class = kl_divergence(mu_class, logvar_class)
+                        self.L_KL_struct = kl_cont_loss_class.item()
+                    elif self.E1_AE:
+                        self.L_KL_struct = 0
                     self.L_KL_var = kl_cont_loss_var
-                    self.L_KL_struct = kl_cont_loss_class
                 elif self.is_both_discrete:
                     kl_disc_loss_var = _kl_multiple_discrete_loss(latent_representation['disc_var'])
                     kl_disc_loss_class = _kl_multiple_discrete_loss(latent_representation['disc_class'])
@@ -547,27 +562,32 @@ class Solver(object):
                 # Calculate total kl value to record it
                 if self.old_weighted:
                     self.L_KL = (self.lambda_Kl_var_normalized * self.L_KL_var.item()) + \
-                                (self.lambda_Kl_struct_normalized * self.L_KL_struct.item())
+                                (self.lambda_Kl_struct_normalized * self.L_KL_struct)
 
                     self.L_Total = (self.lambda_recons_normalized * self.Lr) + \
                                    (self.beta_normalized * self.L_KL) + \
                                    (self.lambda_class_normalized * self.Lc) + \
                                    (self.lambda_partial_class_normalized * self.Lpc)
 
-                    self.L_Total_wt_weights = self.Lr + self.L_KL_var.item() + self.L_KL_struct.item() + self.Lc + self.Lpc
+                    self.L_Total_wt_weights = self.Lr + self.L_KL_var.item() + self.L_KL_struct + self.Lc + self.Lpc
                 else:
-                    self.L_KL = self.beta_normalized * (self.L_KL_var.item() + self.L_KL_struct.item())
+                    self.L_KL = self.beta_normalized * (self.L_KL_var.item() + self.L_KL_struct)
                     self.L_AE = self.L_KL + self.Lr
 
                     # Warning: if we add a new lambda: update normalize weight !!!!
                     self.L_Total = (self.lambda_VAE_normalized * self.L_AE) + (self.lambda_class_normalized * self.Lc)
-                    self.L_Total_wt_weights = self.Lr + self.L_KL_var.item() + self.L_KL_struct.item() + self.Lc + self.L_AE
+                    self.L_Total_wt_weights = self.Lr + self.L_KL_var.item() + self.L_KL_struct + self.Lc + self.L_AE
 
                 if self.is_zvar_sim_loss and self.zvar_sim_loss_for_all_model:
                     self.L_Total += (self.Lm * self.lambda_zvar_sim_normalized)
                     self.L_Total_wt_weights += self.Lm
 
-                # plot parameters:
+                if self.L1_norm:
+                    print(self.net.E1)
+                    l1_norm = torch.norm(self.net.E1[-1].weight, p=1)
+                    self.L_Total += l1_norm
+
+                    # plot parameters:
                 # print('-----------::::::::::::Before:::::::-----------------:', self.i)
                 # print(self.net.encoder[0].weight[0][0])
                 # print(self.net.decoder[0].weight[0])
@@ -639,9 +659,9 @@ class Solver(object):
                         self.epochs,
                         self.L_Total_wt_weights.item(),
                         self.Lr,
-                        self.L_KL_var.item() + self.L_KL_struct.item(),
+                        self.L_KL_var.item() + self.L_KL_struct,
                         self.L_KL_var.item(),
-                        self.L_KL_struct.item(),
+                        self.L_KL_struct,
                         self.Lc,
                         self.Lpc,
                         self.Lm))
@@ -675,7 +695,9 @@ class Solver(object):
                                                                                        self.zvar_sim_var_rand,
                                                                                        self.zvar_sim_normal,
                                                                                        self.zvar_sim_change_zvar,
-                                                                                       self.old_weighted)
+                                                                                       self.old_weighted,
+                                                                                       self.E1_VAE,
+                                                                                       self.E1_AE)
                         self.save_checkpoint_scores_loss()
                         self.net_mode(train=True)
 

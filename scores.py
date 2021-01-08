@@ -7,7 +7,7 @@ EPS = 1e-12
 
 def compute_scores(net, loader, device, latent_spec, nb_data, is_partial_rand_class, random_percentage, is_E1,
                    is_zvar_sim_loss, is_C, is_noise_stats, is_perturbed_score, zvar_sim_var_rand, zvar_sim_normal,
-                   zvar_sim_change_zvar, old_weighted):
+                   zvar_sim_change_zvar, old_weighted, E1_VAE, E1_AE):
 
     """
     compute all sample_scores
@@ -119,10 +119,13 @@ def compute_scores(net, loader, device, latent_spec, nb_data, is_partial_rand_cl
             if is_both_continue:
                 mu_var, logvar_var = latent_representation['cont_var']
                 kl_cont_loss_var = kl_divergence(mu_var, logvar_var)
-                mu_class, logvar_class = latent_representation['cont_class']
-                kl_cont_loss_class = kl_divergence(mu_class, logvar_class)
+                if E1_VAE:
+                    mu_class, logvar_class = latent_representation['cont_class']
+                    kl_cont_loss_class = kl_divergence(mu_class, logvar_class)
+                    kl_class_loss_iter = kl_cont_loss_class
+                elif E1_AE:
+                    kl_class_loss_iter = 0
                 kl_var_loss_iter = kl_cont_loss_var
-                kl_class_loss_iter = kl_cont_loss_class
             elif is_both_discrete:
                 kl_disc_loss_var = _kl_multiple_discrete_loss(latent_representation['disc_var'])
                 kl_disc_loss_class = _kl_multiple_discrete_loss(latent_representation['disc_class'])
