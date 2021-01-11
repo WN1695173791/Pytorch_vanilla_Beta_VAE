@@ -53,7 +53,7 @@ class BetaVAE(nn.Module):
                  BN=False, E1_conv=False, E1_dense=False, batch_size=64, hidden_filters_1=32,
                  hidden_filters_2=32, hidden_filters_3=32, stride_size=2, kernel_size=4, E1_second_conv=False,
                  E1_second_conv_adapt=False, E1_VAE=False, E1_AE=False, two_encoder=False, big_kernel_size=8,
-                 big_kernel=False, normal_kernel=True, GAP=False):
+                 big_kernel=False, normal_kernel=True, GMP=False):
         """
         Class which defines model and forward pass.
         Parameters
@@ -70,7 +70,7 @@ class BetaVAE(nn.Module):
         super(BetaVAE, self).__init__()
 
         # Parameters
-        self.GAP = GAP
+        self.GMP = GMP
         self.normal_kernel = normal_kernel
         self.big_kernel = big_kernel
         self.two_encoder = two_encoder
@@ -147,7 +147,7 @@ class BetaVAE(nn.Module):
         self.big_kernel_size = big_kernel_size
         if self.big_kernel:
             if self.big_kernel_size == 8:
-                if self.GAP:
+                if self.GMP:
                     self.reshape = (self.hidden_filters_3, 7, 7)
                     self.reshape_E1_bk = (self.hidden_filters_E1, 7, 7)
                 else:
@@ -410,11 +410,11 @@ class BetaVAE(nn.Module):
         # ----------------------------------------Define Encoder E1 --------------------------------------------------
         if self.is_E1:
             if self.E1_conv:
-                if self.GAP:
+                if self.GMP:
                     if self.big_kernel:
                         if self.E1_second_conv_adapt:
                             self.E1 = nn.Sequential(
-                                nn.AdaptiveAvgPool2d((1, 1)),  # B, latent_cont_classe, 1, 1
+                                nn.AdaptiveMaxPool2d((1, 1)),  # B, latent_cont_classe, 1, 1
                                 View((-1, self.hidden_filters_1)),  # B, latent_spec['cont_class']
                                 nn.Linear(self.hidden_filters_1, self.output_E1_dim),  # shape: (Batch, 256)
                             )
@@ -427,7 +427,7 @@ class BetaVAE(nn.Module):
                                 # PrintLayer(),
                                 nn.BatchNorm2d(self.hidden_filters_1),
                                 nn.ReLU(True),
-                                nn.AdaptiveAvgPool2d((1, 1)),  # B, latent_cont_classe, 1, 1
+                                nn.AdaptiveMaxPool2d((1, 1)),  # B, latent_cont_classe, 1, 1
                                 View((-1, self.hidden_filters_1)),  # B, latent_spec['cont_class']
                                 nn.Linear(self.hidden_filters_1, self.output_E1_dim),  # shape: (Batch, 256)
                             )
@@ -439,12 +439,12 @@ class BetaVAE(nn.Module):
                                 # PrintLayer(),
                                 nn.BatchNorm2d(self.hidden_filters_E1),
                                 nn.ReLU(True),
-                                nn.AdaptiveAvgPool2d((1, 1)),  # B, latent_cont_classe, 1, 1
+                                nn.AdaptiveMaxPool2d((1, 1)),  # B, latent_cont_classe, 1, 1
                                 # Applies a 2D adaptive average pooling over an input signal
                                 # composed of several input planes.
                                 # The output is of size H x W, for any input size. The number of output features is equal to
                                 # the number of input planes.
-                                #  param: output_size: here: (1, 1) to make a GAP.
+                                #  param: output_size: here: (1, 1) to make a GMP.
                                 # PrintLayer(),
                                 View((-1, self.output_E1_dim)),  # B, latent_spec['cont_class']
                                 # We will add the L1 sparsity constraint to the activations of the neuron after the ReLU
@@ -464,7 +464,7 @@ class BetaVAE(nn.Module):
                                 nn.Conv2d(32, self.hidden_filters_E1, 3, 1, 1),  # B, latent_cont_classe, 15, 15
                                 nn.BatchNorm2d(self.hidden_filters_E1),
                                 nn.ReLU(True),
-                                nn.AdaptiveAvgPool2d((1, 1)),  # B, latent_cont_classe, 1, 1
+                                nn.AdaptiveMaxPool2d((1, 1)),  # B, latent_cont_classe, 1, 1
                                 View((-1, self.output_E1_dim)),  # B, latent_spec['cont_class']
                             )
                 else:
@@ -962,7 +962,7 @@ class BetaVAE(nn.Module):
             gumbel = -torch.log(-torch.log(unif + EPS) + EPS)
             # reparameterization to create gumbel softmax sample
             log_alpha = torch.log(alpha + EPS)
-            # self.temperature: to create more or less big gap between values in logit
+            # self.temperature: to create more or less big GMP between values in logit
             logit = (log_alpha + gumbel) / self.temperature
             return F.softmax(logit, dim=1)
         else:

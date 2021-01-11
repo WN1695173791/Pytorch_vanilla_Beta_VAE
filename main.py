@@ -92,7 +92,7 @@ if __name__ == "__main__":
     parser.add_argument('--two_encoder', default=False, type=str2bool, help='If two_encoder')
     parser.add_argument('--big_kernel_size', nargs='+', type=int, default=8, help='If big_kernel_size')
     parser.add_argument('--big_kernel', default=False, type=str2bool, help='If big_kernel')
-    parser.add_argument('--GAP', default=False, type=str2bool, help='If GAP')
+    parser.add_argument('--GMP', default=False, type=str2bool, help='If GMP')
 
     # --- Params to VAnilla VAE test:
     parser.add_argument('--hidden_filters_layer1', type=int, default=32, metavar='integer value',
