@@ -232,6 +232,8 @@ class Solver(object):
         self.E1_VAE = args.E1_VAE
         self.E1_AE = args.E1_AE
         self.two_encoder = args.two_encoder
+        self.big_kernel = args.big_kernel
+        self.big_kernel_size = args.big_kernel_size
 
         if self.zvar_sim_loss_only_for_encoder or self.zvar_sim_loss_for_all_model:
             list_uniq_choice = [self.zvar_sim_loss_only_for_encoder, self.zvar_sim_loss_for_all_model]
@@ -383,7 +385,7 @@ class Solver(object):
                       hidden_filters_2=self.hidden_filters_layer2, hidden_filters_3=self.hidden_filters_layer3,
                       stride_size=self.stride_size, kernel_size=self.kernel_size, E1_second_conv=self.E1_second_conv,
                       E1_second_conv_adapt=self.E1_second_conv_adapt, E1_VAE=self.E1_VAE, E1_AE=self.E1_AE,
-                      two_encoder=self.two_encoder)
+                      two_encoder=self.two_encoder, big_kernel_size=self.big_kernel_size[0], big_kernel=self.big_kernel)
 
         # print model characteristics:
         print(net)

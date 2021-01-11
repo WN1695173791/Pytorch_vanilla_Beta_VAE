@@ -52,7 +52,8 @@ class BetaVAE(nn.Module):
                  second_layer_C=False, is_E1=False,  is_binary_structural_latent=False, 
                  BN=False, E1_conv=False, E1_dense=False, batch_size=64, hidden_filters_1=32,
                  hidden_filters_2=32, hidden_filters_3=32, stride_size=2, kernel_size=4, E1_second_conv=False,
-                 E1_second_conv_adapt=False, E1_VAE=False, E1_AE=False, two_encoder=False):
+                 E1_second_conv_adapt=False, E1_VAE=False, E1_AE=False, two_encoder=False, big_kernel_size=8,
+                 big_kernel=False, normal_kernel=True):
         """
         Class which defines model and forward pass.
         Parameters
@@ -69,6 +70,8 @@ class BetaVAE(nn.Module):
         super(BetaVAE, self).__init__()
 
         # Parameters
+        self.normal_kernel = normal_kernel
+        self.big_kernel = big_kernel
         self.two_encoder = two_encoder
         self.E1_VAE = E1_VAE
         self.E1_AE = E1_AE
@@ -140,8 +143,15 @@ class BetaVAE(nn.Module):
         self.stride_size = stride_size
         self.hidden_dim = 256
         self.padding = 1
-        # Shape required to start transpose convs
-        self.reshape = (self.hidden_filters_3, 4, 4)
+        self.big_kernel_size = big_kernel_size
+        if self.big_kernel:
+            if self.big_kernel_size == 8:
+                self.reshape = (self.hidden_filters_3, 7, 7)
+            elif self.big_kernel_size == 13:
+                self.reshape = (self.hidden_filters_3, 5, 5)
+        else:
+            # Shape required to start transpose convs
+            self.reshape = (self.hidden_filters_3, 4, 4)
         # (self.hidden_filters_3, self.kernel_size, self.kernel_size)
 
         self.width_conv1_size = round(((32-self.kernel_size+(2*self.padding))/self.stride_size)+1)
@@ -159,168 +169,213 @@ class BetaVAE(nn.Module):
 
         # ---------------------------------------- Define encoder E --------------------------------------------------
         # firsts conv layers
-        self.encoder_conv_layer_1 = [
-            nn.Conv2d(self.nc, self.hidden_filters_1, self.kernel_size, stride=self.stride_size, padding=self.padding),
-            # shape: (Batch, hidden_filters_1, 15, 15)
-        ]
-        if self.BN:
-            self.encoder_conv_layer_1 += [
+        if self.big_kernel:
+            self.encoder = nn.Sequential(
+                nn.Conv2d(self.nc, self.hidden_filters_1, self.big_kernel_size, stride=self.stride_size,
+                          padding=self.padding),
+                # shape: (Batch, hidden_filters_1, 14, 14)
+                # PrintLayer(),
                 nn.BatchNorm2d(self.hidden_filters_1),
-                ]
-        self.encoder_conv_layer_1 += [
-            nn.ReLU(True),
-            # PrintLayer()
-        ]
-
-        self.encoder_conv_layer_3 = [
-            nn.Conv2d(self.hidden_filters_1, self.hidden_filters_2, self.kernel_size, stride=self.stride_size, padding=self.padding),
-            # shape: (Batch, hidden_filters_1, 6, 6)
-        ]
-        if self.BN:
-            self.encoder_conv_layer_3 += [
-                nn.BatchNorm2d(self.hidden_filters_2),
-            ]
-        self.encoder_conv_layer_3 += [
-            nn.ReLU(True),
-            # PrintLayer()
-        ]
-
-        self.encoder_conv_layer_4 = [
-            nn.Conv2d(self.hidden_filters_2, self.hidden_filters_3, self.kernel_size, stride=self.stride_size, padding=self.padding),
-            # shape: (Batch, hidden_filters_1, 2, 2)
-        ]
-        if self.BN:
-            self.encoder_conv_layer_4 += [
-                nn.BatchNorm2d(self.hidden_filters_3),
-            ]
-        self.encoder_conv_layer_4 += [
-            nn.ReLU(True),
-            # PrintLayer()
-        ]
-
-        # Fully connected layers
-        self.encoder_layer_5 = [
-            View((-1, np.product(self.reshape))),  # B, 512
-            nn.Linear(np.product(self.reshape), self.hidden_dim),  # shape: (Batch, 256)
-            nn.ReLU(True),
-            # PrintLayer()
-        ]
-        # self.encoder_layer_6 = [
-        #     nn.Linear(self.hidden_dim, self.hidden_dim),  # B, 256
-        # ]
-
-        # if we want to use binary value for structural latent representation
-        if self.is_binary_structural_latent:
-            if self.four_conv:
-                self.encoder_conv_layer_2 = [
-                    nn.Conv2d(self.hidden_filters_1, self.hidden_filters_1, self.kernel_size),  # B,  32, 15, 15
-                ]
-                if self.BN:
-                    self.encoder_conv_layer_2 += [
-                        nn.BatchNorm2d(self.hidden_filters_1),
-                    ]
-                self.encoder_conv_layer_2 += [
-                    nn.ReLU(True)
-                ]
-                self.encoder = nn.Sequential(*self.encoder_conv_layer_1,
-                                             *self.encoder_conv_layer_2,
-                                             *self.encoder_conv_layer_3,
-                                             *self.encoder_conv_layer_4,
-                                             *self.encoder_layer_5,
-                                             *self.encoder_layer_6)
-            else:
-                self.encoder = nn.Sequential(*self.encoder_conv_layer_1,
-                                             *self.encoder_conv_layer_3,
-                                             *self.encoder_conv_layer_4,
-                                             *self.encoder_layer_5,
-                                             *self.encoder_layer_6)
-            self.output_encoder_variability = [
                 nn.ReLU(True),
-                View((-1, self.hidden_dim)),  # B, self.hidden_dim
-                nn.Linear(self.hidden_dim, self.latent_var_dim * 2)  # B, latent_dim
-            ]
-            self.output_encoder_structural = [
-                # we binary the conv_layer5 output: dim: self.hidden_dim
-                DeterministicBinaryActivation(estimator='ST'),
-                View((-1, self.hidden_dim)),  # B, self.hidden_dim
-                # after linear layer, the neurons are not binary
-                nn.Linear(self.hidden_dim, self.latent_struct_dim)  # B, latent_dim
-            ]
-            self.encoder_output_encoder_variability = nn.Sequential(*self.output_encoder_variability)
-            self.encoder_output_encoder_structural = nn.Sequential(*self.output_encoder_structural)
-        else:
-            # Fully connected layers for mean and variance
-            self.mu_logvar_gen = [
-                # nn.ReLU(True),
+                nn.Conv2d(self.hidden_filters_1, self.hidden_filters_2, self.kernel_size, stride=self.stride_size,
+                          padding=self.padding),
+                # PrintLayer(),
+                # shape: (Batch, hidden_filters_1, 7, 7)
+                nn.BatchNorm2d(self.hidden_filters_2),
+                nn.ReLU(True),
+                View((-1, np.product(self.reshape))),  # B, 1568
+                # PrintLayer(),
+                nn.Linear(np.product(self.reshape), self.hidden_dim),  # shape: (Batch, 256)
+                nn.ReLU(True),
+                # PrintLayer(),
                 nn.Linear(self.hidden_dim, self.latent_dim_encoder),  # shape: (Batch, latent_dim_encoder)
                 # PrintLayer(),
+            )
+        else:
+            self.encoder_conv_layer_1 = [
+                nn.Conv2d(self.nc, self.hidden_filters_1, self.kernel_size, stride=self.stride_size, padding=self.padding),
+                # shape: (Batch, hidden_filters_1, 15, 15)
             ]
-            if self.four_conv:
-                self.encoder_conv_layer_2 = [
-                    nn.Conv2d(self.hidden_filters_1, self.hidden_filters_1, self.kernel_size, stride=self.stride_size, padding=self.padding),
-                    # PrintLayer()
-                ]
-                if self.BN:
-                    self.encoder_conv_layer_2 += [
-                        nn.BatchNorm2d(self.hidden_filters_1),
+            if self.BN:
+                self.encoder_conv_layer_1 += [
+                    nn.BatchNorm2d(self.hidden_filters_1),
                     ]
-                self.encoder_conv_layer_2 += [
-                    nn.ReLU(True)
+            self.encoder_conv_layer_1 += [
+                nn.ReLU(True),
+                # PrintLayer()
+            ]
+
+            self.encoder_conv_layer_3 = [
+                nn.Conv2d(self.hidden_filters_1, self.hidden_filters_2, self.kernel_size, stride=self.stride_size, padding=self.padding),
+                # shape: (Batch, hidden_filters_1, 6, 6)
+            ]
+            if self.BN:
+                self.encoder_conv_layer_3 += [
+                    nn.BatchNorm2d(self.hidden_filters_2),
                 ]
-                self.encoder = nn.Sequential(*self.encoder_conv_layer_1,
-                                             *self.encoder_conv_layer_2,
-                                             *self.encoder_conv_layer_3,
-                                             *self.encoder_conv_layer_4,
-                                             *self.encoder_layer_5,
-                                             # *self.encoder_layer_6,
-                                             *self.mu_logvar_gen)
+            self.encoder_conv_layer_3 += [
+                nn.ReLU(True),
+                # PrintLayer()
+            ]
+
+            self.encoder_conv_layer_4 = [
+                nn.Conv2d(self.hidden_filters_2, self.hidden_filters_3, self.kernel_size, stride=self.stride_size, padding=self.padding),
+                # shape: (Batch, hidden_filters_1, 2, 2)
+            ]
+            if self.BN:
+                self.encoder_conv_layer_4 += [
+                    nn.BatchNorm2d(self.hidden_filters_3),
+                ]
+            self.encoder_conv_layer_4 += [
+                nn.ReLU(True),
+                # PrintLayer()
+            ]
+
+            # Fully connected layers
+            self.encoder_layer_5 = [
+                View((-1, np.product(self.reshape))),  # B, 512
+                nn.Linear(np.product(self.reshape), self.hidden_dim),  # shape: (Batch, 256)
+                nn.ReLU(True),
+                # PrintLayer()
+            ]
+            # self.encoder_layer_6 = [
+            #     nn.Linear(self.hidden_dim, self.hidden_dim),  # B, 256
+            # ]
+
+            # if we want to use binary value for structural latent representation
+            if self.is_binary_structural_latent:
+                if self.four_conv:
+                    self.encoder_conv_layer_2 = [
+                        nn.Conv2d(self.hidden_filters_1, self.hidden_filters_1, self.kernel_size),  # B,  32, 15, 15
+                    ]
+                    if self.BN:
+                        self.encoder_conv_layer_2 += [
+                            nn.BatchNorm2d(self.hidden_filters_1),
+                        ]
+                    self.encoder_conv_layer_2 += [
+                        nn.ReLU(True)
+                    ]
+                    self.encoder = nn.Sequential(*self.encoder_conv_layer_1,
+                                                 *self.encoder_conv_layer_2,
+                                                 *self.encoder_conv_layer_3,
+                                                 *self.encoder_conv_layer_4,
+                                                 *self.encoder_layer_5,
+                                                 *self.encoder_layer_6)
+                else:
+                    self.encoder = nn.Sequential(*self.encoder_conv_layer_1,
+                                                 *self.encoder_conv_layer_3,
+                                                 *self.encoder_conv_layer_4,
+                                                 *self.encoder_layer_5,
+                                                 *self.encoder_layer_6)
+                self.output_encoder_variability = [
+                    nn.ReLU(True),
+                    View((-1, self.hidden_dim)),  # B, self.hidden_dim
+                    nn.Linear(self.hidden_dim, self.latent_var_dim * 2)  # B, latent_dim
+                ]
+                self.output_encoder_structural = [
+                    # we binary the conv_layer5 output: dim: self.hidden_dim
+                    DeterministicBinaryActivation(estimator='ST'),
+                    View((-1, self.hidden_dim)),  # B, self.hidden_dim
+                    # after linear layer, the neurons are not binary
+                    nn.Linear(self.hidden_dim, self.latent_struct_dim)  # B, latent_dim
+                ]
+                self.encoder_output_encoder_variability = nn.Sequential(*self.output_encoder_variability)
+                self.encoder_output_encoder_structural = nn.Sequential(*self.output_encoder_structural)
             else:
-                self.encoder = nn.Sequential(*self.encoder_conv_layer_1,
-                                             *self.encoder_conv_layer_3,
-                                             *self.encoder_conv_layer_4,
-                                             *self.encoder_layer_5,
-                                             # *self.encoder_layer_6,
-                                             *self.mu_logvar_gen)
+                # Fully connected layers for mean and variance
+                self.mu_logvar_gen = [
+                    # nn.ReLU(True),
+                    nn.Linear(self.hidden_dim, self.latent_dim_encoder),  # shape: (Batch, latent_dim_encoder)
+                    # PrintLayer(),
+                ]
+                if self.four_conv:
+                    self.encoder_conv_layer_2 = [
+                        nn.Conv2d(self.hidden_filters_1, self.hidden_filters_1, self.kernel_size, stride=self.stride_size, padding=self.padding),
+                        # PrintLayer()
+                    ]
+                    if self.BN:
+                        self.encoder_conv_layer_2 += [
+                            nn.BatchNorm2d(self.hidden_filters_1),
+                        ]
+                    self.encoder_conv_layer_2 += [
+                        nn.ReLU(True)
+                    ]
+                    self.encoder = nn.Sequential(*self.encoder_conv_layer_1,
+                                                 *self.encoder_conv_layer_2,
+                                                 *self.encoder_conv_layer_3,
+                                                 *self.encoder_conv_layer_4,
+                                                 *self.encoder_layer_5,
+                                                 # *self.encoder_layer_6,
+                                                 *self.mu_logvar_gen)
+                else:
+                    self.encoder = nn.Sequential(*self.encoder_conv_layer_1,
+                                                 *self.encoder_conv_layer_3,
+                                                 *self.encoder_conv_layer_4,
+                                                 *self.encoder_layer_5,
+                                                 # *self.encoder_layer_6,
+                                                 *self.mu_logvar_gen)
         # ---------------------------------------- end encoder E --------------------------------------------------
 
         # ---------------------------------------- Define Decoder D -------------------------------------------------
-        self.decoder_list_layer = [
-            # Fully connected layers with ReLu activations
-            nn.Linear(self.latent_dim, self.hidden_dim),  # B, 128
-            # PrintLayer(),
-            # nn.ReLU(True),
-            # nn.Linear(self.hidden_dim, self.hidden_dim),  # B, 256
-            nn.ReLU(True),
-            nn.Linear(self.hidden_dim, np.product(self.reshape)),  # B, 512
-            nn.ReLU(True),
-            View((-1, *self.reshape)),  # View((-1, *self.reshape)),
-            # PrintLayer(),
-            # Convolutional layers with ReLu activations
-            nn.ConvTranspose2d(self.hidden_filters_3, self.hidden_filters_2, self.kernel_size, stride=self.stride_size,
-                               padding=self.padding),
-            # PrintLayer(),
-            nn.ReLU(True),
-            nn.ConvTranspose2d(self.hidden_filters_2, self.hidden_filters_1, self.kernel_size, stride=self.stride_size,
-                               padding=self.padding),
-            # PrintLayer(),
-            nn.ReLU(True),
-        ]
-        if self.four_conv:
-            self.decoder_list_layer += [
-                nn.ConvTranspose2d(self.hidden_filters_1, self.hidden_filters_1, self.kernel_size,
-                                   stride=self.stride_size, padding=self.padding),
-                nn.ReLU(True)
-            ]
+        if self.big_kernel:
+            self.decoder = nn.Sequential(
+                nn.Linear(self.latent_dim, self.hidden_dim),  # B, 128
+                # PrintLayer(),
+                # nn.ReLU(True),
+                # nn.Linear(self.hidden_dim, self.hidden_dim),  # B, 256
+                nn.ReLU(True),
+                nn.Linear(self.hidden_dim, np.product(self.reshape)),  # B, 512
+                nn.ReLU(True),
+                View((-1, *self.reshape)),  # View((-1, *self.reshape)),
+                # PrintLayer(),
+                nn.ConvTranspose2d(self.hidden_filters_2, self.hidden_filters_1, self.kernel_size,
+                                   stride=self.stride_size,
+                                   padding=self.padding),
+                # PrintLayer(),
+                nn.ReLU(True),
+                nn.ConvTranspose2d(self.hidden_filters_1, self.nc, self.big_kernel_size, stride=self.stride_size,
+                                   padding=self.padding),  # B, 32, 32, 32
+                # PrintLayer(),
+                nn.Sigmoid()
+            )
         else:
-            # (32, 32) images are supported but do not require an extra layer
-            pass
-        self.decoder_list_layer += [
-            nn.ConvTranspose2d(self.hidden_filters_1, self.nc, self.kernel_size, stride=self.stride_size,  padding=self.padding),  # B, 32, 32, 32
-            # PrintLayer(),
-            nn.Sigmoid()
-        ]
+            self.decoder_list_layer = [
+                # Fully connected layers with ReLu activations
+                nn.Linear(self.latent_dim, self.hidden_dim),  # B, 128
+                # PrintLayer(),
+                # nn.ReLU(True),
+                # nn.Linear(self.hidden_dim, self.hidden_dim),  # B, 256
+                nn.ReLU(True),
+                nn.Linear(self.hidden_dim, np.product(self.reshape)),  # B, 512
+                nn.ReLU(True),
+                View((-1, *self.reshape)),  # View((-1, *self.reshape)),
+                # PrintLayer(),
+                # Convolutional layers with ReLu activations
+                nn.ConvTranspose2d(self.hidden_filters_3, self.hidden_filters_2, self.kernel_size, stride=self.stride_size,
+                                   padding=self.padding),
+                # PrintLayer(),
+                nn.ReLU(True),
+                nn.ConvTranspose2d(self.hidden_filters_2, self.hidden_filters_1, self.kernel_size, stride=self.stride_size,
+                                   padding=self.padding),
+                # PrintLayer(),
+                nn.ReLU(True),
+            ]
+            if self.four_conv:
+                self.decoder_list_layer += [
+                    nn.ConvTranspose2d(self.hidden_filters_1, self.hidden_filters_1, self.kernel_size,
+                                       stride=self.stride_size, padding=self.padding),
+                    nn.ReLU(True)
+                ]
+            else:
+                # (32, 32) images are supported but do not require an extra layer
+                pass
+            self.decoder_list_layer += [
+                nn.ConvTranspose2d(self.hidden_filters_1, self.nc, self.kernel_size, stride=self.stride_size,  padding=self.padding),  # B, 32, 32, 32
+                # PrintLayer(),
+                nn.Sigmoid()
+            ]
 
-        self.decoder = nn.Sequential(*self.decoder_list_layer)
+            self.decoder = nn.Sequential(*self.decoder_list_layer)
         # ---------------------------------------- end Decoder --------------------------------------------------
 
         # ---------------------------------------- Define Classifier C -------------------------------------------------
@@ -340,40 +395,61 @@ class BetaVAE(nn.Module):
         # ----------------------------------------Define Encoder E1 --------------------------------------------------
         if self.is_E1:
             if self.E1_conv:
-                if self.E1_second_conv_adapt:
-                    self.E1 = nn.Sequential(
-                        nn.Conv2d(32, self.hidden_filters_E1, 3, 1, 1),  # B, latent_cont_classe, 15, 15
-                        # PrintLayer(),
-                        nn.BatchNorm2d(self.hidden_filters_E1),
-                        nn.ReLU(),
-                        nn.AdaptiveAvgPool2d((1, 1)),  # B, latent_cont_classe, 1, 1
-                        # Applies a 2D adaptive average pooling over an input signal
-                        # composed of several input planes.
-                        # The output is of size H x W, for any input size. The number of output features is equal to
-                        # the number of input planes.
-                        #  param: output_size: here: (1, 1) to make a GAP.
-                        # PrintLayer(),
-                        View((-1, self.output_E1_dim)),  # B, latent_spec['cont_class']
-                        # We will add the L1 sparsity constraint to the activations of the neuron after the ReLU
-                        # function. This will make some of the weights to be zero which will add a sparsity effect
-                        # to the weights.
-                        # L1 regularization: The L1 norm encourages sparsity, e.g. allows some activations to become
-                        # zero. A hyperparameter must be specified that indicates the amount or degree that the loss
-                        # function will weight or pay attention to the penalty
-                        # PrintLayer()
-                    )
-                elif self.two_encoder:
-                    self.E1 = nn.Sequential(
-                        nn.Conv2d(self.nc, self.hidden_filters_1, self.kernel_size, stride=self.stride_size,
-                                  padding=self.padding),
-                        nn.BatchNorm2d(self.hidden_filters_1),
-                        nn.ReLU(True),
-                        nn.Conv2d(32, self.hidden_filters_E1, 3, 1, 1),  # B, latent_cont_classe, 15, 15
-                        nn.BatchNorm2d(self.hidden_filters_E1),
-                        nn.ReLU(),
-                        nn.AdaptiveAvgPool2d((1, 1)),  # B, latent_cont_classe, 1, 1
-                        View((-1, self.output_E1_dim)),  # B, latent_spec['cont_class']
-                    )
+                if self.big_kernel:
+                    if self.E1_second_conv_adapt:
+                        self.E1 = nn.Sequential(
+                            nn.AdaptiveAvgPool2d((1, 1)),  # B, latent_cont_classe, 1, 1
+                            View((-1, self.hidden_filters_1)),  # B, latent_spec['cont_class']
+                            nn.Linear(self.hidden_filters_1, self.output_E1_dim),  # shape: (Batch, 256)
+                        )
+                    elif self.two_encoder:
+                        self.E1 = nn.Sequential(
+                            nn.Conv2d(self.nc, self.hidden_filters_1, self.big_kernel_size, stride=self.stride_size,
+                                      padding=self.padding),
+                            # PrintLayer(),
+                            # shape: (Batch, hidden_filters_1, 15, 15)
+                            # PrintLayer(),
+                            nn.BatchNorm2d(self.hidden_filters_1),
+                            nn.ReLU(True),
+                            nn.AdaptiveAvgPool2d((1, 1)),  # B, latent_cont_classe, 1, 1
+                            View((-1, self.hidden_filters_1)),  # B, latent_spec['cont_class']
+                            nn.Linear(self.hidden_filters_1, self.output_E1_dim),  # shape: (Batch, 256)
+                        )
+                elif self.normal_kernel:
+                    if self.E1_second_conv_adapt:
+                        self.E1 = nn.Sequential(
+                            nn.Conv2d(self.hidden_filters_1, self.hidden_filters_E1, 3, 1, 1),  # B, latent_cont_classe, 15, 15
+                            # PrintLayer(),
+                            nn.BatchNorm2d(self.hidden_filters_E1),
+                            nn.ReLU(True),
+                            nn.AdaptiveAvgPool2d((1, 1)),  # B, latent_cont_classe, 1, 1
+                            # Applies a 2D adaptive average pooling over an input signal
+                            # composed of several input planes.
+                            # The output is of size H x W, for any input size. The number of output features is equal to
+                            # the number of input planes.
+                            #  param: output_size: here: (1, 1) to make a GAP.
+                            # PrintLayer(),
+                            View((-1, self.output_E1_dim)),  # B, latent_spec['cont_class']
+                            # We will add the L1 sparsity constraint to the activations of the neuron after the ReLU
+                            # function. This will make some of the weights to be zero which will add a sparsity effect
+                            # to the weights.
+                            # L1 regularization: The L1 norm encourages sparsity, e.g. allows some activations to become
+                            # zero. A hyperparameter must be specified that indicates the amount or degree that the loss
+                            # function will weight or pay attention to the penalty
+                            # PrintLayer()
+                        )
+                    elif self.two_encoder:
+                        self.E1 = nn.Sequential(
+                            nn.Conv2d(self.nc, self.hidden_filters_1, self.kernel_size, stride=self.stride_size,
+                                      padding=self.padding),
+                            nn.BatchNorm2d(self.hidden_filters_1),
+                            nn.ReLU(True),
+                            nn.Conv2d(32, self.hidden_filters_E1, 3, 1, 1),  # B, latent_cont_classe, 15, 15
+                            nn.BatchNorm2d(self.hidden_filters_E1),
+                            nn.ReLU(True),
+                            nn.AdaptiveAvgPool2d((1, 1)),  # B, latent_cont_classe, 1, 1
+                            View((-1, self.output_E1_dim)),  # B, latent_spec['cont_class']
+                        )
                 else:
                     self.E1 = nn.Sequential(
                         nn.Conv2d(32, 3, 3, 1, 1),

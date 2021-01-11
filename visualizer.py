@@ -766,8 +766,8 @@ def sample_real_distribution(net, path, expe_name, latent_spec, img_size, train_
 
     # mu = [mu_var, mu_struct]
     # var = [sigma_var, sigma_struct]
-    mu = [z_mean[:latent_spec['cont_var']], z_mean[latent_spec['cont_class']:]]
-    var = [z_var[:latent_spec['cont_var']], z_var[latent_spec['cont_class']:]]
+    mu = [z_mean[:latent_spec['cont_var']], z_mean[latent_spec['cont_var']:]]
+    var = [z_var[:latent_spec['cont_var']], z_var[latent_spec['cont_var']:]]
 
     viz = Viz(net, img_size, latent_spec)
     viz.save_images = False

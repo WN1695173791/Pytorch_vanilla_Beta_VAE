@@ -90,6 +90,8 @@ if __name__ == "__main__":
     parser.add_argument('--E1_VAE', default=False, type=str2bool, help='If E1_VAE')
     parser.add_argument('--E1_AE', default=False, type=str2bool, help='If E1_AE')
     parser.add_argument('--two_encoder', default=False, type=str2bool, help='If two_encoder')
+    parser.add_argument('--big_kernel_size', nargs='+', type=int, default=8, help='If big_kernel_size')
+    parser.add_argument('--big_kernel', default=False, type=str2bool, help='If big_kernel')
 
     # --- Params to VAnilla VAE test:
     parser.add_argument('--hidden_filters_layer1', type=int, default=32, metavar='integer value',
