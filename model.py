@@ -53,7 +53,7 @@ class BetaVAE(nn.Module):
                  BN=False, E1_conv=False, E1_dense=False, batch_size=64, hidden_filters_1=32,
                  hidden_filters_2=32, hidden_filters_3=32, stride_size=2, kernel_size=4, E1_second_conv=False,
                  E1_second_conv_adapt=False, E1_VAE=False, E1_AE=False, two_encoder=False, big_kernel_size=8,
-                 big_kernel=False, normal_kernel=True, GMP=False):
+                 big_kernel=False, normal_kernel=True, GMP=False, zeros_W_Classif=False):
         """
         Class which defines model and forward pass.
         Parameters
@@ -70,6 +70,7 @@ class BetaVAE(nn.Module):
         super(BetaVAE, self).__init__()
 
         # Parameters
+        self.zeros_W_Classif = zeros_W_Classif
         self.GMP = GMP
         self.normal_kernel = normal_kernel
         self.big_kernel = big_kernel
@@ -415,6 +416,7 @@ class BetaVAE(nn.Module):
                         if self.E1_second_conv_adapt:
                             self.E1 = nn.Sequential(
                                 nn.AdaptiveMaxPool2d((1, 1)),  # B, latent_cont_classe, 1, 1
+                                # L1Penalty_Layer(),  # use L1 penalty for sparsity
                                 View((-1, self.hidden_filters_1)),  # B, latent_spec['cont_class']
                                 nn.Linear(self.hidden_filters_1, self.output_E1_dim),  # shape: (Batch, 256)
                             )
@@ -428,6 +430,7 @@ class BetaVAE(nn.Module):
                                 nn.BatchNorm2d(self.hidden_filters_1),
                                 nn.ReLU(True),
                                 nn.AdaptiveMaxPool2d((1, 1)),  # B, latent_cont_classe, 1, 1
+                                # L1Penalty_Layer(),
                                 View((-1, self.hidden_filters_1)),  # B, latent_spec['cont_class']
                                 nn.Linear(self.hidden_filters_1, self.output_E1_dim),  # shape: (Batch, 256)
                             )
@@ -440,6 +443,7 @@ class BetaVAE(nn.Module):
                                 nn.BatchNorm2d(self.hidden_filters_E1),
                                 nn.ReLU(True),
                                 nn.AdaptiveMaxPool2d((1, 1)),  # B, latent_cont_classe, 1, 1
+                                # L1Penalty_Layer(),
                                 # Applies a 2D adaptive average pooling over an input signal
                                 # composed of several input planes.
                                 # The output is of size H x W, for any input size. The number of output features is equal to
@@ -465,6 +469,7 @@ class BetaVAE(nn.Module):
                                 nn.BatchNorm2d(self.hidden_filters_E1),
                                 nn.ReLU(True),
                                 nn.AdaptiveMaxPool2d((1, 1)),  # B, latent_cont_classe, 1, 1
+                                # L1Penalty_Layer(),
                                 View((-1, self.output_E1_dim)),  # B, latent_spec['cont_class']
                             )
                 else:
@@ -473,6 +478,7 @@ class BetaVAE(nn.Module):
                             self.E1 = nn.Sequential(
                                 nn.MaxPool2d(kernel_size=self.kernel_MaxPool_Size_E1, stride=2),  # B, self.hidden_filters_E1, 6, 6
                                 # PrintLayer(),
+                                # L1Penalty_Layer(),
                                 View((-1, np.product(self.reshape_E1_bk))),  # B, 192
                                 nn.Linear(np.product(self.reshape_E1_bk), self.output_E1_dim)  # B, struct_dim*2
                             )
@@ -486,6 +492,7 @@ class BetaVAE(nn.Module):
                                 nn.ReLU(True),
                                 nn.MaxPool2d(kernel_size=self.kernel_MaxPool_Size_E1, stride=2),  # B, self.hidden_filters_1, 6, 6
                                 # PrintLayer(),
+                                # L1Penalty_Layer(),
                                 View((-1, np.product(self.reshape_E1_bk))),  # B, 1152
                                 nn.Linear(np.product(self.reshape_E1_bk), self.output_E1_dim)  # B, struct_dim*2
                             )
@@ -498,6 +505,7 @@ class BetaVAE(nn.Module):
                                 nn.ReLU(),
                                 nn.MaxPool2d(kernel_size=self.kernel_MaxPool_Size_E1, stride=2),  # B, self.hidden_filters_E1, 6, 6
                                 # PrintLayer(),
+                                # L1Penalty_Layer(),
                                 View((-1, np.product(self.reshape_E1))),  # B, 192
                                 nn.Linear(np.product(self.reshape_E1), self.output_E1_dim)  # B, struct_dim*2
                             )
@@ -513,6 +521,7 @@ class BetaVAE(nn.Module):
                                 nn.ReLU(),
                                 nn.MaxPool2d(kernel_size=self.kernel_MaxPool_Size_E1, stride=2),  # B, 5, 7, 7
                                 # PrintLayer(),
+                                # L1Penalty_Layer(),
                                 View((-1, np.product(self.reshape_E1))),  # B, 192
                                 nn.Linear(np.product(self.reshape_E1), self.output_E1_dim)  # B, struct_dim*2
                             )
@@ -1028,6 +1037,10 @@ class BetaVAE(nn.Module):
 
         latent_sample_random_continue = self.representation_random_continue(latent_class, latent_var_dim,
                                                                             is_random_class=is_random_class)
+        if self.zeros_W_Classif:
+            latent_sample_random_continue[:, :self.latent_var_dim] = 0
+        else:
+            pass
         predicted_random_variability = self.L3_classifier(latent_sample_random_continue)
         return F.log_softmax(predicted_random_variability, dim=1), latent_sample_random_continue
 
@@ -1229,6 +1242,16 @@ class PrintLayer(nn.Module, ABC):
     def forward(self, x):
         # Do your print / debug stuff here
         print(x.shape)
+        return x
+
+
+class L1Penalty_Layer(nn.Module, ABC):
+
+    def __init__(self):
+        super(L1Penalty_Layer, self).__init__()
+
+    def forward(self, x):
+        x = torch.norm(x, 1)
         return x
 
 

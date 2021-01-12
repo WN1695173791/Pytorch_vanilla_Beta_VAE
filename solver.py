@@ -235,6 +235,7 @@ class Solver(object):
         self.big_kernel = args.big_kernel
         self.big_kernel_size = args.big_kernel_size
         self.GMP = args.GMP
+        self.zeros_W_Classif = args.zeros_W_Classif
 
         if self.zvar_sim_loss_only_for_encoder or self.zvar_sim_loss_for_all_model:
             list_uniq_choice = [self.zvar_sim_loss_only_for_encoder, self.zvar_sim_loss_for_all_model]
@@ -387,7 +388,7 @@ class Solver(object):
                       stride_size=self.stride_size, kernel_size=self.kernel_size, E1_second_conv=self.E1_second_conv,
                       E1_second_conv_adapt=self.E1_second_conv_adapt, E1_VAE=self.E1_VAE, E1_AE=self.E1_AE,
                       two_encoder=self.two_encoder, big_kernel_size=self.big_kernel_size[0], big_kernel=self.big_kernel,
-                      GMP=self.GMP)
+                      GMP=self.GMP, zeros_W_Classif=self.zeros_W_Classif)
 
         # print model characteristics:
         print(net)
