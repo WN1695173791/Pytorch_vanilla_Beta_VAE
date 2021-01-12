@@ -9,7 +9,7 @@
 #BATCH --mail-type=ALL                  # Mail notification of the events concerning the job : start time, end time,?~@?
 #SBATCH --mail-user=julien.dejasmin@lis-lab.fr
 
-#SBATCH --array=1-256
+#SBATCH --array=76-256
 echo "$SLURM_ARRAY_TASK_ID"
 
 LINE=$(sed -n "$SLURM_ARRAY_TASK_ID"p parameters_combinations/mnist_expes.txt)

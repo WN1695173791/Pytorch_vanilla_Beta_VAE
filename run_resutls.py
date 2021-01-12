@@ -143,10 +143,14 @@ indx_image = 0
 
 # _____________ VAE 5 5 + class + E1 old weights ________________
 
-VAE_test_5_5_1 = ['VAE_design_5_1',
-                  'VAE_design_5_2',
-                  'VAE_design_5_9',
-                  'VAE_design_5_10']
+VAE_test_5_5_1 = ['VAE_design_new_5_1',
+                  'VAE_design_new_5_2',
+                  'VAE_design_new_5_9',
+                  'VAE_design_new_5_10',
+                  'VAE_design_new_bk_5_1',
+                  'VAE_design_new_bk_5_2',
+                  'VAE_design_new_bk_5_9',
+                  'VAE_design_new_bk_5_10']
 E1_VAE = True
 E1_AE = False
 E1_second_conv_adapt = True
@@ -155,7 +159,7 @@ two_encoder = False
 is_zvar_sim_loss = False
 is_partial_rand_class = False
 is_C = True
-"""
+
 latent_spec = {'cont_var': 5, 'cont_class': 5}
 BN = True
 is_E1 = True
@@ -206,10 +210,14 @@ for expe in VAE_test_5_5_1:
 
 # _____________ VAE 5 5 + class + E1 old weights ________________
 
-VAE_test_5_5_2 = ['VAE_design_5_3',
-                  'VAE_design_5_4',
-                  'VAE_design_5_11',
-                  'VAE_design_5_12']
+VAE_test_5_5_2 = ['VAE_design_new_5_3',
+                  'VAE_design_new_5_4',
+                  'VAE_design_new_5_11',
+                  'VAE_design_new_5_12',
+                  'VAE_design_new_bk_5_3',
+                  'VAE_design_new_bk_5_4',
+                  'VAE_design_new_bk_5_11',
+                  'VAE_design_new_bk_5_12']
 E1_VAE = False
 E1_AE = True
 E1_second_conv_adapt = True
@@ -266,10 +274,14 @@ for expe in VAE_test_5_5_2:
 
 # _____________ VAE 5 5 + class + E1 old weights ________________
 
-VAE_test_5_5_3 = ['VAE_design_5_5',
-                  'VAE_design_5_6',
-                  'VAE_design_5_13',
-                  'VAE_design_5_14']
+VAE_test_5_5_3 = ['VAE_design_new_5_5',
+                  'VAE_design_new_5_6',
+                  'VAE_design_new_5_13',
+                  'VAE_design_new_5_14',
+                  'VAE_design_new_bk_5_5',
+                  'VAE_design_new_bk_5_6',
+                  'VAE_design_new_bk_5_13',
+                  'VAE_design_new_bk_5_14']
 E1_VAE = True
 E1_AE = False
 E1_second_conv_adapt = False
@@ -327,10 +339,14 @@ for expe in VAE_test_5_5_3:
 
 # _____________ VAE 5 5 + class + E1 old weights ________________
 
-VAE_test_5_5_4 = ['VAE_design_5_7',
-                  'VAE_design_5_8',
-                  'VAE_design_5_15',
-                  'VAE_design_5_16']
+VAE_test_5_5_4 = ['VAE_design_new_5_7',
+                  'VAE_design_new_5_8',
+                  'VAE_design_new_5_15',
+                  'VAE_design_new_5_16',
+                  'VAE_design_new_bk_5_7',
+                  'VAE_design_new_bk_5_8',
+                  'VAE_design_new_bk_5_15',
+                  'VAE_design_new_bk_5_16']
 E1_VAE = False
 E1_AE = True
 E1_second_conv_adapt = False
@@ -384,15 +400,19 @@ for expe in VAE_test_5_5_4:
               path=path, real_img=False, size_struct=10, size_var=8,
               is_partial_rand_class=is_partial_rand_class, save=True, is_E1=is_E1,
               plot_img_traversal=True, both_latent_traversal=True)
-"""
+
 # -------------------------------- 5 10 -----------------------------------------------
 
 # _____________ VAE 5 10 + class + E1 old weights ________________
 
-VAE_test_5_10_1 = ['VAE_design_10_1',
-                   'VAE_design_10_2',
-                   'VAE_design_10_9',
-                   'VAE_design_10_10']
+VAE_test_5_10_1 = ['VAE_design_new_10_1',
+                   'VAE_design_new_10_2',
+                   'VAE_design_new_10_9',
+                   'VAE_design_new_10_10',
+                   'VAE_design_new_bk_10_1',
+                   'VAE_design_new_bk_10_2',
+                   'VAE_design_new_bk_10_9',
+                   'VAE_design_new_bk_10_10']
 E1_VAE = True
 E1_AE = False
 E1_second_conv_adapt = True
@@ -453,10 +473,14 @@ for expe in VAE_test_5_10_1:
 
 # _____________ VAE 5 10 + class + E1 old weights ________________
 
-VAE_test_5_10_2 = ['VAE_design_10_3',
-                   'VAE_design_10_4',
-                   'VAE_design_10_11',
-                   'VAE_design_10_12']
+VAE_test_5_10_2 = ['VAE_design_new_10_3',
+                   'VAE_design_new_10_4',
+                   'VAE_design_new_10_11',
+                   'VAE_design_new_10_12',
+                   'VAE_design_new_bk_10_3',
+                   'VAE_design_new_bk_10_4',
+                   'VAE_design_new_bk_10_11',
+                   'VAE_design_new_bk_10_12']
 E1_VAE = False
 E1_AE = True
 E1_second_conv_adapt = True
@@ -514,10 +538,14 @@ for expe in VAE_test_5_10_2:
 
 # _____________ VAE 5 10 + class + E1 old weights ________________
 
-VAE_test_5_10_3 = ['VAE_design_10_5',
-                   'VAE_design_10_6',
-                   'VAE_design_10_13',
-                   'VAE_design_10_14']
+VAE_test_5_10_3 = ['VAE_design_new_10_5',
+                   'VAE_design_new_10_6',
+                   'VAE_design_new_10_13',
+                   'VAE_design_new_10_14',
+                   'VAE_design_new_bk_10_5',
+                   'VAE_design_new_bk_10_6',
+                   'VAE_design_new_bk_10_13',
+                   'VAE_design_new_bk_10_14']
 E1_VAE = True
 E1_AE = False
 E1_second_conv_adapt = False
@@ -575,10 +603,14 @@ for expe in VAE_test_5_10_3:
 
 # _____________ VAE 5 10 + class + E1 old weights ________________
 
-VAE_test_5_10_4 = ['VAE_design_10_7',
-                   'VAE_design_10_8',
-                   'VAE_design_10_15',
-                   'VAE_design_10_16']
+VAE_test_5_10_4 = ['VAE_design_new_10_7',
+                   'VAE_design_new_10_8',
+                   'VAE_design_new_10_15',
+                   'VAE_design_new_10_16',
+                   'VAE_design_new_bk_10_7',
+                   'VAE_design_new_bk_10_8',
+                   'VAE_design_new_bk_10_15',
+                   'VAE_design_new_bk_10_16']
 E1_VAE = False
 E1_AE = True
 E1_second_conv_adapt = False
@@ -637,10 +669,14 @@ for expe in VAE_test_5_10_4:
 
 # _____________ VAE 5 15 + class + E1 old weights ________________
 
-VAE_test_5_15_1 = ['VAE_design_15_1',
-                   'VAE_design_15_2',
-                   'VAE_design_15_9',
-                   'VAE_design_15_10']
+VAE_test_5_15_1 = ['VAE_design_new_15_1',
+                   'VAE_design_new_15_2',
+                   'VAE_design_new_15_9',
+                   'VAE_design_new_15_10',
+                   'VAE_design_new_bk_15_1',
+                   'VAE_design_new_bk_15_2',
+                   'VAE_design_new_bk_15_9',
+                   'VAE_design_new_bk_15_10']
 E1_VAE = True
 E1_AE = False
 E1_second_conv_adapt = True
@@ -701,10 +737,14 @@ for expe in VAE_test_5_15_1:
 
 # _____________ VAE 5 15 + class + E1 old weights ________________
 
-VAE_test_5_15_2 = ['VAE_design_15_3',
-                   'VAE_design_15_4',
-                   'VAE_design_15_11',
-                   'VAE_design_15_12']
+VAE_test_5_15_2 = ['VAE_design_new_15_3',
+                   'VAE_design_new_15_4',
+                   'VAE_design_new_15_11',
+                   'VAE_design_new_15_12',
+                   'VAE_design_new_bk_15_3',
+                   'VAE_design_new_bk_15_4',
+                   'VAE_design_new_bk_15_11',
+                   'VAE_design_new_bk_15_12']
 E1_VAE = False
 E1_AE = True
 E1_second_conv_adapt = True
@@ -762,10 +802,14 @@ for expe in VAE_test_5_15_2:
 
 # _____________ VAE 5 15 + class + E1 old weights ________________
 
-VAE_test_5_15_3 = ['VAE_design_15_5',
-                   'VAE_design_15_6',
-                   'VAE_design_15_13',
-                   'VAE_design_15_14']
+VAE_test_5_15_3 = ['VAE_design_new_15_5',
+                   'VAE_design_new_15_6',
+                   'VAE_design_new_15_13',
+                   'VAE_design_new_15_14',
+                   'VAE_design_new_bk_15_5',
+                   'VAE_design_new_bk_15_6',
+                   'VAE_design_new_bk_15_13',
+                   'VAE_design_new_bk_15_14']
 E1_VAE = True
 E1_AE = False
 E1_second_conv_adapt = False
@@ -823,10 +867,14 @@ for expe in VAE_test_5_15_3:
 
 # _____________ VAE 5 15 + class + E1 old weights ________________
 
-VAE_test_5_15_4 = ['VAE_design_15_7',
-                   'VAE_design_15_8',
-                   'VAE_design_15_15',
-                   'VAE_design_15_16']
+VAE_test_5_15_4 = ['VAE_design_new_15_7',
+                   'VAE_design_new_15_8',
+                   'VAE_design_new_15_15',
+                   'VAE_design_new_15_16',
+                   'VAE_design_new_bk_15_7',
+                   'VAE_design_new_bk_15_8',
+                   'VAE_design_new_bk_15_15',
+                   'VAE_design_new_bk_15_16']
 E1_VAE = False
 E1_AE = True
 E1_second_conv_adapt = False
@@ -886,10 +934,14 @@ for expe in VAE_test_5_15_4:
 
 # _____________ VAE 5 20 + class + E1 old weights ________________
 
-VAE_test_5_20_1 = ['VAE_design_20_1',
-                   'VAE_design_20_2',
-                   'VAE_design_20_9',
-                   'VAE_design_20_10']
+VAE_test_5_20_1 = ['VAE_design_new_20_1',
+                   'VAE_design_new_20_2',
+                   'VAE_design_new_20_9',
+                   'VAE_design_new_20_10',
+                   'VAE_design_new_bk_20_1',
+                   'VAE_design_new_bk_20_2',
+                   'VAE_design_new_bk_20_9',
+                   'VAE_design_new_bk_20_10']
 E1_VAE = True
 E1_AE = False
 E1_second_conv_adapt = True
@@ -950,10 +1002,14 @@ for expe in VAE_test_5_20_1:
 
 # _____________ VAE 5 20 + class + E1 old weights ________________
 
-VAE_test_5_20_2 = ['VAE_design_20_3',
-                   'VAE_design_20_4',
-                   'VAE_design_20_11',
-                   'VAE_design_20_12']
+VAE_test_5_20_2 = ['VAE_design_new_20_3',
+                   'VAE_design_new_20_4',
+                   'VAE_design_new_20_11',
+                   'VAE_design_new_20_12',
+                   'VAE_design_new_bk_20_3',
+                   'VAE_design_new_bk_20_4',
+                   'VAE_design_new_bk_20_11',
+                   'VAE_design_new_bk_20_12']
 E1_VAE = False
 E1_AE = True
 E1_second_conv_adapt = True
@@ -1011,10 +1067,14 @@ for expe in VAE_test_5_20_2:
 
 # _____________ VAE 5 20 + class + E1 old weights ________________
 
-VAE_test_5_20_3 = ['VAE_design_20_5',
-                   'VAE_design_20_6',
-                   'VAE_design_20_13',
-                   'VAE_design_20_14']
+VAE_test_5_20_3 = ['VAE_design_new_20_5',
+                   'VAE_design_new_20_6',
+                   'VAE_design_new_20_13',
+                   'VAE_design_new_20_14',
+                   'VAE_design_new_bk_20_5',
+                   'VAE_design_new_bk_20_6',
+                   'VAE_design_new_bk_20_13',
+                   'VAE_design_new_bk_20_14']
 E1_VAE = True
 E1_AE = False
 E1_second_conv_adapt = False
@@ -1072,10 +1132,14 @@ for expe in VAE_test_5_20_3:
 
 # _____________ VAE 5 20 + class + E1 old weights ________________
 
-VAE_test_5_20_4 = ['VAE_design_20_7',
-                   'VAE_design_20_8',
-                   'VAE_design_20_15',
-                   'VAE_design_20_16']
+VAE_test_5_20_4 = ['VAE_design_new_20_7',
+                   'VAE_design_new_20_8',
+                   'VAE_design_new_20_15',
+                   'VAE_design_new_20_16',
+                   'VAE_design_new_bk_20_7',
+                   'VAE_design_new_bk_20_8',
+                   'VAE_design_new_bk_20_15',
+                   'VAE_design_new_bk_20_16']
 E1_VAE = False
 E1_AE = True
 E1_second_conv_adapt = False
