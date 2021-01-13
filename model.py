@@ -53,7 +53,7 @@ class BetaVAE(nn.Module):
                  BN=False, E1_conv=False, E1_dense=False, batch_size=64, hidden_filters_1=32,
                  hidden_filters_2=32, hidden_filters_3=32, stride_size=2, kernel_size=4, E1_second_conv=False,
                  E1_second_conv_adapt=False, E1_VAE=False, E1_AE=False, two_encoder=False, big_kernel_size=8,
-                 big_kernel=False, normal_kernel=True, GMP=False, zeros_W_Classif=False):
+                 big_kernel=False, normal_kernel=True, GMP=False, zeros_W_Classif=False, L1_norm=False):
         """
         Class which defines model and forward pass.
         Parameters
@@ -70,6 +70,7 @@ class BetaVAE(nn.Module):
         super(BetaVAE, self).__init__()
 
         # Parameters
+        self.L1_norm = L1_norm
         self.zeros_W_Classif = zeros_W_Classif
         self.GMP = GMP
         self.normal_kernel = normal_kernel
@@ -414,14 +415,21 @@ class BetaVAE(nn.Module):
                 if self.GMP:
                     if self.big_kernel:
                         if self.E1_second_conv_adapt:
-                            self.E1 = nn.Sequential(
+                            self.E1_list_layer = [
                                 nn.AdaptiveMaxPool2d((1, 1)),  # B, latent_cont_classe, 1, 1
-                                # L1Penalty_Layer(),  # use L1 penalty for sparsity
+                            ]
+                            if self.L1_norm:
+                                self.E1_list_layer += [
+                                    L1_penalty_layer(),  # use L1 penalty for sparsity
+                                    ]
+                            self.E1_list_layer = [
                                 View((-1, self.hidden_filters_1)),  # B, latent_spec['cont_class']
                                 nn.Linear(self.hidden_filters_1, self.output_E1_dim),  # shape: (Batch, 256)
-                            )
+                            ]
+
+                            self.E1 = nn.Sequential(*self.E1_list_layer)
                         elif self.two_encoder:
-                            self.E1 = nn.Sequential(
+                            self.E1_list_layer = [
                                 nn.Conv2d(self.nc, self.hidden_filters_1, self.big_kernel_size, stride=self.stride_size,
                                           padding=self.padding),
                                 # PrintLayer(),
@@ -430,26 +438,37 @@ class BetaVAE(nn.Module):
                                 nn.BatchNorm2d(self.hidden_filters_1),
                                 nn.ReLU(True),
                                 nn.AdaptiveMaxPool2d((1, 1)),  # B, latent_cont_classe, 1, 1
-                                # L1Penalty_Layer(),
+                                ]
+                            if self.L1_norm:
+                                self.E1_list_layer += [
+                                    L1_penalty_layer(),  # use L1 penalty for sparsity
+                                    ]
+                            self.E1_list_layer += [
                                 View((-1, self.hidden_filters_1)),  # B, latent_spec['cont_class']
                                 nn.Linear(self.hidden_filters_1, self.output_E1_dim),  # shape: (Batch, 256)
-                            )
+                            ]
+                            self.E1 = nn.Sequential(*self.E1_list_layer)
                     elif self.normal_kernel:
                         if self.E1_second_conv_adapt:
-                            self.E1 = nn.Sequential(
+                            self.E1_list_layer = [
                                 nn.Conv2d(self.hidden_filters_1, self.hidden_filters_E1, 3, 1, 1),
                                 # B, latent_cont_classe, 15, 15
                                 # PrintLayer(),
                                 nn.BatchNorm2d(self.hidden_filters_E1),
                                 nn.ReLU(True),
                                 nn.AdaptiveMaxPool2d((1, 1)),  # B, latent_cont_classe, 1, 1
-                                # L1Penalty_Layer(),
-                                # Applies a 2D adaptive average pooling over an input signal
-                                # composed of several input planes.
-                                # The output is of size H x W, for any input size. The number of output features is equal to
-                                # the number of input planes.
-                                #  param: output_size: here: (1, 1) to make a GMP.
-                                # PrintLayer(),
+                                ]
+                            if self.L1_norm:
+                                self.E1_list_layer += [
+                                    L1_penalty_layer(),
+                                    # Applies a 2D adaptive average pooling over an input signal
+                                    # composed of several input planes.
+                                    # The output is of size H x W, for any input size. The number of output features is equal to
+                                    # the number of input planes.
+                                    #  param: output_size: here: (1, 1) to make a GMP.
+                                    # PrintLayer(),
+                                    ]
+                            self.E1_list_layer += [
                                 View((-1, self.output_E1_dim)),  # B, latent_spec['cont_class']
                                 # We will add the L1 sparsity constraint to the activations of the neuron after the ReLU
                                 # function. This will make some of the weights to be zero which will add a sparsity effect
@@ -458,9 +477,10 @@ class BetaVAE(nn.Module):
                                 # zero. A hyperparameter must be specified that indicates the amount or degree that the loss
                                 # function will weight or pay attention to the penalty
                                 # PrintLayer()
-                            )
+                            ]
+                            self.E1 = nn.Sequential(*self.E1_list_layer)
                         elif self.two_encoder:
-                            self.E1 = nn.Sequential(
+                            self.E1_list_layer = [
                                 nn.Conv2d(self.nc, self.hidden_filters_1, self.kernel_size, stride=self.stride_size,
                                           padding=self.padding),
                                 nn.BatchNorm2d(self.hidden_filters_1),
@@ -469,48 +489,75 @@ class BetaVAE(nn.Module):
                                 nn.BatchNorm2d(self.hidden_filters_E1),
                                 nn.ReLU(True),
                                 nn.AdaptiveMaxPool2d((1, 1)),  # B, latent_cont_classe, 1, 1
-                                # L1Penalty_Layer(),
+                            ]
+                            if self.L1_norm:
+                                self.E1_list_layer += [
+                                    L1_penalty_layer(),
+                                ]
+                            self.E1_list_layer += [
                                 View((-1, self.output_E1_dim)),  # B, latent_spec['cont_class']
-                            )
+                            ]
+                            self.E1 = nn.Sequential(*self.E1_list_layer)
                 else:
                     if self.big_kernel:
                         if self.E1_second_conv_adapt:
-                            self.E1 = nn.Sequential(
-                                nn.MaxPool2d(kernel_size=self.kernel_MaxPool_Size_E1, stride=2),  # B, self.hidden_filters_E1, 6, 6
+                            self.E1_list_layer = [
+                                nn.MaxPool2d(kernel_size=self.kernel_MaxPool_Size_E1, stride=2),
+                                # B, self.hidden_filters_E1, 6, 6
                                 # PrintLayer(),
-                                # L1Penalty_Layer(),
+                            ]
+                            if self.L1_norm:
+                                self.E1_list_layer += [
+                                    L1_penalty_layer(),
+                                ]
+                            self.E1_list_layer += [
                                 View((-1, np.product(self.reshape_E1_bk))),  # B, 192
                                 nn.Linear(np.product(self.reshape_E1_bk), self.output_E1_dim)  # B, struct_dim*2
-                            )
+                            ]
+                            self.E1 = nn.Sequential(*self.E1_list_layer)
                         elif self.two_encoder:
-                            self.E1 = nn.Sequential(
+                            self.E1_list_layer = [
                                 nn.Conv2d(self.nc, self.hidden_filters_1, self.big_kernel_size, stride=self.stride_size,
                                           padding=self.padding),
                                 # PrintLayer(),
                                 # shape: (Batch, hidden_filters_1, 14, 14)
                                 nn.BatchNorm2d(self.hidden_filters_1),
                                 nn.ReLU(True),
-                                nn.MaxPool2d(kernel_size=self.kernel_MaxPool_Size_E1, stride=2),  # B, self.hidden_filters_1, 6, 6
+                                nn.MaxPool2d(kernel_size=self.kernel_MaxPool_Size_E1, stride=2),
+                                # B, self.hidden_filters_1, 6, 6
                                 # PrintLayer(),
-                                # L1Penalty_Layer(),
+                            ]
+                            if self.L1_norm:
+                                self.E1_list_layer += [
+                                    L1_penalty_layer(),
+                                ]
+                            self.E1_list_layer += [
                                 View((-1, np.product(self.reshape_E1_bk))),  # B, 1152
                                 nn.Linear(np.product(self.reshape_E1_bk), self.output_E1_dim)  # B, struct_dim*2
-                            )
+                            ]
+                            self.E1 = nn.Sequential(*self.E1_list_layer)
                     elif self.normal_kernel:
                         if self.E1_second_conv_adapt:
-                            self.E1 = nn.Sequential(
+                            self.E1_list_layer = [
                                 nn.Conv2d(32, self.hidden_filters_E1, self.kernel_size, 1, 1),
                                 # PrintLayer(),
                                 nn.BatchNorm2d(self.hidden_filters_E1),
                                 nn.ReLU(),
-                                nn.MaxPool2d(kernel_size=self.kernel_MaxPool_Size_E1, stride=2),  # B, self.hidden_filters_E1, 6, 6
+                                nn.MaxPool2d(kernel_size=self.kernel_MaxPool_Size_E1, stride=2),
+                                # B, self.hidden_filters_E1, 6, 6
                                 # PrintLayer(),
-                                # L1Penalty_Layer(),
+                            ]
+                            if self.L1_norm:
+                                self.E1_list_layer += [
+                                    L1_penalty_layer(),
+                                ]
+                            self.E1_list_layer += [
                                 View((-1, np.product(self.reshape_E1))),  # B, 192
                                 nn.Linear(np.product(self.reshape_E1), self.output_E1_dim)  # B, struct_dim*2
-                            )
+                            ]
+                            self.E1 = nn.Sequential(*self.E1_list_layer)
                         elif self.two_encoder:
-                            self.E1 = nn.Sequential(
+                            self.E1_list_layer = [
                                 nn.Conv2d(self.nc, self.hidden_filters_1, self.kernel_size, stride=self.stride_size,
                                           padding=self.padding),
                                 nn.BatchNorm2d(self.hidden_filters_1),
@@ -521,10 +568,16 @@ class BetaVAE(nn.Module):
                                 nn.ReLU(),
                                 nn.MaxPool2d(kernel_size=self.kernel_MaxPool_Size_E1, stride=2),  # B, 5, 7, 7
                                 # PrintLayer(),
-                                # L1Penalty_Layer(),
+                            ]
+                            if self.L1_norm:
+                                self.E1_list_layer += [
+                                    L1_penalty_layer(),
+                                ]
+                            self.E1_list_layer += [
                                 View((-1, np.product(self.reshape_E1))),  # B, 192
                                 nn.Linear(np.product(self.reshape_E1), self.output_E1_dim)  # B, struct_dim*2
-                            )
+                            ]
+                            self.E1 = nn.Sequential(*self.E1_list_layer)
             elif self.E1_dense:
                 self.E1 = nn.Sequential(
                     # TODO: dense layer like schema
@@ -1245,13 +1298,15 @@ class PrintLayer(nn.Module, ABC):
         return x
 
 
-class L1Penalty_Layer(nn.Module, ABC):
+class L1_penalty_layer(nn.Module, ABC):
 
     def __init__(self):
-        super(L1Penalty_Layer, self).__init__()
+        super(L1_penalty_layer, self).__init__()
 
     def forward(self, x):
-        x = torch.norm(x, 1)
+        print(x.shape)
+        x = torch.norm(x, 1, dim=1)
+        print(x.shape)
         return x
 
 

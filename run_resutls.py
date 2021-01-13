@@ -189,10 +189,11 @@ indx_image = 0
 
 # _____________ VAE 5 5 + class + E1 old weights ________________
 
-VAE_test_5_5_1 = ['VAE_design_new_5_1',
-                  'VAE_design_new_5_2',
-                  'VAE_design_new_5_9',
-                  'VAE_design_new_5_10']
+VAE_test_5_5_1 = [# 'VAE_design_new_5_1',
+                  # 'VAE_design_new_5_2',
+                  # 'VAE_design_new_5_9',
+                  # 'VAE_design_new_5_10'
+                 ]
 E1_VAE = True
 E1_AE = False
 E1_second_conv_adapt = True
@@ -216,7 +217,7 @@ net = BetaVAE(latent_spec, nb_class, is_C, device, nc=nc, four_conv=four_conv, s
               GMP=GMP, big_kernel=big_kernel)
 # print(net)
 z_component_traversal = np.arange(latent_spec['cont_var'] + latent_spec['cont_class'])
-# run(VAE_test_5_5_1, net, E1_VAE)
+run(VAE_test_5_5_1, net, E1_VAE)
 
 # ------- Big Kernel: -----------
 VAE_test_5_5_1_bk = ['VAE_design_new_bk_5_1',
@@ -230,6 +231,43 @@ net = BetaVAE(latent_spec, nb_class, is_C, device, nc=nc, four_conv=four_conv, s
               E1_second_conv_adapt=E1_second_conv_adapt, E1_VAE=E1_VAE, E1_AE=E1_AE, two_encoder=two_encoder,
               GMP=GMP, big_kernel=big_kernel)
 # run(VAE_test_5_5_1_bk, net, E1_VAE)
+
+# ------- wt GMP: -----------
+VAE_design_wt_GMP_5 = ['VAE_design_wt_GMP_new_5_1',
+                       'VAE_design_wt_GMP_new_5_2',
+                       'VAE_design_wt_GMP_new_5_9',
+                       'VAE_design_wt_GMP_new_5_10',
+                       'VAE_design_zeroW_wt_GMP_new_5_1',
+                       'VAE_design_zeroW_wt_GMP_new_5_2',
+                       'VAE_design_zeroW_wt_GMP_new_5_9',
+                       'VAE_design_zeroW_wt_GMP_new_5_10']
+big_kernel = False
+GMP = False
+
+net = BetaVAE(latent_spec, nb_class, is_C, device, nc=nc, four_conv=four_conv, second_layer_C=second_layer_C,
+              is_E1=is_E1, E1_conv=E1_conv, BN=BN, E1_second_conv=E1_second_conv,
+              E1_second_conv_adapt=E1_second_conv_adapt, E1_VAE=E1_VAE, E1_AE=E1_AE, two_encoder=two_encoder,
+              GMP=GMP, big_kernel=big_kernel)
+
+# run(VAE_design_wt_GMP_5, net, E1_VAE)
+
+# ------- Big Kernel + wt GMP: -----------
+VAE_design_wt_GMP_bk_5 = ['VAE_design_wt_GMP_new_bk_5_1',
+                       'VAE_design_wt_GMP_new_bk_5_2',
+                       'VAE_design_wt_GMP_new_bk_5_9',
+                       'VAE_design_wt_GMP_new_bk_5_10',
+                            'VAE_design_zeroW_wt_GMP_new_bk_5_1',
+                            'VAE_design_zeroW_wt_GMP_new_bk_5_2',
+                            'VAE_design_zeroW_wt_GMP_new_bk_5_9',
+                            'VAE_design_zeroW_wt_GMP_new_bk_5_10']
+big_kernel = True
+
+net = BetaVAE(latent_spec, nb_class, is_C, device, nc=nc, four_conv=four_conv, second_layer_C=second_layer_C,
+              is_E1=is_E1, E1_conv=E1_conv, BN=BN, E1_second_conv=E1_second_conv,
+              E1_second_conv_adapt=E1_second_conv_adapt, E1_VAE=E1_VAE, E1_AE=E1_AE, two_encoder=two_encoder,
+              GMP=GMP, big_kernel=big_kernel)
+
+# run(VAE_design_wt_GMP_bk_5, net, E1_VAE)
 
 # _____________ VAE 5 5 + class + E1 old weights ________________
 
@@ -260,17 +298,54 @@ z_component_traversal = np.arange(latent_spec['cont_var'] + latent_spec['cont_cl
 # run(VAE_test_5_5_2, net, E1_VAE)
 
 # ------- Big Kernel: -----------
-VAE_test_5_5_2_bk = ['VAE_design_new_bk_5_3',
-                     'VAE_design_new_bk_5_4',
-                     'VAE_design_new_bk_5_11']
-                     # 'VAE_design_new_bk_5_12']
+VAE_test_5_5_2_bk = [# 'VAE_design_new_bk_5_3',
+                     # 'VAE_design_new_bk_5_4',
+                     # 'VAE_design_new_bk_5_11']
+                     'VAE_design_new_bk_5_12']
 big_kernel = True
 
 net = BetaVAE(latent_spec, nb_class, is_C, device, nc=nc, four_conv=four_conv, second_layer_C=second_layer_C,
               is_E1=is_E1, E1_conv=E1_conv, BN=BN, E1_second_conv=E1_second_conv,
               E1_second_conv_adapt=E1_second_conv_adapt, E1_VAE=E1_VAE, E1_AE=E1_AE, two_encoder=two_encoder,
               GMP=GMP, big_kernel=big_kernel)
-run(VAE_test_5_5_2_bk, net, E1_VAE)
+# run(VAE_test_5_5_2_bk, net, E1_VAE)
+
+# ------- wt GMP: -----------
+VAE_design_wt_GMP_5_2 = ['VAE_design_wt_GMP_new_5_3',
+                       'VAE_design_wt_GMP_new_5_4',
+                       'VAE_design_wt_GMP_new_5_11',
+                       'VAE_design_wt_GMP_new_5_12',
+                       'VAE_design_zeroW_wt_GMP_new_5_3',
+                       'VAE_design_zeroW_wt_GMP_new_5_4',
+                       'VAE_design_zeroW_wt_GMP_new_5_11',
+                       'VAE_design_zeroW_wt_GMP_new_5_12']
+big_kernel = False
+GMP = False
+
+net = BetaVAE(latent_spec, nb_class, is_C, device, nc=nc, four_conv=four_conv, second_layer_C=second_layer_C,
+              is_E1=is_E1, E1_conv=E1_conv, BN=BN, E1_second_conv=E1_second_conv,
+              E1_second_conv_adapt=E1_second_conv_adapt, E1_VAE=E1_VAE, E1_AE=E1_AE, two_encoder=two_encoder,
+              GMP=GMP, big_kernel=big_kernel)
+
+# run(VAE_design_wt_GMP_5_2, net, E1_VAE)
+
+# ------- Big Kernel + wt GMP: -----------
+VAE_design_wt_GMP_bk_5_2 = ['VAE_design_wt_GMP_new_bk_5_3',
+                       'VAE_design_wt_GMP_new_bk_5_4',
+                       'VAE_design_wt_GMP_new_bk_5_11',
+                       'VAE_design_wt_GMP_new_bk_5_12',
+                            'VAE_design_zeroW_wt_GMP_new_bk_5_3',
+                            'VAE_design_zeroW_wt_GMP_new_bk_5_4',
+                            'VAE_design_zeroW_wt_GMP_new_bk_5_11',
+                            'VAE_design_zeroW_wt_GMP_new_bk_5_12']
+big_kernel = True
+
+net = BetaVAE(latent_spec, nb_class, is_C, device, nc=nc, four_conv=four_conv, second_layer_C=second_layer_C,
+              is_E1=is_E1, E1_conv=E1_conv, BN=BN, E1_second_conv=E1_second_conv,
+              E1_second_conv_adapt=E1_second_conv_adapt, E1_VAE=E1_VAE, E1_AE=E1_AE, two_encoder=two_encoder,
+              GMP=GMP, big_kernel=big_kernel)
+
+# run(VAE_design_wt_GMP_bk_5_2, net, E1_VAE)
 
 # _____________ VAE 5 5 + class + E1 old weights ________________
 
@@ -311,7 +386,44 @@ net = BetaVAE(latent_spec, nb_class, is_C, device, nc=nc, four_conv=four_conv, s
               is_E1=is_E1, E1_conv=E1_conv, BN=BN, E1_second_conv=E1_second_conv,
               E1_second_conv_adapt=E1_second_conv_adapt, E1_VAE=E1_VAE, E1_AE=E1_AE, two_encoder=two_encoder,
               GMP=GMP, big_kernel=big_kernel)
-# run(VAE_test_5_5_3_bk, net, E1_VAE)
+run(VAE_test_5_5_3_bk, net, E1_VAE)
+
+# ------- wt GMP: -----------
+VAE_design_wt_GMP_5_3 = ['VAE_design_wt_GMP_new_5_5',
+                       'VAE_design_wt_GMP_new_5_6',
+                       'VAE_design_wt_GMP_new_5_13',
+                       'VAE_design_wt_GMP_new_5_14',
+                       'VAE_design_zeroW_wt_GMP_new_5_5',
+                       'VAE_design_zeroW_wt_GMP_new_5_6',
+                       'VAE_design_zeroW_wt_GMP_new_5_13',
+                       'VAE_design_zeroW_wt_GMP_new_5_14']
+big_kernel = False
+GMP = False
+
+net = BetaVAE(latent_spec, nb_class, is_C, device, nc=nc, four_conv=four_conv, second_layer_C=second_layer_C,
+              is_E1=is_E1, E1_conv=E1_conv, BN=BN, E1_second_conv=E1_second_conv,
+              E1_second_conv_adapt=E1_second_conv_adapt, E1_VAE=E1_VAE, E1_AE=E1_AE, two_encoder=two_encoder,
+              GMP=GMP, big_kernel=big_kernel)
+
+# run(VAE_design_wt_GMP_5_3, net, E1_VAE)
+
+# ------- Big Kernel + wt GMP: -----------
+VAE_design_wt_GMP_bk_5_3 = ['VAE_design_wt_GMP_new_bk_5_5',
+                       'VAE_design_wt_GMP_new_bk_5_6',
+                       'VAE_design_wt_GMP_new_bk_5_13',
+                       'VAE_design_wt_GMP_new_bk_5_14',
+                            'VAE_design_zeroW_wt_GMP_new_bk_5_5',
+                            'VAE_design_zeroW_wt_GMP_new_bk_5_6',
+                            'VAE_design_zeroW_wt_GMP_new_bk_5_13',
+                            'VAE_design_zeroW_wt_GMP_new_bk_5_14']
+big_kernel = True
+
+net = BetaVAE(latent_spec, nb_class, is_C, device, nc=nc, four_conv=four_conv, second_layer_C=second_layer_C,
+              is_E1=is_E1, E1_conv=E1_conv, BN=BN, E1_second_conv=E1_second_conv,
+              E1_second_conv_adapt=E1_second_conv_adapt, E1_VAE=E1_VAE, E1_AE=E1_AE, two_encoder=two_encoder,
+              GMP=GMP, big_kernel=big_kernel)
+
+# run(VAE_design_wt_GMP_bk_5_3, net, E1_VAE)
 
 # _____________ VAE 5 5 + class + E1 old weights ________________
 
@@ -342,8 +454,8 @@ z_component_traversal = np.arange(latent_spec['cont_var'] + latent_spec['cont_cl
 # run(VAE_test_5_5_4, net, E1_VAE)
 
 # ------- Big Kernel: -----------
-VAE_test_5_5_4_bk = [# 'VAE_design_new_bk_5_7',
-                     # 'VAE_design_new_bk_5_8',
+VAE_test_5_5_4_bk = ['VAE_design_new_bk_5_7',
+                     'VAE_design_new_bk_5_8',
                      'VAE_design_new_bk_5_15',
                      'VAE_design_new_bk_5_16']
 big_kernel = True
@@ -352,7 +464,44 @@ net = BetaVAE(latent_spec, nb_class, is_C, device, nc=nc, four_conv=four_conv, s
               is_E1=is_E1, E1_conv=E1_conv, BN=BN, E1_second_conv=E1_second_conv,
               E1_second_conv_adapt=E1_second_conv_adapt, E1_VAE=E1_VAE, E1_AE=E1_AE, two_encoder=two_encoder,
               GMP=GMP, big_kernel=big_kernel)
-# run(VAE_test_5_5_4_bk, net, E1_VAE)
+run(VAE_test_5_5_4_bk, net, E1_VAE)
+
+# ------- wt GMP: -----------
+VAE_design_wt_GMP_5_4 = ['VAE_design_wt_GMP_new_5_7',
+                       'VAE_design_wt_GMP_new_5_8',
+                       'VAE_design_wt_GMP_new_5_15',
+                       'VAE_design_wt_GMP_new_5_16',
+                       'VAE_design_zeroW_wt_GMP_new_5_7',
+                       'VAE_design_zeroW_wt_GMP_new_5_8',
+                       'VAE_design_zeroW_wt_GMP_new_5_15',
+                       'VAE_design_zeroW_wt_GMP_new_5_16']
+big_kernel = False
+GMP = False
+
+net = BetaVAE(latent_spec, nb_class, is_C, device, nc=nc, four_conv=four_conv, second_layer_C=second_layer_C,
+              is_E1=is_E1, E1_conv=E1_conv, BN=BN, E1_second_conv=E1_second_conv,
+              E1_second_conv_adapt=E1_second_conv_adapt, E1_VAE=E1_VAE, E1_AE=E1_AE, two_encoder=two_encoder,
+              GMP=GMP, big_kernel=big_kernel)
+
+# run(VAE_design_wt_GMP_5_4, net, E1_VAE)
+
+# ------- Big Kernel + wt GMP: -----------
+VAE_design_wt_GMP_bk_5_4 = ['VAE_design_wt_GMP_new_bk_5_7',
+                       'VAE_design_wt_GMP_new_bk_5_8',
+                       'VAE_design_wt_GMP_new_bk_5_15',
+                       'VAE_design_wt_GMP_new_bk_5_16',
+                            'VAE_design_zeroW_wt_GMP_new_bk_5_7',
+                            'VAE_design_zeroW_wt_GMP_new_bk_5_8',
+                            'VAE_design_zeroW_wt_GMP_new_bk_5_15',
+                            'VAE_design_zeroW_wt_GMP_new_bk_5_16']
+big_kernel = True
+
+net = BetaVAE(latent_spec, nb_class, is_C, device, nc=nc, four_conv=four_conv, second_layer_C=second_layer_C,
+              is_E1=is_E1, E1_conv=E1_conv, BN=BN, E1_second_conv=E1_second_conv,
+              E1_second_conv_adapt=E1_second_conv_adapt, E1_VAE=E1_VAE, E1_AE=E1_AE, two_encoder=two_encoder,
+              GMP=GMP, big_kernel=big_kernel)
+
+# run(VAE_design_wt_GMP_bk_5_4, net, E1_VAE)
 
 
 # -------------------------------- 5 10 -----------------------------------------------
@@ -399,7 +548,45 @@ net = BetaVAE(latent_spec, nb_class, is_C, device, nc=nc, four_conv=four_conv, s
               is_E1=is_E1, E1_conv=E1_conv, BN=BN, E1_second_conv=E1_second_conv,
               E1_second_conv_adapt=E1_second_conv_adapt, E1_VAE=E1_VAE, E1_AE=E1_AE, two_encoder=two_encoder,
               GMP=GMP, big_kernel=big_kernel)
-# run(VAE_test_5_10_1_bk, net, E1_VAE)
+run(VAE_test_5_10_1_bk, net, E1_VAE)
+
+# ------- wt GMP: -----------
+VAE_design_wt_GMP_new_10_1 = ['VAE_design_wt_GMP_new_10_1',
+                       'VAE_design_wt_GMP_new_10_2',
+                       'VAE_design_wt_GMP_new_10_9',
+                       'VAE_design_wt_GMP_new_10_10',
+                       'VAE_design_zeroW_wt_GMP_new_10_1',
+                       'VAE_design_zeroW_wt_GMP_new_10_2',
+                       'VAE_design_zeroW_wt_GMP_new_10_9',
+                       'VAE_design_zeroW_wt_GMP_new_10_10']
+big_kernel = False
+GMP = False
+
+net = BetaVAE(latent_spec, nb_class, is_C, device, nc=nc, four_conv=four_conv, second_layer_C=second_layer_C,
+              is_E1=is_E1, E1_conv=E1_conv, BN=BN, E1_second_conv=E1_second_conv,
+              E1_second_conv_adapt=E1_second_conv_adapt, E1_VAE=E1_VAE, E1_AE=E1_AE, two_encoder=two_encoder,
+              GMP=GMP, big_kernel=big_kernel)
+
+# run(VAE_design_wt_GMP_new_10_1, net, E1_VAE)
+
+# ------- Big Kernel + wt GMP: -----------
+VAE_design_wt_GMP_bk_10_1 = [# 'VAE_design_wt_GMP_new_bk_10_1',
+                             # 'VAE_design_wt_GMP_new_bk_10_2',
+                             # 'VAE_design_wt_GMP_new_bk_10_9',
+                             # 'VAE_design_wt_GMP_new_bk_10_10',
+                             # 'VAE_design_zeroW_wt_GMP_new_bk_10_1',
+                             # 'VAE_design_zeroW_wt_GMP_new_bk_10_2',
+                             # 'VAE_design_zeroW_wt_GMP_new_bk_10_9',
+                             'VAE_design_zeroW_wt_GMP_new_bk_10_10'
+                             ]
+big_kernel = True
+
+net = BetaVAE(latent_spec, nb_class, is_C, device, nc=nc, four_conv=four_conv, second_layer_C=second_layer_C,
+              is_E1=is_E1, E1_conv=E1_conv, BN=BN, E1_second_conv=E1_second_conv,
+              E1_second_conv_adapt=E1_second_conv_adapt, E1_VAE=E1_VAE, E1_AE=E1_AE, two_encoder=two_encoder,
+              GMP=GMP, big_kernel=big_kernel)
+
+# run(VAE_design_wt_GMP_bk_10_1, net, E1_VAE)
 
 # _____________ VAE 5 10 + class + E1 old weights ________________
 
@@ -439,7 +626,45 @@ net = BetaVAE(latent_spec, nb_class, is_C, device, nc=nc, four_conv=four_conv, s
               is_E1=is_E1, E1_conv=E1_conv, BN=BN, E1_second_conv=E1_second_conv,
               E1_second_conv_adapt=E1_second_conv_adapt, E1_VAE=E1_VAE, E1_AE=E1_AE, two_encoder=two_encoder,
               GMP=GMP, big_kernel=big_kernel)
-# run(VAE_test_5_10_2_bk, net, E1_VAE)
+run(VAE_test_5_10_2_bk, net, E1_VAE)
+
+# ------- wt GMP: -----------
+VAE_design_wt_GMP_new_10_2 = ['VAE_design_wt_GMP_new_10_3',
+                              'VAE_design_wt_GMP_new_10_4',
+                              'VAE_design_wt_GMP_new_10_11',
+                              'VAE_design_wt_GMP_new_10_12',
+                              'VAE_design_zeroW_wt_GMP_new_10_3',
+                              'VAE_design_zeroW_wt_GMP_new_10_4',
+                              'VAE_design_zeroW_wt_GMP_new_10_11',
+                              'VAE_design_zeroW_wt_GMP_new_10_12']
+big_kernel = False
+GMP = False
+
+net = BetaVAE(latent_spec, nb_class, is_C, device, nc=nc, four_conv=four_conv, second_layer_C=second_layer_C,
+              is_E1=is_E1, E1_conv=E1_conv, BN=BN, E1_second_conv=E1_second_conv,
+              E1_second_conv_adapt=E1_second_conv_adapt, E1_VAE=E1_VAE, E1_AE=E1_AE, two_encoder=two_encoder,
+              GMP=GMP, big_kernel=big_kernel)
+
+# run(VAE_design_wt_GMP_new_10_2, net, E1_VAE)
+
+# ------- Big Kernel + wt GMP: -----------
+VAE_design_wt_GMP_bk_10_2 = [# 'VAE_design_wt_GMP_new_bk_10_3',
+                             # 'VAE_design_wt_GMP_new_bk_10_4',
+                             # 'VAE_design_wt_GMP_new_bk_10_11',
+                             # 'VAE_design_wt_GMP_new_bk_10_12',
+                             'VAE_design_zeroW_wt_GMP_new_bk_10_3',
+                             'VAE_design_zeroW_wt_GMP_new_bk_10_4',
+                             'VAE_design_zeroW_wt_GMP_new_bk_10_11',
+                             'VAE_design_zeroW_wt_GMP_new_bk_10_12'
+                             ]
+big_kernel = True
+
+net = BetaVAE(latent_spec, nb_class, is_C, device, nc=nc, four_conv=four_conv, second_layer_C=second_layer_C,
+              is_E1=is_E1, E1_conv=E1_conv, BN=BN, E1_second_conv=E1_second_conv,
+              E1_second_conv_adapt=E1_second_conv_adapt, E1_VAE=E1_VAE, E1_AE=E1_AE, two_encoder=two_encoder,
+              GMP=GMP, big_kernel=big_kernel)
+
+# run(VAE_design_wt_GMP_bk_10_2, net, E1_VAE)
 
 # _____________ VAE 5 10 + class + E1 old weights ________________
 
@@ -479,7 +704,45 @@ net = BetaVAE(latent_spec, nb_class, is_C, device, nc=nc, four_conv=four_conv, s
               is_E1=is_E1, E1_conv=E1_conv, BN=BN, E1_second_conv=E1_second_conv,
               E1_second_conv_adapt=E1_second_conv_adapt, E1_VAE=E1_VAE, E1_AE=E1_AE, two_encoder=two_encoder,
               GMP=GMP, big_kernel=big_kernel)
-# run(VAE_test_5_10_3_bk, net, E1_VAE)
+run(VAE_test_5_10_3_bk, net, E1_VAE)
+
+# ------- wt GMP: -----------
+VAE_design_wt_GMP_new_10_3 = ['VAE_design_wt_GMP_new_10_5',
+                       'VAE_design_wt_GMP_new_10_6',
+                       'VAE_design_wt_GMP_new_10_13',
+                       'VAE_design_wt_GMP_new_10_14',
+                       'VAE_design_zeroW_wt_GMP_new_10_5',
+                       'VAE_design_zeroW_wt_GMP_new_10_6',
+                       'VAE_design_zeroW_wt_GMP_new_10_13',
+                       'VAE_design_zeroW_wt_GMP_new_10_14']
+big_kernel = False
+GMP = False
+
+net = BetaVAE(latent_spec, nb_class, is_C, device, nc=nc, four_conv=four_conv, second_layer_C=second_layer_C,
+              is_E1=is_E1, E1_conv=E1_conv, BN=BN, E1_second_conv=E1_second_conv,
+              E1_second_conv_adapt=E1_second_conv_adapt, E1_VAE=E1_VAE, E1_AE=E1_AE, two_encoder=two_encoder,
+              GMP=GMP, big_kernel=big_kernel)
+
+# run(VAE_design_wt_GMP_new_10_3, net, E1_VAE)
+
+# ------- Big Kernel + wt GMP: -----------
+VAE_design_wt_GMP_bk_10_3 = [#  'VAE_design_wt_GMP_new_bk_10_5',
+                             #  'VAE_design_wt_GMP_new_bk_10_6',
+                             #  'VAE_design_wt_GMP_new_bk_10_13',
+                             #  'VAE_design_wt_GMP_new_bk_10_14',
+                             # 'VAE_design_zeroW_wt_GMP_new_bk_10_5',
+                             # 'VAE_design_zeroW_wt_GMP_new_bk_10_6',
+                             # 'VAE_design_zeroW_wt_GMP_new_bk_10_13',
+                             'VAE_design_zeroW_wt_GMP_new_bk_10_14'
+                             ]
+big_kernel = True
+
+net = BetaVAE(latent_spec, nb_class, is_C, device, nc=nc, four_conv=four_conv, second_layer_C=second_layer_C,
+              is_E1=is_E1, E1_conv=E1_conv, BN=BN, E1_second_conv=E1_second_conv,
+              E1_second_conv_adapt=E1_second_conv_adapt, E1_VAE=E1_VAE, E1_AE=E1_AE, two_encoder=two_encoder,
+              GMP=GMP, big_kernel=big_kernel)
+
+run(VAE_design_wt_GMP_bk_10_3, net, E1_VAE)
 
 # _____________ VAE 5 10 + class + E1 old weights ________________
 
@@ -519,7 +782,45 @@ net = BetaVAE(latent_spec, nb_class, is_C, device, nc=nc, four_conv=four_conv, s
               is_E1=is_E1, E1_conv=E1_conv, BN=BN, E1_second_conv=E1_second_conv,
               E1_second_conv_adapt=E1_second_conv_adapt, E1_VAE=E1_VAE, E1_AE=E1_AE, two_encoder=two_encoder,
               GMP=GMP, big_kernel=big_kernel)
-# run(VAE_test_5_10_4_bk, net, E1_VAE)
+run(VAE_test_5_10_4_bk, net, E1_VAE)
+
+# ------- wt GMP: -----------
+VAE_design_wt_GMP_new_10_4 = ['VAE_design_wt_GMP_new_10_7',
+                              'VAE_design_wt_GMP_new_10_8',
+                              'VAE_design_wt_GMP_new_10_15',
+                              'VAE_design_wt_GMP_new_10_16',
+                              'VAE_design_zeroW_wt_GMP_new_10_7',
+                              'VAE_design_zeroW_wt_GMP_new_10_8',
+                              'VAE_design_zeroW_wt_GMP_new_10_15',
+                              'VAE_design_zeroW_wt_GMP_new_10_16']
+big_kernel = False
+GMP = False
+
+net = BetaVAE(latent_spec, nb_class, is_C, device, nc=nc, four_conv=four_conv, second_layer_C=second_layer_C,
+              is_E1=is_E1, E1_conv=E1_conv, BN=BN, E1_second_conv=E1_second_conv,
+              E1_second_conv_adapt=E1_second_conv_adapt, E1_VAE=E1_VAE, E1_AE=E1_AE, two_encoder=two_encoder,
+              GMP=GMP, big_kernel=big_kernel)
+
+# run(VAE_design_wt_GMP_new_10_4, net, E1_VAE)
+
+# ------- Big Kernel + wt GMP: -----------
+VAE_design_wt_GMP_bk_10_4 = [# 'VAE_design_wt_GMP_new_bk_10_7',
+                             # 'VAE_design_wt_GMP_new_bk_10_8',
+                             # 'VAE_design_wt_GMP_new_bk_10_15',
+                             # 'VAE_design_wt_GMP_new_bk_10_16',
+                             'VAE_design_zeroW_wt_GMP_new_bk_10_7',
+                             'VAE_design_zeroW_wt_GMP_new_bk_10_8',
+                             'VAE_design_zeroW_wt_GMP_new_bk_10_15',
+                             'VAE_design_zeroW_wt_GMP_new_bk_10_16'
+                             ]
+big_kernel = True
+
+net = BetaVAE(latent_spec, nb_class, is_C, device, nc=nc, four_conv=four_conv, second_layer_C=second_layer_C,
+              is_E1=is_E1, E1_conv=E1_conv, BN=BN, E1_second_conv=E1_second_conv,
+              E1_second_conv_adapt=E1_second_conv_adapt, E1_VAE=E1_VAE, E1_AE=E1_AE, two_encoder=two_encoder,
+              GMP=GMP, big_kernel=big_kernel)
+
+run(VAE_design_wt_GMP_bk_10_4, net, E1_VAE)
 
 # -------------------------------- 5 15 -----------------------------------------------
 
@@ -565,7 +866,46 @@ net = BetaVAE(latent_spec, nb_class, is_C, device, nc=nc, four_conv=four_conv, s
               is_E1=is_E1, E1_conv=E1_conv, BN=BN, E1_second_conv=E1_second_conv,
               E1_second_conv_adapt=E1_second_conv_adapt, E1_VAE=E1_VAE, E1_AE=E1_AE, two_encoder=two_encoder,
               GMP=GMP, big_kernel=big_kernel)
-# run(VAE_test_5_15_1_bk, net, E1_VAE)
+run(VAE_test_5_15_1_bk, net, E1_VAE)
+
+# ------- wt GMP: -----------
+VAE_design_wt_GMP_new_15_1 = [# 'VAE_design_wt_GMP_new_15_1',
+                              # 'VAE_design_wt_GMP_new_15_2',
+                              # 'VAE_design_wt_GMP_new_15_9',
+                              # 'VAE_design_wt_GMP_new_15_10',
+                              'VAE_design_zeroW_wt_GMP_new_15_1',
+                              'VAE_design_zeroW_wt_GMP_new_15_2',
+                              'VAE_design_zeroW_wt_GMP_new_15_9',
+                              'VAE_design_zeroW_wt_GMP_new_15_10'
+                              ]
+big_kernel = False
+GMP = False
+
+net = BetaVAE(latent_spec, nb_class, is_C, device, nc=nc, four_conv=four_conv, second_layer_C=second_layer_C,
+              is_E1=is_E1, E1_conv=E1_conv, BN=BN, E1_second_conv=E1_second_conv,
+              E1_second_conv_adapt=E1_second_conv_adapt, E1_VAE=E1_VAE, E1_AE=E1_AE, two_encoder=two_encoder,
+              GMP=GMP, big_kernel=big_kernel)
+
+run(VAE_design_wt_GMP_new_15_1, net, E1_VAE)
+
+# ------- Big Kernel + wt GMP: -----------
+VAE_design_wt_GMP_bk_15_1 = [# 'VAE_design_wt_GMP_new_bk_15_1',
+                             # 'VAE_design_wt_GMP_new_bk_15_2',
+                             # 'VAE_design_wt_GMP_new_bk_15_9',
+                             # 'VAE_design_wt_GMP_new_bk_15_10',
+                             'VAE_design_zeroW_wt_GMP_new_bk_15_1',
+                             'VAE_design_zeroW_wt_GMP_new_bk_15_2',
+                             'VAE_design_zeroW_wt_GMP_new_bk_15_9',
+                             'VAE_design_zeroW_wt_GMP_new_bk_15_10'
+                             ]
+big_kernel = True
+
+net = BetaVAE(latent_spec, nb_class, is_C, device, nc=nc, four_conv=four_conv, second_layer_C=second_layer_C,
+              is_E1=is_E1, E1_conv=E1_conv, BN=BN, E1_second_conv=E1_second_conv,
+              E1_second_conv_adapt=E1_second_conv_adapt, E1_VAE=E1_VAE, E1_AE=E1_AE, two_encoder=two_encoder,
+              GMP=GMP, big_kernel=big_kernel)
+
+run(VAE_design_wt_GMP_bk_15_1, net, E1_VAE)
 
 # _____________ VAE 5 15 + class + E1 old weights ________________
 
@@ -592,7 +932,7 @@ net = BetaVAE(latent_spec, nb_class, is_C, device, nc=nc, four_conv=four_conv, s
               GMP=GMP, big_kernel=big_kernel)
 
 z_component_traversal = np.arange(latent_spec['cont_var'] + latent_spec['cont_class'])
-run(VAE_test_5_15_2, net, E1_VAE)
+# run(VAE_test_5_15_2, net, E1_VAE)
 
 # ------- Big Kernel: -----------
 VAE_test_5_15_2_bk = ['VAE_design_new_bk_15_3',
@@ -605,7 +945,46 @@ net = BetaVAE(latent_spec, nb_class, is_C, device, nc=nc, four_conv=four_conv, s
               is_E1=is_E1, E1_conv=E1_conv, BN=BN, E1_second_conv=E1_second_conv,
               E1_second_conv_adapt=E1_second_conv_adapt, E1_VAE=E1_VAE, E1_AE=E1_AE, two_encoder=two_encoder,
               GMP=GMP, big_kernel=big_kernel)
-# run(VAE_test_5_15_2_bk, net, E1_VAE)
+run(VAE_test_5_15_2_bk, net, E1_VAE)
+
+# ------- wt GMP: -----------
+VAE_design_wt_GMP_new_15_2 = [# 'VAE_design_wt_GMP_new_15_3',
+                              # 'VAE_design_wt_GMP_new_15_4',
+                              # 'VAE_design_wt_GMP_new_15_11',
+                              # 'VAE_design_wt_GMP_new_15_12',
+                              'VAE_design_zeroW_wt_GMP_new_15_3',
+                              'VAE_design_zeroW_wt_GMP_new_15_4',
+                              'VAE_design_zeroW_wt_GMP_new_15_11',
+                              'VAE_design_zeroW_wt_GMP_new_15_12'
+                              ]
+big_kernel = False
+GMP = False
+
+net = BetaVAE(latent_spec, nb_class, is_C, device, nc=nc, four_conv=four_conv, second_layer_C=second_layer_C,
+              is_E1=is_E1, E1_conv=E1_conv, BN=BN, E1_second_conv=E1_second_conv,
+              E1_second_conv_adapt=E1_second_conv_adapt, E1_VAE=E1_VAE, E1_AE=E1_AE, two_encoder=two_encoder,
+              GMP=GMP, big_kernel=big_kernel)
+
+run(VAE_design_wt_GMP_new_15_2, net, E1_VAE)
+
+# ------- Big Kernel + wt GMP: -----------
+VAE_design_wt_GMP_bk_15_2 = [# 'VAE_design_wt_GMP_new_bk_15_3',
+                             # 'VAE_design_wt_GMP_new_bk_15_4',
+                             # 'VAE_design_wt_GMP_new_bk_15_11',
+                             # 'VAE_design_wt_GMP_new_bk_15_12',
+                             'VAE_design_zeroW_wt_GMP_new_bk_15_3',
+                             'VAE_design_zeroW_wt_GMP_new_bk_15_4',
+                             'VAE_design_zeroW_wt_GMP_new_bk_15_11',
+                             'VAE_design_zeroW_wt_GMP_new_bk_15_12'
+                             ]
+big_kernel = True
+
+net = BetaVAE(latent_spec, nb_class, is_C, device, nc=nc, four_conv=four_conv, second_layer_C=second_layer_C,
+              is_E1=is_E1, E1_conv=E1_conv, BN=BN, E1_second_conv=E1_second_conv,
+              E1_second_conv_adapt=E1_second_conv_adapt, E1_VAE=E1_VAE, E1_AE=E1_AE, two_encoder=two_encoder,
+              GMP=GMP, big_kernel=big_kernel)
+
+run(VAE_design_wt_GMP_bk_15_2, net, E1_VAE)
 
 # _____________ VAE 5 15 + class + E1 old weights ________________
 
@@ -632,7 +1011,7 @@ net = BetaVAE(latent_spec, nb_class, is_C, device, nc=nc, four_conv=four_conv, s
               GMP=GMP, big_kernel=big_kernel)
 
 z_component_traversal = np.arange(latent_spec['cont_var'] + latent_spec['cont_class'])
-run(VAE_test_5_15_3, net, E1_VAE)
+# run(VAE_test_5_15_3, net, E1_VAE)
 
 # ------- Big Kernel: -----------
 VAE_test_5_15_3_bk = ['VAE_design_new_bk_15_5',
@@ -645,7 +1024,46 @@ net = BetaVAE(latent_spec, nb_class, is_C, device, nc=nc, four_conv=four_conv, s
               is_E1=is_E1, E1_conv=E1_conv, BN=BN, E1_second_conv=E1_second_conv,
               E1_second_conv_adapt=E1_second_conv_adapt, E1_VAE=E1_VAE, E1_AE=E1_AE, two_encoder=two_encoder,
               GMP=GMP, big_kernel=big_kernel)
-# run(VAE_test_5_15_3_bk, net, E1_VAE)
+run(VAE_test_5_15_3_bk, net, E1_VAE)
+
+# ------- wt GMP: -----------
+VAE_design_wt_GMP_new_15_3 = [# 'VAE_design_wt_GMP_new_15_5',
+                              # 'VAE_design_wt_GMP_new_15_6',
+                              # 'VAE_design_wt_GMP_new_15_13',
+                              # 'VAE_design_wt_GMP_new_15_14',
+                              'VAE_design_zeroW_wt_GMP_new_15_5',
+                              'VAE_design_zeroW_wt_GMP_new_15_6',
+                              'VAE_design_zeroW_wt_GMP_new_15_13',
+                              'VAE_design_zeroW_wt_GMP_new_15_14'
+                              ]
+big_kernel = False
+GMP = False
+
+net = BetaVAE(latent_spec, nb_class, is_C, device, nc=nc, four_conv=four_conv, second_layer_C=second_layer_C,
+              is_E1=is_E1, E1_conv=E1_conv, BN=BN, E1_second_conv=E1_second_conv,
+              E1_second_conv_adapt=E1_second_conv_adapt, E1_VAE=E1_VAE, E1_AE=E1_AE, two_encoder=two_encoder,
+              GMP=GMP, big_kernel=big_kernel)
+
+run(VAE_design_wt_GMP_new_15_3, net, E1_VAE)
+
+# ------- Big Kernel + wt GMP: -----------
+VAE_design_wt_GMP_bk_15_3 = [# 'VAE_design_wt_GMP_new_bk_15_5',
+                             # 'VAE_design_wt_GMP_new_bk_15_6',
+                             # 'VAE_design_wt_GMP_new_bk_15_13',
+                             # 'VAE_design_wt_GMP_new_bk_15_14',
+                             'VAE_design_zeroW_wt_GMP_new_bk_15_5',
+                             'VAE_design_zeroW_wt_GMP_new_bk_15_6',
+                             'VAE_design_zeroW_wt_GMP_new_bk_15_13',
+                             'VAE_design_zeroW_wt_GMP_new_bk_15_14'
+                             ]
+big_kernel = True
+
+net = BetaVAE(latent_spec, nb_class, is_C, device, nc=nc, four_conv=four_conv, second_layer_C=second_layer_C,
+              is_E1=is_E1, E1_conv=E1_conv, BN=BN, E1_second_conv=E1_second_conv,
+              E1_second_conv_adapt=E1_second_conv_adapt, E1_VAE=E1_VAE, E1_AE=E1_AE, two_encoder=two_encoder,
+              GMP=GMP, big_kernel=big_kernel)
+
+run(VAE_design_wt_GMP_bk_15_3, net, E1_VAE)
 
 # _____________ VAE 5 15 + class + E1 old weights ________________
 
@@ -672,7 +1090,7 @@ net = BetaVAE(latent_spec, nb_class, is_C, device, nc=nc, four_conv=four_conv, s
               GMP=GMP, big_kernel=big_kernel)
 
 z_component_traversal = np.arange(latent_spec['cont_var'] + latent_spec['cont_class'])
-run(VAE_test_5_15_4, net, E1_VAE)
+# run(VAE_test_5_15_4, net, E1_VAE)
 
 # ------- Big Kernel: -----------
 VAE_test_5_15_4_bk = ['VAE_design_new_bk_15_7',
@@ -685,7 +1103,46 @@ net = BetaVAE(latent_spec, nb_class, is_C, device, nc=nc, four_conv=four_conv, s
               is_E1=is_E1, E1_conv=E1_conv, BN=BN, E1_second_conv=E1_second_conv,
               E1_second_conv_adapt=E1_second_conv_adapt, E1_VAE=E1_VAE, E1_AE=E1_AE, two_encoder=two_encoder,
               GMP=GMP, big_kernel=big_kernel)
-# run(VAE_test_5_15_4_bk, net, E1_VAE)
+run(VAE_test_5_15_4_bk, net, E1_VAE)
+
+# ------- wt GMP: -----------
+VAE_design_wt_GMP_new_15_4 = [# 'VAE_design_wt_GMP_new_15_7',
+                              # 'VAE_design_wt_GMP_new_15_8',
+                              # 'VAE_design_wt_GMP_new_15_15',
+                              # 'VAE_design_wt_GMP_new_15_16',
+                              'VAE_design_zeroW_wt_GMP_new_15_7',
+                              'VAE_design_zeroW_wt_GMP_new_15_8',
+                              'VAE_design_zeroW_wt_GMP_new_15_15',
+                              'VAE_design_zeroW_wt_GMP_new_15_16'
+                              ]
+big_kernel = False
+GMP = False
+
+net = BetaVAE(latent_spec, nb_class, is_C, device, nc=nc, four_conv=four_conv, second_layer_C=second_layer_C,
+              is_E1=is_E1, E1_conv=E1_conv, BN=BN, E1_second_conv=E1_second_conv,
+              E1_second_conv_adapt=E1_second_conv_adapt, E1_VAE=E1_VAE, E1_AE=E1_AE, two_encoder=two_encoder,
+              GMP=GMP, big_kernel=big_kernel)
+
+run(VAE_design_wt_GMP_new_15_4, net, E1_VAE)
+
+# ------- Big Kernel + wt GMP: -----------
+VAE_design_wt_GMP_bk_15_4 = [# 'VAE_design_wt_GMP_new_bk_15_7',
+                             # 'VAE_design_wt_GMP_new_bk_15_8',
+                             # 'VAE_design_wt_GMP_new_bk_15_15',
+                             # 'VAE_design_wt_GMP_new_bk_15_16',
+                             'VAE_design_zeroW_wt_GMP_new_bk_15_7',
+                             'VAE_design_zeroW_wt_GMP_new_bk_15_8',
+                             'VAE_design_zeroW_wt_GMP_new_bk_15_15',
+                             'VAE_design_zeroW_wt_GMP_new_bk_15_16'
+                             ]
+big_kernel = True
+
+net = BetaVAE(latent_spec, nb_class, is_C, device, nc=nc, four_conv=four_conv, second_layer_C=second_layer_C,
+              is_E1=is_E1, E1_conv=E1_conv, BN=BN, E1_second_conv=E1_second_conv,
+              E1_second_conv_adapt=E1_second_conv_adapt, E1_VAE=E1_VAE, E1_AE=E1_AE, two_encoder=two_encoder,
+              GMP=GMP, big_kernel=big_kernel)
+
+run(VAE_design_wt_GMP_bk_15_4, net, E1_VAE)
 
 # -------------------------------- 5 20 -----------------------------------------------
 
@@ -718,7 +1175,7 @@ net = BetaVAE(latent_spec, nb_class, is_C, device, nc=nc, four_conv=four_conv, s
               GMP=GMP, big_kernel=big_kernel)
 
 z_component_traversal = np.arange(latent_spec['cont_var'] + latent_spec['cont_class'])
-run(VAE_test_5_20_1, net, E1_VAE)
+# run(VAE_test_5_20_1, net, E1_VAE)
 
 # ------- Big Kernel: -----------
 VAE_test_5_20_1_bk = ['VAE_design_new_bk_20_1',
@@ -758,7 +1215,7 @@ net = BetaVAE(latent_spec, nb_class, is_C, device, nc=nc, four_conv=four_conv, s
               GMP=GMP, big_kernel=big_kernel)
 
 z_component_traversal = np.arange(latent_spec['cont_var'] + latent_spec['cont_class'])
-run(VAE_test_5_20_2, net, E1_VAE)
+# run(VAE_test_5_20_2, net, E1_VAE)
 
 # ------- Big Kernel: -----------
 VAE_test_5_20_2_bk = ['VAE_design_new_bk_20_3',
@@ -798,7 +1255,7 @@ net = BetaVAE(latent_spec, nb_class, is_C, device, nc=nc, four_conv=four_conv, s
               GMP=GMP, big_kernel=big_kernel)
 
 z_component_traversal = np.arange(latent_spec['cont_var'] + latent_spec['cont_class'])
-run(VAE_test_5_20_3, net, E1_VAE)
+# run(VAE_test_5_20_3, net, E1_VAE)
 
 # ------- Big Kernel: -----------
 VAE_test_5_20_3_bk = ['VAE_design_new_bk_20_5',
@@ -838,7 +1295,7 @@ net = BetaVAE(latent_spec, nb_class, is_C, device, nc=nc, four_conv=four_conv, s
               GMP=GMP, big_kernel=big_kernel)
 
 z_component_traversal = np.arange(latent_spec['cont_var'] + latent_spec['cont_class'])
-run(VAE_test_5_20_4, net, E1_VAE)
+# run(VAE_test_5_20_4, net, E1_VAE)
 
 # ------- Big Kernel: -----------
 VAE_test_5_20_4_bk = ['VAE_design_new_bk_20_7',

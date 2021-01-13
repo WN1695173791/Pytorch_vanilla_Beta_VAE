@@ -388,7 +388,7 @@ class Solver(object):
                       stride_size=self.stride_size, kernel_size=self.kernel_size, E1_second_conv=self.E1_second_conv,
                       E1_second_conv_adapt=self.E1_second_conv_adapt, E1_VAE=self.E1_VAE, E1_AE=self.E1_AE,
                       two_encoder=self.two_encoder, big_kernel_size=self.big_kernel_size[0], big_kernel=self.big_kernel,
-                      GMP=self.GMP, zeros_W_Classif=self.zeros_W_Classif)
+                      GMP=self.GMP, zeros_W_Classif=self.zeros_W_Classif, L1_norm=self.L1_norm)
 
         # print model characteristics:
         print(net)
@@ -587,10 +587,6 @@ class Solver(object):
                     self.L_Total += (self.Lm * self.lambda_zvar_sim_normalized)
                     self.L_Total_wt_weights += self.Lm
 
-                if self.L1_norm:
-                    print(self.net.E1)
-                    l1_norm = torch.norm(self.net.E1[-1].weight, p=1)
-                    self.L_Total += l1_norm
 
                     # plot parameters:
                 # print('-----------::::::::::::Before:::::::-----------------:', self.i)
