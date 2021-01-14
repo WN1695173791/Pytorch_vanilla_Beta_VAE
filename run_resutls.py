@@ -120,6 +120,7 @@ def visualize(net, net_trained, nb_class, expe_name, device, latent_spec, train_
 
 def run(expe_list, net, E1_VAE):
     for expe in expe_list:
+        print(expe)
         expe_name = expe
         net_trained, _, nb_epochs = get_checkpoints(net, path, expe_name)
         # # scores and losses:
@@ -189,6 +190,131 @@ indx_image = 0
 
 # _____________ VAE 5 5 + class + E1 old weights ________________
 
+VAE_resume_5 = ['VAE_resume_2_5_1',
+                'VAE_resume_2_5_2',
+                'VAE_resume_2_5_3',
+                'VAE_resume_2_5_4',
+                'VAE_resume_2_5_5',
+                'VAE_resume_2_5_6',
+                'VAE_resume_2_5_7',
+                'VAE_resume_2_5_8',
+                'VAE_resume_2_5_9',
+                'VAE_resume_2_5_10',
+                'VAE_resume_2_5_11',
+                'VAE_resume_2_5_12',
+                'VAE_resume_2_5_13',
+                'VAE_resume_2_5_14',
+                'VAE_resume_2_5_15',
+                'VAE_resume_2_5_16',
+                'VAE_resume_2_5_17',
+                'VAE_resume_2_5_18',
+                'VAE_resume_2_5_19',
+                'VAE_resume_2_5_20',
+                'VAE_resume_2_5_21',
+                'VAE_resume_2_5_22',
+                'VAE_resume_2_5_23',
+                'VAE_resume_2_5_24',
+                'VAE_resume_2_5_25',
+                'VAE_resume_2_5_26',
+                'VAE_resume_2_5_27',
+                'VAE_resume_2_5_28',
+                'VAE_resume_2_5_29',
+                'VAE_resume_2_5_30',
+                'VAE_resume_2_5_31',
+                'VAE_resume_2_5_32',
+                'VAE_resume_2_5_33',
+                'VAE_resume_2_5_34',
+                'VAE_resume_2_5_35',
+                'VAE_resume_2_5_36',
+                'VAE_resume_2_5_37',
+                'VAE_resume_2_5_38',
+                'VAE_resume_2_5_39',
+                'VAE_resume_2_5_40',
+                'VAE_resume_2_5_41',
+                'VAE_resume_2_5_42',
+                'VAE_resume_2_5_43',
+                'VAE_resume_2_5_44',
+                'VAE_resume_2_5_45',
+                'VAE_resume_2_5_46',
+                'VAE_resume_2_5_47',
+                'VAE_resume_2_5_48',
+                'VAE_resume_2_5_49',
+                'VAE_resume_2_L1_5_1',
+                'VAE_resume_2_L1_5_2',
+                'VAE_resume_2_L1_5_3',
+                'VAE_resume_2_L1_5_4',
+                'VAE_resume_2_L1_5_5',
+                'VAE_resume_2_L1_5_6',
+                'VAE_resume_2_L1_5_7',
+                'VAE_resume_2_L1_5_8',
+                'VAE_resume_2_L1_5_9',
+                'VAE_resume_2_L1_5_10',
+                'VAE_resume_2_L1_5_11',
+                'VAE_resume_2_L1_5_12',
+                'VAE_resume_2_L1_5_13',
+                'VAE_resume_2_L1_5_14',
+                'VAE_resume_2_L1_5_15',
+                'VAE_resume_2_L1_5_16',
+                'VAE_resume_2_L1_5_17',
+                'VAE_resume_2_L1_5_18',
+                'VAE_resume_2_L1_5_19',
+                'VAE_resume_2_L1_5_20',
+                'VAE_resume_2_L1_5_21',
+                'VAE_resume_2_L1_5_22',
+                'VAE_resume_2_L1_5_23',
+                'VAE_resume_2_L1_5_24',
+                'VAE_resume_2_L1_5_25',
+                'VAE_resume_2_L1_5_26',
+                'VAE_resume_2_L1_5_27',
+                'VAE_resume_2_L1_5_28',
+                'VAE_resume_2_L1_5_29',
+                'VAE_resume_2_L1_5_30',
+                'VAE_resume_2_L1_5_31',
+                'VAE_resume_2_L1_5_32',
+                'VAE_resume_2_L1_5_33',
+                'VAE_resume_2_L1_5_34',
+                'VAE_resume_2_L1_5_35',
+                'VAE_resume_2_L1_5_36',
+                'VAE_resume_2_L1_5_37',
+                'VAE_resume_2_L1_5_38',
+                'VAE_resume_2_L1_5_39',
+                'VAE_resume_2_L1_5_40',
+                'VAE_resume_2_L1_5_41',
+                'VAE_resume_2_L1_5_42',
+                'VAE_resume_2_L1_5_43',
+                'VAE_resume_2_L1_5_44',
+                'VAE_resume_2_L1_5_45',
+                'VAE_resume_2_L1_5_46',
+                'VAE_resume_2_L1_5_47',
+                'VAE_resume_2_L1_5_48',
+                'VAE_resume_2_L1_5_49']
+
+E1_VAE = True
+E1_AE = False
+E1_second_conv_adapt = False
+two_encoder = True
+GMP = True
+big_kernel = True
+
+is_zvar_sim_loss = False
+is_partial_rand_class = False
+is_C = True
+
+latent_spec = {'cont_var': 5, 'cont_class': 5}
+BN = True
+is_E1 = True
+E1_conv = True
+second_layer_C = False
+E1_second_conv = False
+net = BetaVAE(latent_spec, nb_class, is_C, device, nc=nc, four_conv=four_conv, second_layer_C=second_layer_C,
+              is_E1=is_E1, E1_conv=E1_conv, BN=BN, E1_second_conv=E1_second_conv,
+              E1_second_conv_adapt=E1_second_conv_adapt, E1_VAE=E1_VAE, E1_AE=E1_AE, two_encoder=two_encoder,
+              GMP=GMP, big_kernel=big_kernel)
+# print(net)
+z_component_traversal = np.arange(latent_spec['cont_var'] + latent_spec['cont_class'])
+run(VAE_resume_5, net, E1_VAE)
+
+"""
 VAE_test_5_5_1 = [# 'VAE_design_new_5_1',
                   # 'VAE_design_new_5_2',
                   # 'VAE_design_new_5_9',
@@ -1309,6 +1435,7 @@ net = BetaVAE(latent_spec, nb_class, is_C, device, nc=nc, four_conv=four_conv, s
               E1_second_conv_adapt=E1_second_conv_adapt, E1_VAE=E1_VAE, E1_AE=E1_AE, two_encoder=two_encoder,
               GMP=GMP, big_kernel=big_kernel)
 # run(VAE_test_5_20_4_bk, net, E1_VAE)
+"""
 
 """
 VAE_Class_E1_old_w_expe_5_15_1 = ['VAE_Class_E1_old_w_expe_5_15_1']
