@@ -1,5 +1,5 @@
-import torch
-from model import BetaVAE
+from models.model import BetaVAE
+from models.model_classifier import DefaultCNN
 from dataset.dataset_2 import get_dataloaders
 
 from visualizer import *
@@ -84,6 +84,10 @@ def visualize(net, net_trained, nb_class, expe_name, device, latent_spec, train_
                                      both_continue=True, save=True, FID=FID, IS=IS, psnr=psnr,
                                      is_partial_rand_class=is_partial_rand_class, is_E1=is_E1,
                                      is_zvar_sim_loss=is_zvar_sim_loss)
+            sample_real_distribution(net, path, expe_name, latent_spec, img_size, train_test='test', batch=batch,
+                                     both_continue=True, save=True, FID=FID, IS=IS, psnr=psnr,
+                                     is_partial_rand_class=is_partial_rand_class, is_E1=is_E1,
+                                     is_zvar_sim_loss=is_zvar_sim_loss)
         else:
             plot_samples(net, nb_epochs, path, expe_name, latent_spec, img_size, batch=batch, both_continue=True,
                          save=save,
@@ -92,11 +96,11 @@ def visualize(net, net_trained, nb_class, expe_name, device, latent_spec, train_
     if all_prototype:
         plot_prototype(net, expe_name, nb_class, latent_spec, device, train_loader, train_test='train',
                        print_per_class=True, print_per_var=True,
-                       plot_traversal_struct=False, print_2d_projection=False,
+                       plot_traversal_struct=False, print_2d_projection=True,
                        is_partial_rand_class=is_partial_rand_class, is_E1=is_E1)
         plot_prototype(net, expe_name, nb_class, latent_spec, device, test_loader, train_test='test',
                        print_per_class=True, print_per_var=True,
-                       plot_traversal_struct=False, print_2d_projection=False,
+                       plot_traversal_struct=False, print_2d_projection=True,
                        is_partial_rand_class=is_partial_rand_class, is_E1=is_E1)
 
     if copute_average_z_structural:
@@ -118,7 +122,23 @@ def visualize(net, net_trained, nb_class, expe_name, device, latent_spec, train_
     return
 
 
+def run_score(expes_list, net):
+    path = 'checkpoints_CNN/'
+    path_scores = 'checkpoint_scores_CNN'
+    latent_spec = None
+    for expe in expes_list:
+        print(expe)
+        expe_name = expe
+        net_trained, _, nb_epochs = get_checkpoints(net, path, expe_name)
+        # scores and losses:
+        visualize(net, net_trained, nb_class, expe_name, device, latent_spec, train_loader, test_loader,
+                  path_scores=path_scores,
+                  is_partial_rand_class=False, save=True, scores_and_losses=True, is_E1=False,
+                  losses=True)
+
 def run(expe_list, net, E1_VAE):
+    path = 'checkpoints/'
+    path_scores = 'checkpoints_scores'
     for expe in expe_list:
         print(expe)
         expe_name = expe
@@ -167,8 +187,6 @@ def run(expe_list, net, E1_VAE):
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 batch = torch.load('data/batch_mnist.pt')
-path = 'checkpoints/'
-path_scores = 'checkpoints_scores'
 
 # load mnist dataset:
 train_loader, valid_loader, test_loader = get_dataloaders('mnist', batch_size=64)
@@ -186,109 +204,308 @@ is_binary_structural_latent = False
 # for traversal real image:
 indx_image = 0
 
+# ------------- expes CNN classifier: -----------------
+list_CNN_defaults = ['CNN_mnist_default']
+
+net = DefaultCNN()
+
+# print(net)
+run_score(list_CNN_defaults, net)
+
 # _______________________________Expe test VAE + class + E1_____________________________________
 
 # _____________ VAE 5 5 + class + E1 old weights ________________
 
-VAE_resume_5 = ['VAE_resume_2_5_1',
-                'VAE_resume_2_5_2',
-                'VAE_resume_2_5_3',
-                'VAE_resume_2_5_4',
-                'VAE_resume_2_5_5',
-                'VAE_resume_2_5_6',
-                'VAE_resume_2_5_7',
-                'VAE_resume_2_5_8',
-                'VAE_resume_2_5_9',
-                'VAE_resume_2_5_10',
-                'VAE_resume_2_5_11',
-                'VAE_resume_2_5_12',
-                'VAE_resume_2_5_13',
-                'VAE_resume_2_5_14',
-                'VAE_resume_2_5_15',
-                'VAE_resume_2_5_16',
-                'VAE_resume_2_5_17',
-                'VAE_resume_2_5_18',
-                'VAE_resume_2_5_19',
-                'VAE_resume_2_5_20',
-                'VAE_resume_2_5_21',
-                'VAE_resume_2_5_22',
-                'VAE_resume_2_5_23',
-                'VAE_resume_2_5_24',
-                'VAE_resume_2_5_25',
-                'VAE_resume_2_5_26',
-                'VAE_resume_2_5_27',
-                'VAE_resume_2_5_28',
-                'VAE_resume_2_5_29',
-                'VAE_resume_2_5_30',
-                'VAE_resume_2_5_31',
-                'VAE_resume_2_5_32',
-                'VAE_resume_2_5_33',
-                'VAE_resume_2_5_34',
-                'VAE_resume_2_5_35',
-                'VAE_resume_2_5_36',
-                'VAE_resume_2_5_37',
-                'VAE_resume_2_5_38',
-                'VAE_resume_2_5_39',
-                'VAE_resume_2_5_40',
-                'VAE_resume_2_5_41',
-                'VAE_resume_2_5_42',
-                'VAE_resume_2_5_43',
-                'VAE_resume_2_5_44',
-                'VAE_resume_2_5_45',
-                'VAE_resume_2_5_46',
-                'VAE_resume_2_5_47',
-                'VAE_resume_2_5_48',
-                'VAE_resume_2_5_49',
-                'VAE_resume_2_L1_5_1',
-                'VAE_resume_2_L1_5_2',
-                'VAE_resume_2_L1_5_3',
-                'VAE_resume_2_L1_5_4',
-                'VAE_resume_2_L1_5_5',
-                'VAE_resume_2_L1_5_6',
-                'VAE_resume_2_L1_5_7',
-                'VAE_resume_2_L1_5_8',
-                'VAE_resume_2_L1_5_9',
-                'VAE_resume_2_L1_5_10',
-                'VAE_resume_2_L1_5_11',
-                'VAE_resume_2_L1_5_12',
-                'VAE_resume_2_L1_5_13',
-                'VAE_resume_2_L1_5_14',
-                # 'VAE_resume_2_L1_5_15',
-                # 'VAE_resume_2_L1_5_16',
-                # 'VAE_resume_2_L1_5_17',
-                # 'VAE_resume_2_L1_5_18',
-                # 'VAE_resume_2_L1_5_19',
-                # 'VAE_resume_2_L1_5_20',
-                # 'VAE_resume_2_L1_5_21',
-                # 'VAE_resume_2_L1_5_22',
-                # 'VAE_resume_2_L1_5_23',
-                # 'VAE_resume_2_L1_5_24',
-                # 'VAE_resume_2_L1_5_25',
-                # 'VAE_resume_2_L1_5_26',
-                # 'VAE_resume_2_L1_5_27',
-                # 'VAE_resume_2_L1_5_28',
-                # 'VAE_resume_2_L1_5_29',
-                # 'VAE_resume_2_L1_5_30',
-                # 'VAE_resume_2_L1_5_31',
-                # 'VAE_resume_2_L1_5_32',
-                # 'VAE_resume_2_L1_5_33',
-                # 'VAE_resume_2_L1_5_34',
-                # 'VAE_resume_2_L1_5_35',
-                # 'VAE_resume_2_L1_5_36',
-                # 'VAE_resume_2_L1_5_37',
-                # 'VAE_resume_2_L1_5_38',
-                # 'VAE_resume_2_L1_5_39',
-                # 'VAE_resume_2_L1_5_40',
-                # 'VAE_resume_2_L1_5_41',
-                # 'VAE_resume_2_L1_5_42',
-                # 'VAE_resume_2_L1_5_43',
-                # 'VAE_resume_2_L1_5_44',
-                # 'VAE_resume_2_L1_5_45',
-                # 'VAE_resume_2_L1_5_46',
-                # 'VAE_resume_2_L1_5_47',
-                # 'VAE_resume_2_L1_5_48',
-                # 'VAE_resume_2_L1_5_49'
-                ]
+VAE_resume_5_2 = ['VAE_resume_2_5_1',
+                  'VAE_resume_2_5_2',
+                  'VAE_resume_2_5_3',
+                  'VAE_resume_2_5_4',
+                  'VAE_resume_2_5_5',
+                  'VAE_resume_2_5_6',
+                  'VAE_resume_2_5_7',
+                  'VAE_resume_2_5_8',
+                  'VAE_resume_2_5_9',
+                  'VAE_resume_2_5_10',
+                  'VAE_resume_2_5_11',
+                  'VAE_resume_2_5_12',
+                  'VAE_resume_2_5_13',
+                  'VAE_resume_2_5_14',
+                  'VAE_resume_2_5_15',
+                  'VAE_resume_2_5_16',
+                  'VAE_resume_2_5_17',
+                  'VAE_resume_2_5_18',
+                  'VAE_resume_2_5_19',
+                  'VAE_resume_2_5_20',
+                  'VAE_resume_2_5_21',
+                  'VAE_resume_2_5_22',
+                  'VAE_resume_2_5_23',
+                  'VAE_resume_2_5_24',
+                  'VAE_resume_2_5_25',
+                  'VAE_resume_2_5_26',
+                  'VAE_resume_2_5_27',
+                  'VAE_resume_2_5_28',
+                  'VAE_resume_2_5_29',
+                  'VAE_resume_2_5_30',
+                  'VAE_resume_2_5_31',
+                  'VAE_resume_2_5_32',
+                  'VAE_resume_2_5_33',
+                  'VAE_resume_2_5_34',
+                  'VAE_resume_2_5_35',
+                  'VAE_resume_2_5_36',
+                  'VAE_resume_2_5_37',
+                  'VAE_resume_2_5_38',
+                  'VAE_resume_2_5_39',
+                  'VAE_resume_2_5_40',
+                  'VAE_resume_2_5_41',
+                  'VAE_resume_2_5_42',
+                  'VAE_resume_2_5_43',
+                  'VAE_resume_2_5_44',
+                  'VAE_resume_2_5_45',
+                  'VAE_resume_2_5_46',
+                  'VAE_resume_2_5_47',
+                  'VAE_resume_2_5_48',
+                  'VAE_resume_2_5_49',
+                  'VAE_resume_2_L1_5_1',
+                  'VAE_resume_2_L1_5_2',
+                  'VAE_resume_2_L1_5_3',
+                  'VAE_resume_2_L1_5_4',
+                  'VAE_resume_2_L1_5_5',
+                  'VAE_resume_2_L1_5_6',
+                  'VAE_resume_2_L1_5_7',
+                  'VAE_resume_2_L1_5_8',
+                  'VAE_resume_2_L1_5_9',
+                  'VAE_resume_2_L1_5_10',
+                  'VAE_resume_2_L1_5_11',
+                  'VAE_resume_2_L1_5_12',
+                  'VAE_resume_2_L1_5_13',
+                  'VAE_resume_2_L1_5_14',
+                  'VAE_resume_2_L1_5_15',
+                  'VAE_resume_2_L1_5_16',
+                  'VAE_resume_2_L1_5_17',
+                  'VAE_resume_2_L1_5_18',
+                  'VAE_resume_2_L1_5_19',
+                  'VAE_resume_2_L1_5_20',
+                  'VAE_resume_2_L1_5_21',
+                  'VAE_resume_2_L1_5_22',
+                  'VAE_resume_2_L1_5_23',
+                  'VAE_resume_2_L1_5_24',
+                  'VAE_resume_2_L1_5_25',
+                  'VAE_resume_2_L1_5_26',
+                  'VAE_resume_2_L1_5_27',
+                  'VAE_resume_2_L1_5_28',
+                  'VAE_resume_2_L1_5_29',
+                  'VAE_resume_2_L1_5_30',
+                  'VAE_resume_2_L1_5_31',
+                  'VAE_resume_2_L1_5_32',
+                  'VAE_resume_2_L1_5_33',
+                  'VAE_resume_2_L1_5_34',
+                  'VAE_resume_2_L1_5_35',
+                  'VAE_resume_2_L1_5_36',
+                  'VAE_resume_2_L1_5_37',
+                  'VAE_resume_2_L1_5_38',
+                  'VAE_resume_2_L1_5_39',
+                  'VAE_resume_2_L1_5_40'
+                  ]
+
+VAE_resume_5_3 = ['VAE_resume_3_5_1',
+                  'VAE_resume_3_5_2',
+                  'VAE_resume_3_5_3',
+                  'VAE_resume_3_5_4',
+                  'VAE_resume_3_5_5',
+                  'VAE_resume_3_5_6',
+                  'VAE_resume_3_5_7',
+                  'VAE_resume_3_5_8',
+                  'VAE_resume_3_5_9',
+                  'VAE_resume_3_5_10',
+                  'VAE_resume_3_5_11',
+                  'VAE_resume_3_5_12',
+                  'VAE_resume_3_5_13',
+                  'VAE_resume_3_5_14',
+                  'VAE_resume_3_5_15',
+                  'VAE_resume_3_5_16',
+                  'VAE_resume_3_5_17',
+                  'VAE_resume_3_5_18',
+                  'VAE_resume_3_5_19',
+                  'VAE_resume_3_5_20',
+                  'VAE_resume_3_5_21',
+                  'VAE_resume_3_5_22',
+                  'VAE_resume_3_5_23',
+                  'VAE_resume_3_5_24',
+                  'VAE_resume_3_5_25',
+                  'VAE_resume_3_5_26',
+                  'VAE_resume_3_5_27',
+                  'VAE_resume_3_5_28',
+                  'VAE_resume_3_5_29',
+                  'VAE_resume_3_5_30',
+                  'VAE_resume_3_5_31',
+                  'VAE_resume_3_5_32',
+                  'VAE_resume_3_5_33',
+                  'VAE_resume_3_5_34',
+                  'VAE_resume_3_5_35',
+                  'VAE_resume_3_5_36',
+                  'VAE_resume_3_5_37',
+                  'VAE_resume_3_5_38',
+                  'VAE_resume_3_5_39',
+                  'VAE_resume_3_5_40',
+                  'VAE_resume_3_5_41',
+                  'VAE_resume_3_5_42',
+                  'VAE_resume_3_5_43',
+                  'VAE_resume_3_5_44',
+                  'VAE_resume_3_5_45',
+                  'VAE_resume_3_5_46',
+                  'VAE_resume_3_5_47',
+                  'VAE_resume_3_5_48',
+                  'VAE_resume_3_5_49',
+                  'VAE_resume_3_L1_5_1',
+                  'VAE_resume_3_L1_5_2',
+                  'VAE_resume_3_L1_5_3',
+                  'VAE_resume_3_L1_5_4',
+                  'VAE_resume_3_L1_5_5',
+                  'VAE_resume_3_L1_5_6',
+                  'VAE_resume_3_L1_5_7',
+                  'VAE_resume_3_L1_5_8',
+                  'VAE_resume_3_L1_5_9',
+                  'VAE_resume_3_L1_5_10',
+                  'VAE_resume_3_L1_5_11',
+                  'VAE_resume_3_L1_5_12',
+                  'VAE_resume_3_L1_5_13',
+                  'VAE_resume_3_L1_5_14',
+                  'VAE_resume_3_L1_5_15',
+                  'VAE_resume_3_L1_5_16',
+                  'VAE_resume_3_L1_5_17',
+                  'VAE_resume_3_L1_5_18',
+                  'VAE_resume_3_L1_5_19',
+                  'VAE_resume_3_L1_5_20',
+                  'VAE_resume_3_L1_5_21',
+                  'VAE_resume_3_L1_5_22',
+                  'VAE_resume_3_L1_5_23',
+                  'VAE_resume_3_L1_5_24',
+                  'VAE_resume_3_L1_5_25',
+                  'VAE_resume_3_L1_5_26',
+                  'VAE_resume_3_L1_5_27',
+                  'VAE_resume_3_L1_5_28',
+                  'VAE_resume_3_L1_5_29',
+                  'VAE_resume_3_L1_5_30',
+                  'VAE_resume_3_L1_5_31',
+                  'VAE_resume_3_L1_5_32',
+                  'VAE_resume_3_L1_5_33',
+                  'VAE_resume_3_L1_5_34',
+                  'VAE_resume_3_L1_5_35',
+                  'VAE_resume_3_L1_5_36',
+                  'VAE_resume_3_L1_5_37',
+                  'VAE_resume_3_L1_5_38',
+                  'VAE_resume_3_L1_5_39',
+                  'VAE_resume_3_L1_5_40',
+                  'VAE_resume_3_L1_5_41',
+                  'VAE_resume_3_L1_5_42',
+                  'VAE_resume_3_L1_5_43',
+                  'VAE_resume_3_L1_5_44',
+                  'VAE_resume_3_L1_5_45',
+                  'VAE_resume_3_L1_5_46',
+                  'VAE_resume_3_L1_5_47',
+                  'VAE_resume_3_L1_5_48',
+                  'VAE_resume_3_L1_5_49'
+                  ]
+
+VAE_resume_5_4 = [# 'VAE_resume_4_5_1',
+                  # 'VAE_resume_4_5_2',
+                  # 'VAE_resume_4_5_3',
+                  # 'VAE_resume_4_5_4',
+                  # 'VAE_resume_4_5_5',
+                  # 'VAE_resume_4_5_6',
+                  # 'VAE_resume_4_5_7',
+                  # 'VAE_resume_4_5_8',
+                  # 'VAE_resume_4_5_9',
+                  # 'VAE_resume_4_5_10',
+                  # 'VAE_resume_4_5_11',
+                  # 'VAE_resume_4_5_12',
+                  # 'VAE_resume_4_5_13',
+                  # 'VAE_resume_4_5_14',
+                  # 'VAE_resume_4_5_15',
+                  # 'VAE_resume_4_5_16',
+                  # 'VAE_resume_4_5_17',
+                  # 'VAE_resume_4_5_18',
+                  # 'VAE_resume_4_5_19',
+                  # 'VAE_resume_4_5_20',
+                  # 'VAE_resume_4_5_21',
+                  # 'VAE_resume_4_5_22',
+                  # 'VAE_resume_4_5_23',
+                  # 'VAE_resume_4_5_24',
+                  # 'VAE_resume_4_5_25',
+                  # 'VAE_resume_4_5_26',
+                  # 'VAE_resume_4_5_27',
+                  # 'VAE_resume_4_5_28',
+                  # 'VAE_resume_4_5_29',
+                  # 'VAE_resume_4_5_30',
+                  # 'VAE_resume_4_5_31',
+                  # 'VAE_resume_4_5_32',
+                  # 'VAE_resume_4_5_33',
+                  # 'VAE_resume_4_5_34',
+                  # 'VAE_resume_4_5_35',
+                  # 'VAE_resume_4_5_36',
+                  # 'VAE_resume_4_5_37',
+                  # 'VAE_resume_4_5_38',
+                  # 'VAE_resume_4_5_39',
+                  # 'VAE_resume_4_5_40',
+                  # 'VAE_resume_4_5_41',
+                  # 'VAE_resume_4_5_42',
+                  # 'VAE_resume_4_5_43',
+                  # 'VAE_resume_4_5_44',
+                  # 'VAE_resume_4_5_45',
+                  # 'VAE_resume_4_5_46',
+                  # 'VAE_resume_4_5_47',
+                  # 'VAE_resume_4_5_48',
+                  # 'VAE_resume_4_5_49',
+                  'VAE_resume_4_L1_5_1',
+                  'VAE_resume_4_L1_5_2',
+                  'VAE_resume_4_L1_5_3',
+                  'VAE_resume_4_L1_5_4',
+                  'VAE_resume_4_L1_5_5',
+                  'VAE_resume_4_L1_5_6',
+                  'VAE_resume_4_L1_5_7',
+                  'VAE_resume_4_L1_5_8',
+                  'VAE_resume_4_L1_5_9',
+                  'VAE_resume_4_L1_5_10',
+                  'VAE_resume_4_L1_5_11',
+                  'VAE_resume_4_L1_5_12',
+                  'VAE_resume_4_L1_5_13',
+                  'VAE_resume_4_L1_5_14',
+                  'VAE_resume_4_L1_5_15',
+                  'VAE_resume_4_L1_5_16',
+                  'VAE_resume_4_L1_5_17',
+                  'VAE_resume_4_L1_5_18',
+                  'VAE_resume_4_L1_5_19',
+                  'VAE_resume_4_L1_5_20',
+                  'VAE_resume_4_L1_5_21',
+                  'VAE_resume_4_L1_5_22',
+                  'VAE_resume_4_L1_5_23',
+                  'VAE_resume_4_L1_5_24',
+                  'VAE_resume_4_L1_5_25',
+                  'VAE_resume_4_L1_5_26',
+                  'VAE_resume_4_L1_5_27',
+                  'VAE_resume_4_L1_5_28',
+                  'VAE_resume_4_L1_5_29',
+                  'VAE_resume_4_L1_5_30',
+                  'VAE_resume_4_L1_5_31',
+                  'VAE_resume_4_L1_5_32',
+                  'VAE_resume_4_L1_5_33',
+                  'VAE_resume_4_L1_5_34',
+                  'VAE_resume_4_L1_5_35',
+                  'VAE_resume_4_L1_5_36',
+                  'VAE_resume_4_L1_5_37',
+                  'VAE_resume_4_L1_5_38',
+                  'VAE_resume_4_L1_5_39',
+                  'VAE_resume_4_L1_5_40',
+                  'VAE_resume_4_L1_5_41',
+                  'VAE_resume_4_L1_5_42',
+                  'VAE_resume_4_L1_5_43',
+                  'VAE_resume_4_L1_5_44',
+                  'VAE_resume_4_L1_5_45',
+                  'VAE_resume_4_L1_5_46',
+                  'VAE_resume_4_L1_5_47',
+                  'VAE_resume_4_L1_5_48',
+                  'VAE_resume_4_L1_5_49'
+                  ]
 
 E1_VAE = True
 E1_AE = False
@@ -313,7 +530,37 @@ net = BetaVAE(latent_spec, nb_class, is_C, device, nc=nc, four_conv=four_conv, s
               GMP=GMP, big_kernel=big_kernel)
 # print(net)
 z_component_traversal = np.arange(latent_spec['cont_var'] + latent_spec['cont_class'])
-run(VAE_resume_5, net, E1_VAE)
+# run(VAE_resume_5_2, net, E1_VAE)
+# run(VAE_resume_5_3, net, E1_VAE)
+# run(VAE_resume_5_4, net, E1_VAE)
+
+# --------------------------------------- VAE_full_zvar_sim_strategie_1_expe_13 ------------------
+VAE_test_5_5_1 = ['VAE_full_zvar_sim_strategie_1_expe_13']
+
+E1_VAE = True
+E1_AE = False
+E1_second_conv_adapt = False
+two_encoder = False
+GMP = False
+big_kernel = False
+
+is_zvar_sim_loss = False
+is_partial_rand_class = False
+is_C = True
+
+latent_spec = {'cont_var': 5, 'cont_class': 5}
+BN = True
+is_E1 = True
+E1_conv = True
+second_layer_C = False
+E1_second_conv = False
+net = BetaVAE(latent_spec, nb_class, is_C, device, nc=nc, four_conv=four_conv, second_layer_C=second_layer_C,
+              is_E1=is_E1, E1_conv=E1_conv, BN=BN, E1_second_conv=E1_second_conv,
+              E1_second_conv_adapt=E1_second_conv_adapt, E1_VAE=E1_VAE, E1_AE=E1_AE, two_encoder=two_encoder,
+              GMP=GMP, big_kernel=big_kernel)
+# print(net)
+z_component_traversal = np.arange(latent_spec['cont_var'] + latent_spec['cont_class'])
+# run(VAE_test_5_5_1, net, E1_VAE)
 
 """
 VAE_test_5_5_1 = [# 'VAE_design_new_5_1',

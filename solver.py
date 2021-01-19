@@ -7,7 +7,7 @@ import torch.optim as optimizer
 import torch.nn.functional as F
 import numpy as np
 
-from model import BetaVAE
+from models.model import BetaVAE
 from dataset.dataset_2 import get_dataloaders
 from scores import compute_scores
 
@@ -175,6 +175,13 @@ def gpu_config(model):
     return model, device
 
 
+class OutputHook(list):
+    """ Hook to capture module outputs.
+    """
+    def __call__(self, module, input, output):
+        self.append(output)
+
+
 class Solver(object):
     def __init__(self, args):
 
@@ -228,7 +235,8 @@ class Solver(object):
         self.adapt_lr = args.adapt_lr
         self.E1_second_conv = args.E1_second_conv
         self.E1_second_conv_adapt = args.E1_second_conv_adapt
-        self.L1_norm = args.L1_norm
+        self.L1_norm_weights = args.L1_norm_weights
+        self.L1_norm_act = args.L1_norm_act
         self.E1_VAE = args.E1_VAE
         self.E1_AE = args.E1_AE
         self.two_encoder = args.two_encoder
@@ -236,6 +244,7 @@ class Solver(object):
         self.big_kernel_size = args.big_kernel_size
         self.GMP = args.GMP
         self.zeros_W_Classif = args.zeros_W_Classif
+        self.lambda_L1 = args.lambda_L1
 
         if self.zvar_sim_loss_only_for_encoder or self.zvar_sim_loss_for_all_model:
             list_uniq_choice = [self.zvar_sim_loss_only_for_encoder, self.zvar_sim_loss_for_all_model]
@@ -470,6 +479,22 @@ class Solver(object):
             self.lr = self.lr * self.nb_pixels  # we adapt lr to compare with old expe: indeed, in new expe we compute
             # loss by element, but before we commputed loss by image (1024 mroe big).
 
+        if self.L1_norm_act:
+            # Register hook to capture the layer outputs. Non-trivial networks will often
+            # require hooks to be applied more judiciously.
+            self.output_hook = OutputHook()
+            if self.big_kernel:
+                if self.two_encoder:
+                    num_layer_L1 = 3
+                elif self.E1_second_conv_adapt:
+                    num_layer_L1 = 0
+            else:
+                if self.two_encoder:
+                    num_layer_L1 = 6
+                elif self.E1_second_conv_adapt:
+                    num_layer_L1 = 3
+            self.net.E1[num_layer_L1].register_forward_hook(self.output_hook)
+
     def train(self):
         self.net_mode(train=True)
         out = False
@@ -587,7 +612,7 @@ class Solver(object):
                     self.L_Total += (self.Lm * self.lambda_zvar_sim_normalized)
                     self.L_Total_wt_weights += self.Lm
 
-                if self.L1_norm:
+                if self.L1_norm_weights:
                     l1_regularization = 0.
                     if self.big_kernel:
                         if self.two_encoder:
@@ -600,7 +625,21 @@ class Solver(object):
                         elif self.E1_second_conv_adapt:
                             num_layer_L1 = 3
                     for param in self.net.E1[num_layer_L1].parameters():
+                        print('hereee')
+                        print(param.shape)
                         l1_regularization += param.abs().sum()
+                        print(l1_regularization)
+                        l1_regularization = self.lambda_L1 * l1_regularization
+                    print(self.L_Total)
+                    self.L_Total += l1_regularization
+                    print(self.L_Total)
+                elif self.L1_norm_act:
+                    l1_penalty = 0.
+                    for output in self.output_hook:
+                        print(output.shape)
+                        l1_penalty += torch.norm(output, 1)
+                        print(l1_penalty)
+                        l1_penalty *= self.lambda_L1
                     self.L_Total += l1_regularization
 
 

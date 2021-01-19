@@ -5,6 +5,7 @@ import torch
 import logging
 
 from solver import Solver
+from solver_classifier import SolverClassifier
 from utils.utils import str2bool
 
 import os
@@ -23,7 +24,10 @@ def main(arguments):
     torch.cuda.manual_seed(seed)
     np.random.seed(seed)
 
-    net = Solver(arguments)
+    if args.model == 'VAE':
+        net = Solver(arguments)
+    elif args.model == 'CNN':
+        net = SolverClassifier(arguments)
 
     if arguments.train:
         net.train()
@@ -44,7 +48,7 @@ if __name__ == "__main__":
     parser.add_argument('--seed', default=1, type=int, help='random seed')
     parser.add_argument('--cuda', default=True, type=str2bool, help='enable cuda')
     parser.add_argument('--max_iter', default=500, type=float, help='maximum training iteration')
-    parser.add_argument('--batch_size', default=64, type=int, help='batch size')
+    parser.add_argument('--batch_size', default=32, type=int, help='batch size')
     parser.add_argument('--random_percentage', default=0.2, type=float, help='random_percentage')
 
     parser.add_argument('--second_layer_C', default=False, type=str2bool, help='add a linear layer for L3 classidier')
@@ -86,7 +90,8 @@ if __name__ == "__main__":
     parser.add_argument('--old_weighted', default=False, type=str2bool, help='If the old_weighted')
     parser.add_argument('--E1_second_conv', default=False, type=str2bool, help='If E1_second_conv')
     parser.add_argument('--E1_second_conv_adapt', default=False, type=str2bool, help='If E1_second_conv_adapt')
-    parser.add_argument('--L1_norm', default=False, type=str2bool, help='If L1_norm')
+    parser.add_argument('--L1_norm_weights', default=False, type=str2bool, help='If L1_norm_weights')
+    parser.add_argument('--L1_norm_act', default=False, type=str2bool, help='If L1_norm_act')
     parser.add_argument('--E1_VAE', default=False, type=str2bool, help='If E1_VAE')
     parser.add_argument('--E1_AE', default=False, type=str2bool, help='If E1_AE')
     parser.add_argument('--two_encoder', default=False, type=str2bool, help='If two_encoder')
@@ -130,6 +135,7 @@ if __name__ == "__main__":
     parser.add_argument('--lambda_Kl_struct', default=1, type=float, help='lambda_Kl_disc parameter for Kl_disc loss')
     parser.add_argument('--lambda_partial_class', default=1, type=float, help='lambda_class_partial_rand parameter for loss')
     parser.add_argument('--lambda_VAE', default=1, type=float, help='lambda for autoencoder parameter for loss')
+    parser.add_argument('--lambda_L1', default=1e-2, type=float, help='lambda for L1 penalty')
     # ---------------------------------------------------
     parser.add_argument('--gamma', default=1000, type=float, help='gamma parameter for KL-term in understanding '
                                                                   'beta-VAE')
@@ -157,6 +163,10 @@ if __name__ == "__main__":
                                                                                           'directory')
 
     parser.add_argument("--gpu_devices", type=int, nargs='+', default=None, help="GPU devices available")
+
+    # parameters for classifier:
+    parser.add_argument('--model', default='VAE', type=str, help='model name')
+    parser.add_argument('--is_default_model', default=True, type=str2bool, help='if use default model')
 
     args = parser.parse_args()
 

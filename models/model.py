@@ -70,6 +70,7 @@ class BetaVAE(nn.Module):
         super(BetaVAE, self).__init__()
 
         # Parameters
+        self.double_mu_struct = False
         self.zeros_W_Classif = zeros_W_Classif
         self.GMP = GMP
         self.normal_kernel = normal_kernel
@@ -582,8 +583,13 @@ class BetaVAE(nn.Module):
             latent_representation_structural_layer_1 = self._encode_layer1(x, both_continue=both_continue,
                                                                            E1_second_conv=self.E1_second_conv)
 
+            if self.double_mu_struct:
+                latent_representation_structural_layer_1[1] = latent_representation_structural_layer_1[1] * 2
+                latent_representation['cont_class'] = latent_representation_structural_layer_1
+            else:
+                latent_representation['cont_class'] = latent_representation_structural_layer_1
+
             latent_representation['cont_var'] = latent_representation_var
-            latent_representation['cont_class'] = latent_representation_structural_layer_1
 
             # reparametrize var:
             latent_sample_variability = self.reparameterization(latent_representation_var, both_continue=both_continue,
