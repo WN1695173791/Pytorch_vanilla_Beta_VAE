@@ -15,6 +15,7 @@ from torchvision.utils import make_grid
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
+
 def psnr_metric(mse):
     # mse = torch.mean((img1 - img2) ** 2)
     return 20 * torch.log10(1.0 / torch.sqrt(mse))
@@ -29,6 +30,20 @@ def get_checkpoints(net, path, expe_name):
     nb_epochs = nb_iter
 
     return net, nb_iter, nb_epochs
+
+
+def get_checkpoints_scores_CNN(net, path_scores, expe_name):
+    file_path = os.path.join(path_scores, expe_name, 'last')
+    checkpoints_scores = torch.load(file_path, map_location=torch.device(device))
+
+    global_iter = checkpoints_scores['iter']
+    epochs = checkpoints_scores['epochs']
+    train_score = checkpoints_scores['train_score']
+    test_score = checkpoints_scores['test_score']
+    train_loss = checkpoints_scores['train_loss']
+    test_loss = checkpoints_scores['test_loss']
+
+    return global_iter, epochs, train_score, test_score, train_loss, test_loss
 
 
 def get_checkpoints_scores(net, path_scores, expe_name):
@@ -101,7 +116,6 @@ def get_checkpoints_scores(net, path_scores, expe_name):
 def viz_reconstruction(net, nb_epochs, expe_name, batch, latent_spec, img_size, both_continue=True,
                        both_discrete=False, is_partial_rand_class=False,
                        partial_reconstruciton=False, is_E1=False, save=False):
-
     viz = Viz(net, img_size, latent_spec)
     viz.save_images = False
 
@@ -116,9 +130,9 @@ def viz_reconstruction(net, nb_epochs, expe_name, batch, latent_spec, img_size, 
     size = recon_grid.shape[1:]
     if partial_reconstruciton:
         # The error is the amount by which the values of the original image differ from the degraded image.
-        recon_loss_arounded = np.around(recon_loss*100, 2)
-        recon_loss_arounded_rand_var = np.around(recons_random_variability_loss*100, 2)
-        recon_loss_arounded_rand_classe = np.around(recons_random_classe_loss*100, 2)
+        recon_loss_arounded = np.around(recon_loss * 100, 2)
+        recon_loss_arounded_rand_var = np.around(recons_random_variability_loss * 100, 2)
+        recon_loss_arounded_rand_classe = np.around(recons_random_classe_loss * 100, 2)
 
         # grid with originals data
         recon_grid = recon_grid.permute(1, 2, 0)
@@ -137,7 +151,7 @@ def viz_reconstruction(net, nb_epochs, expe_name, batch, latent_spec, img_size, 
         ax.set(title=('model: {}: random var reconstruction: MSE: {}'.format(expe_name, recon_loss_arounded)))
 
         ax.imshow(recon_grid_random_var.numpy())
-        ax.axhline(y=size[0]//2, linewidth=4, color='r')
+        ax.axhline(y=size[0] // 2, linewidth=4, color='r')
         plt.show()
         if save:
             fig.savefig("fig_results/reconstructions/fig_reconstructions_z_var_rand_" + expe_name + ".png")
@@ -147,7 +161,7 @@ def viz_reconstruction(net, nb_epochs, expe_name, batch, latent_spec, img_size, 
         fig, ax = plt.subplots(figsize=(10, 10), facecolor='w', edgecolor='k')
         ax.set(title=('model: {}: random struct reconstruction: MSE: {}'.format(expe_name, recon_loss_arounded)))
         ax.imshow(recon_grid_random_classe.numpy())
-        ax.axhline(y=size[0]//2, linewidth=4, color='r')
+        ax.axhline(y=size[0] // 2, linewidth=4, color='r')
         plt.show()
         if save:
             fig.savefig("fig_results/reconstructions/fig_reconstructions_z_struct_rand_" + expe_name + ".png")
@@ -168,7 +182,6 @@ def viz_reconstruction(net, nb_epochs, expe_name, batch, latent_spec, img_size, 
 
 def plot_samples(net, epochs, path, expe_name, latent_spec, img_size, size=(8, 8), batch=None, both_continue=False,
                  save=False, FID=False, IS=False, psnr=True):
-
     file_path = os.path.join(path, expe_name, 'last')
     checkpoint = torch.load(file_path, map_location=torch.device(device))
     net.load_state_dict(checkpoint['net'])
@@ -202,9 +215,9 @@ def plot_samples(net, epochs, path, expe_name, latent_spec, img_size, size=(8, 8
 
     samples = samples.permute(1, 2, 0)
     ax.set(title=('samples: {}. Scores: FID(\u2193): {}, IS(\u2191): {}, PSNR(\u2193): {}'.format(expe_name,
-                                                                                            fid_value,
-                                                                                            IS_value,
-                                                                                            psnr_value)))
+                                                                                                  fid_value,
+                                                                                                  IS_value,
+                                                                                                  psnr_value)))
     ax.imshow(samples.numpy())
     plt.show()
 
@@ -215,7 +228,6 @@ def plot_samples(net, epochs, path, expe_name, latent_spec, img_size, size=(8, 8
 
 
 def plot_all_traversal(net, epochs, path, expe_name, latent_spec, img_size, size=8, both_continue=False):
-
     file_path = os.path.join(path, expe_name, 'last')
     checkpoint = torch.load(file_path, map_location=torch.device(device))
     net.load_state_dict(checkpoint['net'])
@@ -234,7 +246,6 @@ def plot_all_traversal(net, epochs, path, expe_name, latent_spec, img_size, size
 
 def latent_random_traversal(net, epochs, path, expe_name, latent_spec, img_size, size=8, indx=0, nb_samples=5,
                             both_continue=False):
-
     file_path = os.path.join(path, expe_name, 'last')
     checkpoint = torch.load(file_path, map_location=torch.device(device))
     net.load_state_dict(checkpoint['net'])
@@ -253,10 +264,9 @@ def latent_random_traversal(net, epochs, path, expe_name, latent_spec, img_size,
 
 
 def latent_real_img_traversal(net, nb_epochs, path, expe_name, latent_spec, batch, img_size, indx_image=None,
-                                  z_component_traversal=None,
-                                  both_continue=True, is_partial_rand_class=False, is_E1=False,
-                                  size=None, save=False):
-
+                              z_component_traversal=None,
+                              both_continue=True, is_partial_rand_class=False, is_E1=False,
+                              size=None, save=False):
     file_path = os.path.join(path, expe_name, 'last')
     checkpoint = torch.load(file_path, map_location=torch.device(device))
     net.load_state_dict(checkpoint['net'])
@@ -265,19 +275,21 @@ def latent_real_img_traversal(net, nb_epochs, path, expe_name, latent_spec, batc
     viz.save_images = False
 
     traversals, recons, ori, indx_same_composante = viz.latent_real_img_traversal(batch, size=size,
-                                                            z_component_traversal=z_component_traversal,
-                                                            both_continue=both_continue, indx_image=indx_image,
-                                                            is_partial_rand_class=is_partial_rand_class, is_E1=is_E1)
+                                                                                  z_component_traversal=z_component_traversal,
+                                                                                  both_continue=both_continue,
+                                                                                  indx_image=indx_image,
+                                                                                  is_partial_rand_class=is_partial_rand_class,
+                                                                                  is_E1=is_E1)
     fig, ax = plt.subplots(figsize=(15, 10), facecolor='w', edgecolor='k')
     traversals = traversals.permute(1, 2, 0)
     ax.set(title=('latent real traversal: {} , for composante: {}'.format(expe_name,
-                                                                                  z_component_traversal)))
+                                                                          z_component_traversal)))
     fig_size = traversals.shape
     plt.imshow(traversals.numpy())
-    ax.axhline(y=(fig_size[0]*(latent_spec['cont_var']/(latent_spec['cont_var']+latent_spec['cont_class']))),
+    ax.axhline(y=(fig_size[0] * (latent_spec['cont_var'] / (latent_spec['cont_var'] + latent_spec['cont_class']))),
                linewidth=4, color='g')
-    ax.axvline(x=(fig_size[1]//size)*indx_same_composante, linewidth=3, color='orange')
-    ax.axvline(x=(fig_size[1] // size)*(indx_same_composante+1), linewidth=3, color='orange')
+    ax.axvline(x=(fig_size[1] // size) * indx_same_composante, linewidth=3, color='orange')
+    ax.axvline(x=(fig_size[1] // size) * (indx_same_composante + 1), linewidth=3, color='orange')
     plt.show()
 
     if save:
@@ -287,9 +299,8 @@ def latent_real_img_traversal(net, nb_epochs, path, expe_name, latent_spec, batc
 
 
 def joint_latent_traversal(net, nb_epochs, path, expe_name, latent_spec, batch, img_size, indx_image=None,
-                                  both_continue=True, is_partial_rand_class=False, is_E1=False,
-                                  size_struct=8, size_var=8, save=False, real_img=False):
-
+                           both_continue=True, is_partial_rand_class=False, is_E1=False,
+                           size_struct=8, size_var=8, save=False, real_img=False):
     file_path = os.path.join(path, expe_name, 'last')
     checkpoint = torch.load(file_path, map_location=torch.device(device))
     net.load_state_dict(checkpoint['net'])
@@ -298,9 +309,9 @@ def joint_latent_traversal(net, nb_epochs, path, expe_name, latent_spec, batch, 
     viz.save_images = False
 
     traversals = viz.joint_latent_traversal(batch, size_struct=size_struct, size_var=size_var,
-                                                            both_continue=both_continue, indx_image=indx_image,
-                                                            is_partial_rand_class=is_partial_rand_class, is_E1=is_E1,
-                                             real_img=real_img)
+                                            both_continue=both_continue, indx_image=indx_image,
+                                            is_partial_rand_class=is_partial_rand_class, is_E1=is_E1,
+                                            real_img=real_img)
     fig, ax = plt.subplots(figsize=(15, 10), facecolor='w', edgecolor='k')
     traversals = traversals.permute(1, 2, 0)
     ax.set(title=('both latent (real img={}) traversal: {}'.format(real_img, expe_name)))
@@ -370,13 +381,49 @@ def plot_scores_results(epochs, Zc_Zd_train, Zc_random_Zd_train, Zc_Zd_random_tr
     return
 
 
+def plot_scores_results_CNN(epochs, train_score, test_score, expe_name, save):
+
+    fig, ax = plt.subplots(figsize=(15, 10), facecolor='w', edgecolor='k')
+
+    ax.set(xlabel='nb_iter', ylabel='accuracy (%)',
+           title=('MNIST scores: ' + expe_name))  # ylim=(0,1))
+
+    ax.plot(epochs, train_score, label='train')
+    ax.plot(epochs, test_score, label='test')
+    ax.legend(loc=1)
+    plt.show()
+
+    if save:
+        fig.savefig("fig_results/scores/fig_scores_Test_Mnist_CNN_" + expe_name + ".png")
+
+    return
+
+
+def plot_loss_results_CNN(epochs, train_loss, test_loss, expe_name, save):
+
+    fig, ax = plt.subplots(figsize=(15, 10), facecolor='w', edgecolor='k')
+
+    ax.set(xlabel='nb_iter', ylabel='loss',
+           title=('MNIST loss: ' + expe_name))
+
+    ax.plot(epochs, train_loss, label='train')
+    ax.plot(epochs, test_loss, label='test')
+    ax.legend(loc=1)
+    plt.show()
+
+    if save:
+        fig.savefig("fig_results/losses/fig_losses_Test_Mnist_CNN_" + expe_name + ".png")
+
+    return
+
+
 def plot_loss_results(epochs, recon_loss_train_train, kl_disc_loss_train, kl_cont_loss_train, total_kl_train,
                       vae_loss_train, classification_random_continue_loss_train, recon_loss_train_test,
                       kl_disc_loss_test, kl_cont_loss_test, total_kl_test, vae_loss_test,
                       classification_random_continue_loss_test, classification_partial_rand_loss_train,
-                      classification_partial_rand_loss_test, zvar_sim_loss_train, zvar_sim_loss_test, expe_name, is_wt_random,
+                      classification_partial_rand_loss_test, zvar_sim_loss_train, zvar_sim_loss_test, expe_name,
+                      is_wt_random,
                       is_both_continuous, save, partial_rand=False):
-
     # facteur_loss_reconstruction_train = int(vae_loss_train[-1] / recon_loss_train_train[-1])
     # facteur_loss_classification_train = int(vae_loss_train[-1] / classification_random_continue_loss_train[-1])
     # facteur_loss_reconstruction_test = int(vae_loss_test[-1] / recon_loss_train_test[-1])
@@ -437,9 +484,9 @@ def plot_loss_results(epochs, recon_loss_train_train, kl_disc_loss_train, kl_con
 
     if not is_wt_random:
         ax[2].plot(epochs, classification_random_continue_loss_train,
-                label='classification_random_continue_loss_train', color='dodgerblue')
+                   label='classification_random_continue_loss_train', color='dodgerblue')
         ax[2].plot(epochs, classification_random_continue_loss_test,
-                label='classification_random_continue_loss_test', color='deepskyblue')
+                   label='classification_random_continue_loss_test', color='deepskyblue')
 
     if partial_rand:
         ax[2].plot(epochs, classification_partial_rand_loss_train,
@@ -463,19 +510,19 @@ def plot_loss_results(epochs, recon_loss_train_train, kl_disc_loss_train, kl_con
     string = 'Zvar_sim value: ' + str(last_zvar_sim_value_train)  # last_zvar_sim_value_train.detach().numpy())
     max_zvar_train = np.max(zvar_sim_loss_train)
     ax[3].annotate(string,
-                xy=(x_ann, last_zvar_sim_value_train), xycoords='data',
-                xytext=(x_ann - 50, last_zvar_sim_value_train + (max_zvar_train//2)), textcoords='data',
-                size=20, va="center", ha="center",
-                bbox=dict(boxstyle="round4", fc="w"),
-                arrowprops=dict(arrowstyle="-|>",
-                                connectionstyle="arc3,rad=+0.2",
-                                fc="w"),
-                )
+                   xy=(x_ann, last_zvar_sim_value_train), xycoords='data',
+                   xytext=(x_ann - 50, last_zvar_sim_value_train + (max_zvar_train // 2)), textcoords='data',
+                   size=20, va="center", ha="center",
+                   bbox=dict(boxstyle="round4", fc="w"),
+                   arrowprops=dict(arrowstyle="-|>",
+                                   connectionstyle="arc3,rad=+0.2",
+                                   fc="w"),
+                   )
 
     plt.show()
 
     if save:
-       fig.savefig("fig_results/losses/fig_losses_Test_Mnist_" + expe_name + ".png")
+        fig.savefig("fig_results/losses/fig_losses_Test_Mnist_" + expe_name + ".png")
 
     """
     fig, ax = plt.subplots(figsize=(15, 10), facecolor='w', edgecolor='k')
@@ -546,13 +593,27 @@ def plot_scores_and_loss(net, expe_name, path_scores, is_wt_random=False, is_bot
                           vae_loss_train, classification_random_continue_loss_train, recon_loss_train_test,
                           kl_disc_loss_test, kl_cont_loss_test, total_kl_test, vae_loss_test,
                           classification_random_continue_loss_test, classification_partial_rand_loss_train,
-                          classification_partial_rand_loss_test, zvar_sim_loss_train, zvar_sim_loss_test, expe_name, is_wt_random,
+                          classification_partial_rand_loss_test, zvar_sim_loss_train, zvar_sim_loss_test, expe_name,
+                          is_wt_random,
                           is_both_continuous, save, partial_rand=partial_rand)
 
     if scores:
         plot_scores_results(epochs, Zc_Zd_train, Zc_random_Zd_train, Zc_Zd_random_train, Zc_pert_Zd_train,
                             Zc_Zd_pert_train, Zc_Zd_test, Zc_random_Zd_test, Zc_Zd_random_test, Zc_pert_Zd_test,
                             Zc_Zd_pert_test, expe_name, is_wt_random, save)
+
+    return
+
+
+def plot_scores_and_loss_CNN(net, expe_name, path_scores, save=False):
+
+    _, epochs, train_score, test_score, train_loss, test_loss = get_checkpoints_scores_CNN(net,
+                                                                                           path_scores,
+                                                                                           expe_name)
+
+    plot_loss_results_CNN(epochs, train_loss, test_loss, expe_name, save)
+
+    plot_scores_results_CNN(epochs, train_score, test_score,  expe_name, save)
 
     return
 
@@ -604,7 +665,6 @@ def plot_all(net, expe_name, path, path_scores, bacth, latent_spec, both_continu
 def real_distribution_model(net, path_expe, expe_name, loader, latent_spec, train_test, is_both_continue=False,
                             is_both_discrete=False, is_partial_rand_class=False, is_E1=False, is_zvar_sim_loss=False,
                             plot_gaussian=False, save=False):
-
     path = 'Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test + '_mu_var.npy'
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
@@ -685,15 +745,16 @@ def real_distribution_model(net, path_expe, expe_name, loader, latent_spec, trai
     mu_var = np.load('Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test +
                      '_mu_var.npy', allow_pickle=True)
     mu_struct = np.load('Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test +
-                     'mu_struct.npy', allow_pickle=True)
+                        'mu_struct.npy', allow_pickle=True)
     sigma_var = np.load('Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test +
-                     'sigma_var.npy', allow_pickle=True)
-    sigma_struct = np.load('Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test +
-                     'sigma_struct.npy', allow_pickle=True)
+                        'sigma_var.npy', allow_pickle=True)
+    sigma_struct = np.load(
+        'Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test +
+        'sigma_struct.npy', allow_pickle=True)
     z_mean = np.load('Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test +
-                '_z_mean.npy', allow_pickle=True)
+                     '_z_mean.npy', allow_pickle=True)
     z_var = np.load('Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test +
-                '_z_var.npy', allow_pickle=True)
+                    '_z_var.npy', allow_pickle=True)
 
     if plot_gaussian:
         mu = 0
@@ -747,7 +808,6 @@ def real_distribution_model(net, path_expe, expe_name, loader, latent_spec, trai
 def sample_real_distribution(net, path, expe_name, latent_spec, img_size, train_test, size=(8, 8), batch=None,
                              both_continue=False, save=False, FID=False, IS=False, psnr=True,
                              is_partial_rand_class=False, is_E1=False, is_zvar_sim_loss=False):
-
     file_path = os.path.join(path, expe_name, 'last')
     checkpoint = torch.load(file_path, map_location=torch.device(device))
     net.load_state_dict(checkpoint['net'])
@@ -799,9 +859,9 @@ def sample_real_distribution(net, path, expe_name, latent_spec, img_size, train_
 
     samples = samples.permute(1, 2, 0)
     ax.set(title=('samples: {}. Scores: FID(\u2193): {}, IS(\u2191): {}, PSNR(\u2193): {}'.format(expe_name,
-                                                                                            fid_value,
-                                                                                            IS_value,
-                                                                                            psnr_value)))
+                                                                                                  fid_value,
+                                                                                                  IS_value,
+                                                                                                  psnr_value)))
     ax.imshow(samples.numpy())
     plt.show()
 
@@ -1175,7 +1235,8 @@ def plot_prototyoe_z_struct_per_class(nb_examples, average_representation_z_stru
         plt.show()
 
     if save:
-        fig.savefig("fig_results/protype_z_struct_class/fig_z_struct_prototype_per_classes_" + expe_name + train_test + ".png")
+        fig.savefig(
+            "fig_results/protype_z_struct_class/fig_z_struct_prototype_per_classes_" + expe_name + train_test + ".png")
 
     return
 
@@ -1219,7 +1280,8 @@ def plot_2d_projection_z_struct(average_representation_z_struct_class, loader, n
     plt.show()
 
     if save:
-        fig.savefig("fig_results/z_struct_2D_projections/fig_z_struct_2d_projection_per_classes_" + expe_name + train_test + ".png")
+        fig.savefig(
+            "fig_results/z_struct_2D_projections/fig_z_struct_2d_projection_per_classes_" + expe_name + train_test + ".png")
 
     return
 
@@ -1258,7 +1320,7 @@ def plot_struct_fixe_and_z_var_moove(average_representation_z_struct_class, trai
     """
     z_struct_prototype = torch.tensor(average_representation_z_struct_class).to(device)  # shape: (nb_class, struct_dim)
     z_struct_prototype = np.expand_dims(z_struct_prototype, axis=0)  # shape: (1, nb_class, struct_dim)
-    z_struct_prototype = torch.tensor(np.repeat(z_struct_prototype, nb_examples+1, axis=0))
+    z_struct_prototype = torch.tensor(np.repeat(z_struct_prototype, nb_examples + 1, axis=0))
     # shape: (nb_example+1, nb_class, struct_dim)
     z_var_zeros = torch.zeros((1, nb_class, latent_spec['cont_var']))  # shape: (1, nb_class, var_dim)
     z_var_zeros = z_var_zeros.to(device)
@@ -1277,16 +1339,16 @@ def plot_struct_fixe_and_z_var_moove(average_representation_z_struct_class, trai
     for i in range(nb_examples):
         latent_rand = []
         latent_rand.append(z_var_rand[i])
-        latent_rand.append(z_struct_prototype[i+1])
+        latent_rand.append(z_struct_prototype[i + 1])
         latent_rand = torch.cat(latent_rand, dim=1)
         all_latent.append(torch.tensor(latent_rand))
 
     all_latent = torch.Tensor(np.array([t.numpy() for t in all_latent])).permute(1, 0, 2)
-    samples.append(all_latent.reshape((nb_class*(nb_examples+1), latent_spec['cont_var'] +
-                                                          latent_spec['cont_class'])))
+    samples.append(all_latent.reshape((nb_class * (nb_examples + 1), latent_spec['cont_var'] +
+                                       latent_spec['cont_class'])))
     latent_samples.append(torch.cat(samples, dim=1))
     generated = net_trained._decode(torch.cat(latent_samples, dim=0))
-    prototype = make_grid(generated.data, nrow=nb_examples+1)
+    prototype = make_grid(generated.data, nrow=nb_examples + 1)
 
     fig, ax = plt.subplots(figsize=(15, 10), facecolor='w', edgecolor='k')
     traversals = prototype.permute(1, 2, 0)
@@ -1300,7 +1362,8 @@ def plot_struct_fixe_and_z_var_moove(average_representation_z_struct_class, trai
     plt.show()
 
     if save:
-        fig.savefig("fig_results/struct_fixe_zvar_moove/fig_z_struct_fixe_zvar_moove_" + expe_name + train_test + ".png")
+        fig.savefig(
+            "fig_results/struct_fixe_zvar_moove/fig_z_struct_fixe_zvar_moove_" + expe_name + train_test + ".png")
 
     return
 
@@ -1326,8 +1389,10 @@ def plot_var_fixe_and_z_struct_moove(average_representation_z_struct_class, nb_c
         images_arr = []
         latent = []
 
-        average_representation_z_struct = average_representation_z_struct_class[class_n].reshape(1, z_struct_dim)   # shape: (1, z_struct_dim)
-        z_struct_prototype = torch.tensor(np.repeat(average_representation_z_struct, size, axis=0))   # shape: (size, z_struct_dim)
+        average_representation_z_struct = average_representation_z_struct_class[class_n].reshape(1,
+                                                                                                 z_struct_dim)  # shape: (1, z_struct_dim)
+        z_struct_prototype = torch.tensor(
+            np.repeat(average_representation_z_struct, size, axis=0))  # shape: (size, z_struct_dim)
 
         latent.append(z_var_rand)
         latent.append(z_struct_prototype)
@@ -1376,7 +1441,6 @@ def plot_var_fixe_and_z_struct_moove(average_representation_z_struct_class, nb_c
 def plot_prototype(net, expe_name, nb_class, latent_spec, device, loader, nb_examples=1, train_test='train',
                    print_per_class=True, print_per_var=False, plot_traversal_struct=False, size=8, bit=0,
                    print_2d_projection=False, is_partial_rand_class=False, is_E1=False, save=True):
-
     # TODO: find objective criterion to measure quality image generation and diversity of generate images
 
     path = 'structural_representation/average_representation_z_struct_class_' + expe_name + '_' + train_test + '.npy'
@@ -1387,7 +1451,7 @@ def plot_prototype(net, expe_name, nb_class, latent_spec, device, loader, nb_exa
 
     if print_per_class:
         plot_prototyoe_z_struct_per_class(nb_examples, average_representation_z_struct_class, train_test, expe_name,
-                                      nb_class, latent_spec, device, net, save=save)
+                                          nb_class, latent_spec, device, net, save=save)
 
     if print_2d_projection:
         plot_2d_projection_z_struct(average_representation_z_struct_class, loader, net, device, nb_class, latent_spec,
@@ -1443,7 +1507,6 @@ def traversal_values(size):
 
 
 def plot_weights_values_z_struct(net_trained, latent_spec):
-
     weights_z_struct = net_trained.L3_classifier[0].weight[:, latent_spec['cont_var']:]
     print('weights of z_struct: ', weights_z_struct.shape)
     sum_z_struct = torch.sum(weights_z_struct, axis=0)
@@ -1503,7 +1566,6 @@ def heatmap_vector(model_classifier, latent_sample, latent_dim, cond_vals, captu
 
 def compute_heatmap_avg(loader, model, latent, expe_name, train_test, nb_class, save=False, captum=False,
                         is_partial_rand_class=False, is_E1=False):
-
     path = 'structural_representation/average_representation_z_struct_class_heatmap_' + expe_name + '_' + train_test + '.npy'
     if os.path.exists(path):
         print("this heatmap avg is already computed")
@@ -1574,13 +1636,12 @@ def compute_heatmap_avg(loader, model, latent, expe_name, train_test, nb_class, 
 
 
 def plot_heatmap_avg(expe_name, latent, all_classes_details=False, all_classes_resum=True, train_test=None):
-
-
     path_train = 'structural_representation/average_representation_z_struct_class_heatmap_' + expe_name + '_' + train_test + '.npy'
     assert os.path.exists(path_train), "path doesn't exist"
 
     average_representation_z_struct_class_heatmap_train = np.load(path_train, allow_pickle=True)
-    print('load average z_struct heatmap per class train: {}'.format(average_representation_z_struct_class_heatmap_train.shape))
+    print('load average z_struct heatmap per class train: {}'.format(
+        average_representation_z_struct_class_heatmap_train.shape))
 
     # plot 1D heatmap by class:
     nb_class = average_representation_z_struct_class_heatmap_train.shape[0]
@@ -1620,8 +1681,8 @@ def plot_heatmap_avg(expe_name, latent, all_classes_details=False, all_classes_r
 
 
 # Helper method to print importances and visualize distribution
-def visualize_importances(feature_names, importances, title="Average Feature Importances", plot=True, axis_title="Features"):
-
+def visualize_importances(feature_names, importances, title="Average Feature Importances", plot=True,
+                          axis_title="Features"):
     x_pos = (np.arange(len(feature_names)))
 
     plt.figure(figsize=(12, 6))
@@ -1635,7 +1696,6 @@ def visualize_importances(feature_names, importances, title="Average Feature Imp
 
 
 def compute_importance_neuron(model, loader, both_continue=True, is_partial_rand_class=False, is_E1=False):
-
     cond = LayerConductance(model.L3_classifier, model.L3_classifier[0])
 
     for data, labels in loader:

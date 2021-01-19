@@ -1,5 +1,5 @@
 from models.model import BetaVAE
-from models.model_classifier import DefaultCNN
+from models.default_CNN import DefaultCNN
 from dataset.dataset_2 import get_dataloaders
 
 from visualizer import *
@@ -131,10 +131,8 @@ def run_score(expes_list, net):
         expe_name = expe
         net_trained, _, nb_epochs = get_checkpoints(net, path, expe_name)
         # scores and losses:
-        visualize(net, net_trained, nb_class, expe_name, device, latent_spec, train_loader, test_loader,
-                  path_scores=path_scores,
-                  is_partial_rand_class=False, save=True, scores_and_losses=True, is_E1=False,
-                  losses=True)
+        plot_scores_and_loss_CNN(net_trained, expe_name, path_scores, save=True)
+
 
 def run(expe_list, net, E1_VAE):
     path = 'checkpoints/'
@@ -205,7 +203,10 @@ is_binary_structural_latent = False
 indx_image = 0
 
 # ------------- expes CNN classifier: -----------------
-list_CNN_defaults = ['CNN_mnist_default']
+list_CNN_defaults = ['CNN_mnist_default_1',
+                     'CNN_mnist_default_2',
+                     'CNN_mnist_default_3',
+                     'CNN_mnist_default_4']
 
 net = DefaultCNN()
 

@@ -5,7 +5,8 @@ import torch.nn.functional as F
 import os
 
 from dataset.dataset_2 import get_dataloaders
-from models.model_classifier import DefaultCNN
+from models.default_CNN import DefaultCNN
+from models.custom_CNN import Custom_CNN
 from solver import gpu_config
 from tqdm import tqdm
 from scores_classifier import compute_scores
@@ -33,9 +34,17 @@ class SolverClassifier(object):
 
         # parameters:
         self.is_default_model = args.is_default_model
+        self.is_custom_model = args.is_custom_model
         self.batch_size = args.batch_size
         self.lr = args.lr
         self.max_iter = args.max_iter
+
+        # Custom CNN parameters:
+        self.add_z_struct_bottleneck = args.add_z_struct_bottleneck
+        self.add_classification_layer = args.add_classification_layer
+        self.z_struct_size = args.z_struct_size
+        self.classif_layer_size = args.classif_layer_size
+
 
         # dataset parameters:
         if args.dataset.lower() == 'mnist':
@@ -71,7 +80,13 @@ class SolverClassifier(object):
                                            self.test_loader_size))
 
         # create model
-        net = DefaultCNN()
+        if self.is_default_model:
+            net = DefaultCNN(add_z_struct_bottleneck=self.add_z_struct_bottleneck,
+                             add_classification_layer=self.add_classification_layer,
+                             z_struct_size=self.z_struct_size,
+                             classif_layer_size=self.classif_layer_size)
+        elif self.is_custom_model:
+            net = Custom_CNN()
 
         # print model characteristics:
         print(net)

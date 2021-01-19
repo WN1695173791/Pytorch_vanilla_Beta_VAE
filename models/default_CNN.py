@@ -1,6 +1,5 @@
 from abc import ABC
 import torch.nn as nn
-import torch
 
 
 class Flatten(nn.Module, ABC):
@@ -21,7 +20,11 @@ class View(nn.Module, ABC):
 class DefaultCNN(nn.Module, ABC):
     """Model proposed in Kaggle for mnist recognition."""
 
-    def __init__(self):
+    def __init__(self,
+                 add_z_struct_bottleneck=False,
+                 add_classification_layer=False,
+                 z_struct_size=5,
+                 classif_layer_size=30):
         """
         Class which defines model and forward pass.
         """
@@ -38,9 +41,16 @@ class DefaultCNN(nn.Module, ABC):
         self.flatten_dim = 64
         self.linear_dim = 32
         self.n_classes = 10
+        self.last_linear_layer_size = self.linear_dim
+
+        # custom parameters:
+        self.z_struct_size = z_struct_size
+        self.add_z_struct_bottleneck = add_z_struct_bottleneck
+        self.add_classification_layer = add_classification_layer
+        self.classif_layer_size = classif_layer_size
 
         # ----------- define model: ------------
-        self.net = nn.Sequential(
+        self.model = [
             # --------------- first conv bloc:
             nn.Conv2d(self.nc, self.hidden_filters_1, self.kernel_size_1, stride=self.stride_size_1),
             nn.BatchNorm2d(self.hidden_filters_1),
@@ -76,9 +86,36 @@ class DefaultCNN(nn.Module, ABC):
             nn.BatchNorm1d(self.linear_dim),
             nn.ReLU(True),
             nn.Dropout(0.4),
-            nn.Linear(self.linear_dim, self.n_classes),  # B, nb_class
+        ]
+
+        if self.add_z_struct_bottleneck:
+            self.last_linear_layer_size = self.z_struct_size
+            self.model += [
+                # --------- add z_struct bottleneck :
+                nn.Linear(self.linear_dim, self.z_struct_size),  # B, z_struct_size
+                nn.BatchNorm1d(self.z_struct_size),
+                nn.ReLU(True),
+                nn.Dropout(0.4),
+            ]
+
+        if self.add_classification_layer:
+            self.last_linear_layer_size = self.classif_layer_size
+            self.model += [
+                # --------- add classification layer :
+                nn.Linear(self.z_struct_size, self.classif_layer_size),  # B, classif_layer_size
+                nn.BatchNorm1d(self.classif_layer_size),
+                nn.ReLU(True),
+                nn.Dropout(0.4),
+            ]
+
+        self.model += [
+            nn.Linear(self.last_linear_layer_size, self.n_classes),  # B, nb_class
             nn.Softmax()
-        )
+        ]
+
+
+
+        self.net= nn.Sequential(*self.model)
         self.weight_init()
 
     def weight_init(self):

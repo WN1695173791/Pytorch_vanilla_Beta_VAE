@@ -167,6 +167,11 @@ if __name__ == "__main__":
     # parameters for classifier:
     parser.add_argument('--model', default='VAE', type=str, help='model name')
     parser.add_argument('--is_default_model', default=True, type=str2bool, help='if use default model')
+    parser.add_argument('--is_custom_model', default=False, type=str2bool, help='if use custom model')
+    parser.add_argument('--add_z_struct_bottleneck', default=False, type=str2bool, help='if add_z_struct_bottleneck')
+    parser.add_argument('--add_classification_layer', default=False, type=str2bool, help='if add_classification_layer')
+    parser.add_argument('--z_struct_size', default=5, type=int, help='z_struct_size')
+    parser.add_argument('--classif_layer_size', default=30, type=int, help='classif_layer_size')
 
     args = parser.parse_args()
 
