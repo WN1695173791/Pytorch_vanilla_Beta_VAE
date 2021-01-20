@@ -173,6 +173,11 @@ if __name__ == "__main__":
     parser.add_argument('--add_classification_layer', default=False, type=str2bool, help='if add_classification_layer')
     parser.add_argument('--z_struct_size', default=5, type=int, help='z_struct_size')
     parser.add_argument('--classif_layer_size', default=30, type=int, help='classif_layer_size')
+    parser.add_argument('--BK_in_first_layer', default=False, type=str2bool, help='if BK_in_first_layer')
+    parser.add_argument('--BK_in_second_layer', default=False, type=str2bool, help='if BK_in_second_layer')
+    parser.add_argument('--BK_in_third_layer', default=False, type=str2bool, help='if BK_in_third_layer')
+    parser.add_argument('--two_conv_layer', default=False, type=str2bool, help='if two_conv_layer')
+    parser.add_argument('--three_conv_layer', default=False, type=str2bool, help='if three_conv_layer')
 
     args = parser.parse_args()
 
