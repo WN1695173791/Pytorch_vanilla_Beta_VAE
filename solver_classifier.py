@@ -48,7 +48,13 @@ class SolverClassifier(object):
         self.big_kernel_size = args.big_kernel_size[0]
         self.stride_size = args.stride_size
         self.hidden_filters_1 = args.hidden_filters_layer1
-        self.hidden_filters_2 = args.hidden_filters_layer1
+        self.hidden_filters_2 = args.hidden_filters_layer2
+        self.hidden_filters_3 = args.hidden_filters_layer3
+        self.BK_in_first_layer = args.BK_in_first_layer
+        self.two_conv_layer = args.two_conv_layer
+        self.three_conv_layer = args.three_conv_layer
+        self.BK_in_second_layer = args.BK_in_second_layer
+        self.BK_in_third_layer = args.BK_in_third_layer
 
         # dataset parameters:
         if args.dataset.lower() == 'mnist':
@@ -96,7 +102,13 @@ class SolverClassifier(object):
                                 classif_layer_size=self.classif_layer_size,
                                 add_classification_layer=self.add_classification_layer,
                                 hidden_filters_1=self.hidden_filters_1,
-                                hidden_filters_2=self.hidden_filters_2)
+                                hidden_filters_2=self.hidden_filters_2,
+                                hidden_filters_3=self.hidden_filters_3,
+                                BK_in_first_layer=self.BK_in_first_layer,
+                                two_conv_layer=self.two_conv_layer,
+                                three_conv_layer=self.three_conv_layer,
+                                BK_in_second_layer=self.BK_in_second_layer,
+                                BK_in_third_layer=self.BK_in_third_layer)
         elif self.is_custom_model:
             pass
 
