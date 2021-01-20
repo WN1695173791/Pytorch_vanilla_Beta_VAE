@@ -6,7 +6,7 @@ import os
 
 from dataset.dataset_2 import get_dataloaders
 from models.default_CNN import DefaultCNN
-from models.custom_CNN import Custom_CNN
+from models.custom_CNN_BK import Custom_CNN_BK
 from solver import gpu_config
 from tqdm import tqdm
 from scores_classifier import compute_scores
@@ -35,6 +35,7 @@ class SolverClassifier(object):
         # parameters:
         self.is_default_model = args.is_default_model
         self.is_custom_model = args.is_custom_model
+        self.is_custom_model_BK = args.is_custom_model_BK
         self.batch_size = args.batch_size
         self.lr = args.lr
         self.max_iter = args.max_iter
@@ -44,7 +45,10 @@ class SolverClassifier(object):
         self.add_classification_layer = args.add_classification_layer
         self.z_struct_size = args.z_struct_size
         self.classif_layer_size = args.classif_layer_size
-
+        self.big_kernel_size = args.big_kernel_size[0]
+        self.stride_size = args.stride_size
+        self.hidden_filters_1 = args.hidden_filters_layer1
+        self.hidden_filters_2 = args.hidden_filters_layer1
 
         # dataset parameters:
         if args.dataset.lower() == 'mnist':
@@ -85,8 +89,16 @@ class SolverClassifier(object):
                              add_classification_layer=self.add_classification_layer,
                              z_struct_size=self.z_struct_size,
                              classif_layer_size=self.classif_layer_size)
+        elif self.is_custom_model_BK:
+            net = Custom_CNN_BK(z_struct_size=self.z_struct_size,
+                                big_kernel_size=self.big_kernel_size,
+                                stride_size=self.stride_size,
+                                classif_layer_size=self.classif_layer_size,
+                                add_classification_layer=self.add_classification_layer,
+                                hidden_filters_1=self.hidden_filters_1,
+                                hidden_filters_2=self.hidden_filters_2)
         elif self.is_custom_model:
-            net = Custom_CNN()
+            pass
 
         # print model characteristics:
         print(net)

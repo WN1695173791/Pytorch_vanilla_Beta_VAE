@@ -122,16 +122,12 @@ def visualize(net, net_trained, nb_class, expe_name, device, latent_spec, train_
     return
 
 
-def run_score(expes_list, net):
+def run_score(expe_name, net):
     path = 'checkpoints_CNN/'
     path_scores = 'checkpoint_scores_CNN'
-    latent_spec = None
-    for expe in expes_list:
-        print(expe)
-        expe_name = expe
-        net_trained, _, nb_epochs = get_checkpoints(net, path, expe_name)
-        # scores and losses:
-        plot_scores_and_loss_CNN(net_trained, expe_name, path_scores, save=True)
+    net_trained, _, nb_epochs = get_checkpoints(net, path, expe_name)
+    # scores and losses:
+    plot_scores_and_loss_CNN(net_trained, expe_name, path_scores, save=True)
 
 
 def run(expe_list, net, E1_VAE):
@@ -203,15 +199,14 @@ is_binary_structural_latent = False
 indx_image = 0
 
 # ------------- expes CNN classifier: -----------------
-list_CNN_defaults = ['CNN_mnist_default_1',
-                     'CNN_mnist_default_2',
-                     'CNN_mnist_default_3',
-                     'CNN_mnist_default_4']
+list_CNN_defaults = 'CNN_mnist_default_'
 
 net = DefaultCNN()
 
 # print(net)
-run_score(list_CNN_defaults, net)
+for i in range(1, 88):
+    expe_name = list_CNN_defaults + str(i)
+    run_score(expe_name, net)
 
 # _______________________________Expe test VAE + class + E1_____________________________________
 
