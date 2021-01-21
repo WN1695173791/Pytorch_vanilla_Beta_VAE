@@ -1,5 +1,6 @@
 from models.model import BetaVAE
 from models.default_CNN import DefaultCNN
+from models.custom_CNN_BK import Custom_CNN_BK
 from dataset.dataset_2 import get_dataloaders
 
 from visualizer import *
@@ -123,6 +124,7 @@ def visualize(net, net_trained, nb_class, expe_name, device, latent_spec, train_
 
 
 def run_score(expe_name, net):
+    print(expe_name)
     path = 'checkpoints_CNN/'
     path_scores = 'checkpoint_scores_CNN'
     net_trained, _, nb_epochs = get_checkpoints(net, path, expe_name)
@@ -178,6 +180,26 @@ def run(expe_list, net, E1_VAE):
                   plot_img_traversal=True, both_latent_traversal=True)
 
 
+def network(z_struct_size, big_kernel_size, stride_size, classif_layer_size, add_classification_layer,
+            hidden_filters_1, hidden_filters_2, hidden_filters_3, BK_in_first_layer, two_conv_layer, three_conv_layer,
+            BK_in_second_layer, BK_in_third_layer):
+
+    model = Custom_CNN_BK(z_struct_size=z_struct_size,
+                          big_kernel_size=big_kernel_size,
+                          stride_size=stride_size,
+                          classif_layer_size=classif_layer_size,
+                          add_classification_layer=add_classification_layer,
+                          hidden_filters_1=hidden_filters_1,
+                          hidden_filters_2=hidden_filters_2,
+                          hidden_filters_3=hidden_filters_3,
+                          BK_in_first_layer=BK_in_first_layer,
+                          two_conv_layer=two_conv_layer,
+                          three_conv_layer=three_conv_layer,
+                          BK_in_second_layer=BK_in_second_layer,
+                          BK_in_third_layer=BK_in_third_layer)
+    return model
+
+
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 batch = torch.load('data/batch_mnist.pt')
@@ -201,11 +223,46 @@ indx_image = 0
 # ------------- expes CNN classifier: -----------------
 list_CNN_defaults = 'CNN_mnist_default_'
 
-net = DefaultCNN()
+
+# -------- custom CNN BK: z_struct=5, fitler=32
+list_CNN_custom_BK_5 = 'CNN_mnist_custom_BK_5_'
+list_size = 2
+first_model = 1
+
+z_struct_size = 5
+big_kernel_size = 8
+stride_size = 2
+classif_layer_size = 30
+hidden_filters_1 = 32
+hidden_filters_2 = None
+hidden_filters_3 = None
+BK_in_first_layer = False
+two_conv_layer = False
+three_conv_layer = False
+BK_in_second_layer = False
+BK_in_third_layer = False
+add_classification_layer = False
+
+net = network(z_struct_size, big_kernel_size, stride_size, classif_layer_size, add_classification_layer,
+              hidden_filters_1, hidden_filters_2, hidden_filters_3, BK_in_first_layer, two_conv_layer, three_conv_layer,
+              BK_in_second_layer, BK_in_third_layer)
 
 # print(net)
-for i in range(1, 88):
-    expe_name = list_CNN_defaults + str(i)
+for i in range(1, first_model+list_size):
+    expe_name = list_CNN_custom_BK_5 + str(i)
+    run_score(expe_name, net)
+
+# -------- custom CNN BK: z_struct=5, filter=64
+first_model = 3
+list_size = 2
+hidden_filters_1 = 64
+net = network(z_struct_size, big_kernel_size, stride_size, classif_layer_size, add_classification_layer,
+              hidden_filters_1, hidden_filters_2, hidden_filters_3, BK_in_first_layer, two_conv_layer, three_conv_layer,
+              BK_in_second_layer, BK_in_third_layer)
+
+# print(net)
+for i in range(first_model, first_model+list_size):
+    expe_name = list_CNN_custom_BK_5 + str(i)
     run_score(expe_name, net)
 
 # _______________________________Expe test VAE + class + E1_____________________________________
