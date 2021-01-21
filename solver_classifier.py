@@ -7,6 +7,7 @@ import os
 from dataset.dataset_2 import get_dataloaders
 from models.default_CNN import DefaultCNN
 from models.custom_CNN_BK import Custom_CNN_BK
+from models.custom_CNN import Custom_CNN
 from solver import gpu_config
 from tqdm import tqdm
 from scores_classifier import compute_scores
@@ -45,7 +46,8 @@ class SolverClassifier(object):
         self.add_classification_layer = args.add_classification_layer
         self.z_struct_size = args.z_struct_size
         self.classif_layer_size = args.classif_layer_size
-        self.big_kernel_size = args.big_kernel_size[0]
+        if self.is_custom_model_BK:
+            self.big_kernel_size = args.big_kernel_size[0]
         self.stride_size = args.stride_size
         self.hidden_filters_1 = args.hidden_filters_layer1
         self.hidden_filters_2 = args.hidden_filters_layer2
@@ -110,7 +112,15 @@ class SolverClassifier(object):
                                 BK_in_second_layer=self.BK_in_second_layer,
                                 BK_in_third_layer=self.BK_in_third_layer)
         elif self.is_custom_model:
-            pass
+            net = Custom_CNN(z_struct_size=self.z_struct_size,
+                             stride_size=self.stride_size,
+                             classif_layer_size=self.classif_layer_size,
+                             add_classification_layer=self.add_classification_layer,
+                             hidden_filters_1=self.hidden_filters_1,
+                             hidden_filters_2=self.hidden_filters_2,
+                             hidden_filters_3=self.hidden_filters_3,
+                             two_conv_layer=self.two_conv_layer,
+                             three_conv_layer=self.three_conv_layer)
 
         # print model characteristics:
         print(net)
