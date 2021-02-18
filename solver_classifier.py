@@ -201,9 +201,6 @@ class SolverClassifier(object):
         self.scores = 0
         self.losses = 0
 
-        # z_struct_layer_num:
-        self.z_struct_layer_num = get_layer_zstruct_num(self.net, self.net_type)
-
     def train(self):
         self.net_mode(train=True)
 
