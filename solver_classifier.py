@@ -3,6 +3,8 @@ import logging
 import torch.optim as optimizer
 import torch.nn.functional as F
 import os
+from torchvision import transforms
+import torchvision.datasets as datasets
 
 from dataset.dataset_2 import get_dataloaders
 from models.default_CNN import DefaultCNN
@@ -11,10 +13,10 @@ from models.custom_CNN import Custom_CNN
 from solver import gpu_config
 from tqdm import tqdm
 from scores_classifier import compute_scores
+from visualizer_CNN import get_layer_zstruct_num
 
 
-def compute_scores_and_loss(net, train_loader, test_loader, device, train_loader_size,  test_loader_size):
-
+def compute_scores_and_loss(net, train_loader, test_loader, device, train_loader_size, test_loader_size):
     score_train, loss_train = compute_scores(net,
                                              train_loader,
                                              device,
@@ -57,6 +59,8 @@ class SolverClassifier(object):
         self.three_conv_layer = args.three_conv_layer
         self.BK_in_second_layer = args.BK_in_second_layer
         self.BK_in_third_layer = args.BK_in_third_layer
+        # binary parameters:
+        self.binary_z = args.binary_z
 
         # dataset parameters:
         if args.dataset.lower() == 'mnist':
@@ -77,12 +81,35 @@ class SolverClassifier(object):
         logger.addHandler(stream)
 
         # load dataset:
-        self.train_loader, self.valid_loader, self.test_loader = get_dataloaders(args.dataset,
-                                                                                 batch_size=self.batch_size,
-                                                                                 logger=logger)
+        if args.dataset == 'mnist':
+            self.valid_loader = 0
+            mnist_trainset = datasets.MNIST(root='../data/mnist',
+                                            train=True,
+                                            download=True,
+                                            transform=transforms.Compose([transforms.Resize(32),
+                                                                          transforms.ToTensor()]))
+            mnist_testset = datasets.MNIST(root='../data/mnist',
+                                           train=False,
+                                           download=True,
+                                           transform=transforms.Compose([transforms.Resize(32),
+                                                                         transforms.ToTensor()]))
+
+            self.train_loader = torch.utils.data.DataLoader(dataset=mnist_trainset,
+                                                       batch_size=self.batch_size,
+                                                       shuffle=True)
+            self.test_loader = torch.utils.data.DataLoader(dataset=mnist_testset,
+                                                      batch_size=self.batch_size,
+                                                      shuffle=False)
+        else:
+            self.train_loader, self.valid_loader, self.test_loader = get_dataloaders(args.dataset,
+                                                                                     batch_size=self.batch_size,
+                                                                                     logger=logger)
 
         self.train_loader_size = len(self.train_loader.dataset)
-        self.valid_loader_size = len(self.valid_loader.dataset)
+        if self.valid_loader == 0:
+            self.valid_loader_size = 0
+        else:
+            self.valid_loader_size = len(self.valid_loader.dataset)
         self.test_loader_size = len(self.test_loader.dataset)
 
         logger.info("Train {} with {} train samples, {} valid samples and {}"
@@ -93,11 +120,13 @@ class SolverClassifier(object):
 
         # create model
         if self.is_default_model:
+            self.net_type = 'default'
             net = DefaultCNN(add_z_struct_bottleneck=self.add_z_struct_bottleneck,
                              add_classification_layer=self.add_classification_layer,
                              z_struct_size=self.z_struct_size,
                              classif_layer_size=self.classif_layer_size)
         elif self.is_custom_model_BK:
+            self.net_type = 'Custom_CNN_BK'
             net = Custom_CNN_BK(z_struct_size=self.z_struct_size,
                                 big_kernel_size=self.big_kernel_size,
                                 stride_size=self.stride_size,
@@ -110,8 +139,10 @@ class SolverClassifier(object):
                                 two_conv_layer=self.two_conv_layer,
                                 three_conv_layer=self.three_conv_layer,
                                 BK_in_second_layer=self.BK_in_second_layer,
-                                BK_in_third_layer=self.BK_in_third_layer)
+                                BK_in_third_layer=self.BK_in_third_layer,
+                                Binary_z=self.binary_z)
         elif self.is_custom_model:
+            self.net_type = 'Custom_CNN'
             net = Custom_CNN(z_struct_size=self.z_struct_size,
                              stride_size=self.stride_size,
                              classif_layer_size=self.classif_layer_size,
@@ -170,6 +201,9 @@ class SolverClassifier(object):
         self.scores = 0
         self.losses = 0
 
+        # z_struct_layer_num:
+        self.z_struct_layer_num = get_layer_zstruct_num(self.net, self.net_type)
+
     def train(self):
         self.net_mode(train=True)
 
@@ -179,7 +213,6 @@ class SolverClassifier(object):
         print_bar.update(self.epochs)
         while not out:
             for data, labels in self.train_loader:
-
                 self.global_iter += 1
                 self.epochs = self.global_iter / len(self.train_loader)
                 print_bar.update(1)
@@ -187,7 +220,7 @@ class SolverClassifier(object):
                 data = data.to(self.device)  # Variable(data.to(self.device))
                 labels = labels.to(self.device)  # Variable(labels.to(self.device))
 
-                prediction = self.net(data)
+                prediction, _ = self.net(data)
 
                 # classification loss
                 # averaged over each loss element in the batch

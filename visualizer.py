@@ -400,7 +400,6 @@ def plot_scores_results_CNN(epochs, train_score, test_score, expe_name, save):
 
 
 def plot_loss_results_CNN(epochs, train_loss, test_loss, expe_name, save):
-
     fig, ax = plt.subplots(figsize=(15, 10), facecolor='w', edgecolor='k')
 
     ax.set(xlabel='nb_iter', ylabel='loss',
@@ -605,15 +604,17 @@ def plot_scores_and_loss(net, expe_name, path_scores, is_wt_random=False, is_bot
     return
 
 
-def plot_scores_and_loss_CNN(net, expe_name, path_scores, save=False):
-
+def plot_scores_and_loss_CNN(net, expe_name, path_scores, save=False, return_score=False):
     _, epochs, train_score, test_score, train_loss, test_loss = get_checkpoints_scores_CNN(net,
                                                                                            path_scores,
                                                                                            expe_name)
 
-    plot_loss_results_CNN(epochs, train_loss, test_loss, expe_name, save)
+    if return_score:
+        return train_score[-1], test_score[-1]
+    else:
+        plot_loss_results_CNN(epochs, train_loss, test_loss, expe_name, save)
 
-    plot_scores_results_CNN(epochs, train_score, test_score,  expe_name, save)
+        plot_scores_results_CNN(epochs, train_score, test_score, expe_name, save)
 
     return
 

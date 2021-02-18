@@ -98,10 +98,18 @@ class Custom_CNN(nn.Module, ABC):
             for m in self._modules[block]:
                 kaiming_init(m)
 
-    def forward(self, x):
+    def forward(self, x, z_struct_out=False, z_struct_prediction=False, z_struct_layer_num=None):
         """
         Forward pass of model.
         """
-        prediction = self.net(x)
 
-        return prediction
+        z_struct = None
+        if z_struct_out:
+            z_struct = self.net[:z_struct_layer_num](x)
+
+        if z_struct_prediction:
+            prediction = self.net[z_struct_layer_num:](x)
+        else:
+            prediction = self.net(x)
+
+        return prediction, z_struct

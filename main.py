@@ -179,6 +179,9 @@ if __name__ == "__main__":
     parser.add_argument('--two_conv_layer', default=False, type=str2bool, help='if two_conv_layer')
     parser.add_argument('--three_conv_layer', default=False, type=str2bool, help='if three_conv_layer')
 
+    # Binary parameters:
+    parser.add_argument('--binary_z', default=False, type=str2bool, help='To binary the last conv2d output')
+
     args = parser.parse_args()
 
     print(args)

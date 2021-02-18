@@ -1,6 +1,7 @@
 from abc import ABC
 import torch.nn as nn
 from custom_Layer import Flatten, View, PrintLayer, kaiming_init
+from binary_tools.activations import DeterministicBinaryActivation
 
 
 class Custom_CNN_BK(nn.Module, ABC):
@@ -18,12 +19,14 @@ class Custom_CNN_BK(nn.Module, ABC):
                  two_conv_layer=False,
                  three_conv_layer=False,
                  BK_in_second_layer=False,
-                 BK_in_third_layer=False):
+                 BK_in_third_layer=False,
+                 Binary_z=False):
         """
         Class which defines model and forward pass.
         """
         super(Custom_CNN_BK, self).__init__()
 
+        self.Binary_z = Binary_z
         # parameters
         self.nc = 1  # number of channels
         self.hidden_filters_1 = hidden_filters_1
@@ -60,24 +63,45 @@ class Custom_CNN_BK(nn.Module, ABC):
         self.model = [
             nn.Conv2d(self.nc, self.hidden_filters_1, self.kernel_size_1, stride=self.stride_size),
             nn.BatchNorm2d(self.hidden_filters_1),
-            nn.ReLU(True),
             # PrintLayer(),  # B, 32, 25, 25
         ]
+        if self.Binary_z and not self.two_conv_layer:
+            self.model += [
+                DeterministicBinaryActivation(estimator='ST')
+            ]
+        else:
+            self.model += [
+                nn.ReLU(True),
+            ]
         if self.two_conv_layer:
             self.hidden_filter_GMP = self.hidden_filters_2
             self.model += [
                 nn.Conv2d(self.hidden_filters_1, self.hidden_filters_2, self.kernel_size_2, stride=self.stride_size),
                 nn.BatchNorm2d(self.hidden_filters_2),
-                nn.ReLU(True),
                 # PrintLayer(),  # B, 32, 25, 25
+            ]
+        if self.Binary_z and self.two_conv_layer and not self.three_conv_layer:
+            self.model += [
+                DeterministicBinaryActivation(estimator='ST')
+            ]
+        else:
+            self.model += [
+                nn.ReLU(True),
             ]
         if self.three_conv_layer:
             self.hidden_filter_GMP = self.hidden_filters_3
             self.model += [
                 nn.Conv2d(self.hidden_filters_2, self.hidden_filters_3, self.kernel_size_3, stride=self.stride_size),
                 nn.BatchNorm2d(self.hidden_filters_3),
-                nn.ReLU(True),
                 # PrintLayer(),  # B, 32, 25, 25
+            ]
+        if self.Binary_z and self.three_conv_layer:
+            self.model += [
+                DeterministicBinaryActivation(estimator='ST')
+            ]
+        elif self.three_conv_layer:
+            self.model += [
+                nn.ReLU(True),
             ]
         # ----------- add GMP bloc:
         self.model += [
@@ -115,10 +139,17 @@ class Custom_CNN_BK(nn.Module, ABC):
             for m in self._modules[block]:
                 kaiming_init(m)
 
-    def forward(self, x):
+    def forward(self, x, z_struct_out=False, z_struct_prediction=False, z_struct_layer_num=None):
         """
         Forward pass of model.
         """
-        prediction = self.net(x)
+        z_struct = None
+        if z_struct_out:
+            z_struct = self.net[:z_struct_layer_num](x)
 
-        return prediction
+        if z_struct_prediction:
+            prediction = self.net[z_struct_layer_num:](x)
+        else:
+            prediction = self.net(x)
+
+        return prediction, z_struct
