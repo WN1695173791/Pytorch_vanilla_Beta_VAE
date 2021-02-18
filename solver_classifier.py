@@ -13,7 +13,6 @@ from models.custom_CNN import Custom_CNN
 from solver import gpu_config
 from tqdm import tqdm
 from scores_classifier import compute_scores
-from visualizer_CNN import get_layer_zstruct_num
 
 
 def compute_scores_and_loss(net, train_loader, test_loader, device, train_loader_size, test_loader_size):
