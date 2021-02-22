@@ -79,10 +79,10 @@ def compute_z_struct(net_trained, exp_name, loader, train_test=None, net_type=No
             # train mode:
             net_trained.eval()
 
-            labels_list.extend(labels.detach().numpy())
-            z_struct_batch = z_struct.squeeze().detach().numpy()
+            labels_list.extend(labels.cpu().detach().numpy())
+            z_struct_batch = z_struct.squeeze().cpu().detach().numpy()
             z_struct_representation.extend(z_struct_batch)
-            prediction.extend(pred.squeeze().detach().numpy())
+            prediction.extend(pred.squeeze().cpu().detach().numpy())
 
         z_struct_representation = np.array(z_struct_representation)
         labels_list = np.array(labels_list)

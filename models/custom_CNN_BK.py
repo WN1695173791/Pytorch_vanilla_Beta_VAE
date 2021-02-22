@@ -14,8 +14,8 @@ def compute_ratio_batch(batch_z_struct, labels_batch, nb_class):
     :return:
     """
     if 'torch.Tensor' in str(type(batch_z_struct)):
-        batch_z_struct = batch_z_struct.detach().numpy()
-        labels_batch = labels_batch.detach().numpy()
+        batch_z_struct = batch_z_struct.cpu().detach().numpy()
+        labels_batch = labels_batch.cpu().detach().numpy()
 
     representation_z_struct_class = []
 
