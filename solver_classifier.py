@@ -108,8 +108,8 @@ class SolverClassifier(object):
 
         # initialize the early_stopping object
         # early stopping patience; how long to wait after last time validation loss improved.
-        self.patience = 10
-        self.early_stopping = EarlyStopping(patience=self.patience, verbose=True)
+        # self.patience = 10
+        # self.early_stopping = EarlyStopping(patience=self.patience, verbose=True)
 
         # logger
         formatter = logging.Formatter('%(asc_time)s %(level_name)s - %(funcName)s: %(message)s', "%H:%M:%S")
@@ -301,7 +301,7 @@ class SolverClassifier(object):
                                                                self.ratio_reg)
             # early_stopping needs the validation loss to check if it has decresed,
             # and if it has, it will make a checkpoint of the current model
-            self.early_stopping(self.losses['total_loss_test'], self.net)
+            # self.early_stopping(self.losses['total_loss_test'], self.net)
 
             self.save_checkpoint_scores_loss()
             self.net_mode(train=True)
@@ -318,10 +318,10 @@ class SolverClassifier(object):
                                                               self.losses['ratio_test_loss'],
                                                               self.losses['total_loss_train'],
                                                               self.losses['total_loss_test']))
-            if self.early_stopping.early_stop:
-                print("Early stopping")
-                out = True
-                break
+            # if self.early_stopping.early_stop:
+            #     print("Early stopping")
+            #     out = True
+            #     break
             if self.epochs >= self.max_iter:
                 out = True
                 break
