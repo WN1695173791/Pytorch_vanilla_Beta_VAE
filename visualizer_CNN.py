@@ -37,9 +37,11 @@ def get_layer_zstruct_num(net, net_type):
     return z_struct_layer_num + add_layer
 
 
-def compute_z_struct(net_trained, exp_name, loader, train_test=None, net_type=None):
+def compute_z_struct(net_trained, exp_name, loader, train_test=None, net_type=None, return_results=False):
     """
     Extract all z_struct representation for a specific model and all images in loader and save it.
+    :param net_type:
+    :param return_results:
     :param net_trained:
     :param exp_name:
     :param loader:
@@ -69,8 +71,10 @@ def compute_z_struct(net_trained, exp_name, loader, train_test=None, net_type=No
             if torch.cuda.is_available():
                 input_data = input_data.cuda()
 
-            _, z_struct = net_trained(input_data, z_struct_out=True, z_struct_layer_num=z_struct_layer_num)
-            pred, _ = net_trained(input_data)
+            _, z_struct, _ = net_trained(input_data,
+                                         z_struct_out=True,
+                                         z_struct_layer_num=z_struct_layer_num)
+            pred, _, _ = net_trained(input_data)
 
             # train mode:
             net_trained.eval()
@@ -83,21 +87,24 @@ def compute_z_struct(net_trained, exp_name, loader, train_test=None, net_type=No
         z_struct_representation = np.array(z_struct_representation)
         labels_list = np.array(labels_list)
         prediction = np.array(prediction)
-        print(z_struct_representation.shape)  # shape: (nb_data, z_struct_dim)
-        print(labels_list.shape)
-        print(prediction.shape)
+        # print(z_struct_representation.shape)  # shape: (nb_data, z_struct_dim)
+        # print(labels_list.shape)
+        # print(prediction.shape)
 
-        np.save('structural_representation/z_struct_representation_' + exp_name + '_' + train_test + '.npy',
-                z_struct_representation)
-        print('save z_struct representation for model {}'.format(exp_name))
-        np.save('structural_representation/label_list_' + exp_name + '_' + train_test + '.npy',
-                labels_list)
-        print('save label list')
-        np.save('structural_representation/prediction_' + exp_name + '_' + train_test + '.npy',
-                prediction)
-        print('save prediction')
+        if return_results:
+            return z_struct_representation, labels_list
+        else:
+            np.save('structural_representation/z_struct_representation_' + exp_name + '_' + train_test + '.npy',
+                    z_struct_representation)
+            print('save z_struct representation for model {}'.format(exp_name))
+            np.save('structural_representation/label_list_' + exp_name + '_' + train_test + '.npy',
+                    labels_list)
+            print('save label list')
+            np.save('structural_representation/prediction_' + exp_name + '_' + train_test + '.npy',
+                    prediction)
+            print('save prediction')
 
-        return
+            return
 
 
 def compute_z_struct_representation_noised(net, exp_name, train_test=None, nb_repeat=100, nb_class=10, net_type=None):
@@ -106,7 +113,6 @@ def compute_z_struct_representation_noised(net, exp_name, train_test=None, nb_re
     :param train_test:
     :param exp_name:
     :param net:
-    :param z_struct_representation:
     :param nb_repeat:
     :param nb_class:
     :return: np.array of shape: (z_struct_size, nb_images, nb_class)
@@ -842,6 +848,8 @@ def dispersion_classes(exp_name, train_test=None, plot_fig=False, cat=None):
                 plt.text(x, y, "%0.2f" % cov_data[x, y], size=12, color='black', ha="center", va="center")
         plt.show()
 
+    print('dispersion classes for model {}: {}'.format(exp_name, coef_mean_all_real))
+
     return coef_mean_all_real
 
 
@@ -994,6 +1002,8 @@ def correlation_filters(net, exp_name, train_test=None, ch=1, vis_filters=False,
 
     if vis_filters:
         viz_filters(net, 8)
+
+    print('correlation filter for model {}: {}'.format(exp_name, coef_mean_all_real))
 
     return coef_mean_all_real
 

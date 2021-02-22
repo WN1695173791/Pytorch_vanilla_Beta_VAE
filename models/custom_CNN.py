@@ -1,6 +1,8 @@
 from abc import ABC
 import torch.nn as nn
 from custom_Layer import Flatten, View, PrintLayer, kaiming_init
+from models.custom_CNN_BK import compute_ratio_batch
+from models.weight_init import weight_init
 
 
 class Custom_CNN(nn.Module, ABC):
@@ -96,14 +98,22 @@ class Custom_CNN(nn.Module, ABC):
     def weight_init(self):
         for block in self._modules:
             for m in self._modules[block]:
-                kaiming_init(m)
+                weight_init(m)
 
-    def forward(self, x, z_struct_out=False, z_struct_prediction=False, z_struct_layer_num=None):
+    def forward(self, x, labels=None, nb_class=None, use_ratio=False, z_struct_out=False, z_struct_prediction=False,
+                z_struct_layer_num=None):
         """
-        Forward pass of model.
-        """
+                Forward pass of model.
+                """
+        if use_ratio:
+            assert z_struct_out is True, "to compute ratio we need to extract z_struct"
+        if z_struct_out or z_struct_prediction:
+            assert z_struct_layer_num is not None, "if we use z_struct we need the extraction layer num"
 
+        # initialization:
         z_struct = None
+        ratio = 0
+
         if z_struct_out:
             z_struct = self.net[:z_struct_layer_num](x)
 
@@ -112,4 +122,7 @@ class Custom_CNN(nn.Module, ABC):
         else:
             prediction = self.net(x)
 
-        return prediction, z_struct
+        if use_ratio:
+            ratio = compute_ratio_batch(z_struct, labels, nb_class)
+
+        return prediction, z_struct, ratio

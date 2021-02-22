@@ -178,9 +178,14 @@ if __name__ == "__main__":
     parser.add_argument('--BK_in_third_layer', default=False, type=str2bool, help='if BK_in_third_layer')
     parser.add_argument('--two_conv_layer', default=False, type=str2bool, help='if two_conv_layer')
     parser.add_argument('--three_conv_layer', default=False, type=str2bool, help='if three_conv_layer')
+    parser.add_argument('--use_scheduler', default=False, type=str2bool, help='if use scheduler')
 
     # Binary parameters:
     parser.add_argument('--binary_z', default=False, type=str2bool, help='To binary the last conv2d output')
+
+    # ratio loss parameters:
+    parser.add_argument('--ratio_reg', default=False, type=str2bool, help='if add ratio to regularization')
+    parser.add_argument('--lambda_ratio_reg', default=1, type=float, help="lambda ratio regularization value")
 
     args = parser.parse_args()
 

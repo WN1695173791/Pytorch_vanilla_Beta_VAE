@@ -408,3 +408,24 @@ def preprocess(root, size=(64, 64), img_format='JPEG', center_crop=None):
             img.crop((left, top, right, bottom))
 
         img.save(img_path, img_format)
+
+
+def get_mnist_dataset(batch_size=64):
+    mnist_trainset = datasets.MNIST(root='../data/mnist',
+                                    train=True,
+                                    download=True,
+                                    transform=transforms.Compose([transforms.Resize(32),
+                                                                  transforms.ToTensor()]))
+    mnist_testset = datasets.MNIST(root='../data/mnist',
+                                   train=False,
+                                   download=True,
+                                   transform=transforms.Compose([transforms.Resize(32),
+                                                                 transforms.ToTensor()]))
+
+    train_loader = torch.utils.data.DataLoader(dataset=mnist_trainset,
+                                               batch_size=batch_size,
+                                               shuffle=True)
+    test_loader = torch.utils.data.DataLoader(dataset=mnist_testset,
+                                              batch_size=batch_size,
+                                              shuffle=False)
+    return train_loader, test_loader

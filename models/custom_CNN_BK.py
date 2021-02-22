@@ -2,6 +2,45 @@ from abc import ABC
 import torch.nn as nn
 from custom_Layer import Flatten, View, PrintLayer, kaiming_init
 from binary_tools.activations import DeterministicBinaryActivation
+import numpy as np
+from models.weight_init import weight_init
+
+
+def compute_ratio_batch(batch_z_struct, labels_batch, nb_class):
+    """
+    compute ratio of one batch:
+    ratio: to minimize, variance_inter_class / var_intra_class
+
+    :return:
+    """
+    if 'torch.Tensor' in str(type(batch_z_struct)):
+        batch_z_struct = batch_z_struct.detach().numpy()
+        labels_batch = labels_batch.detach().numpy()
+
+    representation_z_struct_class = []
+
+    for class_id in range(nb_class):
+        z_struct_class = batch_z_struct[np.where(labels_batch == class_id)]
+        representation_z_struct_class.append(z_struct_class)
+
+    representation_z_struct_class = np.array(representation_z_struct_class)
+
+    z_struct_mean_global_per_class = []
+    z_struct_std_global_per_class = []
+    for class_id in range(nb_class):
+        z_struct_mean_global_per_class.append(np.mean(representation_z_struct_class[class_id], axis=0))
+        z_struct_std_global_per_class.append(np.std(representation_z_struct_class[class_id], axis=0))
+
+    z_struct_mean_global_per_class = np.array(z_struct_mean_global_per_class)
+    z_struct_std_global_per_class = np.array(z_struct_std_global_per_class)
+
+    variance_intra_class = np.square(z_struct_std_global_per_class)  # shape: (nb_class, len(z_struct))
+    variance_intra_class_mean_components = np.mean(variance_intra_class, axis=0)
+    variance_inter_class = np.square(np.std(z_struct_mean_global_per_class, axis=0))
+    ratio = variance_intra_class_mean_components / variance_inter_class
+    ratio_variance_mean = np.mean(ratio)
+
+    return ratio_variance_mean
 
 
 class Custom_CNN_BK(nn.Module, ABC):
@@ -137,13 +176,22 @@ class Custom_CNN_BK(nn.Module, ABC):
     def weight_init(self):
         for block in self._modules:
             for m in self._modules[block]:
-                kaiming_init(m)
+                weight_init(m)
 
-    def forward(self, x, z_struct_out=False, z_struct_prediction=False, z_struct_layer_num=None):
+    def forward(self, x, labels=None, nb_class=None, use_ratio=False, z_struct_out=False, z_struct_prediction=False,
+                z_struct_layer_num=None):
         """
         Forward pass of model.
         """
+        if use_ratio:
+            assert z_struct_out is True, "to compute ratio we need to extract z_struct"
+        if z_struct_out or z_struct_prediction:
+            assert z_struct_layer_num is not None, "if we use z_struct we need the extraction layer num"
+
+        # initialization:
         z_struct = None
+        ratio = 0
+
         if z_struct_out:
             z_struct = self.net[:z_struct_layer_num](x)
 
@@ -152,4 +200,7 @@ class Custom_CNN_BK(nn.Module, ABC):
         else:
             prediction = self.net(x)
 
-        return prediction, z_struct
+        if use_ratio:
+            ratio = compute_ratio_batch(z_struct, labels, nb_class)
+
+        return prediction, z_struct, ratio

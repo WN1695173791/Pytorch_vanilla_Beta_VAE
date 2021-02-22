@@ -155,7 +155,7 @@ def get_regions_interest_fct(regions, labels, activation, activations_normalized
             viz_regions(nb_image, region_to_print_normalized, nrow)
             plt.show()
 
-    return selected_regions, activation_values, activation_values_normalized
+    return selected_regions, activation_values, activation_values_normalized, to_visualize
 
 
 def get_index_filter_interest(regions, list_filter):

@@ -2,7 +2,7 @@ from models.model import BetaVAE
 from models.default_CNN import DefaultCNN
 from models.custom_CNN_BK import Custom_CNN_BK
 from models.custom_CNN import Custom_CNN
-from dataset.dataset_2 import get_dataloaders
+from dataset.dataset_2 import get_dataloaders, get_mnist_dataset
 import cv2
 import torchvision.datasets as datasets
 from torchvision import transforms
@@ -11,195 +11,14 @@ from visualizer import *
 from visualizer_CNN import *
 from viz.viz_regions import *
 
-
-def compute_heatmap(net_trained, train_loader, test_loader, latent_spec, device, exp_name):
-    compute_heatmap_avg(train_loader, net_trained, latent_spec, device, exp_name, 'train', save=True, captum=False,
-                        is_partial_rand_class=is_partial_rand_class, is_E1=is_E1)
-    compute_heatmap_avg(train_loader, net_trained, latent_spec, device, exp_name, 'train_captum', save=True,
-                        captum=True,
-                        is_partial_rand_class=is_partial_rand_class, is_E1=is_E1)
-    compute_heatmap_avg(test_loader, net_trained, latent_spec, device, exp_name, 'test', save=True, captum=False,
-                        is_partial_rand_class=is_partial_rand_class, is_E1=is_E1)
-    compute_heatmap_avg(test_loader, net_trained, latent_spec, device, exp_name, 'test_captum', save=True, captum=True,
-                        is_partial_rand_class=is_partial_rand_class, is_E1=is_E1)
-
-    return
-
-
-def visualize(net, net_trained, nb_class, exp_name, device, latent_spec, train_loader, test_loader, nb_epochs=None,
-              path_scores=None, batch=None, img_size=None, indx_image=None, path=None, losses=True, real_img=False,
-              FID=False, IS=False, psnr=False, scores=True, all_prototype=False, copute_average_z_structural=False,
-              is_partial_rand_class=False, all_classes_resum=True, save=False, scores_and_losses=False,
-              size_struct=None, size_var=None, plot_gaussian=False, sample_real=False,
-              heatmap=False, prototype=False, all_classes_details=False, project_2d=False, is_E1=False,
-              reconstruction=False, plot_img_traversal=False, z_component_traversal=None, plot_sample=False,
-              real_distribution=False, both_latent_traversal=False):
-    if scores_and_losses:
-        plot_scores_and_loss(net, exp_name, path_scores, save=save, partial_rand=is_partial_rand_class, losses=losses,
-                             scores=scores)
-
-    if reconstruction:
-        viz_reconstruction(net, nb_epochs, exp_name, batch, latent_spec, img_size,
-                           is_partial_rand_class=is_partial_rand_class,
-                           partial_reconstruciton=True, is_E1=is_E1, save=save)
-
-    if heatmap:
-        plot_heatmap_avg(exp_name, latent_spec, all_classes_details=all_classes_details,
-                         all_classes_resum=all_classes_resum,
-                         train_test='train')
-        plot_heatmap_avg(exp_name, latent_spec, all_classes_details=all_classes_details,
-                         all_classes_resum=all_classes_resum,
-                         train_test='train_captum')
-        plot_heatmap_avg(exp_name, latent_spec, all_classes_details=all_classes_details,
-                         all_classes_resum=all_classes_resum,
-                         train_test='test')
-        plot_heatmap_avg(exp_name, latent_spec, all_classes_details=all_classes_details,
-                         all_classes_resum=all_classes_resum,
-                         train_test='test_captum')
-
-    if prototype:
-        plot_prototype(net, exp_name, nb_class, latent_spec, device, test_loader, train_test='test',
-                       print_per_class=True, print_per_var=True,
-                       plot_traversal_struct=False, is_partial_rand_class=is_partial_rand_class, save=save)
-        plot_prototype(net, exp_name, nb_class, latent_spec, device, train_loader, train_test='train',
-                       print_per_class=True, print_per_var=True,
-                       plot_traversal_struct=False, is_partial_rand_class=is_partial_rand_class, save=save)
-
-    if project_2d:
-        plot_prototype(net, exp_name, nb_class, latent_spec, device, train_loader, train_test='train',
-                       print_per_class=False, print_per_var=False,
-                       plot_traversal_struct=False, print_2d_projection=True,
-                       is_partial_rand_class=is_partial_rand_class, is_E1=is_E1)
-        plot_prototype(net, exp_name, nb_class, latent_spec, device, test_loader, train_test='test',
-                       print_per_class=False, print_per_var=False,
-                       plot_traversal_struct=False, print_2d_projection=True,
-                       is_partial_rand_class=is_partial_rand_class, is_E1=is_E1)
-
-    if plot_img_traversal:
-        if both_latent_traversal:
-            joint_latent_traversal(net, nb_epochs, path, exp_name, latent_spec, batch, img_size,
-                                   both_continue=True, is_partial_rand_class=is_partial_rand_class, is_E1=is_E1,
-                                   size_struct=size_struct, size_var=size_var, save=save, real_img=real_img)
-        else:
-            plot_images_taversal(net, exp_name, latent_spec, batch, nb_epochs, path, img_size, indx_image=indx_image,
-                                 size=8, save=True, z_component_traversal=z_component_traversal,
-                                 is_partial_rand_class=is_partial_rand_class, is_E1=is_E1)
-
-    if plot_sample:
-        if sample_real:
-            sample_real_distribution(net, path, exp_name, latent_spec, img_size, train_test='train', batch=batch,
-                                     both_continue=True, save=True, FID=FID, IS=IS, psnr=psnr,
-                                     is_partial_rand_class=is_partial_rand_class, is_E1=is_E1,
-                                     is_zvar_sim_loss=is_zvar_sim_loss)
-            sample_real_distribution(net, path, exp_name, latent_spec, img_size, train_test='test', batch=batch,
-                                     both_continue=True, save=True, FID=FID, IS=IS, psnr=psnr,
-                                     is_partial_rand_class=is_partial_rand_class, is_E1=is_E1,
-                                     is_zvar_sim_loss=is_zvar_sim_loss)
-        else:
-            plot_samples(net, nb_epochs, path, exp_name, latent_spec, img_size, batch=batch, both_continue=True,
-                         save=save,
-                         FID=FID, IS=IS, psnr=psnr)
-
-    if all_prototype:
-        plot_prototype(net, exp_name, nb_class, latent_spec, device, train_loader, train_test='train',
-                       print_per_class=True, print_per_var=True,
-                       plot_traversal_struct=False, print_2d_projection=True,
-                       is_partial_rand_class=is_partial_rand_class, is_E1=is_E1)
-        plot_prototype(net, exp_name, nb_class, latent_spec, device, test_loader, train_test='test',
-                       print_per_class=True, print_per_var=True,
-                       plot_traversal_struct=False, print_2d_projection=True,
-                       is_partial_rand_class=is_partial_rand_class, is_E1=is_E1)
-
-    if copute_average_z_structural:
-        plot_average_z_structural(net_trained, train_loader, device, nb_class, latent_spec, exp_name,
-                                  train_test='train', both_continue=True,
-                                  is_partial_rand_class=is_partial_rand_class, is_E1=is_E1)
-        plot_average_z_structural(net_trained, test_loader, device, nb_class, latent_spec, exp_name,
-                                  train_test='test', both_continue=True,
-                                  is_partial_rand_class=is_partial_rand_class, is_E1=is_E1)
-
-    if real_distribution:
-        real_distribution_model(net, path, exp_name, train_loader, latent_spec, train_test='train',
-                                is_both_continue=True, is_partial_rand_class=is_partial_rand_class, is_E1=is_E1,
-                                plot_gaussian=plot_gaussian, save=save)
-        real_distribution_model(net, path, exp_name, test_loader, latent_spec, train_test='test',
-                                is_both_continue=True, is_partial_rand_class=is_partial_rand_class, is_E1=is_E1,
-                                plot_gaussian=plot_gaussian, save=save)
-
-    return
-
-
-def run(expe_list, net, E1_VAE):
-    path = 'checkpoints/'
-    path_scores = 'checkpoints_scores'
-    for expe in expe_list:
-        print(expe)
-        exp_name = expe
-        net_trained, _, nb_epochs = get_checkpoints(net, path, exp_name)
-        # # scores and losses:
-        visualize(net, net_trained, nb_class, exp_name, device, latent_spec, train_loader, test_loader,
-                  path_scores=path_scores,
-                  is_partial_rand_class=is_partial_rand_class, save=True, scores_and_losses=True, is_E1=is_E1,
-                  losses=True)
-        # sample:
-        visualize(net, net_trained, nb_class, exp_name, device, latent_spec, train_loader, test_loader,
-                  nb_epochs=nb_epochs,
-                  path=path,
-                  save=True, batch=batch, plot_sample=True, FID=False, IS=False, psnr=False)
-        # reconstruction:
-        visualize(net, net_trained, nb_class, exp_name, device, latent_spec, train_loader, test_loader,
-                  nb_epochs=nb_epochs,
-                  batch=batch, img_size=img_size, is_partial_rand_class=is_partial_rand_class,
-                  save=True, is_E1=is_E1, reconstruction=True)
-        # Traversal:
-        visualize(net, net_trained, nb_class, exp_name, device, latent_spec, train_loader, test_loader,
-                  nb_epochs=nb_epochs,
-                  batch=batch, img_size=img_size, path=path, is_partial_rand_class=is_partial_rand_class,
-                  is_E1=is_E1, z_component_traversal=z_component_traversal, indx_image=indx_image,
-                  plot_img_traversal=True)
-        # prototype
-        visualize(net, net_trained, nb_class, exp_name, device, latent_spec, train_loader, test_loader,
-                  copute_average_z_structural=True, is_partial_rand_class=is_partial_rand_class, save=True,
-                  is_E1=is_E1)
-        # projection 2d:
-        visualize(net, net_trained, nb_class, exp_name, device, latent_spec, train_loader, test_loader,
-                  all_prototype=True, is_partial_rand_class=is_partial_rand_class, save=True, is_E1=is_E1)
-        # gaussian real distribution:
-        if E1_VAE:
-            visualize(net, net_trained, nb_class, exp_name, device, latent_spec, train_loader, test_loader, path=path,
-                      save=True,
-                      is_partial_rand_class=is_partial_rand_class, is_E1=is_E1, real_distribution=True,
-                      plot_gaussian=True)
-            # sample from real distribution:
-            visualize(net, net_trained, nb_class, exp_name, device, latent_spec, train_loader, test_loader,
-                      plot_sample=True,
-                      sample_real=True, batch=batch, path=path,
-                      save=True, FID=False, IS=False, psnr=False, is_partial_rand_class=is_partial_rand_class,
-                      is_E1=is_E1)
-        # traversal image with struct fixe and var fixe:
-        visualize(net, net_trained, nb_class, exp_name, device, latent_spec, train_loader, test_loader, batch=batch,
-                  path=path, real_img=False, size_struct=10, size_var=8,
-                  is_partial_rand_class=is_partial_rand_class, save=True, is_E1=is_E1,
-                  plot_img_traversal=True, both_latent_traversal=True)
-
-
-def network(z_struct_size, big_kernel_size, stride_size, classif_layer_size, add_classification_layer,
-            hidden_filters_1, hidden_filters_2, hidden_filters_3, BK_in_first_layer, two_conv_layer, three_conv_layer,
-            BK_in_second_layer, BK_in_third_layer):
-    model = Custom_CNN_BK(z_struct_size=z_struct_size,
-                          big_kernel_size=big_kernel_size,
-                          stride_size=stride_size,
-                          classif_layer_size=classif_layer_size,
-                          add_classification_layer=add_classification_layer,
-                          hidden_filters_1=hidden_filters_1,
-                          hidden_filters_2=hidden_filters_2,
-                          hidden_filters_3=hidden_filters_3,
-                          BK_in_first_layer=BK_in_first_layer,
-                          two_conv_layer=two_conv_layer,
-                          three_conv_layer=three_conv_layer,
-                          BK_in_second_layer=BK_in_second_layer,
-                          BK_in_third_layer=BK_in_third_layer)
-    return model
+# Selected model list:
+list_model_to_test = [# 'CNN_mnist_custom_3layer_5_82',  # bad variance z size: 20: 2.118
+                      # 'CNN_mnist_custom_3layer_5_58',  # bad variance z size: 50: 2.96
+                      'CNN_mnist_custom_3layer_5_51',  # best variance no BK: 4.79
+                      # "'CNN_mnist_custom_BK_2layer_bk1_20_37',  # bk1 + 32: 5.78
+                      'CNN_mnist_custom_BK_2layer_bk1_20_39',  # bk1 + 64 best_variance: 7.20
+                      'CNN_mnist_custom_BK_2layer_bk2_20_55']  # bk2 + 32: 5.71
+                      # 'CNN_mnist_custom_BK_2layer_bk2_20_64']  # bk2 + 64: 6.98
 
 
 def run_score(exp_name, net):
@@ -218,11 +37,12 @@ def run_viz_expes(exp_name, net, net_type=None, cat=None):
     path = 'checkpoints_CNN/'
     path_scores = 'checkpoint_scores_CNN'
     net_trained, _, nb_epochs = get_checkpoints(net, path, exp_name)
+    print(net)
     # scores and losses:
     # plot_scores_and_loss_CNN(net_trained, exp_name, path_scores, save=True)
 
     train_test = 'test'
-    # loader = test_loader
+    loader = test_loader
 
     # compute features:
     # compute_z_struct(net_trained, exp_name, loader, train_test=train_test, net_type=net_type)
@@ -239,12 +59,9 @@ def run_viz_expes(exp_name, net, net_type=None, cat=None):
 
     # plot:
     # ratio_variance = ratio(exp_name, train_test=train_test, cat=cat)
-    # print('ratio mean: {}'.format(np.mean(ratio_variance)))
     # score = correlation_filters(net_trained, exp_name, train_test=train_test, ch=nc, vis_filters=False, plot_fig=True,
-    #                              cat=cat)
-    # print(exp_name, score)
+    #                             cat=cat)
     # score_corr_class = dispersion_classes(exp_name, train_test=train_test, plot_fig=True, cat=cat)
-    # print(exp_name, score_corr_class)
     # plot_2d_projection_z_struct(nb_class, exp_name, train_test=train_test, ratio=ratio_variance)
 
     # plot_acc_bit_noised_per_class(exp_name,
@@ -264,41 +81,38 @@ def visualize_regions_of_interest(exp_name, net, net_type=None):
     print(exp_name)
     path = 'checkpoints_CNN/'
     net_trained, _, nb_epochs = get_checkpoints(net, path, exp_name)
+    loader = test_loader
 
-    visualize_regions(exp_name, net_trained, len_img_h, len_img_w, plot_activation_value=True)
+    # visualize_regions(exp_name, net_trained, len_img_h, len_img_w, loader, plot_activation_value=True,
+    #                   plot_correlation_regions=True, percentage=1)
 
     random_index = False  # select one random index just for see a random regions for a random image
     choice_label = True  # Choose a specific label to see images of this label
-    label = 8  # choice of the label to see regions
-    nb_im = 5  # if is an integer > 0 so select nb_im images else if in a float between 0 and 1, select nb_im % images
+    label = 5  # choice of the label to see regions
+    same_im = True  # to see first image of any label
+    nb_im = 1  # if is an integer > 0 so select nb_im images else if in a float between 0 and 1, select nb_im % images
     best_region = False  # if we choose best region, we select nb_img who active the most each filter independently
     worst_regions = False  # if we choose worst region, we select nb_img who active the less each filter independently
     any_label = False  # if we don't want to choose any specific label
     average_result = False  # if we want to see all regions extracted averaged by filter
     plot_activation_value = True  # if we plot diagram with bar to see activation value in order to see the most active
+    plot_correlation_regions = True  # if plot correlation between region extracted to see redundancy
 
-    # viz_region_im(exp_name,
-    #               net_trained,
-    #               random_index=random_index,
-    #               choice_label=choice_label,
-    #               label=label,
-    #               nb_im=nb_im,
-    #               best_region=best_region,
-    #               worst_regions=worst_regions,
-    #               any_label=any_label,
-    #               average_result=average_result,
-    #               plot_activation_value=plot_activation_value)
+    viz_region_im(exp_name,
+                  net_trained,
+                  random_index=random_index,
+                  choice_label=choice_label,
+                  label=label,
+                  nb_im=nb_im,
+                  best_region=best_region,
+                  worst_regions=worst_regions,
+                  any_label=any_label,
+                  average_result=average_result,
+                  plot_activation_value=plot_activation_value,
+                  plot_correlation_regions=plot_correlation_regions,
+                  same_im=same_im,
+                  net_type=net_type)
     return
-
-
-list_model_to_test = [# 'CNN_mnist_custom_3layer_5_82'  # worst variance z size: 20
-                      # 'CNN_mnist_custom_3layer_5_58'  # worst variance z size: 50
-                      # 'CNN_mnist_custom_3layer_5_51',  # best variance no BK
-                      'CNN_mnist_custom_BK_2layer_bk1_20_37',  # bk1 + 32
-                      # 'CNN_mnist_custom_BK_2layer_bk1_20_39'  # bk1 + 64
-                      # 'CNN_mnist_custom_BK_2layer_bk2_20_55',  # bk2 + 32
-                      # 'CNN_mnist_custom_BK_2layer_bk2_20_64'  # bk2 + 64, best variance z size: 20
-                      ]
 
 
 def plot_histo():
@@ -307,7 +121,7 @@ def plot_histo():
     criterion_corr_class = 1
     criterion_loss_max = 1
     criterion_max_of_max_loss = 1
-    criterion_ratio_variance = 4.7
+    criterion_ratio_variance = 7
 
     plot_histograms_models(criterion_corr_filter_20, criterion_corr_filter_50, criterion_corr_class, criterion_loss_max,
                            criterion_max_of_max_loss, criterion_ratio_variance, plot=True)
@@ -418,45 +232,26 @@ def selection(net, exp_name):
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 batch = torch.load('data/batch_mnist.pt')
 
-# download mnist dataset _________________________________________________________________________________
-# train_loader, valid_loader, test_loader = get_dataloaders('mnist', batch_size=64)
-# train_set, valid_set,  test_loader = get_dataloaders('mnist', batch_size=64)
-"""
+# download mnist dataset: _________________________________________________________________________________
 batch_size = 64
-batch_size_test = 10000
-mnist_trainset = datasets.MNIST(root='../data/mnist',
-                                train=True,
-                                download=True,
-                                transform=transforms.Compose([transforms.Resize(32),
-                                                              transforms.ToTensor()]))
-mnist_testset = datasets.MNIST(root='../data/mnist',
-                               train=False,
-                               download=True,
-                               transform=transforms.Compose([transforms.Resize(32),
-                                                             transforms.ToTensor()]))
+_, test_loader = get_mnist_dataset(batch_size=batch_size)
 
-train_loader = torch.utils.data.DataLoader(dataset=mnist_trainset,
-                                           batch_size=batch_size,
-                                           shuffle=True)
-test_loader = torch.utils.data.DataLoader(dataset=mnist_testset,
-                                          batch_size=batch_size_test,
-                                          shuffle=False)
+path_image_save = 'regions_of_interest/images/images.npy'
+if not os.path.exists(path_image_save):
+    _, test_loader = get_mnist_dataset(batch_size=batch_size)
+    dataiter_test = iter(test_loader)
+    images_test, label_test = dataiter_test.next()
+    
+    print('load mnist dataset test with images shape: {}', images_test.shape)
+    
+    np.save('regions_of_interest/labels/labels.npy', label_test)
+    np.save(path_image_save, images_test)
+else:
+    # load labels:
+    label_test = np.load('regions_of_interest/labels/labels.npy', allow_pickle=True)
+    images_test = torch.tensor(np.load('regions_of_interest/images/images.npy', allow_pickle=True))
 
-print('==>>> total training batch number: {}'.format(len(train_loader)))
-print('==>>> total testing batch number: {}'.format(len(test_loader)))
-
-dataiter_train = iter(train_loader)
-dataiter_test = iter(test_loader)
-images_train, _ = dataiter_train.next()
-images_test, label_test = dataiter_test.next()
-
-print(images_train.shape, images_test.shape)
-
-np.save('regions_of_interest/labels/labels.npy', label_test)
-np.save('regions_of_interest/images/images.npy', images_test)
-"""
-# download mnist dataset _________________________________________________________________________________
-
+# parameters:
 img_size = (1, 32, 32)
 nb_class = 10
 nb_samples = 10
@@ -471,7 +266,6 @@ len_img_h = img_size[-1]
 len_img_w = img_size[-2]
 images = batch
 padding = 0
-
 # for traversal real image:
 indx_image = 0
 
@@ -615,7 +409,7 @@ for key in arguments_1:
 
     if exp_name in list_model_to_test:
         run_viz_expes(exp_name, net, net_type='Custom_CNN', cat='zstruct_20')
-        visualize_regions_of_interest(exp_name, net)
+        visualize_regions_of_interest(exp_name, net, net_type='Custom_CNN')
 
     # save list models:
     if z_struct_size == 5:
@@ -999,3 +793,195 @@ if not os.path.exists(path_save):
             filehandle.write('%s\n' % listitem)
 
 f.close()
+
+
+def compute_heatmap(net_trained, train_loader, test_loader, latent_spec, device, exp_name, is_partial_rand_class,
+                    is_E1):
+    compute_heatmap_avg(train_loader, net_trained, latent_spec, device, exp_name, 'train', save=True, captum=False,
+                        is_partial_rand_class=is_partial_rand_class, is_E1=is_E1)
+    compute_heatmap_avg(train_loader, net_trained, latent_spec, device, exp_name, 'train_captum', save=True,
+                        captum=True,
+                        is_partial_rand_class=is_partial_rand_class, is_E1=is_E1)
+    compute_heatmap_avg(test_loader, net_trained, latent_spec, device, exp_name, 'test', save=True, captum=False,
+                        is_partial_rand_class=is_partial_rand_class, is_E1=is_E1)
+    compute_heatmap_avg(test_loader, net_trained, latent_spec, device, exp_name, 'test_captum', save=True, captum=True,
+                        is_partial_rand_class=is_partial_rand_class, is_E1=is_E1)
+
+    return
+
+
+def visualize(net, net_trained, nb_class, exp_name, device, latent_spec, train_loader, test_loader, nb_epochs=None,
+              path_scores=None, batch=None, img_size=None, indx_image=None, path=None, losses=True, real_img=False,
+              FID=False, IS=False, psnr=False, scores=True, all_prototype=False, copute_average_z_structural=False,
+              is_partial_rand_class=False, all_classes_resum=True, save=False, scores_and_losses=False,
+              size_struct=None, size_var=None, plot_gaussian=False, sample_real=False,
+              heatmap=False, prototype=False, all_classes_details=False, project_2d=False, is_E1=False,
+              reconstruction=False, plot_img_traversal=False, z_component_traversal=None, plot_sample=False,
+              real_distribution=False, both_latent_traversal=False, is_zvar_sim_loss=False):
+    if scores_and_losses:
+        plot_scores_and_loss(net, exp_name, path_scores, save=save, partial_rand=is_partial_rand_class, losses=losses,
+                             scores=scores)
+
+    if reconstruction:
+        viz_reconstruction(net, nb_epochs, exp_name, batch, latent_spec, img_size,
+                           is_partial_rand_class=is_partial_rand_class,
+                           partial_reconstruciton=True, is_E1=is_E1, save=save)
+
+    if heatmap:
+        plot_heatmap_avg(exp_name, latent_spec, all_classes_details=all_classes_details,
+                         all_classes_resum=all_classes_resum,
+                         train_test='train')
+        plot_heatmap_avg(exp_name, latent_spec, all_classes_details=all_classes_details,
+                         all_classes_resum=all_classes_resum,
+                         train_test='train_captum')
+        plot_heatmap_avg(exp_name, latent_spec, all_classes_details=all_classes_details,
+                         all_classes_resum=all_classes_resum,
+                         train_test='test')
+        plot_heatmap_avg(exp_name, latent_spec, all_classes_details=all_classes_details,
+                         all_classes_resum=all_classes_resum,
+                         train_test='test_captum')
+
+    if prototype:
+        plot_prototype(net, exp_name, nb_class, latent_spec, device, test_loader, train_test='test',
+                       print_per_class=True, print_per_var=True,
+                       plot_traversal_struct=False, is_partial_rand_class=is_partial_rand_class, save=save)
+        plot_prototype(net, exp_name, nb_class, latent_spec, device, train_loader, train_test='train',
+                       print_per_class=True, print_per_var=True,
+                       plot_traversal_struct=False, is_partial_rand_class=is_partial_rand_class, save=save)
+
+    if project_2d:
+        plot_prototype(net, exp_name, nb_class, latent_spec, device, train_loader, train_test='train',
+                       print_per_class=False, print_per_var=False,
+                       plot_traversal_struct=False, print_2d_projection=True,
+                       is_partial_rand_class=is_partial_rand_class, is_E1=is_E1)
+        plot_prototype(net, exp_name, nb_class, latent_spec, device, test_loader, train_test='test',
+                       print_per_class=False, print_per_var=False,
+                       plot_traversal_struct=False, print_2d_projection=True,
+                       is_partial_rand_class=is_partial_rand_class, is_E1=is_E1)
+
+    if plot_img_traversal:
+        if both_latent_traversal:
+            joint_latent_traversal(net, nb_epochs, path, exp_name, latent_spec, batch, img_size,
+                                   both_continue=True, is_partial_rand_class=is_partial_rand_class, is_E1=is_E1,
+                                   size_struct=size_struct, size_var=size_var, save=save, real_img=real_img)
+        else:
+            plot_images_taversal(net, exp_name, latent_spec, batch, nb_epochs, path, img_size, indx_image=indx_image,
+                                 size=8, save=True, z_component_traversal=z_component_traversal,
+                                 is_partial_rand_class=is_partial_rand_class, is_E1=is_E1)
+
+    if plot_sample:
+        if sample_real:
+            sample_real_distribution(net, path, exp_name, latent_spec, img_size, train_test='train', batch=batch,
+                                     both_continue=True, save=True, FID=FID, IS=IS, psnr=psnr,
+                                     is_partial_rand_class=is_partial_rand_class, is_E1=is_E1,
+                                     is_zvar_sim_loss=is_zvar_sim_loss)
+            sample_real_distribution(net, path, exp_name, latent_spec, img_size, train_test='test', batch=batch,
+                                     both_continue=True, save=True, FID=FID, IS=IS, psnr=psnr,
+                                     is_partial_rand_class=is_partial_rand_class, is_E1=is_E1,
+                                     is_zvar_sim_loss=is_zvar_sim_loss)
+        else:
+            plot_samples(net, nb_epochs, path, exp_name, latent_spec, img_size, batch=batch, both_continue=True,
+                         save=save,
+                         FID=FID, IS=IS, psnr=psnr)
+
+    if all_prototype:
+        plot_prototype(net, exp_name, nb_class, latent_spec, device, train_loader, train_test='train',
+                       print_per_class=True, print_per_var=True,
+                       plot_traversal_struct=False, print_2d_projection=True,
+                       is_partial_rand_class=is_partial_rand_class, is_E1=is_E1)
+        plot_prototype(net, exp_name, nb_class, latent_spec, device, test_loader, train_test='test',
+                       print_per_class=True, print_per_var=True,
+                       plot_traversal_struct=False, print_2d_projection=True,
+                       is_partial_rand_class=is_partial_rand_class, is_E1=is_E1)
+
+    if copute_average_z_structural:
+        plot_average_z_structural(net_trained, train_loader, device, nb_class, latent_spec, exp_name,
+                                  train_test='train', both_continue=True,
+                                  is_partial_rand_class=is_partial_rand_class, is_E1=is_E1)
+        plot_average_z_structural(net_trained, test_loader, device, nb_class, latent_spec, exp_name,
+                                  train_test='test', both_continue=True,
+                                  is_partial_rand_class=is_partial_rand_class, is_E1=is_E1)
+
+    if real_distribution:
+        real_distribution_model(net, path, exp_name, train_loader, latent_spec, train_test='train',
+                                is_both_continue=True, is_partial_rand_class=is_partial_rand_class, is_E1=is_E1,
+                                plot_gaussian=plot_gaussian, save=save)
+        real_distribution_model(net, path, exp_name, test_loader, latent_spec, train_test='test',
+                                is_both_continue=True, is_partial_rand_class=is_partial_rand_class, is_E1=is_E1,
+                                plot_gaussian=plot_gaussian, save=save)
+
+    return
+
+
+def run(expe_list, net, E1_VAE, latent_spec, train_loader, test_loader, is_E1, is_partial_rand_class,
+        z_component_traversal):
+    path = 'checkpoints/'
+    path_scores = 'checkpoints_scores'
+    for expe in expe_list:
+        print(expe)
+        exp_name = expe
+        net_trained, _, nb_epochs = get_checkpoints(net, path, exp_name)
+        # # scores and losses:
+        visualize(net, net_trained, nb_class, exp_name, device, latent_spec, train_loader, test_loader,
+                  path_scores=path_scores,
+                  is_partial_rand_class=is_partial_rand_class, save=True, scores_and_losses=True, is_E1=is_E1,
+                  losses=True)
+        # sample:
+        visualize(net, net_trained, nb_class, exp_name, device, latent_spec, train_loader, test_loader,
+                  nb_epochs=nb_epochs,
+                  path=path,
+                  save=True, batch=batch, plot_sample=True, FID=False, IS=False, psnr=False)
+        # reconstruction:
+        visualize(net, net_trained, nb_class, exp_name, device, latent_spec, train_loader, test_loader,
+                  nb_epochs=nb_epochs,
+                  batch=batch, img_size=img_size, is_partial_rand_class=is_partial_rand_class,
+                  save=True, is_E1=is_E1, reconstruction=True)
+        # Traversal:
+        visualize(net, net_trained, nb_class, exp_name, device, latent_spec, train_loader, test_loader,
+                  nb_epochs=nb_epochs,
+                  batch=batch, img_size=img_size, path=path, is_partial_rand_class=is_partial_rand_class,
+                  is_E1=is_E1, z_component_traversal=z_component_traversal, indx_image=indx_image,
+                  plot_img_traversal=True)
+        # prototype
+        visualize(net, net_trained, nb_class, exp_name, device, latent_spec, train_loader, test_loader,
+                  copute_average_z_structural=True, is_partial_rand_class=is_partial_rand_class, save=True,
+                  is_E1=is_E1)
+        # projection 2d:
+        visualize(net, net_trained, nb_class, exp_name, device, latent_spec, train_loader, test_loader,
+                  all_prototype=True, is_partial_rand_class=is_partial_rand_class, save=True, is_E1=is_E1)
+        # gaussian real distribution:
+        if E1_VAE:
+            visualize(net, net_trained, nb_class, exp_name, device, latent_spec, train_loader, test_loader, path=path,
+                      save=True,
+                      is_partial_rand_class=is_partial_rand_class, is_E1=is_E1, real_distribution=True,
+                      plot_gaussian=True)
+            # sample from real distribution:
+            visualize(net, net_trained, nb_class, exp_name, device, latent_spec, train_loader, test_loader,
+                      plot_sample=True,
+                      sample_real=True, batch=batch, path=path,
+                      save=True, FID=False, IS=False, psnr=False, is_partial_rand_class=is_partial_rand_class,
+                      is_E1=is_E1)
+        # traversal image with struct fixe and var fixe:
+        visualize(net, net_trained, nb_class, exp_name, device, latent_spec, train_loader, test_loader, batch=batch,
+                  path=path, real_img=False, size_struct=10, size_var=8,
+                  is_partial_rand_class=is_partial_rand_class, save=True, is_E1=is_E1,
+                  plot_img_traversal=True, both_latent_traversal=True)
+
+
+def network(z_struct_size, big_kernel_size, stride_size, classif_layer_size, add_classification_layer,
+            hidden_filters_1, hidden_filters_2, hidden_filters_3, BK_in_first_layer, two_conv_layer, three_conv_layer,
+            BK_in_second_layer, BK_in_third_layer):
+    model = Custom_CNN_BK(z_struct_size=z_struct_size,
+                          big_kernel_size=big_kernel_size,
+                          stride_size=stride_size,
+                          classif_layer_size=classif_layer_size,
+                          add_classification_layer=add_classification_layer,
+                          hidden_filters_1=hidden_filters_1,
+                          hidden_filters_2=hidden_filters_2,
+                          hidden_filters_3=hidden_filters_3,
+                          BK_in_first_layer=BK_in_first_layer,
+                          two_conv_layer=two_conv_layer,
+                          three_conv_layer=three_conv_layer,
+                          BK_in_second_layer=BK_in_second_layer,
+                          BK_in_third_layer=BK_in_third_layer)
+    return model

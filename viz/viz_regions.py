@@ -31,8 +31,7 @@ def get_activation_values(net, exp_name, images):
     out, _ = net(images)
 
     # concatenate all the outputs we saved to get the the activations for each layer for the whole dataset
-    activations = {name: torch.cat(outputs, 0) for name, outputs in
-                   activations.items()}
+    activations = {name: torch.cat(outputs, 0) for name, outputs in activations.items()}
 
     np.save('regions_of_interest/activations/activations_' + exp_name + '.npy', activations)
 
@@ -120,16 +119,14 @@ def get_regions(net, activations, len_img_h, len_img_w, images, exp_name):
     return
 
 
-def visualize_regions(exp_name, net, len_img_h, len_img_w, plot_activation_value=False):
+def visualize_regions(exp_name, net, len_img_h, len_img_w, loader, plot_activation_value=False,
+                      plot_correlation_regions=False, percentage=10, nrow=8):
     # print(net)
 
     # load labels:
     labels = np.load('regions_of_interest/labels/labels.npy', allow_pickle=True)
     images = torch.tensor(np.load('regions_of_interest/images/images.npy', allow_pickle=True))
-
-    print('loader shape', images.shape)
-    # plt.hist(labels)
-    # plt.show()
+    print('images loaded with shape: {}'.format(images.shape))
 
     if not os.path.exists('regions_of_interest/activations/activations_' + exp_name + '.npy'):
         get_activation_values(net, exp_name, images)
@@ -183,7 +180,6 @@ def visualize_regions(exp_name, net, len_img_h, len_img_w, plot_activation_value
         activations.append(activation_layer4)
         activations_normalized.append(activation_layer4_normalized)
 
-
     th_layer = 0
     for name, m in net.named_modules():
         if type(m) == nn.Conv2d:
@@ -191,10 +187,10 @@ def visualize_regions(exp_name, net, len_img_h, len_img_w, plot_activation_value
             nb_filters = m.weight.data.clone().shape[0]
             print('Layer: {}, number of filter: {}'.format(name, nb_filters))
             list_filter = range(nb_filters)
-            visualize(regions[th_layer], activations[th_layer], activations_normalized[th_layer],
-                      labels, list_filter, net, layer_name, plot_activation_value)
+            visualize(exp_name, regions[th_layer], activations[th_layer], activations_normalized[th_layer],
+                      labels, list_filter, net, layer_name, plot_activation_value,
+                      plot_correlation_regions=plot_correlation_regions, percentage=percentage, nrow=nrow)
             th_layer += 1
-
     return
 
 
@@ -234,8 +230,8 @@ def get_last_regions_activation(exp_name):
     return region, activation, activation_normalized
 
 
-def visualize(regions, activation, activations_normalized, labels, list_filter, net, layer_name, plot_activation_value):
-
+def visualize(exp_name, regions, activation, activations_normalized, labels, list_filter, net, layer_name,
+              plot_activation_value, plot_correlation_regions=False, percentage=10, nrow=8):
     # parameters
     best = True
     worst = False
@@ -244,8 +240,8 @@ def visualize(regions, activation, activations_normalized, labels, list_filter, 
     plot_histogram = False
     details = False  # True
 
-    percentage = 1
-    nrow = 14
+    percentage = percentage
+    nrow = nrow
 
     # regions and activation of interest
     list_filter = list_filter
@@ -253,19 +249,37 @@ def visualize(regions, activation, activations_normalized, labels, list_filter, 
     activations = activation
     activations_normalized = activations_normalized
 
-    _, activation, _ = get_regions_interest_fct(regions,
-                                       labels,
-                                       activations,
-                                       activations_normalized,
-                                       details=details,
-                                       best=best,
-                                       worst=worst,
-                                       viz_mean_img=viz_mean_img,
-                                       viz_grid=viz_grid,
-                                       percentage=percentage,
-                                       list_filter=list_filter,
-                                       nrow=nrow,
-                                       plot_histogram=plot_histogram)
+    _, activation, _, reg = get_regions_interest_fct(regions,
+                                                     labels,
+                                                     activations,
+                                                     activations_normalized,
+                                                     details=details,
+                                                     best=best,
+                                                     worst=worst,
+                                                     viz_mean_img=viz_mean_img,
+                                                     viz_grid=viz_grid,
+                                                     percentage=percentage,
+                                                     list_filter=list_filter,
+                                                     nrow=nrow,
+                                                     plot_histogram=plot_histogram)
+
+    if plot_correlation_regions:
+        reg = np.array(reg)
+        reg = reg.reshape(reg.shape[0], reg.shape[-1]*reg.shape[-2])
+        cov_data = np.corrcoef(reg)
+        # compute score dispersion classes:
+        cov_data = np.array(cov_data)
+        # get triangle upper of matrix:
+        cov_data_triu = np.triu(cov_data, k=1)
+        # mean of nonzero values:
+        coef_mean_all_real = np.mean(cov_data_triu[np.nonzero(cov_data_triu)])
+
+        fig, ax = plt.subplots(figsize=(15, 10), facecolor='w', edgecolor='k')
+        ax.set(title=('Model: {}, covariance matrix mean: {}'.format(exp_name, coef_mean_all_real)))
+
+        img = ax.matshow(cov_data, cmap=plt.cm.rainbow)
+        plt.colorbar(img, ticks=[-1, 0, 1], fraction=0.045)
+        plt.show()
 
     if plot_activation_value:
         activation = np.array(activation)
@@ -305,7 +319,8 @@ def viz_filters(model, nrow, layer_name):
 
 
 def viz_region_im(exp_name, net, random_index=False, choice_label=None, label=None, nb_im=None, best_region=False,
-                  worst_regions=False, any_label=False, average_result=False, plot_activation_value=False):
+                  worst_regions=False, any_label=False, average_result=False, plot_activation_value=False,
+                  plot_correlation_regions=False, same_im=False, net_type=None):
     """
     :param plot_activation_value:
     :param average_result:
@@ -326,6 +341,11 @@ def viz_region_im(exp_name, net, random_index=False, choice_label=None, label=No
     # load activation model
     path_load_activation = 'regions_of_interest/MNIST_regions/activations_normalized_layer1_' + exp_name + '.npy'
     assert os.path.exists(path_load_activation), "Activation doesn't extracted, please run 'get_activation_values'"
+
+    if net_type =='Custom_CNN':
+        index_max = 4000
+        labels = labels[:index_max]
+        images = images[:index_max]
 
     region, activation, activation_normalized = get_last_regions_activation(exp_name)
     nb_filter = activation.shape[-1]
@@ -379,7 +399,10 @@ def viz_region_im(exp_name, net, random_index=False, choice_label=None, label=No
             if average_result:
                 regions_selected = np.expand_dims(np.mean(regions_selected, axis=0), axis=0)
         else:
-            index_selected = np.random.randint(0, index_len, nb_im)
+            if same_im:
+                index_selected = np.arange(nb_im)
+            else:
+                index_selected = np.random.randint(0, index_len, nb_im)
             regions_selected = region[index_selected]
             activation_values = activation[index_selected]
             activation_normalized_values = activation_normalized[index_selected]
@@ -421,7 +444,10 @@ def viz_region_im(exp_name, net, random_index=False, choice_label=None, label=No
             if average_result:
                 regions_selected = np.expand_dims(np.mean(regions_selected, axis=0), axis=0)
         else:
-            index_selected = np.random.randint(0, index_len, nb_im)
+            if same_im:
+                index_selected = np.arange(nb_im)
+            else:
+                index_selected = np.random.randint(0, index_len, nb_im)
             regions_selected = region[index_selected]
             activation_values = activation[index_selected]
             activation_normalized_values = activation_normalized[index_selected]
@@ -437,8 +463,8 @@ def viz_region_im(exp_name, net, random_index=False, choice_label=None, label=No
         # plot regions extracted:
         region = torch.tensor(regions_selected[i])
         region = region.reshape((len(regions_selected[i]), 1,
-                                                     region.shape[-2],
-                                                     region.shape[-1]))
+                                 region.shape[-2],
+                                 region.shape[-1]))
         if plot_activation_value:
             if average_result:
                 act = np.sum(np.abs(activation_values), axis=0)
@@ -462,6 +488,26 @@ def viz_region_im(exp_name, net, random_index=False, choice_label=None, label=No
         else:
             visTensor(regions_selected, ch=0, allkernels=False, nrow=8, save=False, path_save=None)
             plt.ioff()
+            plt.show()
+        if plot_correlation_regions:
+            if average_result:
+                reg = np.array(regions_selected)
+            else:
+                reg = np.array(regions_selected[i])
+            reg = reg.reshape(reg.shape[-3], reg.shape[-1] * reg.shape[-2])
+            cov_data = np.corrcoef(reg)
+            # compute score dispersion classes:
+            cov_data = np.array(cov_data)
+            # get triangle upper of matrix:
+            cov_data_triu = np.triu(cov_data, k=1)
+            # mean of nonzero values:
+            coef_mean_all_real = np.mean(cov_data_triu[np.nonzero(cov_data_triu)])
+
+            fig, ax = plt.subplots(figsize=(15, 10), facecolor='w', edgecolor='k')
+            ax.set(title=('Model: {}, covariance matrix mean: {}'.format(exp_name, coef_mean_all_real)))
+
+            img = ax.matshow(cov_data, cmap=plt.cm.rainbow)
+            plt.colorbar(img, ticks=[-1, 0, 1], fraction=0.045)
             plt.show()
 
     return

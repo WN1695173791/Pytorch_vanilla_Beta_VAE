@@ -5,17 +5,23 @@ import torch.nn.functional as F
 import os
 from torchvision import transforms
 import torchvision.datasets as datasets
+from pytorchtools import EarlyStopping
 
-from dataset.dataset_2 import get_dataloaders
+
+from dataset.dataset_2 import get_dataloaders, get_mnist_dataset
 from models.default_CNN import DefaultCNN
 from models.custom_CNN_BK import Custom_CNN_BK
 from models.custom_CNN import Custom_CNN
 from solver import gpu_config
 from tqdm import tqdm
 from scores_classifier import compute_scores
+from torch.optim.lr_scheduler import StepLR
+from visualizer_CNN import get_layer_zstruct_num, compute_z_struct
+from models.custom_CNN_BK import compute_ratio_batch
 
 
-def compute_scores_and_loss(net, train_loader, test_loader, device, train_loader_size, test_loader_size):
+def compute_scores_and_loss(net, train_loader, test_loader, device, train_loader_size, test_loader_size,
+                            net_type, nb_class):
     score_train, loss_train = compute_scores(net,
                                              train_loader,
                                              device,
@@ -24,9 +30,30 @@ def compute_scores_and_loss(net, train_loader, test_loader, device, train_loader
                                            test_loader,
                                            device,
                                            test_loader_size)
+    # compute ratio on all test set:
+    z_struct_representation_test, labels_batch_test = compute_z_struct(net,
+                                                                       'exp_name',
+                                                                       test_loader,
+                                                                       train_test='None',
+                                                                       net_type=net_type,
+                                                                       return_results=True)
+    ratio_test = compute_ratio_batch(z_struct_representation_test, labels_batch_test, nb_class)
+    # compute ratio on all train set:
+    z_struct_representation_train, labels_batch_train = compute_z_struct(net,
+                                                                         'exp_name',
+                                                                         train_loader,
+                                                                         train_test='None',
+                                                                         net_type=net_type,
+                                                                         return_results=True)
+    ratio_train = compute_ratio_batch(z_struct_representation_train, labels_batch_train, nb_class)
 
     scores = {'train': score_train, 'test': score_test}
-    losses = {'train': loss_train, 'test': loss_test}
+    losses = {'train_class': loss_train,
+              'test_class': loss_test,
+              'ratio_test_loss': ratio_test,
+              'ratio_train_loss': ratio_train,
+              'total_loss_train': loss_train + ratio_train,
+              'total_loss_test': loss_test + ratio_test}
 
     return scores, losses
 
@@ -43,6 +70,7 @@ class SolverClassifier(object):
         self.max_iter = args.max_iter
 
         # Custom CNN parameters:
+        self.lambda_classification = args.lambda_class
         self.add_z_struct_bottleneck = args.add_z_struct_bottleneck
         self.add_classification_layer = args.add_classification_layer
         self.z_struct_size = args.z_struct_size
@@ -58,8 +86,12 @@ class SolverClassifier(object):
         self.three_conv_layer = args.three_conv_layer
         self.BK_in_second_layer = args.BK_in_second_layer
         self.BK_in_third_layer = args.BK_in_third_layer
+        self.use_scheduler = args.use_scheduler
         # binary parameters:
         self.binary_z = args.binary_z
+        # ratio regularization:
+        self.ratio_reg = args.ratio_reg
+        self.lambda_ratio_reg = args.lambda_ratio_reg
 
         # dataset parameters:
         if args.dataset.lower() == 'mnist':
@@ -69,6 +101,11 @@ class SolverClassifier(object):
         else:
             raise NotImplementedError
         self.nb_pixels = self.img_size[1] * self.img_size[2]
+
+        # initialize the early_stopping object
+        # early stopping patience; how long to wait after last time validation loss improved.
+        self.patience = 10
+        self.early_stopping = EarlyStopping(patience=self.patience, verbose=True)
 
         # logger
         formatter = logging.Formatter('%(asc_time)s %(level_name)s - %(funcName)s: %(message)s', "%H:%M:%S")
@@ -82,23 +119,7 @@ class SolverClassifier(object):
         # load dataset:
         if args.dataset == 'mnist':
             self.valid_loader = 0
-            mnist_trainset = datasets.MNIST(root='../data/mnist',
-                                            train=True,
-                                            download=True,
-                                            transform=transforms.Compose([transforms.Resize(32),
-                                                                          transforms.ToTensor()]))
-            mnist_testset = datasets.MNIST(root='../data/mnist',
-                                           train=False,
-                                           download=True,
-                                           transform=transforms.Compose([transforms.Resize(32),
-                                                                         transforms.ToTensor()]))
-
-            self.train_loader = torch.utils.data.DataLoader(dataset=mnist_trainset,
-                                                       batch_size=self.batch_size,
-                                                       shuffle=True)
-            self.test_loader = torch.utils.data.DataLoader(dataset=mnist_testset,
-                                                      batch_size=self.batch_size,
-                                                      shuffle=False)
+            self.train_loader, self.test_loader = get_mnist_dataset(batch_size=self.batch_size)
         else:
             self.train_loader, self.valid_loader, self.test_loader = get_dataloaders(args.dataset,
                                                                                      batch_size=self.batch_size,
@@ -157,9 +178,29 @@ class SolverClassifier(object):
         num_params = sum(p.numel() for p in net.parameters() if p.requires_grad)
         print('The number of parameters of model is', num_params)
 
+        # get layer num to extract z_struct:
+        if self.ratio_reg:
+            self.z_struct_out = True
+            self.z_struct_layer_num = get_layer_zstruct_num(net, self.net_type)
+        else:
+            self.z_struct_out = False
+            self.z_struct_layer_num = None
+
         # config gpu:
         self.net, self.device = gpu_config(net)
         self.optimizer = optimizer.Adam(self.net.parameters(), lr=self.lr)
+
+        # Decays the learning rate of each parameter group by gamma every step_size epochs.
+        # Notice that such decay can happen simultaneously with other changes to the learning rate
+        # from outside this scheduler. When last_epoch=-1, sets initial lr as lr.
+        """
+        Assuming optimizer uses lr = 0.05 for all groups:
+        with: scheduler = StepLR(optimizer, step_size=30, gamma=0.1)
+        lr = 0.005    if 30 <= epoch < 60
+        lr = 0.0005   if 60 <= epoch < 90
+        """
+        if self.use_scheduler:
+            self.scheduler = StepLR(self.optimizer, step_size=30, gamma=0.1)
 
         if 'parallel' in str(type(self.net)):
             self.net = self.net.module
@@ -181,10 +222,13 @@ class SolverClassifier(object):
             self.checkpoint_scores = {'iter': [],
                                       'epochs': [],
                                       'train_score': [],
-                                      'train_loss': [],
+                                      'train_loss_class': [],
                                       'test_score': [],
-                                      'test_loss': []
-                                      }
+                                      'test_loss_class': [],
+                                      'ratio_train_loss': [],
+                                      'ratio_test_loss': [],
+                                      'total_loss_train': [],
+                                      'total_loss_test': []}
             with open(self.file_path_checkpoint_scores, mode='wb+') as f:
                 torch.save(self.checkpoint_scores, f)
 
@@ -199,6 +243,7 @@ class SolverClassifier(object):
         self.Total_loss = 0
         self.scores = 0
         self.losses = 0
+        self.ratio = 0
 
     def train(self):
         self.net_mode(train=True)
@@ -216,17 +261,26 @@ class SolverClassifier(object):
                 data = data.to(self.device)  # Variable(data.to(self.device))
                 labels = labels.to(self.device)  # Variable(labels.to(self.device))
 
-                prediction, _ = self.net(data)
-
+                prediction, _, ratio = self.net(data,
+                                                labels=labels,
+                                                nb_class=self.nb_class,
+                                                use_ratio=self.ratio_reg,
+                                                z_struct_out=self.z_struct_out,
+                                                z_struct_layer_num=self.z_struct_layer_num)
                 # classification loss
                 # averaged over each loss element in the batch
                 self.Classification_loss = F.nll_loss(prediction, labels)
 
-                self.Total_loss = self.Classification_loss
+                self.Classification_loss = self.lambda_classification * self.Classification_loss
+                self.ratio = ratio * self.lambda_ratio_reg
+
+                self.Total_loss = self.Classification_loss + self.ratio
                 # backpropagation loss
                 self.optimizer.zero_grad()
                 self.Total_loss.backward()
                 self.optimizer.step()
+                if self.use_scheduler:
+                    self.scheduler.step()
 
             # save step
             self.save_checkpoint('last')
@@ -237,18 +291,32 @@ class SolverClassifier(object):
                                                                self.test_loader,
                                                                self.device,
                                                                self.train_loader_size,
-                                                               self.test_loader_size)
+                                                               self.test_loader_size,
+                                                               self.net_type,
+                                                               self.nb_class)
+            # early_stopping needs the validation loss to check if it has decresed,
+            # and if it has, it will make a checkpoint of the current model
+            self.early_stopping(self.losses['total_loss_test'], self.net)
 
             self.save_checkpoint_scores_loss()
             self.net_mode(train=True)
 
             print_bar.write('[Save Checkpoint] epoch: [{:.1f}], Train score:{:.5f}, Test score:{:.5f}, '
-                            'train loss:{:.5f}, test loss:{:.5f}'.format(self.epochs,
-                                                                         self.scores['train'],
-                                                                         self.scores['test'],
-                                                                         self.losses['train'],
-                                                                         self.losses['test']))
-
+                            'train loss:{:.5f}, test loss:{:.5f}, ratio_train_loss:{:.5f},'
+                            'ratio_test_loss:{:.5f}, total_loss_train:{:.5f},'
+                            'total_loss_test:{:.5f}, '.format(self.epochs,
+                                                              self.scores['train'],
+                                                              self.scores['test'],
+                                                              self.losses['train_class'],
+                                                              self.losses['test_class'],
+                                                              self.losses['ratio_train_loss'],
+                                                              self.losses['ratio_test_loss'],
+                                                              self.losses['total_loss_train'],
+                                                              self.losses['total_loss_test']))
+            if self.early_stopping.early_stop:
+                print("Early stopping")
+                out = True
+                break
             if self.epochs >= self.max_iter:
                 out = True
                 break
@@ -274,8 +342,12 @@ class SolverClassifier(object):
         self.checkpoint_scores['train_score'].append(self.scores['train'])
         self.checkpoint_scores['test_score'].append(self.scores['test'])
         # losses
-        self.checkpoint_scores['train_loss'].append(self.losses['train'])
-        self.checkpoint_scores['test_loss'].append(self.losses['test'])
+        self.checkpoint_scores['train_loss_class'].append(self.losses['train_class'])
+        self.checkpoint_scores['test_loss_class'].append(self.losses['test_class'])
+        self.checkpoint_scores['ratio_train_loss'].append(self.losses['ratio_train_loss'])
+        self.checkpoint_scores['ratio_test_loss'].append(self.losses['ratio_test_loss'])
+        self.checkpoint_scores['total_loss_train'].append(self.losses['total_loss_train'])
+        self.checkpoint_scores['total_loss_test'].append(self.losses['total_loss_test'])
 
         with open(self.file_path_checkpoint_scores, mode='wb+') as f:
             torch.save(self.checkpoint_scores, f)
