@@ -14,7 +14,7 @@
 #BATCH --mail-type=ALL           
 #SBATCH --mail-user=julien.dejasmin@lis-lab.fr
 
-#SBATCH --array=1-60
+#SBATCH --array=1-65
 echo "$SLURM_ARRAY_TASK_ID"
 
 # nettoyage des modules charges en interactif et herites par defaut
