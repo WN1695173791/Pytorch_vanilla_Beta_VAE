@@ -204,7 +204,7 @@ class SolverClassifier(object):
         lr = 0.0005   if 60 <= epoch < 90
         """
         if self.use_scheduler:
-            self.scheduler = StepLR(self.optimizer, step_size=30, gamma=0.1)
+            self.scheduler = StepLR(self.optimizer, step_size=20, gamma=0.1)
 
         if 'parallel' in str(type(self.net)):
             self.net = self.net.module
