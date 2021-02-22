@@ -21,7 +21,7 @@ from models.custom_CNN_BK import compute_ratio_batch
 
 
 def compute_scores_and_loss(net, train_loader, test_loader, device, train_loader_size, test_loader_size,
-                            net_type, nb_class):
+                            net_type, nb_class, ratio_reg):
     score_train, loss_train = compute_scores(net,
                                              train_loader,
                                              device,
@@ -30,22 +30,26 @@ def compute_scores_and_loss(net, train_loader, test_loader, device, train_loader
                                            test_loader,
                                            device,
                                            test_loader_size)
-    # compute ratio on all test set:
-    z_struct_representation_test, labels_batch_test = compute_z_struct(net,
-                                                                       'exp_name',
-                                                                       test_loader,
-                                                                       train_test='None',
-                                                                       net_type=net_type,
-                                                                       return_results=True)
-    ratio_test = compute_ratio_batch(z_struct_representation_test, labels_batch_test, nb_class)
-    # compute ratio on all train set:
-    z_struct_representation_train, labels_batch_train = compute_z_struct(net,
-                                                                         'exp_name',
-                                                                         train_loader,
-                                                                         train_test='None',
-                                                                         net_type=net_type,
-                                                                         return_results=True)
-    ratio_train = compute_ratio_batch(z_struct_representation_train, labels_batch_train, nb_class)
+    if ratio_reg:
+        # compute ratio on all test set:
+        z_struct_representation_test, labels_batch_test = compute_z_struct(net,
+                                                                           'exp_name',
+                                                                           test_loader,
+                                                                           train_test='None',
+                                                                           net_type=net_type,
+                                                                           return_results=True)
+        ratio_test = compute_ratio_batch(z_struct_representation_test, labels_batch_test, nb_class)
+        # compute ratio on all train set:
+        z_struct_representation_train, labels_batch_train = compute_z_struct(net,
+                                                                             'exp_name',
+                                                                             train_loader,
+                                                                             train_test='None',
+                                                                             net_type=net_type,
+                                                                             return_results=True)
+        ratio_train = compute_ratio_batch(z_struct_representation_train, labels_batch_train, nb_class)
+    else:
+        ratio_test = 0
+        ratio_train = 0
 
     scores = {'train': score_train, 'test': score_test}
     losses = {'train_class': loss_train,
@@ -293,7 +297,8 @@ class SolverClassifier(object):
                                                                self.train_loader_size,
                                                                self.test_loader_size,
                                                                self.net_type,
-                                                               self.nb_class)
+                                                               self.nb_class,
+                                                               self.ratio_reg)
             # early_stopping needs the validation loss to check if it has decresed,
             # and if it has, it will make a checkpoint of the current model
             self.early_stopping(self.losses['total_loss_test'], self.net)
