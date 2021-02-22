@@ -6,7 +6,7 @@ from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
 from matplotlib import cm
 from sklearn.preprocessing import StandardScaler
-from torch_receptive_field import receptive_field
+# from torch_receptive_field import receptive_field
 from torchvision.utils import make_grid
 
 
@@ -860,8 +860,8 @@ def get_receptive_field(net, img_size):
     :param img_size:
     :return:
     """
-
-    receptive_field_dict = receptive_field(net, img_size, return_zstruct_RF=True)
+    receptive_field_dict = 0
+    # receptive_field_dict = receptive_field(net, img_size, return_zstruct_RF=True)
 
     return receptive_field_dict
 
