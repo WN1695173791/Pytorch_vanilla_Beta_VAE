@@ -1,11 +1,10 @@
 #!/bin/bash
-
 #SBATCH --job-name="mnist"       # Job Name
 #SBATCH --partition=gpu_p2             # partition name
 #SBATCH --qos=qos_gpu-t4             # for jean-zay
-#SBATCH --gres=gpu:2                # nombre de GPU a reserver
-#SBATCH --cpus-per-task=3          # nombre de coeurs CPU par tache (un quart du noeud ici)
-#SBATCH --time=04:00:00                  # time (DD-HH:MM)
+# #SBATCH --gres=gpu:2                # nombre de GPU a reserver
+# #SBATCH --cpus-per-task=3          # nombre de coeurs CPU par tache
+#SBATCH --time=01:00:00                  # time (DD-HH:MM)
 #SBATCH --output=mnist_%A_%a.out       # STDOUT
 #SBATCH --error="mnist_%A_%a.err"       # STDERR
 
@@ -15,7 +14,7 @@
 #BATCH --mail-type=ALL           
 #SBATCH --mail-user=julien.dejasmin@lis-lab.fr
 
-#SBATCH --array=1-57
+#SBATCH --array=1-6
 echo "$SLURM_ARRAY_TASK_ID"
 
 # nettoyage des modules charges en interactif et herites par defaut
@@ -27,7 +26,7 @@ module load pytorch-gpu/py3/1.6.0   # jean-zay
 # echo des commandes lancees
 set -x
 
-LINE=$(sed -n "$SLURM_ARRAY_TASK_ID"p parameters_combinations/mnist_expes.txt)
+LINE=$(sed -n "$SLURM_ARRAY_TASK_ID"p parameters_combinations/mnist_classifier_ratio.txt)
 echo $LINE
 
 python3 -u main.py $LINE
