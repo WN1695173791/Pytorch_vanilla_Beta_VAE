@@ -144,8 +144,8 @@ def compute_z_struct_representation_noised(net, exp_name, train_test=None, nb_re
                 z_struct_representation_noised[:, i] = std_z_struct_max[i] * torch.randn(
                     (z_struct_representation.shape[0])) \
                                                        + mean_z_struct[i]
-                pred, _ = net(z_struct_representation_noised, z_struct_prediction=True,
-                              z_struct_layer_num=z_struct_layer_num)
+                pred, _, _ = net(z_struct_representation_noised, z_struct_prediction=True,
+                                 z_struct_layer_num=z_struct_layer_num)
                 prediction.append(pred.detach().numpy())
             prediction_noised.append(np.mean(np.array(prediction), axis=0))
 
@@ -914,7 +914,7 @@ def ratio(exp_name, train_test=None, cat=None):
         variance_intra_class = np.square(z_struct_std_global_per_class)  # shape: (nb_class, len(z_struct))
         variance_intra_class_mean_components = np.mean(variance_intra_class, axis=0)  # shape: (len(z_struct))
         variance_inter_class = np.square(np.std(z_struct_mean_global_per_class, axis=0))  # shape: len(z_struct)
-        ratio_variance = variance_inter_class / variance_intra_class_mean_components   # shape: (len(z_struct))
+        ratio_variance = variance_intra_class_mean_components / variance_inter_class  # shape: (len(z_struct))
         ratio_variance_mean = np.mean(ratio_variance)
 
         print('Var intra class shape: ', variance_intra_class.shape, variance_intra_class_mean_components.shape)
@@ -941,15 +941,15 @@ def ratio(exp_name, train_test=None, cat=None):
         variance_intra_class_normalized = np.square(z_struct_std_global_per_class_normalized)
         variance_intra_class_normalized_mean_components = np.mean(variance_intra_class_normalized, axis=0)
         variance_inter_class_normalized = np.square(np.std(z_struct_mean_global_per_class_normalized, axis=0))
-        ratio_variance_normalized = variance_inter_class_normalized / variance_intra_class_normalized_mean_components
+        ratio_variance_normalized = variance_intra_class_normalized_mean_components / variance_inter_class_normalized
         ratio_variance_normalized_mean = np.mean(ratio_variance_normalized)
 
         np.save(path_save_ratio_variance, np.mean(ratio_variance_mean))
     else:
-        ratio_variance = np.load(path_save_ratio_variance, allow_pickle=True)
-        print('ratio (Var intra / Var inter) for model {}: {}'.format(exp_name, ratio_variance))
+        ratio_variance_mean = np.load(path_save_ratio_variance, allow_pickle=True)
+        print('ratio (Var intra / Var inter) for model {}: {}'.format(exp_name, ratio_variance_mean))
 
-    return ratio_variance
+    return ratio_variance_mean
 
 
 def get_filter_id(net, exp_name):

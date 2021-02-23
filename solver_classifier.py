@@ -6,6 +6,7 @@ import os
 from torchvision import transforms
 import torchvision.datasets as datasets
 from pytorchtools import EarlyStopping
+from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 
 from dataset.dataset_2 import get_dataloaders, get_mnist_dataset
@@ -198,13 +199,17 @@ class SolverClassifier(object):
         # Notice that such decay can happen simultaneously with other changes to the learning rate
         # from outside this scheduler. When last_epoch=-1, sets initial lr as lr.
         """
-        Assuming optimizer uses lr = 0.05 for all groups:
-        with: scheduler = StepLR(optimizer, step_size=30, gamma=0.1)
-        lr = 0.005    if 30 <= epoch < 60
-        lr = 0.0005   if 60 <= epoch < 90
+        mode:  lr will be reduced when the quantity monitored has stopped decreasing.
+        factor: Factor by which the learning rate will be reduced.
+        patience: Number of epochs with no improvement after which learning rate will be reduced.
         """
         if self.use_scheduler:
-            self.scheduler = StepLR(self.optimizer, step_size=20, gamma=0.1)
+            self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer,
+                                                                        mode='min',
+                                                                        factor=0.2,
+                                                                        patience=20,
+                                                                        min_lr=1e-6,
+                                                                        verbose=True)
 
         if 'parallel' in str(type(self.net)):
             self.net = self.net.module

@@ -11,14 +11,258 @@ from visualizer import *
 from visualizer_CNN import *
 from viz.viz_regions import *
 
-# Selected model list:
-list_model_to_test = [# 'CNN_mnist_custom_3layer_5_82',  # bad variance z size: 20: 2.118
-                      # 'CNN_mnist_custom_3layer_5_58',  # bad variance z size: 50: 2.96
-                      # 'CNN_mnist_custom_3layer_5_51',  # best variance no BK: 4.79
-                      # "'CNN_mnist_custom_BK_2layer_bk1_20_37',  # bk1 + 32: 5.78
-                      'CNN_mnist_custom_BK_2layer_bk1_20_39']  # bk1 + 64 best_variance: 7.20
-                      # 'CNN_mnist_custom_BK_2layer_bk2_20_55']  # bk2 + 32: 5.71
-                      # 'CNN_mnist_custom_BK_2layer_bk2_20_64']  # bk2 + 64: 6.98
+
+# ___________________________________ begin extrraction parameters models ______________________________________________
+def run_exp_extraction_and_visualization_custom(path_parameter, line_begin, line_end, list_model):
+    # Read mnist_expes:
+    file = open(path_parameter, "r")
+    # 24 arguments to recuperate
+    arguments_1 = {}
+    list_model_selected_Custom_CNN_95_acc_z_struct_5 = []
+
+    path_save_95_acc_zstruct_5 = 'list_model_selected/list_model_selected_Custom_CNN_95_acc_z_struct_5.txt'
+    if os.path.exists(path_save_95_acc_zstruct_5):
+        with open(path_save_95_acc_zstruct_5, 'r') as filehandle:
+            for line in filehandle:
+                # remove linebreak which is the last character of the string
+                currentPlace = line[:-1]
+                # add item to the list
+                list_model_selected_Custom_CNN_95_acc_z_struct_5.append(currentPlace)
+
+    index = 0
+    key = 0
+    for line in file:
+        index += 1
+        if index < line_begin:
+            pass
+        elif line[0].isspace() or index > line_end:
+            break
+        elif line[0] != "-":
+            pass
+        else:
+            key += 1
+            arguments_1[key] = []
+            current_line = line.split("--")
+            for l in range(len(current_line)):
+                arg = current_line[l].split(' ')
+                arguments_1[key].append(arg)
+
+    for key in arguments_1:
+
+        args = arguments_1[key]
+        exp_name = args[23][-1].split('\n')[0]
+        z_struct_size = int(args[11][1])
+        stride_size = int(args[19][1])
+        classif_layer_size = int(args[13][1])
+        hidden_filters_1 = int(args[20][1])
+        hidden_filters_2 = int(args[21][1])
+        hidden_filters_3 = int(args[22][1])
+        if args[17][1] == 'True':
+            two_conv_layer = True
+        elif args[17][1] == 'False':
+            two_conv_layer = False
+        if args[18][1] == 'True':
+            three_conv_layer = True
+        elif args[18][1] == 'False':
+            three_conv_layer = False
+        if args[12][1] == 'True':
+            add_classification_layer = True
+        elif args[12][1] == 'False':
+            add_classification_layer = False
+
+        net = Custom_CNN(z_struct_size=z_struct_size,
+                         stride_size=stride_size,
+                         classif_layer_size=classif_layer_size,
+                         add_classification_layer=add_classification_layer,
+                         hidden_filters_1=hidden_filters_1,
+                         hidden_filters_2=hidden_filters_2,
+                         hidden_filters_3=hidden_filters_3,
+                         two_conv_layer=two_conv_layer,
+                         three_conv_layer=three_conv_layer)
+
+        # if exp_name in list_model_selected_Custom_CNN_95_acc_z_struct_5:
+        #     run_viz_expes(exp_name, net, net_type='Custom_CNN', cat='zstruct_5')
+        # if exp_name in list_model_selected_Custom_CNN_95_acc_z_struct_10:
+        #     run_viz_expes(exp_name, net, net_type='Custom_CNN', cat='zstruct_10')
+        # if exp_name in list_model_selected_Custom_CNN_95_acc_z_struct_15:
+        #     run_viz_expes(exp_name, net, net_type='Custom_CNN', cat='zstruct_15')
+        # if exp_name in list_model_selected_Custom_CNN_95_acc_z_struct_20:
+        #     run_viz_expes(exp_name, net, net_type='Custom_CNN', cat='zstruct_20')
+        # if exp_name in list_model_selected_Custom_CNN_95_acc_z_struct_30:
+        #     run_viz_expes(exp_name, net, net_type='Custom_CNN', cat='zstruct_30')
+        # if exp_name in list_model_selected_Custom_CNN_95_acc_z_struct_50:
+        #     run_viz_expes(exp_name, net, net_type='Custom_CNN', cat='zstruct_50')
+
+        # if exp_name in selected_analyse_20:
+        #     run_viz_expes(exp_name, net, net_type='Custom_CNN', cat='zstruct_20')
+        # if exp_name in selected_analyse_50:
+        #     run_viz_expes(exp_name, net, net_type='Custom_CNN', cat='zstruct_50')
+
+        if exp_name in list_model:
+            run_viz_expes(exp_name, net, net_type='Custom_CNN', cat='zstruct_20')
+            visualize_regions_of_interest(exp_name, net, net_type='Custom_CNN')
+
+        # # save list models:
+        # if z_struct_size == 5:
+        #     if not os.path.exists(path_save_95_acc_zstruct_5):
+        #         if add_classification_layer:
+        #             model_name = selection(net, exp_name)
+        #             if model_name is not None:
+        #                 list_model_selected_Custom_CNN_95_acc_z_struct_5.append(model_name)
+
+    # if not os.path.exists(path_save_95_acc_zstruct_5):
+    #     # save list models:
+    #     with open(path_save_95_acc_zstruct_5, 'w') as filehandle:
+    #         for listitem in list_model_selected_Custom_CNN_95_acc_z_struct_5:
+    #             filehandle.write('%s\n' % listitem)
+
+    file.close()
+
+
+def run_exp_extraction_and_visualization_custom_BK(path_parameter, line_begin, line_end, list_model, is_ratio=False):
+    file = open(path_parameter, "r")
+    # 28 arguments to recuperate
+    arguments_2 = {}
+    list_model_selected_Custom_CNN_BK_95_acc_z_struct_5 = []
+    path_save = 'list_model_selected/list_model_selected_Custom_CNN_BK_95_acc.txt'
+
+    path_save_BK_95_acc_zstruct_5 = 'list_model_selected/list_model_selected_Custom_CNN_BK_95_acc_z_struct_5.txt'
+    if os.path.exists(path_save_BK_95_acc_zstruct_5):
+        with open(path_save_BK_95_acc_zstruct_5, 'r') as filehandle:
+            for line in filehandle:
+                # remove linebreak which is the last character of the string
+                currentPlace = line[:-1]
+                # add item to the list
+                list_model_selected_Custom_CNN_BK_95_acc_z_struct_5.append(currentPlace)
+
+    index = 0
+    key = 0
+    for line in file:
+        index += 1
+        if index < line_begin:
+            pass
+        elif line[0].isspace() or index > line_end:
+            break
+        elif line[0] != "-":
+            pass
+        else:
+            key += 1
+            arguments_2[key] = []
+            current_line = line.split("--")
+            for l in range(len(current_line)):
+                arg = current_line[l].split(' ')
+                arguments_2[key].append(arg)
+
+    for key in arguments_2:
+
+        args = arguments_2[key]
+        batch_size = args[4]
+
+        if is_ratio:
+            lambda_ratio = args[28][1]
+            lambda_class = args[29][1]
+            exp_name = args[30][-1].split('\n')[0]
+            ratio_reg = True
+        else:
+            exp_name = args[27][-1].split('\n')[0]
+            ratio_reg = False
+
+        z_struct_size = int(args[11][1])
+        stride_size = int(args[23][1])
+        classif_layer_size = int(args[13][1])
+        hidden_filters_1 = int(args[24][1])
+        hidden_filters_2 = int(args[25][1])
+        hidden_filters_3 = int(args[26][1])
+        if args[18][1] == 'True':
+            two_conv_layer = True
+        elif args[18][1] == 'False':
+            two_conv_layer = False
+        if args[19][1] == 'True':
+            three_conv_layer = True
+        elif args[19][1] == 'False':
+            three_conv_layer = False
+        if args[12][1] == 'True':
+            add_classification_layer = True
+        elif args[12][1] == 'False':
+            add_classification_layer = False
+        if args[20][1] == 'True':
+            BK_in_first_layer = True
+        elif args[20][1] == 'False':
+            BK_in_first_layer = False
+        if args[21][1] == 'True':
+            BK_in_second_layer = True
+        elif args[21][1] == 'False':
+            BK_in_second_layer = False
+        if args[22][1] == 'True':
+            BK_in_third_layer = True
+        elif args[22][1] == 'False':
+            BK_in_third_layer = False
+
+        big_kernel_size = int(args[17][1])
+
+        if two_conv_layer:
+            zstruct_size = str(hidden_filters_2)
+        elif three_conv_layer:
+            zstruct_size = str(hidden_filters_3)
+        else:
+            zstruct_size = str(hidden_filters_1)
+        cat = 'zstruct_' + zstruct_size
+
+        net = Custom_CNN_BK(z_struct_size=z_struct_size,
+                            big_kernel_size=big_kernel_size,
+                            stride_size=stride_size,
+                            classif_layer_size=classif_layer_size,
+                            add_classification_layer=add_classification_layer,
+                            hidden_filters_1=hidden_filters_1,
+                            hidden_filters_2=hidden_filters_2,
+                            hidden_filters_3=hidden_filters_3,
+                            BK_in_first_layer=BK_in_first_layer,
+                            two_conv_layer=two_conv_layer,
+                            three_conv_layer=three_conv_layer,
+                            BK_in_second_layer=BK_in_second_layer,
+                            BK_in_third_layer=BK_in_third_layer,
+                            Binary_z=False)
+
+        # if exp_name in list_model_selected_Custom_CNN_BK_95_acc_z_struct_5:
+        #     run_viz_expes(exp_name, net, net_type='Custom_CNN_BK', cat='zstruct_5')
+        # if exp_name in list_model_selected_Custom_CNN_BK_95_acc_z_struct_10:
+        #     run_viz_expes(exp_name, net, net_type='Custom_CNN_BK', cat='zstruct_10')
+        # if exp_name in list_model_selected_Custom_CNN_BK_95_acc_z_struct_15:
+        #     run_viz_expes(exp_name, net, net_type='Custom_CNN_BK', cat='zstruct_15')
+        # if exp_name in list_model_selected_Custom_CNN_BK_95_acc_z_struct_20:
+        #     run_viz_expes(exp_name, net, net_type='Custom_CNN_BK', cat='zstruct_20')
+        # if exp_name in list_model_selected_Custom_CNN_BK_95_acc_z_struct_30:
+        #     run_viz_expes(exp_name, net, net_type='Custom_CNN_BK', cat='zstruct_30')
+        # if exp_name in list_model_selected_Custom_CNN_BK_95_acc_z_struct_50:
+        #     run_viz_expes(exp_name, net, net_type='Custom_CNN_BK', cat='zstruct_50')
+
+        # if exp_name in selected_analyse_20:
+        #     run_viz_expes(exp_name, net, net_type='Custom_CNN_BK', cat='zstruct_20')
+        # if exp_name in selected_analyse_50:
+        #     run_viz_expes(exp_name, net, net_type='Custom_CNN_BK', cat='zstruct_50')
+
+        if exp_name in list_model:
+            run_viz_expes(exp_name, net, net_type='Custom_CNN_BK', cat=cat, ratio_reg=ratio_reg)
+            visualize_regions_of_interest(exp_name, net, net_type='Custom_CNN_BK')
+
+        # save list models:
+        # if z_struct_size == 5:
+        #     if not os.path.exists(path_save_BK_95_acc_zstruct_5):
+        #         if add_classification_layer:
+        #             model_name = selection(net, exp_name)
+        #             if model_name is not None:
+        #                 list_model_selected_Custom_CNN_BK_95_acc_z_struct_5.append(model_name)
+
+    # if not os.path.exists(path_save_BK_95_acc_zstruct_5):
+    #     # save list models:
+    #     with open(path_save_BK_95_acc_zstruct_5, 'w') as filehandle:
+    #         for listitem in list_model_selected_Custom_CNN_BK_95_acc_z_struct_5:
+    #             filehandle.write('%s\n' % listitem)
+
+    file.close()
+
+
+# ______________________________________end extrraction parameters models ______________________________________________
 
 
 def run_score(exp_name, net):
@@ -32,37 +276,38 @@ def run_score(exp_name, net):
     return
 
 
-def run_viz_expes(exp_name, net, net_type=None, cat=None):
-    print(exp_name)
+def run_viz_expes(exp_name, net, net_type=None, cat=None, ratio_reg=False):
+    print(exp_name, 'run viz expes')
     path = 'checkpoints_CNN/'
     path_scores = 'checkpoint_scores_CNN'
     net_trained, _, nb_epochs = get_checkpoints(net, path, exp_name)
-    print(net)
+    # print(net)
     # scores and losses:
-    # plot_scores_and_loss_CNN(net_trained, exp_name, path_scores, save=True)
+    plot_scores_and_loss_CNN(net_trained, exp_name, path_scores, is_ratio=ratio_reg, save=True)
 
     train_test = 'test'
     loader = test_loader
 
     # compute features:
-    # compute_z_struct(net_trained, exp_name, loader, train_test=train_test, net_type=net_type)
-    # compute_z_struct_representation_noised(net, exp_name, train_test=train_test, nb_repeat=10, nb_class=nb_class,
-    #                                        net_type=net_type)
-    # get_z_struct_per_class(exp_name, train_test=train_test, nb_class=nb_class)
-    # get_average_z_struct_per_classes(exp_name=exp_name, train_test=train_test)
-    # get_prediction_per_classes(exp_name, train_test=train_test)
-    # get_prediction_noised_per_class(exp_name, train_test=train_test)
-    # compute_all_score_acc(exp_name, train_test=train_test)
-    # compute_mean_std_prediction(exp_name, train_test=train_test)
+    compute_z_struct(net_trained, exp_name, loader, train_test=train_test, net_type=net_type)
+    compute_z_struct_representation_noised(net, exp_name, train_test=train_test, nb_repeat=10, nb_class=nb_class,
+                                           net_type=net_type)
+    get_z_struct_per_class(exp_name, train_test=train_test, nb_class=nb_class)
+    get_average_z_struct_per_classes(exp_name=exp_name, train_test=train_test)
+    get_prediction_per_classes(exp_name, train_test=train_test)
+    get_prediction_noised_per_class(exp_name, train_test=train_test)
+    compute_all_score_acc(exp_name, train_test=train_test)
+    compute_mean_std_prediction(exp_name, train_test=train_test)
 
     # receptive_field = get_receptive_field(net_trained, img_size, net_type=net_type)
 
     # plot:
     ratio_variance = ratio(exp_name, train_test=train_test, cat=cat)
+    print(ratio_variance)
     # score = correlation_filters(net_trained, exp_name, train_test=train_test, ch=nc, vis_filters=False, plot_fig=True,
     #                             cat=cat)
     # score_corr_class = dispersion_classes(exp_name, train_test=train_test, plot_fig=True, cat=cat)
-    plot_2d_projection_z_struct(nb_class, exp_name, train_test=train_test, ratio=ratio_variance)
+    # plot_2d_projection_z_struct(nb_class, exp_name, train_test=train_test, ratio=ratio_variance)
 
     # plot_acc_bit_noised_per_class(exp_name,
     #                               train_test=train_test,
@@ -78,7 +323,7 @@ def run_viz_expes(exp_name, net, net_type=None, cat=None):
 
 
 def visualize_regions_of_interest(exp_name, net, net_type=None):
-    print(exp_name)
+    print(exp_name, 'visualize regions of interrest')
     path = 'checkpoints_CNN/'
     net_trained, _, nb_epochs = get_checkpoints(net, path, exp_name)
     loader = test_loader
@@ -98,20 +343,20 @@ def visualize_regions_of_interest(exp_name, net, net_type=None):
     plot_activation_value = True  # if we plot diagram with bar to see activation value in order to see the most active
     plot_correlation_regions = True  # if plot correlation between region extracted to see redundancy
 
-    viz_region_im(exp_name,
-                  net_trained,
-                  random_index=random_index,
-                  choice_label=choice_label,
-                  label=label,
-                  nb_im=nb_im,
-                  best_region=best_region,
-                  worst_regions=worst_regions,
-                  any_label=any_label,
-                  average_result=average_result,
-                  plot_activation_value=plot_activation_value,
-                  plot_correlation_regions=plot_correlation_regions,
-                  same_im=same_im,
-                  net_type=net_type)
+    # viz_region_im(exp_name,
+    #               net_trained,
+    #               random_index=random_index,
+    #               choice_label=choice_label,
+    #               label=label,
+    #               nb_im=nb_im,
+    #               best_region=best_region,
+    #               worst_regions=worst_regions,
+    #               any_label=any_label,
+    #               average_result=average_result,
+    #               plot_activation_value=plot_activation_value,
+    #               plot_correlation_regions=plot_correlation_regions,
+    #               same_im=same_im,
+    #               net_type=net_type)
     return
 
 
@@ -231,8 +476,6 @@ def selection(net, exp_name):
 # parameters:
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 batch = torch.load('data/batch_mnist.pt')
-
-# download mnist dataset: _________________________________________________________________________________
 batch_size = 64
 _, test_loader = get_mnist_dataset(batch_size=batch_size)
 
@@ -241,9 +484,9 @@ if not os.path.exists(path_image_save):
     _, test_loader = get_mnist_dataset(batch_size=batch_size)
     dataiter_test = iter(test_loader)
     images_test, label_test = dataiter_test.next()
-    
+
     print('load mnist dataset test with images shape: {}', images_test.shape)
-    
+
     np.save('regions_of_interest/labels/labels.npy', label_test)
     np.save(path_image_save, images_test)
 else:
@@ -275,524 +518,6 @@ if os.path.exists(path_select_model_analyse_20):
 path_select_model_analyse_50 = 'list_model_selected/criterion_select_for_analyse_50.npy'
 if os.path.exists(path_select_model_analyse_50):
     selected_analyse_50 = np.load(path_select_model_analyse_50)
-
-# Read mnist_expes:
-i = 0
-f = open("parameters_combinations/mnist_classifier_expes.txt", "r")
-# 24 arguments to recuperate
-arguments_1 = {}
-list_model_selected_Custom_CNN_95_acc_z_struct_5 = []
-list_model_selected_Custom_CNN_95_acc_z_struct_10 = []
-list_model_selected_Custom_CNN_95_acc_z_struct_15 = []
-list_model_selected_Custom_CNN_95_acc_z_struct_20 = []
-list_model_selected_Custom_CNN_95_acc_z_struct_30 = []
-list_model_selected_Custom_CNN_95_acc_z_struct_50 = []
-
-path_save_95_acc_zstruct_5 = 'list_model_selected/list_model_selected_Custom_CNN_95_acc_z_struct_5.txt'
-if os.path.exists(path_save_95_acc_zstruct_5):
-    with open(path_save_95_acc_zstruct_5, 'r') as filehandle:
-        for line in filehandle:
-            # remove linebreak which is the last character of the string
-            currentPlace = line[:-1]
-            # add item to the list
-            list_model_selected_Custom_CNN_95_acc_z_struct_5.append(currentPlace)
-
-path_save_95_acc_zstruct_10 = 'list_model_selected/list_model_selected_Custom_CNN_95_acc_z_struct_10.txt'
-if os.path.exists(path_save_95_acc_zstruct_10):
-    with open(path_save_95_acc_zstruct_10, 'r') as filehandle:
-        for line in filehandle:
-            # remove linebreak which is the last character of the string
-            currentPlace = line[:-1]
-            # add item to the list
-            list_model_selected_Custom_CNN_95_acc_z_struct_10.append(currentPlace)
-
-path_save_95_acc_zstruct_15 = 'list_model_selected/list_model_selected_Custom_CNN_95_acc_z_struct_15.txt'
-if os.path.exists(path_save_95_acc_zstruct_15):
-    with open(path_save_95_acc_zstruct_15, 'r') as filehandle:
-        for line in filehandle:
-            # remove linebreak which is the last character of the string
-            currentPlace = line[:-1]
-            # add item to the list
-            list_model_selected_Custom_CNN_95_acc_z_struct_15.append(currentPlace)
-
-path_save_95_acc_zstruct_20 = 'list_model_selected/list_model_selected_Custom_CNN_95_acc_z_struct_20.txt'
-if os.path.exists(path_save_95_acc_zstruct_20):
-    with open(path_save_95_acc_zstruct_20, 'r') as filehandle:
-        for line in filehandle:
-            # remove linebreak which is the last character of the string
-            currentPlace = line[:-1]
-            # add item to the list
-            list_model_selected_Custom_CNN_95_acc_z_struct_20.append(currentPlace)
-
-path_save_95_acc_zstruct_30 = 'list_model_selected/list_model_selected_Custom_CNN_95_acc_z_struct_30.txt'
-if os.path.exists(path_save_95_acc_zstruct_30):
-    with open(path_save_95_acc_zstruct_30, 'r') as filehandle:
-        for line in filehandle:
-            # remove linebreak which is the last character of the string
-            currentPlace = line[:-1]
-            # add item to the list
-            list_model_selected_Custom_CNN_95_acc_z_struct_30.append(currentPlace)
-
-path_save_95_acc_zstruct_50 = 'list_model_selected/list_model_selected_Custom_CNN_95_acc_z_struct_50.txt'
-if os.path.exists(path_save_95_acc_zstruct_50):
-    with open(path_save_95_acc_zstruct_50, 'r') as filehandle:
-        for line in filehandle:
-            # remove linebreak which is the last character of the string
-            currentPlace = line[:-1]
-            # add item to the list
-            list_model_selected_Custom_CNN_95_acc_z_struct_50.append(currentPlace)
-for x in f:
-    i += 1
-    if i < 16:
-        pass
-    elif x[0].isspace():
-        break
-    elif x[0] != "-":
-        pass
-    else:
-        arguments_1[i] = []
-        line = x.split("--")
-        for l in range(len(line)):
-            arg = line[l].split(' ')
-            arguments_1[i].append(arg)
-
-for key in arguments_1:
-
-    args = arguments_1[key]
-    exp_name = args[23][-1].split('\n')[0]
-    z_struct_size = int(args[11][1])
-    stride_size = int(args[19][1])
-    classif_layer_size = int(args[13][1])
-    hidden_filters_1 = int(args[20][1])
-    hidden_filters_2 = int(args[21][1])
-    hidden_filters_3 = int(args[22][1])
-    if args[17][1] == 'True':
-        two_conv_layer = True
-    elif args[17][1] == 'False':
-        two_conv_layer = False
-    if args[18][1] == 'True':
-        three_conv_layer = True
-    elif args[18][1] == 'False':
-        three_conv_layer = False
-    if args[12][1] == 'True':
-        add_classification_layer = True
-    elif args[12][1] == 'False':
-        add_classification_layer = False
-
-    net = Custom_CNN(z_struct_size=z_struct_size,
-                     stride_size=stride_size,
-                     classif_layer_size=classif_layer_size,
-                     add_classification_layer=add_classification_layer,
-                     hidden_filters_1=hidden_filters_1,
-                     hidden_filters_2=hidden_filters_2,
-                     hidden_filters_3=hidden_filters_3,
-                     two_conv_layer=two_conv_layer,
-                     three_conv_layer=three_conv_layer)
-
-    # if exp_name in list_model_selected_Custom_CNN_95_acc_z_struct_5:
-    #     run_viz_expes(exp_name, net, net_type='Custom_CNN', cat='zstruct_5')
-    # if exp_name in list_model_selected_Custom_CNN_95_acc_z_struct_10:
-    #     run_viz_expes(exp_name, net, net_type='Custom_CNN', cat='zstruct_10')
-    # if exp_name in list_model_selected_Custom_CNN_95_acc_z_struct_15:
-    #     run_viz_expes(exp_name, net, net_type='Custom_CNN', cat='zstruct_15')
-    # if exp_name in list_model_selected_Custom_CNN_95_acc_z_struct_20:
-    #     run_viz_expes(exp_name, net, net_type='Custom_CNN', cat='zstruct_20')
-    # if exp_name in list_model_selected_Custom_CNN_95_acc_z_struct_30:
-    #     run_viz_expes(exp_name, net, net_type='Custom_CNN', cat='zstruct_30')
-    # if exp_name in list_model_selected_Custom_CNN_95_acc_z_struct_50:
-    #     run_viz_expes(exp_name, net, net_type='Custom_CNN', cat='zstruct_50')
-
-    # if exp_name in selected_analyse_20:
-    #     run_viz_expes(exp_name, net, net_type='Custom_CNN', cat='zstruct_20')
-    # if exp_name in selected_analyse_50:
-    #     run_viz_expes(exp_name, net, net_type='Custom_CNN', cat='zstruct_50')
-
-    if exp_name in list_model_to_test:
-        run_viz_expes(exp_name, net, net_type='Custom_CNN', cat='zstruct_20')
-        visualize_regions_of_interest(exp_name, net, net_type='Custom_CNN')
-
-    # save list models:
-    if z_struct_size == 5:
-        if not os.path.exists(path_save_95_acc_zstruct_5):
-            if add_classification_layer:
-                model_name = selection(net, exp_name)
-                if model_name is not None:
-                    list_model_selected_Custom_CNN_95_acc_z_struct_5.append(model_name)
-    elif z_struct_size == 10:
-        if not os.path.exists(path_save_95_acc_zstruct_10):
-            if add_classification_layer:
-                model_name = selection(net, exp_name)
-                if model_name is not None:
-                    list_model_selected_Custom_CNN_95_acc_z_struct_10.append(model_name)
-    elif z_struct_size == 15:
-        if not os.path.exists(path_save_95_acc_zstruct_15):
-            if add_classification_layer:
-                model_name = selection(net, exp_name)
-                if model_name is not None:
-                    list_model_selected_Custom_CNN_95_acc_z_struct_15.append(model_name)
-    elif z_struct_size == 20:
-        if not os.path.exists(path_save_95_acc_zstruct_20):
-            if add_classification_layer:
-                model_name = selection(net, exp_name)
-                if model_name is not None:
-                    list_model_selected_Custom_CNN_95_acc_z_struct_20.append(model_name)
-    elif z_struct_size == 30:
-        if not os.path.exists(path_save_95_acc_zstruct_30):
-            if add_classification_layer:
-                model_name = selection(net, exp_name)
-                if model_name is not None:
-                    list_model_selected_Custom_CNN_95_acc_z_struct_30.append(model_name)
-    elif z_struct_size == 50:
-        if not os.path.exists(path_save_95_acc_zstruct_50):
-            if add_classification_layer:
-                model_name = selection(net, exp_name)
-                if model_name is not None:
-                    list_model_selected_Custom_CNN_95_acc_z_struct_50.append(model_name)
-
-if not os.path.exists(path_save_95_acc_zstruct_5):
-    # save list models:
-    with open(path_save_95_acc_zstruct_5, 'w') as filehandle:
-        for listitem in list_model_selected_Custom_CNN_95_acc_z_struct_5:
-            filehandle.write('%s\n' % listitem)
-if not os.path.exists(path_save_95_acc_zstruct_10):
-    # save list models:
-    with open(path_save_95_acc_zstruct_10, 'w') as filehandle:
-        for listitem in list_model_selected_Custom_CNN_95_acc_z_struct_10:
-            filehandle.write('%s\n' % listitem)
-if not os.path.exists(path_save_95_acc_zstruct_15):
-    # save list models:
-    with open(path_save_95_acc_zstruct_15, 'w') as filehandle:
-        for listitem in list_model_selected_Custom_CNN_95_acc_z_struct_15:
-            filehandle.write('%s\n' % listitem)
-if not os.path.exists(path_save_95_acc_zstruct_20):
-    # save list models:
-    with open(path_save_95_acc_zstruct_20, 'w') as filehandle:
-        for listitem in list_model_selected_Custom_CNN_95_acc_z_struct_20:
-            filehandle.write('%s\n' % listitem)
-if not os.path.exists(path_save_95_acc_zstruct_30):
-    # save list models:
-    with open(path_save_95_acc_zstruct_30, 'w') as filehandle:
-        for listitem in list_model_selected_Custom_CNN_95_acc_z_struct_30:
-            filehandle.write('%s\n' % listitem)
-if not os.path.exists(path_save_95_acc_zstruct_50):
-    # save list models:
-    with open(path_save_95_acc_zstruct_50, 'w') as filehandle:
-        for listitem in list_model_selected_Custom_CNN_95_acc_z_struct_50:
-            filehandle.write('%s\n' % listitem)
-
-f.close()
-
-# print(len(list_model_selected_Custom_CNN_95_acc_z_struct_5))
-# print(len(list_model_selected_Custom_CNN_95_acc_z_struct_10))
-# print(len(list_model_selected_Custom_CNN_95_acc_z_struct_15))
-# print(len(list_model_selected_Custom_CNN_95_acc_z_struct_20))
-# print(len(list_model_selected_Custom_CNN_95_acc_z_struct_30))
-# print(len(list_model_selected_Custom_CNN_95_acc_z_struct_50))
-
-
-f = open("parameters_combinations/mnist_classifier_expes.txt", "r")
-# 28 arguments to recuperate
-arguments_2 = {}
-list_model_selected_Custom_CNN_BK_95_acc_z_struct_5 = []
-list_model_selected_Custom_CNN_BK_95_acc_z_struct_10 = []
-list_model_selected_Custom_CNN_BK_95_acc_z_struct_15 = []
-list_model_selected_Custom_CNN_BK_95_acc_z_struct_20 = []
-list_model_selected_Custom_CNN_BK_95_acc_z_struct_30 = []
-list_model_selected_Custom_CNN_BK_95_acc_z_struct_50 = []
-path_save = 'list_model_selected/list_model_selected_Custom_CNN_BK_95_acc.txt'
-
-path_save_BK_95_acc_zstruct_5 = 'list_model_selected/list_model_selected_Custom_CNN_BK_95_acc_z_struct_5.txt'
-if os.path.exists(path_save_BK_95_acc_zstruct_5):
-    with open(path_save_BK_95_acc_zstruct_5, 'r') as filehandle:
-        for line in filehandle:
-            # remove linebreak which is the last character of the string
-            currentPlace = line[:-1]
-            # add item to the list
-            list_model_selected_Custom_CNN_BK_95_acc_z_struct_5.append(currentPlace)
-
-path_save_BK_95_acc_zstruct_10 = 'list_model_selected/list_model_selected_Custom_CNN_BK_95_acc_z_struct_10.txt'
-if os.path.exists(path_save_BK_95_acc_zstruct_10):
-    with open(path_save_BK_95_acc_zstruct_10, 'r') as filehandle:
-        for line in filehandle:
-            # remove linebreak which is the last character of the string
-            currentPlace = line[:-1]
-            # add item to the list
-            list_model_selected_Custom_CNN_BK_95_acc_z_struct_10.append(currentPlace)
-
-path_save_BK_95_acc_zstruct_15 = 'list_model_selected/list_model_selected_Custom_CNN_BK_95_acc_z_struct_15.txt'
-if os.path.exists(path_save_BK_95_acc_zstruct_15):
-    with open(path_save_BK_95_acc_zstruct_15, 'r') as filehandle:
-        for line in filehandle:
-            # remove linebreak which is the last character of the string
-            currentPlace = line[:-1]
-            # add item to the list
-            list_model_selected_Custom_CNN_BK_95_acc_z_struct_15.append(currentPlace)
-
-path_save_BK_95_acc_zstruct_20 = 'list_model_selected/list_model_selected_Custom_CNN_BK_95_acc_z_struct_20.txt'
-if os.path.exists(path_save_BK_95_acc_zstruct_20):
-    with open(path_save_BK_95_acc_zstruct_20, 'r') as filehandle:
-        for line in filehandle:
-            # remove linebreak which is the last character of the string
-            currentPlace = line[:-1]
-            # add item to the list
-            list_model_selected_Custom_CNN_BK_95_acc_z_struct_20.append(currentPlace)
-
-path_save_BK_95_acc_zstruct_30 = 'list_model_selected/list_model_selected_Custom_CNN_BK_95_acc_z_struct_30.txt'
-if os.path.exists(path_save_BK_95_acc_zstruct_30):
-    with open(path_save_BK_95_acc_zstruct_30, 'r') as filehandle:
-        for line in filehandle:
-            # remove linebreak which is the last character of the string
-            currentPlace = line[:-1]
-            # add item to the list
-            list_model_selected_Custom_CNN_BK_95_acc_z_struct_30.append(currentPlace)
-
-path_save_BK_95_acc_zstruct_50 = 'list_model_selected/list_model_selected_Custom_CNN_BK_95_acc_z_struct_50.txt'
-if os.path.exists(path_save_BK_95_acc_zstruct_50):
-    with open(path_save_BK_95_acc_zstruct_50, 'r') as filehandle:
-        for line in filehandle:
-            # remove linebreak which is the last character of the string
-            currentPlace = line[:-1]
-            # add item to the list
-            list_model_selected_Custom_CNN_BK_95_acc_z_struct_50.append(currentPlace)
-
-i = 0
-key = 0
-for x in f:
-    i += 1
-    if i < 306:
-        pass
-    elif x[0].isspace():
-        break
-    elif x[0] != "-":
-        pass
-    else:
-        key += 1
-        arguments_2[key] = []
-        line = x.split("--")
-        for l in range(len(line)):
-            arg = line[l].split(' ')
-            arguments_2[key].append(arg)
-
-for key in arguments_2:
-
-    args = arguments_2[key]
-    exp_name = args[27][-1].split('\n')[0]
-    z_struct_size = int(args[11][1])
-    stride_size = int(args[23][1])
-    classif_layer_size = int(args[13][1])
-    hidden_filters_1 = int(args[24][1])
-    hidden_filters_2 = int(args[25][1])
-    hidden_filters_3 = int(args[26][1])
-    if args[18][1] == 'True':
-        two_conv_layer = True
-    elif args[18][1] == 'False':
-        two_conv_layer = False
-    if args[19][1] == 'True':
-        three_conv_layer = True
-    elif args[19][1] == 'False':
-        three_conv_layer = False
-    if args[12][1] == 'True':
-        add_classification_layer = True
-    elif args[12][1] == 'False':
-        add_classification_layer = False
-    if args[20][1] == 'True':
-        BK_in_first_layer = True
-    elif args[20][1] == 'False':
-        BK_in_first_layer = False
-    if args[21][1] == 'True':
-        BK_in_second_layer = True
-    elif args[21][1] == 'False':
-        BK_in_second_layer = False
-    if args[22][1] == 'True':
-        BK_in_third_layer = True
-    elif args[22][1] == 'False':
-        BK_in_third_layer = False
-
-    big_kernel_size = int(args[17][1])
-
-    net = Custom_CNN_BK(z_struct_size=z_struct_size,
-                        big_kernel_size=big_kernel_size,
-                        stride_size=stride_size,
-                        classif_layer_size=classif_layer_size,
-                        add_classification_layer=add_classification_layer,
-                        hidden_filters_1=hidden_filters_1,
-                        hidden_filters_2=hidden_filters_2,
-                        hidden_filters_3=hidden_filters_3,
-                        BK_in_first_layer=BK_in_first_layer,
-                        two_conv_layer=two_conv_layer,
-                        three_conv_layer=three_conv_layer,
-                        BK_in_second_layer=BK_in_second_layer,
-                        BK_in_third_layer=BK_in_third_layer)
-
-    # if exp_name in list_model_selected_Custom_CNN_BK_95_acc_z_struct_5:
-    #     run_viz_expes(exp_name, net, net_type='Custom_CNN_BK', cat='zstruct_5')
-    # if exp_name in list_model_selected_Custom_CNN_BK_95_acc_z_struct_10:
-    #     run_viz_expes(exp_name, net, net_type='Custom_CNN_BK', cat='zstruct_10')
-    # if exp_name in list_model_selected_Custom_CNN_BK_95_acc_z_struct_15:
-    #     run_viz_expes(exp_name, net, net_type='Custom_CNN_BK', cat='zstruct_15')
-    # if exp_name in list_model_selected_Custom_CNN_BK_95_acc_z_struct_20:
-    #     run_viz_expes(exp_name, net, net_type='Custom_CNN_BK', cat='zstruct_20')
-    # if exp_name in list_model_selected_Custom_CNN_BK_95_acc_z_struct_30:
-    #     run_viz_expes(exp_name, net, net_type='Custom_CNN_BK', cat='zstruct_30')
-    # if exp_name in list_model_selected_Custom_CNN_BK_95_acc_z_struct_50:
-    #     run_viz_expes(exp_name, net, net_type='Custom_CNN_BK', cat='zstruct_50')
-
-    # if exp_name in selected_analyse_20:
-    #     run_viz_expes(exp_name, net, net_type='Custom_CNN_BK', cat='zstruct_20')
-    # if exp_name in selected_analyse_50:
-    #     run_viz_expes(exp_name, net, net_type='Custom_CNN_BK', cat='zstruct_50')
-
-    if exp_name in list_model_to_test:
-        run_viz_expes(exp_name, net, net_type='Custom_CNN_BK', cat='zstruct_20')
-        visualize_regions_of_interest(exp_name, net, net_type='Custom_CNN_BK')
-
-    # save list models:
-    if z_struct_size == 5:
-        if not os.path.exists(path_save_BK_95_acc_zstruct_5):
-            if add_classification_layer:
-                model_name = selection(net, exp_name)
-                if model_name is not None:
-                    list_model_selected_Custom_CNN_BK_95_acc_z_struct_5.append(model_name)
-    elif z_struct_size == 10:
-        if not os.path.exists(path_save_BK_95_acc_zstruct_10):
-            if add_classification_layer:
-                model_name = selection(net, exp_name)
-                if model_name is not None:
-                    list_model_selected_Custom_CNN_BK_95_acc_z_struct_10.append(model_name)
-    elif z_struct_size == 15:
-        if not os.path.exists(path_save_BK_95_acc_zstruct_15):
-            if add_classification_layer:
-                model_name = selection(net, exp_name)
-                if model_name is not None:
-                    list_model_selected_Custom_CNN_BK_95_acc_z_struct_15.append(model_name)
-    elif z_struct_size == 20:
-        if not os.path.exists(path_save_BK_95_acc_zstruct_20):
-            if add_classification_layer:
-                model_name = selection(net, exp_name)
-                if model_name is not None:
-                    list_model_selected_Custom_CNN_BK_95_acc_z_struct_20.append(model_name)
-    elif z_struct_size == 30:
-        if not os.path.exists(path_save_BK_95_acc_zstruct_30):
-            if add_classification_layer:
-                model_name = selection(net, exp_name)
-                if model_name is not None:
-                    list_model_selected_Custom_CNN_BK_95_acc_z_struct_30.append(model_name)
-    elif z_struct_size == 50:
-        if not os.path.exists(path_save_BK_95_acc_zstruct_50):
-            if add_classification_layer:
-                model_name = selection(net, exp_name)
-                if model_name is not None:
-                    list_model_selected_Custom_CNN_BK_95_acc_z_struct_50.append(model_name)
-
-if not os.path.exists(path_save_BK_95_acc_zstruct_5):
-    # save list models:
-    with open(path_save_BK_95_acc_zstruct_5, 'w') as filehandle:
-        for listitem in list_model_selected_Custom_CNN_BK_95_acc_z_struct_5:
-            filehandle.write('%s\n' % listitem)
-if not os.path.exists(path_save_BK_95_acc_zstruct_10):
-    # save list models:
-    with open(path_save_BK_95_acc_zstruct_10, 'w') as filehandle:
-        for listitem in list_model_selected_Custom_CNN_BK_95_acc_z_struct_10:
-            filehandle.write('%s\n' % listitem)
-if not os.path.exists(path_save_BK_95_acc_zstruct_15):
-    # save list models:
-    with open(path_save_BK_95_acc_zstruct_15, 'w') as filehandle:
-        for listitem in list_model_selected_Custom_CNN_BK_95_acc_z_struct_15:
-            filehandle.write('%s\n' % listitem)
-if not os.path.exists(path_save_BK_95_acc_zstruct_20):
-    # save list models:
-    with open(path_save_BK_95_acc_zstruct_20, 'w') as filehandle:
-        for listitem in list_model_selected_Custom_CNN_BK_95_acc_z_struct_20:
-            filehandle.write('%s\n' % listitem)
-if not os.path.exists(path_save_BK_95_acc_zstruct_30):
-    # save list models:
-    with open(path_save_BK_95_acc_zstruct_30, 'w') as filehandle:
-        for listitem in list_model_selected_Custom_CNN_BK_95_acc_z_struct_30:
-            filehandle.write('%s\n' % listitem)
-if not os.path.exists(path_save_BK_95_acc_zstruct_50):
-    # save list models:
-    with open(path_save_BK_95_acc_zstruct_50, 'w') as filehandle:
-        for listitem in list_model_selected_Custom_CNN_BK_95_acc_z_struct_50:
-            filehandle.write('%s\n' % listitem)
-
-f.close()
-
-# print(len(list_model_sected_Custom_CNN_BK_95_acc_z_struct_5))
-# print(len(list_model_sected_Custom_CNN_BK_95_acc_z_struct_10))
-# print(len(list_model_sected_Custom_CNN_BK_95_acc_z_struct_15))
-# print(len(list_model_sected_Custom_CNN_BK_95_acc_z_struct_20))
-# print(len(list_model_sected_Custom_CNN_BK_95_acc_z_struct_30))
-# print(len(list_model_sected_Custom_CNN_BK_95_acc_z_struct_50))
-
-f = open("parameters_combinations/mnist_classifier_expes.txt", "r")
-# 18 arguments to recuperate
-arguments_4 = {}
-list_model_selected_default = []
-path_save = 'list_model_selected/list_model_selected_default.txt'
-if os.path.exists(path_save):
-    with open(path_save, 'r') as filehandle:
-        for line in filehandle:
-            # remove linebreak which is the last character of the string
-            currentPlace = line[:-1]
-            # add item to the list
-            list_model_selected_default.append(currentPlace)
-
-i = 0
-key = 0
-for x in f:
-    i += 1
-    if i < 934:
-        pass
-    elif x[0].isspace():
-        break
-    elif x[0] != "-":
-        print(x[0])
-        pass
-    else:
-        key += 1
-        arguments_4[key] = []
-        line = x.split("--")
-        for l in range(len(line)):
-            arg = line[l].split(' ')
-            arguments_4[key].append(arg)
-
-for key in arguments_4:
-
-    args = arguments_4[key]
-    exp_name = args[17][-1].split('\n')[0]
-    z_struct_size = int(args[10][1])
-    classif_layer_size = int(args[11][1])
-    if args[9][1] == 'True':
-        add_classification_layer = True
-    elif args[9][1] == 'False':
-        add_classification_layer = False
-    if args[8][1] == 'True':
-        add_z_struct_bottleneck = True
-    elif args[8][1] == 'False':
-        add_z_struct_bottleneck = False
-
-    net = DefaultCNN(add_z_struct_bottleneck=add_z_struct_bottleneck,
-                     add_classification_layer=add_classification_layer,
-                     z_struct_size=z_struct_size,
-                     classif_layer_size=classif_layer_size)
-
-    if exp_name in list_model_selected_default:
-        run_viz_expes(exp_name, net, net_type='DefaultCNN')
-
-    # save list models:
-    if not os.path.exists(path_save):
-        if add_classification_layer:
-            model_name = selection(net, exp_name)
-            if model_name is not None:
-                list_model_selected_default.append(model_name)
-
-if not os.path.exists(path_save):
-    # save list models:
-    with open(path_save, 'w') as filehandle:
-        for listitem in list_model_selected_default:
-            filehandle.write('%s\n' % listitem)
-
-f.close()
 
 
 def compute_heatmap(net_trained, train_loader, test_loader, latent_spec, device, exp_name, is_partial_rand_class,
@@ -985,3 +710,43 @@ def network(z_struct_size, big_kernel_size, stride_size, classif_layer_size, add
                           BK_in_second_layer=BK_in_second_layer,
                           BK_in_third_layer=BK_in_third_layer)
     return model
+
+
+if __name__ == '__main__':
+
+    # Selected model list:
+    list_model_to_test = [  # 'CNN_mnist_custom_3layer_5_82',  # bad variance z size: 20: 2.118
+        # 'CNN_mnist_custom_3layer_5_58',  # bad variance z size: 50: 2.96
+        # 'CNN_mnist_custom_3layer_5_51',  # best variance no BK: 4.79
+        'CNN_mnist_custom_BK_2layer_bk1_20_37',  # bk1 + 32: 5.78
+        # 'CNN_mnist_custom_BK_2layer_bk1_20_39']  # bk1 + 64 best_variance: 7.20
+        # 'CNN_mnist_custom_BK_2layer_bk2_20_55']  # bk2 + 32: 5.71
+        # 'CNN_mnist_custom_BK_2layer_bk2_20_64']  # bk2 + 64: 6.98
+    ]
+
+    parameters_mnist_classifier_BK = "parameters_combinations/mnist_classifier_expes.txt"
+    line_begin_bk = 307
+    line_end_bk = 810
+
+    list_model_ratio = ['CNN_mnist_custom_BK_2layer_bk1_20_ratio_1',
+                        'CNN_mnist_custom_BK_2layer_bk1_20_ratio_2',
+                        'CNN_mnist_custom_BK_2layer_bk1_20_ratio_3',
+                        'CNN_mnist_custom_BK_2layer_bk1_20_ratio_4',
+                        'CNN_mnist_custom_BK_2layer_bk1_20_ratio_5']
+
+    parameters_mnist_classifier_BK_ratio = "parameters_combinations/mnist_classifier_ratio.txt"
+    line_begin_bk_ratio = 6  # first line with model custom BK that we want see
+    line_end_bk_ratio = 10  # last line with model custom BK that we want see
+    line_begin_custom = 0  # first line with model custom that we want see
+    line_end_custom = 0  # last line with model custom that we want see
+
+    run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK,
+                                                   line_begin_bk,
+                                                   line_end_bk,
+                                                   list_model_to_test,
+                                                   is_ratio=False)
+    run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
+                                                   line_begin_bk_ratio,
+                                                   line_end_bk_ratio,
+                                                   list_model_ratio,
+                                                   is_ratio=True)
