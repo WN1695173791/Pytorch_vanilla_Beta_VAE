@@ -11,6 +11,7 @@ from pytorchtools import EarlyStopping
 from dataset.dataset_2 import get_dataloaders, get_mnist_dataset
 from models.default_CNN import DefaultCNN
 from models.custom_CNN_BK import Custom_CNN_BK
+from models.custom_CNN_BK_test import Custom_CNN_BK_test
 from models.custom_CNN import Custom_CNN
 from solver import gpu_config
 from tqdm import tqdm
@@ -151,7 +152,21 @@ class SolverClassifier(object):
                              classif_layer_size=self.classif_layer_size)
         elif self.is_custom_model_BK:
             self.net_type = 'Custom_CNN_BK'
-            net = Custom_CNN_BK(z_struct_size=self.z_struct_size,
+            # net = Custom_CNN_BK(z_struct_size=self.z_struct_size,
+            #                     big_kernel_size=self.big_kernel_size,
+            #                     stride_size=self.stride_size,
+            #                     classif_layer_size=self.classif_layer_size,
+            #                     add_classification_layer=self.add_classification_layer,
+            #                     hidden_filters_1=self.hidden_filters_1,
+            #                     hidden_filters_2=self.hidden_filters_2,
+            #                     hidden_filters_3=self.hidden_filters_3,
+            #                     BK_in_first_layer=self.BK_in_first_layer,
+            #                     two_conv_layer=self.two_conv_layer,
+            #                     three_conv_layer=self.three_conv_layer,
+            #                     BK_in_second_layer=self.BK_in_second_layer,
+            #                     BK_in_third_layer=self.BK_in_third_layer,
+            #                     Binary_z=self.binary_z)
+            net = Custom_CNN_BK_test(z_struct_size=self.z_struct_size,
                                 big_kernel_size=self.big_kernel_size,
                                 stride_size=self.stride_size,
                                 classif_layer_size=self.classif_layer_size,
@@ -163,8 +178,7 @@ class SolverClassifier(object):
                                 two_conv_layer=self.two_conv_layer,
                                 three_conv_layer=self.three_conv_layer,
                                 BK_in_second_layer=self.BK_in_second_layer,
-                                BK_in_third_layer=self.BK_in_third_layer,
-                                Binary_z=self.binary_z)
+                                BK_in_third_layer=self.BK_in_third_layer)
         elif self.is_custom_model:
             self.net_type = 'Custom_CNN'
             net = Custom_CNN(z_struct_size=self.z_struct_size,
