@@ -6,7 +6,7 @@ import numpy as np
 from models.weight_init import weight_init
 
 
-def compute_ratio_batch(batch_z_struct, labels_batch, nb_class):
+def compute_ratio_batch(batch_z_struct, labels_batch, nb_class, other_ratio=False):
     """
     compute ratio of one batch:
     ratio: to minimize, variance_inter_class / var_intra_class
@@ -18,7 +18,6 @@ def compute_ratio_batch(batch_z_struct, labels_batch, nb_class):
         labels_batch = labels_batch.cpu().detach().numpy()
 
     representation_z_struct_class = []
-
     for class_id in range(nb_class):
         z_struct_class = batch_z_struct[np.where(labels_batch == class_id)]
         representation_z_struct_class.append(z_struct_class)
@@ -37,7 +36,10 @@ def compute_ratio_batch(batch_z_struct, labels_batch, nb_class):
     variance_intra_class = np.square(z_struct_std_global_per_class)  # shape: (nb_class, len(z_struct))
     variance_intra_class_mean_components = np.mean(variance_intra_class, axis=0)
     variance_inter_class = np.square(np.std(z_struct_mean_global_per_class, axis=0))
-    ratio = variance_intra_class_mean_components / variance_inter_class
+    if other_ratio:
+        ratio = variance_inter_class / variance_intra_class_mean_components  # shape: (len(z_struct))
+    else:
+        ratio = variance_intra_class_mean_components / variance_inter_class
     ratio_variance_mean = np.mean(ratio)
 
     return ratio_variance_mean
@@ -188,7 +190,7 @@ class Custom_CNN_BK(nn.Module, ABC):
                 # kaiming_init(m)
 
     def forward(self, x, labels=None, nb_class=None, use_ratio=False, z_struct_out=False, z_struct_prediction=False,
-                z_struct_layer_num=None):
+                z_struct_layer_num=None, other_ratio=False):
         """
         Forward pass of model.
         """
@@ -210,6 +212,6 @@ class Custom_CNN_BK(nn.Module, ABC):
             prediction = self.net(x)
 
         if use_ratio:
-            ratio = compute_ratio_batch(z_struct, labels, nb_class)
+            ratio = compute_ratio_batch(z_struct, labels, nb_class, other_ratio=other_ratio)
 
         return prediction, z_struct, ratio

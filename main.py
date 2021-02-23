@@ -186,6 +186,7 @@ if __name__ == "__main__":
     # ratio loss parameters:
     parser.add_argument('--ratio_reg', default=False, type=str2bool, help='if add ratio to regularization')
     parser.add_argument('--lambda_ratio_reg', default=1, type=float, help="lambda ratio regularization value")
+    parser.add_argument('--other_ratio', default=False, type=str2bool, help='other ratio (inverse)')
 
     args = parser.parse_args()
 

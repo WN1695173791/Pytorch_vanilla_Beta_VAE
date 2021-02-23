@@ -3,8 +3,6 @@ import logging
 import torch.optim as optimizer
 import torch.nn.functional as F
 import os
-from torchvision import transforms
-import torchvision.datasets as datasets
 from pytorchtools import EarlyStopping
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 
@@ -16,13 +14,12 @@ from models.custom_CNN import Custom_CNN
 from solver import gpu_config
 from tqdm import tqdm
 from scores_classifier import compute_scores
-from torch.optim.lr_scheduler import StepLR
 from visualizer_CNN import get_layer_zstruct_num, compute_z_struct
 from models.custom_CNN_BK import compute_ratio_batch
 
 
 def compute_scores_and_loss(net, train_loader, test_loader, device, train_loader_size, test_loader_size,
-                            net_type, nb_class, ratio_reg):
+                            net_type, nb_class, ratio_reg, other_ratio):
     score_train, loss_train = compute_scores(net,
                                              train_loader,
                                              device,
@@ -47,7 +44,10 @@ def compute_scores_and_loss(net, train_loader, test_loader, device, train_loader
                                                                              train_test='None',
                                                                              net_type=net_type,
                                                                              return_results=True)
-        ratio_train = compute_ratio_batch(z_struct_representation_train, labels_batch_train, nb_class)
+        ratio_train = compute_ratio_batch(z_struct_representation_train,
+                                          labels_batch_train,
+                                          nb_class,
+                                          other_ratio=other_ratio)
     else:
         ratio_test = 0
         ratio_train = 0
@@ -98,6 +98,7 @@ class SolverClassifier(object):
         # ratio regularization:
         self.ratio_reg = args.ratio_reg
         self.lambda_ratio_reg = args.lambda_ratio_reg
+        self.other_ratio = args.other_ratio
 
         # dataset parameters:
         if args.dataset.lower() == 'mnist':
@@ -110,8 +111,8 @@ class SolverClassifier(object):
 
         # initialize the early_stopping object
         # early stopping patience; how long to wait after last time validation loss improved.
-        # self.patience = 10
-        # self.early_stopping = EarlyStopping(patience=self.patience, verbose=True)
+        self.patience = 20
+        self.early_stopping = EarlyStopping(patience=self.patience, verbose=True)
 
         # logger
         formatter = logging.Formatter('%(asc_time)s %(level_name)s - %(funcName)s: %(message)s', "%H:%M:%S")
@@ -206,12 +207,12 @@ class SolverClassifier(object):
         patience: Number of epochs with no improvement after which learning rate will be reduced.
         """
         if self.use_scheduler:
-            self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizer,
-                                                                        mode='min',
-                                                                        factor=0.2,
-                                                                        patience=20,
-                                                                        min_lr=1e-6,
-                                                                        verbose=True)
+            self.scheduler = ReduceLROnPlateau(self.optimizer,
+                                               mode='min',
+                                               factor=0.2,
+                                               patience=5,
+                                               min_lr=1e-6,
+                                               verbose=True)
 
         if 'parallel' in str(type(self.net)):
             self.net = self.net.module
@@ -277,20 +278,24 @@ class SolverClassifier(object):
                                                 nb_class=self.nb_class,
                                                 use_ratio=self.ratio_reg,
                                                 z_struct_out=self.z_struct_out,
-                                                z_struct_layer_num=self.z_struct_layer_num)
+                                                z_struct_layer_num=self.z_struct_layer_num,
+                                                other_ratio=self.other_ratio)
                 # classification loss
                 # averaged over each loss element in the batch
                 self.Classification_loss = F.nll_loss(prediction, labels)
-
                 self.Classification_loss = self.lambda_classification * self.Classification_loss
-                self.ratio = ratio * self.lambda_ratio_reg
+
+                # ratio loss:
+                if self.other_ratio:
+                    self.ratio = -(ratio * self.lambda_ratio_reg)
+                else:
+                    self.ratio = ratio * self.lambda_ratio_reg
 
                 self.Total_loss = self.Classification_loss + self.ratio
                 # backpropagation loss
                 self.optimizer.zero_grad()
                 self.Total_loss.backward()
                 self.optimizer.step()
-
 
             # save step
             self.save_checkpoint('last')
@@ -304,10 +309,11 @@ class SolverClassifier(object):
                                                                self.test_loader_size,
                                                                self.net_type,
                                                                self.nb_class,
-                                                               self.ratio_reg)
+                                                               self.ratio_reg,
+                                                               self.other_ratio)
             # early_stopping needs the validation loss to check if it has decresed,
             # and if it has, it will make a checkpoint of the current model
-            # self.early_stopping(self.losses['total_loss_test'], self.net)
+            self.early_stopping(self.losses['total_loss_test'], self.net)
 
             self.save_checkpoint_scores_loss()
             self.net_mode(train=True)
@@ -324,10 +330,10 @@ class SolverClassifier(object):
                                                               self.losses['ratio_test_loss'],
                                                               self.losses['total_loss_train'],
                                                               self.losses['total_loss_test']))
-            # if self.early_stopping.early_stop:
-            #     print("Early stopping")
-            #     out = True
-            #     break
+            if self.early_stopping.early_stop:
+                print("Early stopping")
+                out = True
+                break
             if self.epochs >= self.max_iter:
                 out = True
                 break
