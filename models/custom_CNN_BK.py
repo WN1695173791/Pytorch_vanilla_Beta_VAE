@@ -176,8 +176,8 @@ class Custom_CNN_BK(nn.Module, ABC):
     def weight_init(self):
         for block in self._modules:
             for m in self._modules[block]:
-                # weight_init(m)
-                kaiming_init(m)
+                weight_init(m)
+                # kaiming_init(m)
 
     def forward(self, x, labels=None, nb_class=None, use_ratio=False, z_struct_out=False, z_struct_prediction=False,
                 z_struct_layer_num=None):
