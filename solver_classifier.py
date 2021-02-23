@@ -73,6 +73,7 @@ class SolverClassifier(object):
         self.batch_size = args.batch_size
         self.lr = args.lr
         self.max_iter = args.max_iter
+        self.use_early_stopping = args.use_early_stopping
 
         # Custom CNN parameters:
         self.lambda_classification = args.lambda_class
@@ -111,8 +112,9 @@ class SolverClassifier(object):
 
         # initialize the early_stopping object
         # early stopping patience; how long to wait after last time validation loss improved.
-        self.patience = 20
-        self.early_stopping = EarlyStopping(patience=self.patience, verbose=True)
+        if self.use_early_stopping:
+            self.patience = 20
+            self.early_stopping = EarlyStopping(patience=self.patience, verbose=True)
 
         # logger
         formatter = logging.Formatter('%(asc_time)s %(level_name)s - %(funcName)s: %(message)s', "%H:%M:%S")
@@ -313,7 +315,8 @@ class SolverClassifier(object):
                                                                self.other_ratio)
             # early_stopping needs the validation loss to check if it has decresed,
             # and if it has, it will make a checkpoint of the current model
-            self.early_stopping(self.losses['total_loss_test'], self.net)
+            if self.use_early_stopping:
+                self.early_stopping(self.losses['total_loss_test'], self.net)
 
             self.save_checkpoint_scores_loss()
             self.net_mode(train=True)
@@ -330,10 +333,11 @@ class SolverClassifier(object):
                                                               self.losses['ratio_test_loss'],
                                                               self.losses['total_loss_train'],
                                                               self.losses['total_loss_test']))
-            if self.early_stopping.early_stop:
-                print("Early stopping")
-                out = True
-                break
+            if self.use_early_stopping:
+                if self.early_stopping.early_stop:
+                    print("Early stopping")
+                    out = True
+                    break
             if self.epochs >= self.max_iter:
                 out = True
                 break
