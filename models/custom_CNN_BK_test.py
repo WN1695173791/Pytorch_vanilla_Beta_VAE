@@ -120,7 +120,7 @@ class Custom_CNN_BK_test(nn.Module, ABC):
         """
         Forward pass of model.
         """
-
+        ratio = 0
         z_struct = None
         if z_struct_out:
             z_struct = self.net[:z_struct_layer_num](x)
@@ -130,4 +130,4 @@ class Custom_CNN_BK_test(nn.Module, ABC):
         else:
             prediction = self.net(x)
 
-        return prediction, z_struct
+        return prediction, z_struct, ratio
