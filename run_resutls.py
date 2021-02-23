@@ -14,10 +14,10 @@ from viz.viz_regions import *
 # Selected model list:
 list_model_to_test = [# 'CNN_mnist_custom_3layer_5_82',  # bad variance z size: 20: 2.118
                       # 'CNN_mnist_custom_3layer_5_58',  # bad variance z size: 50: 2.96
-                      'CNN_mnist_custom_3layer_5_51',  # best variance no BK: 4.79
+                      # 'CNN_mnist_custom_3layer_5_51',  # best variance no BK: 4.79
                       # "'CNN_mnist_custom_BK_2layer_bk1_20_37',  # bk1 + 32: 5.78
-                      'CNN_mnist_custom_BK_2layer_bk1_20_39',  # bk1 + 64 best_variance: 7.20
-                      'CNN_mnist_custom_BK_2layer_bk2_20_55']  # bk2 + 32: 5.71
+                      'CNN_mnist_custom_BK_2layer_bk1_20_39']  # bk1 + 64 best_variance: 7.20
+                      # 'CNN_mnist_custom_BK_2layer_bk2_20_55']  # bk2 + 32: 5.71
                       # 'CNN_mnist_custom_BK_2layer_bk2_20_64']  # bk2 + 64: 6.98
 
 
@@ -58,11 +58,11 @@ def run_viz_expes(exp_name, net, net_type=None, cat=None):
     # receptive_field = get_receptive_field(net_trained, img_size, net_type=net_type)
 
     # plot:
-    # ratio_variance = ratio(exp_name, train_test=train_test, cat=cat)
+    ratio_variance = ratio(exp_name, train_test=train_test, cat=cat)
     # score = correlation_filters(net_trained, exp_name, train_test=train_test, ch=nc, vis_filters=False, plot_fig=True,
     #                             cat=cat)
     # score_corr_class = dispersion_classes(exp_name, train_test=train_test, plot_fig=True, cat=cat)
-    # plot_2d_projection_z_struct(nb_class, exp_name, train_test=train_test, ratio=ratio_variance)
+    plot_2d_projection_z_struct(nb_class, exp_name, train_test=train_test, ratio=ratio_variance)
 
     # plot_acc_bit_noised_per_class(exp_name,
     #                               train_test=train_test,
