@@ -115,7 +115,8 @@ class Custom_CNN_BK_test(nn.Module, ABC):
             for m in self._modules[block]:
                 kaiming_init(m)
 
-    def forward(self, x, z_struct_out=False, z_struct_prediction=False, z_struct_layer_num=None):
+    def forward(self, x, labels=None, nb_class=None, use_ratio=False, z_struct_out=False, z_struct_prediction=False,
+                z_struct_layer_num=None):
         """
         Forward pass of model.
         """
