@@ -204,7 +204,7 @@ class SolverClassifier(object):
         patience: Number of epochs with no improvement after which learning rate will be reduced.
         """
         if self.use_scheduler:
-            self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer,
+            self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizer,
                                                                         mode='min',
                                                                         factor=0.2,
                                                                         patience=20,
@@ -288,8 +288,8 @@ class SolverClassifier(object):
                 self.optimizer.zero_grad()
                 self.Total_loss.backward()
                 self.optimizer.step()
-                if self.use_scheduler:
-                    self.scheduler.step()
+                # if self.use_scheduler:
+                #     self.scheduler.step()
 
             # save step
             self.save_checkpoint('last')
