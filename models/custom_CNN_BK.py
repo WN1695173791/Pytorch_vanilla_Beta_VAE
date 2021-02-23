@@ -59,12 +59,14 @@ class Custom_CNN_BK(nn.Module, ABC):
                  three_conv_layer=False,
                  BK_in_second_layer=False,
                  BK_in_third_layer=False,
-                 Binary_z=False):
+                 Binary_z=False,
+                 add_linear_after_GMP=True):
         """
         Class which defines model and forward pass.
         """
         super(Custom_CNN_BK, self).__init__()
 
+        self.add_linear_after_GMP = add_linear_after_GMP
         self.Binary_z = Binary_z
         # parameters
         self.nc = 1  # number of channels
@@ -148,12 +150,18 @@ class Custom_CNN_BK(nn.Module, ABC):
             # PrintLayer(),  # B, hidden_filters_1, 1, 1
             View((-1, self.hidden_filter_GMP)),  # B, hidden_filters_1
             # PrintLayer(),  # B, hidden_filters_1
-            nn.Linear(self.hidden_filter_GMP, self.z_struct_size),  # shape: (Batch, z_struct_size)
-            nn.BatchNorm1d(self.z_struct_size),
-            nn.ReLU(True),
-            nn.Dropout(0.4),
-            # PrintLayer(),  # B, z_struct_size
         ]
+        if self.add_linear_after_GMP:
+            self.model += [
+                nn.Linear(self.hidden_filter_GMP, self.z_struct_size),  # shape: (Batch, z_struct_size)
+                nn.BatchNorm1d(self.z_struct_size),
+                nn.ReLU(True),
+                nn.Dropout(0.4),
+                # PrintLayer(),  # B, z_struct_size
+            ]
+        else:
+            self.last_linear_layer_size = self.hidden_filter_GMP
+
         if self.add_classification_layer:
             self.last_linear_layer_size = self.classif_layer_size
             # ------------ add classification bloc:
@@ -176,8 +184,8 @@ class Custom_CNN_BK(nn.Module, ABC):
     def weight_init(self):
         for block in self._modules:
             for m in self._modules[block]:
-                # weight_init(m)
-                kaiming_init(m)
+                weight_init(m)
+                # kaiming_init(m)
 
     def forward(self, x, labels=None, nb_class=None, use_ratio=False, z_struct_out=False, z_struct_prediction=False,
                 z_struct_layer_num=None):

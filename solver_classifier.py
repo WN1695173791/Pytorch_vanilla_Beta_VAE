@@ -92,6 +92,7 @@ class SolverClassifier(object):
         self.BK_in_second_layer = args.BK_in_second_layer
         self.BK_in_third_layer = args.BK_in_third_layer
         self.use_scheduler = args.use_scheduler
+        self.add_linear_after_GMP = args.add_linear_after_GMP
         # binary parameters:
         self.binary_z = args.binary_z
         # ratio regularization:
@@ -165,7 +166,8 @@ class SolverClassifier(object):
                                 three_conv_layer=self.three_conv_layer,
                                 BK_in_second_layer=self.BK_in_second_layer,
                                 BK_in_third_layer=self.BK_in_third_layer,
-                                Binary_z=self.binary_z)
+                                Binary_z=self.binary_z,
+                                add_linear_after_GMP=self.add_linear_after_GMP)
         elif self.is_custom_model:
             self.net_type = 'Custom_CNN'
             net = Custom_CNN(z_struct_size=self.z_struct_size,
@@ -217,11 +219,11 @@ class SolverClassifier(object):
             self.net = self.net
 
         # experience name
-        self.checkpoint_dir = os.path.join(args.ckpt_dir, args.expe_name)
+        self.checkpoint_dir = os.path.join(args.ckpt_dir, args.exp_name)
         if not os.path.exists(self.checkpoint_dir):
             os.makedirs(self.checkpoint_dir, exist_ok=True)
 
-        self.checkpoint_dir_scores = os.path.join(args.ckpt_dir_scores, args.expe_name)
+        self.checkpoint_dir_scores = os.path.join(args.ckpt_dir_scores, args.exp_name)
         if not os.path.exists(self.checkpoint_dir_scores):
             os.makedirs(self.checkpoint_dir_scores, exist_ok=True)
 
@@ -288,8 +290,7 @@ class SolverClassifier(object):
                 self.optimizer.zero_grad()
                 self.Total_loss.backward()
                 self.optimizer.step()
-                # if self.use_scheduler:
-                #     self.scheduler.step()
+
 
             # save step
             self.save_checkpoint('last')

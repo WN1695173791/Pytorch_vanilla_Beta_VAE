@@ -302,8 +302,8 @@ def run_viz_expes(exp_name, net, net_type=None, cat=None, ratio_reg=False):
     # receptive_field = get_receptive_field(net_trained, img_size, net_type=net_type)
 
     # plot:
-    ratio_variance = ratio(exp_name, train_test=train_test, cat=cat)
-    print(ratio_variance)
+    # ratio_variance = ratio(exp_name, train_test=train_test, cat=cat)
+    # print(ratio_variance)
     # score = correlation_filters(net_trained, exp_name, train_test=train_test, ch=nc, vis_filters=False, plot_fig=True,
     #                             cat=cat)
     # score_corr_class = dispersion_classes(exp_name, train_test=train_test, plot_fig=True, cat=cat)
@@ -735,8 +735,8 @@ if __name__ == '__main__':
                         'CNN_mnist_custom_BK_2layer_bk1_20_ratio_5']
 
     parameters_mnist_classifier_BK_ratio = "parameters_combinations/mnist_classifier_ratio.txt"
-    line_begin_bk_ratio = 6  # first line with model custom BK that we want see
-    line_end_bk_ratio = 10  # last line with model custom BK that we want see
+    line_begin_bk_ratio = 1  # first line with model custom BK that we want see
+    line_end_bk_ratio = 6  # last line with model custom BK that we want see
     line_begin_custom = 0  # first line with model custom that we want see
     line_end_custom = 0  # last line with model custom that we want see
 

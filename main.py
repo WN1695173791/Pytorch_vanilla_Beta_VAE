@@ -111,7 +111,7 @@ if __name__ == "__main__":
     parser.add_argument('--kernel_size', type=int, default=4, metavar='integer value',
                         help='kernel_size')
     parser.add_argument('--adapt_lr', default=False, type=str2bool, help='if we multily lr by element number (to adapt'
-                                                                         ' expes with old expes)')
+                                                                         ' exps with old exps)')
     # ------------------------------------
 
     parser.add_argument('--is_perturbed_score', default=False, type=str2bool, help='Compute stat with z perturbed '
@@ -149,7 +149,7 @@ if __name__ == "__main__":
     parser.add_argument('--image_size', default=64, type=int, help='image size. now only (64,64) is supported')
     parser.add_argument('--num_workers', default=2, type=int, help='dataloader num_workers')
 
-    parser.add_argument('--expe_name', default='main', type=str, help='expes name')
+    parser.add_argument('--exp_name', default='main', type=str, help='exps name')
 
     parser.add_argument('--display_step', default=10000, type=int, help='number of iterations after which loss data is'
                                                                         ' printed and visdom is updated')
@@ -178,6 +178,7 @@ if __name__ == "__main__":
     parser.add_argument('--two_conv_layer', default=False, type=str2bool, help='if two_conv_layer')
     parser.add_argument('--three_conv_layer', default=False, type=str2bool, help='if three_conv_layer')
     parser.add_argument('--use_scheduler', default=False, type=str2bool, help='if use scheduler')
+    parser.add_argument('--add_linear_after_GMP', default=True, type=str2bool, help='linear after GMP')
 
     # Binary parameters:
     parser.add_argument('--binary_z', default=False, type=str2bool, help='To binary the last conv2d output')
@@ -192,7 +193,7 @@ if __name__ == "__main__":
 
     if not args.just_train:
         # save arguments parser:
-        with open('args_parser/commandline_args_test' + args.expe_name + '.txt', 'w') as f:
+        with open('args_parser/commandline_args_test' + args.exp_name + '.txt', 'w') as f:
             f.write(str(str(args).split('Namespace(')[1]).replace(', ', '\n').replace(')', ''))
 
     if args.gpu_devices is not None:

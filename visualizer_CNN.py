@@ -914,7 +914,7 @@ def ratio(exp_name, train_test=None, cat=None):
         variance_intra_class = np.square(z_struct_std_global_per_class)  # shape: (nb_class, len(z_struct))
         variance_intra_class_mean_components = np.mean(variance_intra_class, axis=0)  # shape: (len(z_struct))
         variance_inter_class = np.square(np.std(z_struct_mean_global_per_class, axis=0))  # shape: len(z_struct)
-        ratio_variance = variance_intra_class_mean_components / variance_inter_class  # shape: (len(z_struct))
+        ratio_variance = variance_inter_class / variance_intra_class_mean_components  # shape: (len(z_struct))
         ratio_variance_mean = np.mean(ratio_variance)
 
         print('Var intra class shape: ', variance_intra_class.shape, variance_intra_class_mean_components.shape)
