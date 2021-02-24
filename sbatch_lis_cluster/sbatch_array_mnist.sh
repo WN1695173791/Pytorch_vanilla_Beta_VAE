@@ -9,7 +9,7 @@
 #BATCH --mail-type=ALL                  # Mail notification of the events concerning the job : start time, end time,?~@?
 #SBATCH --mail-user=julien.dejasmin@lis-lab.fr
 
-#SBATCH --array=39-62%5   # % for run n jobs in same time
+#SBATCH --array=61-83%5   # % for run n jobs in same time
 echo "$SLURM_ARRAY_TASK_ID"
 
 LINE=$(sed -n "$SLURM_ARRAY_TASK_ID"p parameters_combinations/mnist_classifier_ratio.txt)
