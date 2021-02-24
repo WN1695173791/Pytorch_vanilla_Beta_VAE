@@ -28,7 +28,7 @@ def get_activation_values(net, exp_name, images):
             # partial to assign the layer name to each hook
             m.register_forward_hook(partial(save_activations, name))
 
-    out, _ = net(images)
+    out, _, _ = net(images)
 
     # concatenate all the outputs we saved to get the the activations for each layer for the whole dataset
     activations = {name: torch.cat(outputs, 0) for name, outputs in activations.items()}

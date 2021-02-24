@@ -5,6 +5,8 @@ from binary_tools.activations import DeterministicBinaryActivation
 import numpy as np
 from models.weight_init import weight_init
 
+EPS = 1e-12
+
 
 def compute_ratio_batch(batch_z_struct, labels_batch, nb_class, other_ratio=False):
     """
@@ -37,9 +39,9 @@ def compute_ratio_batch(batch_z_struct, labels_batch, nb_class, other_ratio=Fals
     variance_intra_class_mean_components = np.mean(variance_intra_class, axis=0)
     variance_inter_class = np.square(np.std(z_struct_mean_global_per_class, axis=0))
     if other_ratio:
-        ratio = variance_inter_class / variance_intra_class_mean_components  # shape: (len(z_struct))
+        ratio = variance_inter_class / (variance_intra_class_mean_components + EPS)  # shape: (len(z_struct))
     else:
-        ratio = variance_intra_class_mean_components / variance_inter_class
+        ratio = variance_intra_class_mean_components / (variance_inter_class + EPS)
     ratio_variance_mean = np.mean(ratio)
 
     return ratio_variance_mean
@@ -186,8 +188,8 @@ class Custom_CNN_BK(nn.Module, ABC):
     def weight_init(self):
         for block in self._modules:
             for m in self._modules[block]:
-                weight_init(m)
-                # kaiming_init(m)
+                # weight_init(m)
+                kaiming_init(m)
 
     def forward(self, x, labels=None, nb_class=None, use_ratio=False, z_struct_out=False, z_struct_prediction=False,
                 z_struct_layer_num=None, other_ratio=False):

@@ -9,6 +9,8 @@ from sklearn.preprocessing import StandardScaler
 # from torch_receptive_field import receptive_field
 from torchvision.utils import make_grid
 
+EPS = 1e-12
+
 
 def compute_scores_pred(prediction, labels):
     """
@@ -27,7 +29,7 @@ def get_layer_zstruct_num(net, net_type):
     if net_type == 'Custom_CNN':
         add_layer = 1
     elif net_type == 'Custom_CNN_BK':
-        add_layer = 3
+        add_layer = 1
 
     # get layer num for GMP:
     for name, m in net.named_modules():
@@ -915,9 +917,9 @@ def ratio(exp_name, train_test=None, cat=None, other_ratio=False):
         variance_intra_class_mean_components = np.mean(variance_intra_class, axis=0)  # shape: (len(z_struct))
         variance_inter_class = np.square(np.std(z_struct_mean_global_per_class, axis=0))  # shape: len(z_struct)
         if other_ratio:
-            ratio_variance = variance_inter_class / variance_intra_class_mean_components  # shape: (len(z_struct))
+            ratio_variance = variance_inter_class / (variance_intra_class_mean_components + EPS)  # shape: (len(z_struct))
         else:
-            ratio_variance = variance_intra_class_mean_components / variance_inter_class
+            ratio_variance = variance_intra_class_mean_components / (variance_inter_class + EPS)
         ratio_variance_mean = np.mean(ratio_variance)
 
         print('Var intra class shape: ', variance_intra_class.shape, variance_intra_class_mean_components.shape)
@@ -944,7 +946,8 @@ def ratio(exp_name, train_test=None, cat=None, other_ratio=False):
         variance_intra_class_normalized = np.square(z_struct_std_global_per_class_normalized)
         variance_intra_class_normalized_mean_components = np.mean(variance_intra_class_normalized, axis=0)
         variance_inter_class_normalized = np.square(np.std(z_struct_mean_global_per_class_normalized, axis=0))
-        ratio_variance_normalized = variance_intra_class_normalized_mean_components / variance_inter_class_normalized
+        ratio_variance_normalized = variance_intra_class_normalized_mean_components /\
+                                    (variance_inter_class_normalized + EPS)
         ratio_variance_normalized_mean = np.mean(ratio_variance_normalized)
 
         np.save(path_save_ratio_variance, np.mean(ratio_variance_mean))

@@ -415,12 +415,14 @@ def get_mnist_dataset(batch_size=64):
                                     train=True,
                                     download=False,
                                     transform=transforms.Compose([transforms.Resize(32),
-                                                                  transforms.ToTensor()]))
+                                                                  transforms.ToTensor(),
+                                                                  transforms.Normalize((0.1307,), (0.3081,))]))
     mnist_testset = datasets.MNIST(root='data/mnist/',
                                    train=False,
                                    download=False,
                                    transform=transforms.Compose([transforms.Resize(32),
-                                                                 transforms.ToTensor()]))
+                                                                 transforms.ToTensor(),
+                                                                 transforms.Normalize((0.1307,), (0.3081,))]))
 
     train_loader = torch.utils.data.DataLoader(dataset=mnist_trainset,
                                                batch_size=batch_size,

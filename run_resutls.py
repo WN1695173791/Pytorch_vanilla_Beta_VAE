@@ -10,6 +10,7 @@ from torchvision import transforms
 from visualizer import *
 from visualizer_CNN import *
 from viz.viz_regions import *
+from scores_classifier import compute_scores
 
 
 # ___________________________________ begin extrraction parameters models ______________________________________________
@@ -159,13 +160,29 @@ def run_exp_extraction_and_visualization_custom_BK(path_parameter, line_begin, l
         batch_size = args[4]
 
         if is_ratio:
+            ratio_reg = True
             lambda_ratio = args[28][1]
             lambda_class = args[29][1]
-            exp_name = args[30][-1].split('\n')[0]
-            ratio_reg = True
+            if args[30][0] == 'other_ratio':
+                if args[30][1] == 'True':
+                    other_ratio = True
+                elif args[30][1] == 'False':
+                    other_ratio = False
+                exp_name = args[31][-1].split('\n')[0]
+                add_linear_after_GMP = True
+            elif args[30][0] == 'add_linear_after_GMP':
+                if args[30][1] == 'True':
+                    add_linear_after_GMP = True
+                elif args[30][1] == 'False':
+                    add_linear_after_GMP = False
+                exp_name = args[31][-1].split('\n')[0]
+            else:
+                exp_name = args[30][-1].split('\n')[0]
+                add_linear_after_GMP = True
         else:
             exp_name = args[27][-1].split('\n')[0]
             ratio_reg = False
+            add_linear_after_GMP = True
 
         z_struct_size = int(args[11][1])
         stride_size = int(args[23][1])
@@ -221,25 +238,8 @@ def run_exp_extraction_and_visualization_custom_BK(path_parameter, line_begin, l
                             three_conv_layer=three_conv_layer,
                             BK_in_second_layer=BK_in_second_layer,
                             BK_in_third_layer=BK_in_third_layer,
-                            Binary_z=False)
-
-        # if exp_name in list_model_selected_Custom_CNN_BK_95_acc_z_struct_5:
-        #     run_viz_expes(exp_name, net, net_type='Custom_CNN_BK', cat='zstruct_5')
-        # if exp_name in list_model_selected_Custom_CNN_BK_95_acc_z_struct_10:
-        #     run_viz_expes(exp_name, net, net_type='Custom_CNN_BK', cat='zstruct_10')
-        # if exp_name in list_model_selected_Custom_CNN_BK_95_acc_z_struct_15:
-        #     run_viz_expes(exp_name, net, net_type='Custom_CNN_BK', cat='zstruct_15')
-        # if exp_name in list_model_selected_Custom_CNN_BK_95_acc_z_struct_20:
-        #     run_viz_expes(exp_name, net, net_type='Custom_CNN_BK', cat='zstruct_20')
-        # if exp_name in list_model_selected_Custom_CNN_BK_95_acc_z_struct_30:
-        #     run_viz_expes(exp_name, net, net_type='Custom_CNN_BK', cat='zstruct_30')
-        # if exp_name in list_model_selected_Custom_CNN_BK_95_acc_z_struct_50:
-        #     run_viz_expes(exp_name, net, net_type='Custom_CNN_BK', cat='zstruct_50')
-
-        # if exp_name in selected_analyse_20:
-        #     run_viz_expes(exp_name, net, net_type='Custom_CNN_BK', cat='zstruct_20')
-        # if exp_name in selected_analyse_50:
-        #     run_viz_expes(exp_name, net, net_type='Custom_CNN_BK', cat='zstruct_50')
+                            Binary_z=False,
+                            add_linear_after_GMP=add_linear_after_GMP)
 
         if exp_name in list_model:
             run_viz_expes(exp_name, net, net_type='Custom_CNN_BK', cat=cat, ratio_reg=ratio_reg)
@@ -282,11 +282,15 @@ def run_viz_expes(exp_name, net, net_type=None, cat=None, ratio_reg=False):
     path_scores = 'checkpoint_scores_CNN'
     net_trained, _, nb_epochs = get_checkpoints(net, path, exp_name)
     # print(net)
-    # scores and losses:
-    plot_scores_and_loss_CNN(net_trained, exp_name, path_scores, is_ratio=ratio_reg, save=True)
 
     train_test = 'test'
     loader = test_loader
+    loader_size = len(loader.dataset)
+
+    # scores and losses:
+    # plot_scores_and_loss_CNN(net_trained, exp_name, path_scores, is_ratio=ratio_reg, save=True)
+    score, _ = compute_scores(net_trained, loader, device, loader_size)
+    print('score Test acc: {:.3f}%'.format(score))
 
     # compute features:
     compute_z_struct(net_trained, exp_name, loader, train_test=train_test, net_type=net_type)
@@ -302,12 +306,12 @@ def run_viz_expes(exp_name, net, net_type=None, cat=None, ratio_reg=False):
     # receptive_field = get_receptive_field(net_trained, img_size, net_type=net_type)
 
     # plot:
-    # ratio_variance = ratio(exp_name, train_test=train_test, cat=cat)
+    ratio_variance = ratio(exp_name, train_test=train_test, cat=cat)
     # print(ratio_variance)
     # score = correlation_filters(net_trained, exp_name, train_test=train_test, ch=nc, vis_filters=False, plot_fig=True,
     #                             cat=cat)
     # score_corr_class = dispersion_classes(exp_name, train_test=train_test, plot_fig=True, cat=cat)
-    # plot_2d_projection_z_struct(nb_class, exp_name, train_test=train_test, ratio=ratio_variance)
+    plot_2d_projection_z_struct(nb_class, exp_name, train_test=train_test, ratio=ratio_variance)
 
     # plot_acc_bit_noised_per_class(exp_name,
     #                               train_test=train_test,
@@ -476,7 +480,7 @@ def selection(net, exp_name):
 # parameters:
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 batch = torch.load('data/batch_mnist.pt')
-batch_size = 64
+batch_size = 10000
 _, test_loader = get_mnist_dataset(batch_size=batch_size)
 
 path_image_save = 'regions_of_interest/images/images.npy'
@@ -728,25 +732,99 @@ if __name__ == '__main__':
     line_begin_bk = 307
     line_end_bk = 810
 
-    list_model_ratio = ['CNN_mnist_custom_BK_2layer_bk1_20_ratio_1',
-                        'CNN_mnist_custom_BK_2layer_bk1_20_ratio_2',
-                        'CNN_mnist_custom_BK_2layer_bk1_20_ratio_3',
-                        'CNN_mnist_custom_BK_2layer_bk1_20_ratio_4',
-                        'CNN_mnist_custom_BK_2layer_bk1_20_ratio_5']
+    list_model_ratio = ['CNN_mnist_custom_BK_2layer_bk1_20_ratio_bs_128_1',
+                        'CNN_mnist_custom_BK_2layer_bk1_20_ratio_bs_128_2',
+                        'CNN_mnist_custom_BK_2layer_bk1_20_ratio_bs_128_3',
+                        'CNN_mnist_custom_BK_2layer_bk1_20_ratio_bs_128_4',
+                        'CNN_mnist_custom_BK_2layer_bk1_20_ratio_bs_128_5',
+                        'CNN_mnist_custom_BK_2layer_bk1_20_ratio_bs_128_6',
+                        'CNN_mnist_custom_BK_2layer_bk1_20_ratio_bs_128_7',
+                        'CNN_mnist_custom_BK_2layer_bk1_20_ratio_bs_128_8']
+                        # 'CNN_mnist_custom_BK_2layer_bk1_20_ratio_bs_256_1',
+                        # 'CNN_mnist_custom_BK_2layer_bk1_20_ratio_bs_256_2',
+                        # 'CNN_mnist_custom_BK_2layer_bk1_20_ratio_bs_256_3',
+                        # 'CNN_mnist_custom_BK_2layer_bk1_20_ratio_bs_256_4',
+                        # 'CNN_mnist_custom_BK_2layer_bk1_20_ratio_bs_256_5',
+                        # 'CNN_mnist_custom_BK_2layer_bk1_20_ratio_bs_256_6',
+                        # 'CNN_mnist_custom_BK_2layer_bk1_20_ratio_bs_256_7',
+                        # 'CNN_mnist_custom_BK_2layer_bk1_20_ratio_bs_256_8',
+                        # 'CNN_mnist_custom_BK_2layer_bk1_20_ratio_bs_512_1',
+                        # 'CNN_mnist_custom_BK_2layer_bk1_20_ratio_bs_512_2',
+                        # 'CNN_mnist_custom_BK_2layer_bk1_20_ratio_bs_512_3',
+                        # 'CNN_mnist_custom_BK_2layer_bk1_20_ratio_bs_512_4',
+                        # 'CNN_mnist_custom_BK_2layer_bk1_20_ratio_bs_512_5',
+                        # 'CNN_mnist_custom_BK_2layer_bk1_20_ratio_bs_512_6',
+                        # 'CNN_mnist_custom_BK_2layer_bk1_20_ratio_bs_512_7',
+                        # 'CNN_mnist_custom_BK_2layer_bk1_20_ratio_bs_512_8',
+                        # 'CNN_mnist_custom_BK_2layer_bk1_20_other_ratio_bs_128_1',
+                        # 'CNN_mnist_custom_BK_2layer_bk1_20_other_ratio_bs_128_2',
+                        # 'CNN_mnist_custom_BK_2layer_bk1_20_other_ratio_bs_128_3',
+                        # 'CNN_mnist_custom_BK_2layer_bk1_20_other_ratio_bs_128_4',
+                        # 'CNN_mnist_custom_BK_2layer_bk1_20_other_ratio_bs_128_5',
+                        # 'CNN_mnist_custom_BK_2layer_bk1_20_other_ratio_bs_128_6',
+                        # 'CNN_mnist_custom_BK_2layer_bk1_20_other_ratio_bs_128_7',
+                        # 'CNN_mnist_custom_BK_2layer_bk1_20_other_ratio_bs_128_8',
+                        # 'CNN_mnist_custom_BK_2layer_bk1_20_other_ratio_bs_256_1',
+                        # 'CNN_mnist_custom_BK_2layer_bk1_20_other_ratio_bs_256_2',
+                        # 'CNN_mnist_custom_BK_2layer_bk1_20_other_ratio_bs_256_3',
+                        # 'CNN_mnist_custom_BK_2layer_bk1_20_other_ratio_bs_256_4',
+                        # 'CNN_mnist_custom_BK_2layer_bk1_20_other_ratio_bs_256_5',
+                        # 'CNN_mnist_custom_BK_2layer_bk1_20_other_ratio_bs_256_6',
+                        # 'CNN_mnist_custom_BK_2layer_bk1_20_other_ratio_bs_256_7',
+                        # 'CNN_mnist_custom_BK_2layer_bk1_20_other_ratio_bs_256_8',
+                        # 'CNN_mnist_custom_BK_2layer_bk1_20_other_ratio_bs_512_1',
+                        # 'CNN_mnist_custom_BK_2layer_bk1_20_other_ratio_bs_512_2',
+                        # 'CNN_mnist_custom_BK_2layer_bk1_20_other_ratio_bs_512_3',
+                        # 'CNN_mnist_custom_BK_2layer_bk1_20_other_ratio_bs_512_4',
+                        # 'CNN_mnist_custom_BK_2layer_bk1_20_other_ratio_bs_512_5',
+                        # 'CNN_mnist_custom_BK_2layer_bk1_20_other_ratio_bs_512_6',
+                        # 'CNN_mnist_custom_BK_2layer_bk1_20_other_ratio_bs_512_7',
+                        # 'CNN_mnist_custom_BK_2layer_bk1_20_other_ratio_bs_512_8']
+
+    list_old_model_grid_search_z_struct_size = [# 'CNN_mnist_custom_BK_2layer_bk1_class_layer_5']  # acc: 93.3%, ratio: 0.25
+                                                # 'CNN_mnist_custom_BK_2layer_b2_class_layer_5',  # acc: 90.68%, ratio: 0.31
+                                                # 'CNN_mnist_custom_BK_2layer_bk1_5',  # acc: 87.1%, ratio: 0.27
+                                                # 'CNN_mnist_custom_BK_2layer_bk2_5']  # acc: 59.4%, ratio: 0.48
+                                                # 'CNN_mnist_custom_BK_2layer_bk1_class_layer_10',  # acc: 96.1%, ratio: 0.32
+                                                # 'CNN_mnist_custom_BK_2layer_bk2_class_layer_10',  # acc: 95.55.4%, ratio: 0.43
+                                                # 'CNN_mnist_custom_BK_2layer_bk1_10',  # acc: 79.05%, ratio: 0.56
+                                                # 'CNN_mnist_custom_BK_2layer_bk2_10']  # acc: 69.27%, ratio: 0.60
+                                                # 'CNN_mnist_custom_BK_2layer_bk1_class_layer_15',  # acc: 88.71.42%, ratio: 0.57
+                                                # 'CNN_mnist_custom_BK_2layer_bk2_class_layer_15',  # acc: 59.75.29%, ratio: 0.82
+                                                # 'CNN_mnist_custom_BK_2layer_bk1_15',  # acc: 69.27%, ratio: 0.60
+                                                # 'CNN_mnist_custom_BK_2layer_bk2_15']  # acc: 69.27%, ratio: 0.60
+                                                # 'CNN_mnist_custom_BK_2layer_bk1_class_layer_20',  # acc: 97.64%, ratio: 0.55
+                                                # 'CNN_mnist_custom_BK_2layer_bk2_class_layer_20',  # acc: 97.57%, ratio: 0.68
+                                                # 'CNN_mnist_custom_BK_2layer_bk1_20',  # acc: 88.45%, ratio: 0.77
+                                                # 'CNN_mnist_custom_BK_2layer_bk2_20']  # acc: 69.40%, ratio: 0.90
+                                                # 'CNN_mnist_custom_BK_2layer_bk1_class_layer_25',  # acc: 97.53%, ratio: 0.64
+                                                # 'CNN_mnist_custom_BK_2layer_bk2_class_layer_25',  # acc: 97.84%, ratio: 0.68
+                                                # 'CNN_mnist_custom_BK_2layer_bk1_25',   # acc: 98.65.40%, ratio: 0.93
+                                                # 'CNN_mnist_custom_BK_2layer_bk2_25']  # acc: 69.12%, ratio: 1.00
+                                                # 'CNN_mnist_custom_BK_2layer_bk1_class_layer_30',  # acc: 98.06%, ratio: 0.62
+                                                # 'CNN_mnist_custom_BK_2layer_bk2_class_layer_30',  # acc: 98.03%, ratio: 0.70
+                                                # 'CNN_mnist_custom_BK_2layer_bk1_30',  # acc: 68.7.12%, ratio: 1.73
+                                                # 'CNN_mnist_custom_BK_2layer_bk2_30']  # acc: 89.88%, ratio: 1.01
+                                                ]
 
     parameters_mnist_classifier_BK_ratio = "parameters_combinations/mnist_classifier_ratio.txt"
-    line_begin_bk_ratio = 1  # first line with model custom BK that we want see
-    line_end_bk_ratio = 6  # last line with model custom BK that we want see
-    line_begin_custom = 0  # first line with model custom that we want see
-    line_end_custom = 0  # last line with model custom that we want see
+    line_begin_bk_ratio = 10  # first line with model custom BK that we want see
+    line_end_bk_ratio = 57  # last line with model custom BK that we want see
+    line_begin_old_gs_z_struct = 60  # first line with model custom that we want see
+    line_end_old_gs_z_struct = 83  # last line with model custom that we want see
 
+    # run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
+    #                                               line_begin_bk_ratio,
+    #                                               line_end_bk_ratio,
+    #                                               list_model_ratio,
+    #                                               is_ratio=True)
+    # run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
+    #                                                line_begin_old_gs_z_struct,
+    #                                                line_end_old_gs_z_struct,
+    #                                                list_old_model_grid_search_z_struct_size,
+    #                                                is_ratio=True)
     run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK,
                                                    line_begin_bk,
                                                    line_end_bk,
                                                    list_model_to_test,
                                                    is_ratio=False)
-    run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
-                                                   line_begin_bk_ratio,
-                                                   line_end_bk_ratio,
-                                                   list_model_ratio,
-                                                   is_ratio=True)
