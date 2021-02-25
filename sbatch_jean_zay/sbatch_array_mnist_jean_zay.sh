@@ -4,7 +4,7 @@
 #SBATCH --qos=qos_gpu-t4             # for jean-zay
 #SBATCH --gres=gpu:1                # nombre de GPU a reserver
 #SBATCH --cpus-per-task=3          # nombre de coeurs CPU par tache
-#SBATCH --time=01:00:00                  # time (DD-HH:MM)
+#SBATCH --time=00:45:00                  # time (DD-HH:MM)
 #SBATCH --output=mnist_%A_%a.out       # STDOUT
 #SBATCH --error="mnist_%A_%a.err"       # STDERR
 
@@ -14,7 +14,7 @@
 #BATCH --mail-type=ALL           
 #SBATCH --mail-user=julien.dejasmin@lis-lab.fr
 
-#SBATCH --array=10-57  # 60-83
+#SBATCH --array=60-83  # 11-57
 echo "$SLURM_ARRAY_TASK_ID"
 
 # nettoyage des modules charges en interactif et herites par defaut
