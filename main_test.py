@@ -9,6 +9,7 @@ from utils.utils import str2bool
 
 import os
 from utils.helpers import (get_config_section)
+import wandb
 
 
 CONFIG_FILE = "hyperparam.ini"
@@ -44,6 +45,9 @@ if __name__ == "__main__":
     parser.add_argument('-L', '--log-level', help="Logging levels.",
                         default=default_config['log_level'], choices=LOG_LEVELS)
 
+    # add to test:
+    parser.add_argument('--LOG_DIR', default='logs', help='Path to log folder')
+    # end test ___________
     parser.add_argument('--train', default=True, type=str2bool, help='train or traverse')
     parser.add_argument('--seed', default=1, type=int, help='random seed')
     parser.add_argument('--cuda', default=True, type=str2bool, help='enable cuda')
@@ -193,6 +197,21 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     print(args)
+
+    # Directory for Log
+    LOG_DIR = args.LOG_DIR + '/logs_{}/{}_{}_embedding{}_alpha{}_mrg{}_{}_lr{}_batch{}{}'.format(args.dataset,
+                                                                                                 args.model,
+                                                                                                 # args.loss,
+                                                                                                 # args.sz_embedding,
+                                                                                                 # args.alpha,
+                                                                                                 # args.mrg,
+                                                                                                 # args.optimizer,
+                                                                                                 args.lr,
+                                                                                                 args.batch_size)
+                                                                                                 # args.remark)
+    # Wandb Initialization
+    wandb.init(project=args.dataset + '_ProxyAnchor', notes=LOG_DIR)
+    wandb.config.update(args)
 
     if not args.just_train:
         # save arguments parser:

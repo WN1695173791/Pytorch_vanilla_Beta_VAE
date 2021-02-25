@@ -290,8 +290,8 @@ class SolverClassifier(object):
                                                 other_ratio=self.other_ratio)
                 # classification loss
                 # averaged over each loss element in the batch
-                # self.Classification_loss = F.nll_loss(prediction, labels)
-                # self.Classification_loss = self.lambda_classification * self.Classification_loss
+                self.Classification_loss = F.nll_loss(prediction, labels)
+                self.Classification_loss = self.lambda_classification * self.Classification_loss
 
                 # ratio loss:
                 if self.other_ratio:
@@ -299,8 +299,7 @@ class SolverClassifier(object):
                 else:
                     self.ratio = ratio * self.lambda_ratio_reg
 
-                # self.Total_loss = self.Classification_loss + self.ratio
-                self.Total_loss = self.ratio
+                self.Total_loss = self.Classification_loss + self.ratio
                 # backpropagation loss
                 self.optimizer.zero_grad()
                 self.Total_loss.backward()

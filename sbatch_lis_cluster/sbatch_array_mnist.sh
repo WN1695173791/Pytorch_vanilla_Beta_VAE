@@ -3,8 +3,8 @@
 #SBATCH --partition=gpu                  # Name of the Slurm partition used
 #SBATCH --gres=gpu:1                # nombre de GPU a reserver
 #SBATCH --time=01:00:00                # time (DD-HH:MM)
-#SBATCH --output=mnist_%A_%a.out       # STDOUT
-#SBATCH --error="mnist_%A_%a.err"       # STDERR
+#SBATCH --output=output_exp/lis_cluster/mnist_%A_%a.out       # STDOUT
+#SBATCH --error=output_exp/lis_cluster/mnist_%A_%a.err       # STDERR
 
 #BATCH --mail-type=ALL                  # Mail notification of the events concerning the job : start time, end time,?~@?
 #SBATCH --mail-user=julien.dejasmin@lis-lab.fr
