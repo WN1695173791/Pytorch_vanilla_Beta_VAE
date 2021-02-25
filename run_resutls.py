@@ -288,9 +288,9 @@ def run_viz_expes(exp_name, net, net_type=None, cat=None, ratio_reg=False):
     loader_size = len(loader.dataset)
 
     # scores and losses:
-    # plot_scores_and_loss_CNN(net_trained, exp_name, path_scores, is_ratio=ratio_reg, save=True)
-    # score, _ = compute_scores(net_trained, loader, device, loader_size)
-    # print('score Test acc: {:.3f}%'.format(score))
+    plot_scores_and_loss_CNN(net_trained, exp_name, path_scores, is_ratio=ratio_reg, save=True)
+    score, _ = compute_scores(net_trained, loader, device, loader_size)
+    print('score Test acc: {:.3f}%'.format(score))
 
     # compute features:
     compute_z_struct(net_trained, exp_name, loader, train_test=train_test, net_type=net_type)
@@ -732,54 +732,55 @@ if __name__ == '__main__':
     line_begin_bk = 307
     line_end_bk = 810
 
-    list_model_ratio = [# 'CNN_mnist_custom_BK_2layer_bk1_20_ratio_bs_128_1',
+    list_model_ratio = ['CNN_mnist_custom_BK_2layer_bk1_20_ratio_bs_128_1']
                         # 'CNN_mnist_custom_BK_2layer_bk1_20_ratio_bs_128_2',
                         # 'CNN_mnist_custom_BK_2layer_bk1_20_ratio_bs_128_3',
-                        'CNN_mnist_custom_BK_2layer_bk1_20_ratio_bs_128_4',
+                        # 'CNN_mnist_custom_BK_2layer_bk1_20_ratio_bs_128_4',
                         # 'CNN_mnist_custom_BK_2layer_bk1_20_ratio_bs_128_5',
                         # 'CNN_mnist_custom_BK_2layer_bk1_20_ratio_bs_128_6',
                         # 'CNN_mnist_custom_BK_2layer_bk1_20_ratio_bs_128_7',
-                        'CNN_mnist_custom_BK_2layer_bk1_20_ratio_bs_128_8',
+                        # 'CNN_mnist_custom_BK_2layer_bk1_20_ratio_bs_128_8',
                         # 'CNN_mnist_custom_BK_2layer_bk1_20_ratio_bs_256_1',
                         # 'CNN_mnist_custom_BK_2layer_bk1_20_ratio_bs_256_2',
                         # 'CNN_mnist_custom_BK_2layer_bk1_20_ratio_bs_256_3',
-                        'CNN_mnist_custom_BK_2layer_bk1_20_ratio_bs_256_4',
+                        # 'CNN_mnist_custom_BK_2layer_bk1_20_ratio_bs_256_4',
                         # 'CNN_mnist_custom_BK_2layer_bk1_20_ratio_bs_256_5',
                         # 'CNN_mnist_custom_BK_2layer_bk1_20_ratio_bs_256_6',
                         # 'CNN_mnist_custom_BK_2layer_bk1_20_ratio_bs_256_7',
-                        'CNN_mnist_custom_BK_2layer_bk1_20_ratio_bs_256_8',
+                        # 'CNN_mnist_custom_BK_2layer_bk1_20_ratio_bs_256_8',
                         # 'CNN_mnist_custom_BK_2layer_bk1_20_ratio_bs_512_1',
                         # 'CNN_mnist_custom_BK_2layer_bk1_20_ratio_bs_512_2',
                         # 'CNN_mnist_custom_BK_2layer_bk1_20_ratio_bs_512_3',
-                        'CNN_mnist_custom_BK_2layer_bk1_20_ratio_bs_512_4',
+                        # 'CNN_mnist_custom_BK_2layer_bk1_20_ratio_bs_512_4',
                         # 'CNN_mnist_custom_BK_2layer_bk1_20_ratio_bs_512_5',
                         # 'CNN_mnist_custom_BK_2layer_bk1_20_ratio_bs_512_6',
                         # 'CNN_mnist_custom_BK_2layer_bk1_20_ratio_bs_512_7',
-                        'CNN_mnist_custom_BK_2layer_bk1_20_ratio_bs_512_8',
+                        # 'CNN_mnist_custom_BK_2layer_bk1_20_ratio_bs_512_8',
                         # 'CNN_mnist_custom_BK_2layer_bk1_20_other_ratio_bs_128_1',
                         # 'CNN_mnist_custom_BK_2layer_bk1_20_other_ratio_bs_128_2',
                         # 'CNN_mnist_custom_BK_2layer_bk1_20_other_ratio_bs_128_3',
-                        'CNN_mnist_custom_BK_2layer_bk1_20_other_ratio_bs_128_4',
+                        # 'CNN_mnist_custom_BK_2layer_bk1_20_other_ratio_bs_128_4',
                         # 'CNN_mnist_custom_BK_2layer_bk1_20_other_ratio_bs_128_5',
                         # 'CNN_mnist_custom_BK_2layer_bk1_20_other_ratio_bs_128_6',
                         # 'CNN_mnist_custom_BK_2layer_bk1_20_other_ratio_bs_128_7',
-                        'CNN_mnist_custom_BK_2layer_bk1_20_other_ratio_bs_128_8',
+                        # 'CNN_mnist_custom_BK_2layer_bk1_20_other_ratio_bs_128_8',
                         # 'CNN_mnist_custom_BK_2layer_bk1_20_other_ratio_bs_256_1',
                         # 'CNN_mnist_custom_BK_2layer_bk1_20_other_ratio_bs_256_2',
                         # 'CNN_mnist_custom_BK_2layer_bk1_20_other_ratio_bs_256_3',
-                        'CNN_mnist_custom_BK_2layer_bk1_20_other_ratio_bs_256_4',
+                        # 'CNN_mnist_custom_BK_2layer_bk1_20_other_ratio_bs_256_4',
                         # 'CNN_mnist_custom_BK_2layer_bk1_20_other_ratio_bs_256_5',
                         # 'CNN_mnist_custom_BK_2layer_bk1_20_other_ratio_bs_256_6',
                         # 'CNN_mnist_custom_BK_2layer_bk1_20_other_ratio_bs_256_7',
-                        'CNN_mnist_custom_BK_2layer_bk1_20_other_ratio_bs_256_8',
+                        # 'CNN_mnist_custom_BK_2layer_bk1_20_other_ratio_bs_256_8',
                         # 'CNN_mnist_custom_BK_2layer_bk1_20_other_ratio_bs_512_1',
                         # 'CNN_mnist_custom_BK_2layer_bk1_20_other_ratio_bs_512_2',
                         # 'CNN_mnist_custom_BK_2layer_bk1_20_other_ratio_bs_512_3',
-                        'CNN_mnist_custom_BK_2layer_bk1_20_other_ratio_bs_512_4',
+                        # 'CNN_mnist_custom_BK_2layer_bk1_20_other_ratio_bs_512_4']
+
                         # 'CNN_mnist_custom_BK_2layer_bk1_20_other_ratio_bs_512_5',
                         # 'CNN_mnist_custom_BK_2layer_bk1_20_other_ratio_bs_512_6',
                         # 'CNN_mnist_custom_BK_2layer_bk1_20_other_ratio_bs_512_7',
-                        'CNN_mnist_custom_BK_2layer_bk1_20_other_ratio_bs_512_8']
+                        # 'CNN_mnist_custom_BK_2layer_bk1_20_other_ratio_bs_512_8']
 
     list_old_model_grid_search_z_struct_size = [# 'CNN_mnist_custom_BK_2layer_bk1_class_layer_5',  # acc: 93.3%, ratio: 0.25
                                                 # 'CNN_mnist_custom_BK_2layer_b2_class_layer_5',  # acc: 90.68%, ratio: 0.31
@@ -818,11 +819,11 @@ if __name__ == '__main__':
                                                   line_end_bk_ratio,
                                                   list_model_ratio,
                                                   is_ratio=True)
-    run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
-                                                   line_begin_old_gs_z_struct,
-                                                   line_end_old_gs_z_struct,
-                                                   list_old_model_grid_search_z_struct_size,
-                                                   is_ratio=True)
+    # run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
+    #                                                line_begin_old_gs_z_struct,
+    #                                                line_end_old_gs_z_struct,
+    #                                                list_old_model_grid_search_z_struct_size,
+    #                                                is_ratio=True)
     # run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK,
     #                                                line_begin_bk,
     #                                                line_end_bk,
