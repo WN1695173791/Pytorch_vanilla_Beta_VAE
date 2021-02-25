@@ -16,7 +16,7 @@ from scores_classifier import compute_scores
 from visualizer_CNN import get_layer_zstruct_num, compute_z_struct
 from models.custom_CNN_BK import compute_ratio_batch
 
-import wandb
+# import wandb
 
 
 def compute_scores_and_loss(net, train_loader, test_loader, device, train_loader_size, test_loader_size,
@@ -103,8 +103,8 @@ class SolverClassifier(object):
         self.other_ratio = args.other_ratio
 
         # Wandb Initialization
-        wandb.init(project=args.dataset + '_ProxyAnchor', notes=LOG_DIR)
-        wandb.config.update(args)
+        # wandb.init(project=args.dataset + '_ProxyAnchor', notes=LOG_DIR)
+        # wandb.config.update(args)
 
         # dataset parameters:
         if args.dataset.lower() == 'mnist':
