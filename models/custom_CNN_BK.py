@@ -17,8 +17,8 @@ def compute_ratio_batch_test(batch_z_struct, labels_batch, nb_class, other_ratio
     :return:
     """
     if 'torch.Tensor' in str(type(batch_z_struct)):
-        batch_z_struct = batch_z_struct.cpu().detach().numpy()
-        labels_batch = labels_batch.cpu().detach().numpy()
+        batch_z_struct = batch_z_struct.cpu().detach()
+        labels_batch = labels_batch.cpu().detach()
 
     representation_z_struct_class = []
     for class_id in range(nb_class):
@@ -240,9 +240,11 @@ class Custom_CNN_BK(nn.Module, ABC):
                 std_class = torch.cat((std_class, std_class_iter), dim=0)
             first = False
 
-        variance_intra_class = torch.square(std_class)  # shape: (nb_class, len(z_struct))
+        # variance_intra_class = torch.square(std_class)  # shape: (nb_class, len(z_struct))
+        variance_intra_class = std_class * std_class
         variance_intra_class_mean_components = torch.mean(variance_intra_class, axis=0)
-        variance_inter_class = torch.square(torch.std(mean_class, axis=0))
+        # variance_inter_class = torch.square(torch.std(mean_class, axis=0))
+        variance_inter_class = torch.std(mean_class, axis=0) * torch.std(mean_class, axis=0)
 
         if other_ratio:
             ratio = variance_inter_class / (variance_intra_class_mean_components + EPS)  # shape: (len(z_struct))
