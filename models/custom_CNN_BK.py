@@ -22,7 +22,7 @@ def compute_ratio_batch_test(batch_z_struct, labels_batch, nb_class, other_ratio
 
     representation_z_struct_class = []
     for class_id in range(nb_class):
-        z_struct_class = batch_z_struct[torch.where(labels_batch == class_id)]
+        z_struct_class = batch_z_struct[np.where(labels_batch == class_id)]
         representation_z_struct_class.append(z_struct_class)
 
     representation_z_struct_class = np.array(representation_z_struct_class)
