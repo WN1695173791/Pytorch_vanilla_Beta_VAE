@@ -9,7 +9,7 @@ import torch
 EPS = 1e-12
 
 
-def compute_ratio_batch_test(self, batch_z_struct, labels_batch, nb_class, other_ratio=False):
+def compute_ratio_batch_test(batch_z_struct, labels_batch, nb_class, other_ratio=False):
     """
     compute ratio of one batch:
     ratio: to minimize, variance_inter_class / var_intra_class
