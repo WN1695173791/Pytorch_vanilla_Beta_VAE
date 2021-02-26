@@ -405,7 +405,8 @@ class SolverClassifier(object):
                     # loss take emnedding, not prediciton
                     embedding = embedding.squeeze(axis=-1).squeeze(axis=-1)
                     loss = self.criterion(embedding, labels)
-                    # loss = Variable(loss.data, requires_grad=True)
+                    # pour aller plus vite j'utilise ratio reg mais il faudra ajotuer cette variable:
+                    loss = loss * self.lambda_ratio_reg
 
                 if self.ratio_reg:
                     # ratio loss:
@@ -425,7 +426,7 @@ class SolverClassifier(object):
                 else:
                     if self.ratio_reg:
                         if self.contrastive_loss:
-                            self.total_loss = self.Classification_loss + loss + self.ratio
+                            self.total_loss = self.Classification_loss + loss  # on ne veut pas utiliser le ratio avec la contrastive loss
                         else:
                             self.total_loss = self.Classification_loss + self.ratio
                     else:
@@ -437,6 +438,11 @@ class SolverClassifier(object):
                 # backpropagation loss
                 self.optimizer.zero_grad()
                 self.total_loss.backward()
+
+                # print(self.total_loss.grad)
+                # print(self.ratio.grad)
+                # print(self.Classification_loss.grad)
+                # print(self.net.net[0].weight.grad)
 
                 if self.contrastive_loss:
                     torch.nn.utils.clip_grad_value_(self.net.parameters(), 10)
