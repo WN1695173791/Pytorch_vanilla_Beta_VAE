@@ -414,6 +414,7 @@ class SolverClassifier(object):
                     else:
                         self.ratio = ratio * self.lambda_ratio_reg
                     self.ratio = Variable(self.ratio.data, requires_grad=True)
+                    self.ratio = self.ratio.to(self.device)
 
                 # total loss:
                 if self.without_acc:
