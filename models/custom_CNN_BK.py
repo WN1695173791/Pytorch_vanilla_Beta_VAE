@@ -17,8 +17,8 @@ def compute_ratio_batch_test(batch_z_struct, labels_batch, nb_class, other_ratio
     :return:
     """
     if 'torch.Tensor' in str(type(batch_z_struct)):
-        batch_z_struct = batch_z_struct.cpu().detach().numpy()
-        labels_batch = labels_batch.cpu().detach().numpy()
+        batch_z_struct = batch_z_struct.cpu().detach()
+        labels_batch = labels_batch.cpu().detach()
 
     first = True
     for class_id in range(nb_class):
