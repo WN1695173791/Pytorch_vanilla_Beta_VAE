@@ -437,7 +437,7 @@ class SolverClassifier(object):
                 self.optimizer.zero_grad()
                 self.total_loss.backward()
 
-                # print(self.net.net[0].weight.grad)
+                print(self.net.net[0].weight.grad)
 
                 if self.contrastive_loss:
                     torch.nn.utils.clip_grad_value_(self.net.parameters(), 10)
