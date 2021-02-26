@@ -405,7 +405,7 @@ class SolverClassifier(object):
                     # loss take emnedding, not prediciton
                     embedding = embedding.squeeze(axis=-1).squeeze(axis=-1)
                     loss = self.criterion(embedding, labels)
-                    loss = Variable(loss.data, requires_grad=True)
+                    # loss = Variable(loss.data, requires_grad=True)
 
                 if self.ratio_reg:
                     # ratio loss:
