@@ -158,12 +158,20 @@ def run_exp_extraction_and_visualization_custom_BK(path_parameter, line_begin, l
 
         args = arguments_2[key]
         batch_size = args[4]
-
         if is_ratio:
             ratio_reg = True
             lambda_ratio = args[28][1]
             lambda_class = args[29][1]
-            if args[30][0] == 'other_ratio':
+            if args[30][0] == 'alpha':
+                alpha = args[30][0]
+                loss = args[31][0]
+                optimizer = args[32][0]
+                mrg = args[33][0]
+                IPC = args[34][0]
+                warm = args[35][0]
+                exp_name = args[36][-1].split('\n')[0]
+                add_linear_after_GMP = True
+            elif args[30][0] == 'other_ratio':
                 if args[30][1] == 'True':
                     other_ratio = True
                 elif args[30][1] == 'False':
@@ -808,17 +816,25 @@ if __name__ == '__main__':
                                                 # 'CNN_mnist_custom_BK_2layer_bk2_30']  # acc: 89.88%, ratio: 1.01
 
 
+    list_model_test = ['CNN_mnist_contrastive_loss_test_2']
+    params_test = 'parameters_combinations/mnist_parameters_test_contrastive_loss.txt'
+
     parameters_mnist_classifier_BK_ratio = "parameters_combinations/mnist_classifier_ratio.txt"
     line_begin_bk_ratio = 10  # first line with model custom BK that we want see
     line_end_bk_ratio = 57  # last line with model custom BK that we want see
     line_begin_old_gs_z_struct = 60  # first line with model custom that we want see
     line_end_old_gs_z_struct = 83  # last line with model custom that we want see
 
-    run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
-                                                  line_begin_bk_ratio,
-                                                  line_end_bk_ratio,
-                                                  list_model_ratio,
-                                                  is_ratio=True)
+    run_exp_extraction_and_visualization_custom_BK(params_test,
+                                                   1,
+                                                   1,
+                                                   list_model_test,
+                                                   is_ratio=True)
+    # run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
+    #                                               line_begin_bk_ratio,
+    #                                               line_end_bk_ratio,
+    #                                               list_model_ratio,
+    #                                               is_ratio=True)
     # run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
     #                                                line_begin_old_gs_z_struct,
     #                                                line_end_old_gs_z_struct,

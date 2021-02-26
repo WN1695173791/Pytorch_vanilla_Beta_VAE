@@ -1,16 +1,12 @@
 import argparse
 import numpy as np
 import torch
-import logging
-
-from solver import Solver
-from solver_classifier import SolverClassifier
+from solver_Classifier_test import SolverClassifier_Contrastive_loss
 from utils.utils import str2bool
+import logging
+from utils.helpers import (get_config_section)
 
 import os
-from utils.helpers import (get_config_section)
-import wandb
-
 
 CONFIG_FILE = "hyperparam.ini"
 LOG_LEVELS = list(logging._levelToName.values())
@@ -25,10 +21,7 @@ def main(arguments):
     torch.cuda.manual_seed(seed)
     np.random.seed(seed)
 
-    if args.model == 'VAE':
-        net = Solver(arguments)
-    elif args.model == 'CNN':
-        net = SolverClassifier(arguments)
+    net = SolverClassifier_Contrastive_loss(arguments)
 
     if arguments.train:
         net.train()
@@ -40,14 +33,12 @@ if __name__ == "__main__":
 
     default_config = get_config_section([CONFIG_FILE], "Custom")
 
-    parser = argparse.ArgumentParser(description='implementatino of VAE to extract structural and variability information')
+    parser = argparse.ArgumentParser(description='implementatino test of VAE to extract structural and variability '
+                                                 'information')
 
     parser.add_argument('-L', '--log-level', help="Logging levels.",
                         default=default_config['log_level'], choices=LOG_LEVELS)
 
-    # add to test:
-    parser.add_argument('--LOG_DIR', default='logs', help='Path to log folder')
-    # end test ___________
     parser.add_argument('--train', default=True, type=str2bool, help='train or traverse')
     parser.add_argument('--seed', default=1, type=int, help='random seed')
     parser.add_argument('--cuda', default=True, type=str2bool, help='enable cuda')
@@ -194,29 +185,21 @@ if __name__ == "__main__":
     parser.add_argument('--lambda_ratio_reg', default=1, type=float, help="lambda ratio regularization value")
     parser.add_argument('--other_ratio', default=False, type=str2bool, help='other ratio (inverse)')
 
+    # add to test:
+    parser.add_argument('--LOG_DIR', default='logs', help='Path to log folder')
+    # add contrastive loss parameters:
+    parser.add_argument('--alpha', default=32, type=float, help='Scaling Parameter setting')
+    parser.add_argument('--loss', default='Proxy_Anchor', help='Criterion for training')
+    parser.add_argument('--optimizer', default='adamw', help='Optimizer setting')
+    parser.add_argument('--mrg', default=0.1, type=float, help='Margin parameter setting')
+    parser.add_argument('--IPC', default=False, type=str2bool, help='Balanced sampling, images per class')
+    parser.add_argument('--warm', default=1, type=int, help='Warmup training epochs')
+    parser.add_argument('--remark', default='', help='Any remark')
+    # end test ___________
+
     args = parser.parse_args()
 
     print(args)
-
-    # Directory for Log
-    LOG_DIR = args.LOG_DIR + '/logs_{}/{}_{}_embedding{}_alpha{}_mrg{}_{}_lr{}_batch{}{}'.format(args.dataset,
-                                                                                                 args.model,
-                                                                                                 # args.loss,
-                                                                                                 # args.sz_embedding,
-                                                                                                 # args.alpha,
-                                                                                                 # args.mrg,
-                                                                                                 # args.optimizer,
-                                                                                                 args.lr,
-                                                                                                 args.batch_size)
-                                                                                                 # args.remark)
-    # Wandb Initialization
-    wandb.init(project=args.dataset + '_ProxyAnchor', notes=LOG_DIR)
-    wandb.config.update(args)
-
-    if not args.just_train:
-        # save arguments parser:
-        with open('args_parser/commandline_args_test' + args.exp_name + '.txt', 'w') as f:
-            f.write(str(str(args).split('Namespace(')[1]).replace(', ', '\n').replace(')', ''))
 
     if args.gpu_devices is not None:
         gpu_devices = ','.join([str(idx) for idx in args.gpu_devices])

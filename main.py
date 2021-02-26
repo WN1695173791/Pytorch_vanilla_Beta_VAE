@@ -181,6 +181,8 @@ if __name__ == "__main__":
     parser.add_argument('--three_conv_layer', default=False, type=str2bool, help='if three_conv_layer')
     parser.add_argument('--use_scheduler', default=False, type=str2bool, help='if use scheduler')
     parser.add_argument('--add_linear_after_GMP', default=True, type=str2bool, help='linear after GMP')
+    parser.add_argument('--without_acc', default=False, type=str2bool, help='linear after GMP')
+    parser.add_argument('--contrastive_loss', default=False, type=str2bool, help='contrastive_loss')
 
     # Binary parameters:
     parser.add_argument('--binary_z', default=False, type=str2bool, help='To binary the last conv2d output')
@@ -189,6 +191,19 @@ if __name__ == "__main__":
     parser.add_argument('--ratio_reg', default=False, type=str2bool, help='if add ratio to regularization')
     parser.add_argument('--lambda_ratio_reg', default=1, type=float, help="lambda ratio regularization value")
     parser.add_argument('--other_ratio', default=False, type=str2bool, help='other ratio (inverse)')
+
+    # add to test:
+    parser.add_argument('--LOG_DIR', default='logs', help='Path to log folder')
+    # add contrastive loss parameters:
+    parser.add_argument('--alpha', default=32, type=float, help='Scaling Parameter setting')
+    parser.add_argument('--loss', default='Proxy_Anchor', help='Criterion for training')
+    parser.add_argument('--optimizer', default='adamw', help='Optimizer setting')
+    parser.add_argument('--mrg', default=0.1, type=float, help='Margin parameter setting')
+    parser.add_argument('--IPC', default=False, type=str2bool, help='Balanced sampling, images per class')
+    parser.add_argument('--warm', default=1, type=int, help='Warmup training epochs')
+    parser.add_argument('--sz_embedding', default=5, type=int, help='embedding size')
+    parser.add_argument('--remark', default='', help='Any remark')
+    # end test ___________
 
     args = parser.parse_args()
 

@@ -1,22 +1,26 @@
-import torch
 import logging
-import torch.optim as optimizer
-import torch.nn.functional as F
 import os
-from pytorchtools import EarlyStopping
+
+import torch
+import torch.nn.functional as F
+import torch.optim as optimizer
 from torch.optim.lr_scheduler import ReduceLROnPlateau
-
-from dataset.dataset_2 import get_dataloaders, get_mnist_dataset
-from models.default_CNN import DefaultCNN
-from models.custom_CNN_BK import Custom_CNN_BK
-from models.custom_CNN import Custom_CNN
-from solver import gpu_config
+from torch.utils.data.sampler import BatchSampler
 from tqdm import tqdm
-from scores_classifier import compute_scores
-from visualizer_CNN import get_layer_zstruct_num, compute_z_struct
-from models.custom_CNN_BK import compute_ratio_batch
 
-# import wandb
+import losses
+from dataset import sampler
+from dataset.dataset_2 import get_dataloaders, get_mnist_dataset
+from models.custom_CNN import Custom_CNN
+from models.custom_CNN_BK import Custom_CNN_BK
+from models.custom_CNN_BK import compute_ratio_batch
+from models.default_CNN import DefaultCNN
+from pytorchtools import EarlyStopping
+from scores_classifier import compute_scores
+from solver import gpu_config
+from visualizer_CNN import get_layer_zstruct_num, compute_z_struct
+import numpy as np
+from torch.autograd import Variable
 
 
 def compute_scores_and_loss(net, train_loader, test_loader, device, train_loader_size, test_loader_size,
@@ -95,16 +99,52 @@ class SolverClassifier(object):
         self.BK_in_third_layer = args.BK_in_third_layer
         self.use_scheduler = args.use_scheduler
         self.add_linear_after_GMP = args.add_linear_after_GMP
+        self.without_acc = args.without_acc
         # binary parameters:
         self.binary_z = args.binary_z
         # ratio regularization:
         self.ratio_reg = args.ratio_reg
         self.lambda_ratio_reg = args.lambda_ratio_reg
         self.other_ratio = args.other_ratio
+        # Contrastive loss parameters:
+        self.IPC = args.IPC
+        self.num_workers = args.num_workers
+        self.loss = args.loss
+        self.sz_embedding = args.sz_embedding
+        self.mrg = args.mrg
+        self.dataset = args.dataset
+        self.model = args.model
+        self.loss = args.loss
+        self.alpha = args.alpha
+        self.mrg = args.mrg
+        self.optimizer = args.optimizer
+        self.lr = args.lr
+        self.batch_size = args.batch_size
+        self.remark = args.remark
+        self.contrastive_loss = args.contrastive_loss
+
+        # wandb parameters:
+        self.use_wandb = False
+        if self.use_wandb:
+            import wandb
+
+        # Directory for Log
+        if self.use_wandb:
+            LOG_DIR = args.LOG_DIR + '/logs_{}/{}_{}_embedding_{}_alpha{}_mrg{}_{}_lr{}_batch{}{}'.format(self.dataset,
+                                                                                                          self.model,
+                                                                                                          self.loss,
+                                                                                                          self.sz_embedding,
+                                                                                                          self.alpha,
+                                                                                                          self.mrg,
+                                                                                                          self.optimizer,
+                                                                                                          self.lr,
+                                                                                                          self.batch_size,
+                                                                                                          self.remark)
 
         # Wandb Initialization
-        # wandb.init(project=args.dataset + '_ProxyAnchor', notes=LOG_DIR)
-        # wandb.config.update(args)
+        if self.use_wandb:
+            wandb.init(project=args.dataset + '_ProxyAnchor', notes=LOG_DIR)
+            wandb.config.update(args)
 
         # dataset parameters:
         if args.dataset.lower() == 'mnist':
@@ -120,7 +160,6 @@ class SolverClassifier(object):
         if self.use_early_stopping:
             self.patience = 20
             self.early_stopping = EarlyStopping(patience=self.patience, verbose=True)
-
 
         # logger
         formatter = logging.Formatter('%(asc_time)s %(level_name)s - %(funcName)s: %(message)s', "%H:%M:%S")
@@ -146,6 +185,32 @@ class SolverClassifier(object):
         else:
             self.valid_loader_size = len(self.valid_loader.dataset)
         self.test_loader_size = len(self.test_loader.dataset)
+
+        if self.contrastive_loss:
+            if self.IPC:
+                balanced_sampler = sampler.BalancedSampler(self.train_loader,
+                                                           batch_size=self.batch_size,
+                                                           images_per_class=self.IPC)
+                batch_sampler = BatchSampler(balanced_sampler,
+                                             batch_size=self.batch_size,
+                                             drop_last=True)
+                self.dl_tr = torch.utils.data.DataLoader(
+                    self.train_loader,
+                    num_workers=self.num_workers,
+                    pin_memory=True,
+                    batch_sampler=batch_sampler
+                )
+                print('Balanced Sampling')
+            else:
+                self.dl_tr = torch.utils.data.DataLoader(
+                    self.train_loader,
+                    batch_size=self.batch_size,
+                    shuffle=True,
+                    num_workers=self.num_workers,
+                    drop_last=True,
+                    pin_memory=True
+                )
+                print('Random Sampling')
 
         logger.info("Train {} with {} train samples, {} valid samples and {}"
                     " test samples".format(args.dataset,
@@ -195,15 +260,13 @@ class SolverClassifier(object):
         print('The number of parameters of model is', num_params)
 
         # get layer num to extract z_struct:
-        if self.ratio_reg:
-            self.z_struct_out = True
-            self.z_struct_layer_num = get_layer_zstruct_num(net, self.net_type)
-        else:
-            self.z_struct_out = False
-            self.z_struct_layer_num = None
+        self.z_struct_out = True
+        self.z_struct_layer_num = get_layer_zstruct_num(net, self.net_type)
 
         # config gpu:
         self.net, self.device = gpu_config(net)
+
+        # TODO: add optimizer choice
         self.optimizer = optimizer.Adam(self.net.parameters(), lr=self.lr)
 
         # Decays the learning rate of each parameter group by gamma every step_size epochs.
@@ -221,6 +284,41 @@ class SolverClassifier(object):
                                                patience=5,
                                                min_lr=1e-6,
                                                verbose=True)
+
+        if self.contrastive_loss:
+            # DML Losses
+            if self.loss == 'Proxy_Anchor':
+                if torch.cuda.is_available():
+                    self.criterion = losses.Proxy_Anchor(nb_classes=self.nb_class, sz_embed=self.sz_embedding, mrg=self.mrg,
+                                                         alpha=args.alpha).cuda()
+                else:
+                    self.criterion = losses.Proxy_Anchor(nb_classes=self.nb_class, sz_embed=self.sz_embedding, mrg=self.mrg,
+                                                         alpha=args.alpha)
+            elif self.loss == 'Proxy_NCA':
+                if torch.cuda.is_available():
+                    self.criterion = losses.Proxy_NCA(nb_classes=self.nb_class, sz_embed=self.sz_embedding).cuda()
+                else:
+                    self.criterion = losses.Proxy_NCA(nb_classes=self.nb_class, sz_embed=self.sz_embedding)
+            elif self.loss == 'MS':
+                if torch.cuda.is_available():
+                    self.criterion = losses.MultiSimilarityLoss().cuda()
+                else:
+                    self.criterion = losses.MultiSimilarityLoss()
+            elif self.loss == 'Contrastive':
+                if torch.cuda.is_available():
+                    self.criterion = losses.ContrastiveLoss().cuda()
+                else:
+                    self.criterion = losses.ContrastiveLoss()
+            elif self.loss == 'Triplet':
+                if torch.cuda.is_available():
+                    self.criterion = losses.TripletLoss().cuda()
+                else:
+                    self.criterion = losses.TripletLoss()
+            elif self.loss == 'NPair':
+                if torch.cuda.is_available():
+                    self.criterion = losses.NPairLoss().cuda()
+                else:
+                    self.criterion = losses.NPairLoss()
 
         if 'parallel' in str(type(self.net)):
             self.net = self.net.module
@@ -265,6 +363,12 @@ class SolverClassifier(object):
         self.losses = 0
         self.ratio = 0
 
+        if self.contrastive_loss:
+            self.pbar = tqdm(enumerate(self.dl_tr))
+        self.losses_list = []
+        self.best_recall = [0]
+        self.best_epoch = 0
+
     def train(self):
         self.net_mode(train=True)
 
@@ -273,7 +377,10 @@ class SolverClassifier(object):
         print_bar = tqdm(total=self.max_iter)
         print_bar.update(self.epochs)
         while not out:
-            for data, labels in self.train_loader:
+            for batch_idx, (data, labels) in enumerate(self.train_loader):
+
+                losses_per_epoch = []
+
                 self.global_iter += 1
                 self.epochs = self.global_iter / len(self.train_loader)
                 print_bar.update(1)
@@ -281,29 +388,71 @@ class SolverClassifier(object):
                 data = data.to(self.device)  # Variable(data.to(self.device))
                 labels = labels.to(self.device)  # Variable(labels.to(self.device))
 
-                prediction, _, ratio = self.net(data,
-                                                labels=labels,
-                                                nb_class=self.nb_class,
-                                                use_ratio=self.ratio_reg,
-                                                z_struct_out=self.z_struct_out,
-                                                z_struct_layer_num=self.z_struct_layer_num,
-                                                other_ratio=self.other_ratio)
+                prediction, embedding, ratio = self.net(data,
+                                                         labels=labels,
+                                                         nb_class=self.nb_class,
+                                                         use_ratio=self.ratio_reg,
+                                                         z_struct_out=self.z_struct_out,
+                                                         z_struct_layer_num=self.z_struct_layer_num,
+                                                         other_ratio=self.other_ratio)
+
                 # classification loss
                 # averaged over each loss element in the batch
-                # self.Classification_loss = F.nll_loss(prediction, labels)
-                # self.Classification_loss = self.lambda_classification * self.Classification_loss
+                self.Classification_loss = F.nll_loss(prediction, labels)
+                self.Classification_loss = self.lambda_classification * self.Classification_loss
 
-                # ratio loss:
-                if self.other_ratio:
-                    self.ratio = -(ratio * self.lambda_ratio_reg)
+                if self.contrastive_loss:
+                    # loss take emnedding, not prediciton
+                    embedding = embedding.squeeze(axis=-1).squeeze(axis=-1)
+                    loss = self.criterion(embedding, labels)
+                    loss = Variable(loss.data, requires_grad=True)
+
+                if self.ratio_reg:
+                    # ratio loss:
+                    if self.other_ratio:
+                        self.ratio = -(ratio * self.lambda_ratio_reg)
+                    else:
+                        self.ratio = ratio * self.lambda_ratio_reg
+                    self.ratio = Variable(self.ratio.data, requires_grad=True)
+
+                # total loss:
+                if self.without_acc:
+                    if self.contrastive_loss:
+                        self.total_loss = loss + self.ratio
+                    else:
+                        self.total_loss = self.ratio
                 else:
-                    self.ratio = ratio * self.lambda_ratio_reg
+                    if self.ratio_reg:
+                        if self.contrastive_loss:
+                            self.total_loss = self.Classification_loss + loss + self.ratio
+                        else:
+                            self.total_loss = self.Classification_loss + self.ratio
+                    else:
+                        if self.contrastive_loss:
+                            self.total_loss = self.Classification_loss + loss
+                        else:
+                            self.total_loss = self.Classification_loss
 
-                # self.Total_loss = self.Classification_loss + self.ratio
-                self.Total_loss = self.ratio
                 # backpropagation loss
                 self.optimizer.zero_grad()
-                self.Total_loss.backward()
+                self.total_loss.backward()
+
+                if self.contrastive_loss:
+                    torch.nn.utils.clip_grad_value_(self.net.parameters(), 10)
+                    if self.loss == 'Proxy_Anchor':
+                        torch.nn.utils.clip_grad_value_(self.criterion.parameters(), 10)
+
+                    if torch.cuda.is_available():
+                        losses_per_epoch.append(loss.data.cpu().numpy())
+                    else:
+                        losses_per_epoch.append(loss.data.numpy())
+
+                    self.pbar.set_description(
+                        'Train Epoch: {} [{}/{} ({:.0f}%)] Loss: {:.6f}'.format(
+                            self.epochs, batch_idx + 1, len(self.dl_tr),
+                                         100. * batch_idx / len(self.dl_tr),
+                            loss.item()))
+
                 self.optimizer.step()
 
             # save step
@@ -320,6 +469,18 @@ class SolverClassifier(object):
                                                                self.nb_class,
                                                                self.ratio_reg,
                                                                self.other_ratio)
+
+            if self.contrastive_loss:
+                self.losses_list.append(np.mean(losses_per_epoch))
+            self.epochs = int(self.epochs)
+
+            if self.use_wandb:
+                if self.contrastive_loss:
+                    wandb.log({'contrastive loss': self.losses_list[-1]}, step=self.epochs)
+                wandb.log({'ratio': self.losses['ratio_test_loss']}, step=self.epochs)
+                wandb.log({'acc': self.scores['test']}, step=self.epochs)
+                wandb.log({'Total loss': self.total_loss}, step=self.epochs)
+
             # early_stopping needs the validation loss to check if it has decresed,
             # and if it has, it will make a checkpoint of the current model
             if self.use_early_stopping:

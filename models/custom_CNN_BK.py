@@ -4,6 +4,8 @@ from custom_Layer import Flatten, View, PrintLayer, kaiming_init
 from binary_tools.activations import DeterministicBinaryActivation
 import numpy as np
 from models.weight_init import weight_init
+import torch
+
 
 EPS = 1e-12
 
@@ -215,5 +217,6 @@ class Custom_CNN_BK(nn.Module, ABC):
 
         if use_ratio:
             ratio = compute_ratio_batch(z_struct, labels, nb_class, other_ratio=other_ratio)
+            ratio = torch.tensor(ratio)
 
         return prediction, z_struct, ratio
