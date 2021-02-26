@@ -1,7 +1,7 @@
 from abc import ABC
 import torch.nn as nn
 from custom_Layer import Flatten, View, PrintLayer, kaiming_init
-from models.custom_CNN_BK import compute_ratio_batch
+from models.custom_CNN_BK import compute_ratio_batch_test
 from models.weight_init import weight_init
 
 
@@ -123,6 +123,6 @@ class Custom_CNN(nn.Module, ABC):
             prediction = self.net(x)
 
         if use_ratio:
-            ratio = compute_ratio_batch(z_struct, labels, nb_class)
+            ratio = compute_ratio_batch_test(z_struct, labels, nb_class)
 
         return prediction, z_struct, ratio

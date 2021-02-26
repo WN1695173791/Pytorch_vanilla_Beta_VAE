@@ -6,11 +6,10 @@ import numpy as np
 from models.weight_init import weight_init
 import torch
 
-
 EPS = 1e-12
 
 
-def compute_ratio_batch(batch_z_struct, labels_batch, nb_class, other_ratio=False):
+def compute_ratio_batch_test(self, batch_z_struct, labels_batch, nb_class, other_ratio=False):
     """
     compute ratio of one batch:
     ratio: to minimize, variance_inter_class / var_intra_class
@@ -21,30 +20,28 @@ def compute_ratio_batch(batch_z_struct, labels_batch, nb_class, other_ratio=Fals
         batch_z_struct = batch_z_struct.cpu().detach().numpy()
         labels_batch = labels_batch.cpu().detach().numpy()
 
-    representation_z_struct_class = []
+    first = True
     for class_id in range(nb_class):
-        z_struct_class = batch_z_struct[np.where(labels_batch == class_id)]
-        representation_z_struct_class.append(z_struct_class)
+        z_struct_class = batch_z_struct[torch.where(labels_batch == class_id)]
+        mean_class_iter = torch.mean(z_struct_class, axis=0).squeeze(axis=-1).squeeze(axis=-1).unsqueeze(axis=0)
+        std_class_iter = torch.std(z_struct_class, axis=0).squeeze(axis=-1).squeeze(axis=-1).unsqueeze(axis=0)
+        if first:
+            mean_class = mean_class_iter
+            std_class = std_class_iter
+        else:
+            mean_class = torch.cat((mean_class, mean_class_iter), dim=0)
+            std_class = torch.cat((std_class, std_class_iter), dim=0)
+        first = False
 
-    representation_z_struct_class = np.array(representation_z_struct_class)
+    variance_intra_class = torch.square(std_class)  # shape: (nb_class, len(z_struct))
+    variance_intra_class_mean_components = torch.mean(variance_intra_class, axis=0)
+    variance_inter_class = torch.square(torch.std(mean_class, axis=0))
 
-    z_struct_mean_global_per_class = []
-    z_struct_std_global_per_class = []
-    for class_id in range(nb_class):
-        z_struct_mean_global_per_class.append(np.mean(representation_z_struct_class[class_id], axis=0))
-        z_struct_std_global_per_class.append(np.std(representation_z_struct_class[class_id], axis=0))
-
-    z_struct_mean_global_per_class = np.array(z_struct_mean_global_per_class)
-    z_struct_std_global_per_class = np.array(z_struct_std_global_per_class)
-
-    variance_intra_class = np.square(z_struct_std_global_per_class)  # shape: (nb_class, len(z_struct))
-    variance_intra_class_mean_components = np.mean(variance_intra_class, axis=0)
-    variance_inter_class = np.square(np.std(z_struct_mean_global_per_class, axis=0))
     if other_ratio:
         ratio = variance_inter_class / (variance_intra_class_mean_components + EPS)  # shape: (len(z_struct))
     else:
         ratio = variance_intra_class_mean_components / (variance_inter_class + EPS)
-    ratio_variance_mean = np.mean(ratio)
+    ratio_variance_mean = torch.mean(ratio)
 
     return ratio_variance_mean
 
@@ -216,7 +213,40 @@ class Custom_CNN_BK(nn.Module, ABC):
             prediction = self.net(x)
 
         if use_ratio:
-            ratio = compute_ratio_batch(z_struct, labels, nb_class, other_ratio=other_ratio)
+            ratio = self.compute_ratio_batch(z_struct, labels, nb_class, other_ratio=other_ratio)
             ratio = torch.tensor(ratio)
 
         return prediction, z_struct, ratio
+
+    def compute_ratio_batch(self, batch_z_struct, labels_batch, nb_class, other_ratio=False):
+        """
+        compute ratio of one batch:
+        ratio: to minimize, variance_inter_class / var_intra_class
+
+        :return:
+        """
+
+        first = True
+        for class_id in range(nb_class):
+            z_struct_class = batch_z_struct[torch.where(labels_batch == class_id)]
+            mean_class_iter = torch.mean(z_struct_class, axis=0).squeeze(axis=-1).squeeze(axis=-1).unsqueeze(axis=0)
+            std_class_iter = torch.std(z_struct_class, axis=0).squeeze(axis=-1).squeeze(axis=-1).unsqueeze(axis=0)
+            if first:
+                mean_class = mean_class_iter
+                std_class = std_class_iter
+            else:
+                mean_class = torch.cat((mean_class, mean_class_iter), dim=0)
+                std_class = torch.cat((std_class, std_class_iter), dim=0)
+            first = False
+
+        variance_intra_class = torch.square(std_class)  # shape: (nb_class, len(z_struct))
+        variance_intra_class_mean_components = torch.mean(variance_intra_class, axis=0)
+        variance_inter_class = torch.square(torch.std(mean_class, axis=0))
+
+        if other_ratio:
+            ratio = variance_inter_class / (variance_intra_class_mean_components + EPS)  # shape: (len(z_struct))
+        else:
+            ratio = variance_intra_class_mean_components / (variance_inter_class + EPS)
+        ratio_variance_mean = torch.mean(ratio)
+
+        return ratio_variance_mean

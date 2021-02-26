@@ -162,14 +162,15 @@ def run_exp_extraction_and_visualization_custom_BK(path_parameter, line_begin, l
             ratio_reg = True
             lambda_ratio = args[28][1]
             lambda_class = args[29][1]
-            if args[30][0] == 'alpha':
-                alpha = args[30][0]
-                loss = args[31][0]
-                optimizer = args[32][0]
-                mrg = args[33][0]
-                IPC = args[34][0]
-                warm = args[35][0]
-                exp_name = args[36][-1].split('\n')[0]
+            if args[31][0] == 'alpha':
+                alpha = args[31][0]
+                loss = args[32][0]
+                optimizer = args[33][0]
+                mrg = args[34][0]
+                IPC = args[35][0]
+                warm = args[36][0]
+                sz_embedding = args[37][0]
+                exp_name = args[38][-1].split('\n')[0]
                 add_linear_after_GMP = True
             elif args[30][0] == 'other_ratio':
                 if args[30][1] == 'True':
@@ -301,30 +302,30 @@ def run_viz_expes(exp_name, net, net_type=None, cat=None, ratio_reg=False):
     loader_size = len(loader.dataset)
 
     # scores and losses:
-    plot_scores_and_loss_CNN(net_trained, exp_name, path_scores, is_ratio=ratio_reg, save=True)
+    # plot_scores_and_loss_CNN(net_trained, exp_name, path_scores, is_ratio=ratio_reg, save=True)
     # score, _ = compute_scores(net_trained, loader, device, loader_size)
     # print('score Test acc: {:.3f}%'.format(score))
 
     # compute features:
-    # compute_z_struct(net_trained, exp_name, loader, train_test=train_test, net_type=net_type)
-    # compute_z_struct_representation_noised(net, exp_name, train_test=train_test, nb_repeat=10, nb_class=nb_class,
-    #                                        net_type=net_type)
-    # get_z_struct_per_class(exp_name, train_test=train_test, nb_class=nb_class)
-    # get_average_z_struct_per_classes(exp_name=exp_name, train_test=train_test)
-    # get_prediction_per_classes(exp_name, train_test=train_test)
-    # get_prediction_noised_per_class(exp_name, train_test=train_test)
-    # compute_all_score_acc(exp_name, train_test=train_test)
-    # compute_mean_std_prediction(exp_name, train_test=train_test)
+    compute_z_struct(net_trained, exp_name, loader, train_test=train_test, net_type=net_type)
+    compute_z_struct_representation_noised(net, exp_name, train_test=train_test, nb_repeat=10, nb_class=nb_class,
+                                           net_type=net_type)
+    get_z_struct_per_class(exp_name, train_test=train_test, nb_class=nb_class)
+    get_average_z_struct_per_classes(exp_name=exp_name, train_test=train_test)
+    get_prediction_per_classes(exp_name, train_test=train_test)
+    get_prediction_noised_per_class(exp_name, train_test=train_test)
+    compute_all_score_acc(exp_name, train_test=train_test)
+    compute_mean_std_prediction(exp_name, train_test=train_test)
 
     # receptive_field = get_receptive_field(net_trained, img_size, net_type=net_type)
 
     # plot:
-    # ratio_variance = ratio(exp_name, train_test=train_test, cat=cat)
+    ratio_variance = ratio(exp_name, train_test=train_test, cat=cat)
     # print(ratio_variance)
     # score = correlation_filters(net_trained, exp_name, train_test=train_test, ch=nc, vis_filters=False, plot_fig=True,
     #                             cat=cat)
     # score_corr_class = dispersion_classes(exp_name, train_test=train_test, plot_fig=True, cat=cat)
-    # plot_2d_projection_z_struct(nb_class, exp_name, train_test=train_test, ratio=ratio_variance)
+    plot_2d_projection_z_struct(nb_class, exp_name, train_test=train_test, ratio=ratio_variance)
 
     # plot_acc_bit_noised_per_class(exp_name,
     #                               train_test=train_test,
@@ -838,7 +839,28 @@ if __name__ == '__main__':
                                # 'CNN_mnist_custom_BK_2layer_bk1_20_other_ratio_bs_128_8_wt_acc']
 
 
-    list_model_test = ['CNN_mnist_contrastive_loss_test_2']
+    list_model_test = ['CNN_mnist_contrastive_loss_20_test_1_1',
+                       'CNN_mnist_contrastive_loss_20_test_1_2',
+                       'CNN_mnist_contrastive_loss_20_test_1_3',
+                       'CNN_mnist_contrastive_loss_20_test_1_4',
+                       'CNN_mnist_contrastive_loss_20_test_1_5',
+                       'CNN_mnist_contrastive_loss_20_test_2_1',
+                       'CNN_mnist_contrastive_loss_20_test_2_2',
+                       'CNN_mnist_contrastive_loss_20_test_2_3',
+                       'CNN_mnist_contrastive_loss_20_test_2_4',
+                       'CNN_mnist_contrastive_loss_20_test_2_5',
+                       'CNN_mnist_contrastive_loss_20_test_3_1',
+                       'CNN_mnist_contrastive_loss_20_test_3_2',
+                       'CNN_mnist_contrastive_loss_20_test_3_3',
+                       'CNN_mnist_contrastive_loss_20_test_3_4',
+                       'CNN_mnist_contrastive_loss_20_test_3_5',
+                       'CNN_mnist_contrastive_loss_20_test_4_1',
+                       'CNN_mnist_contrastive_loss_20_test_4_2',
+                       'CNN_mnist_contrastive_loss_20_test_4_3',
+                       'CNN_mnist_contrastive_loss_20_test_4_4',
+                       'CNN_mnist_contrastive_loss_20_test_4_5']
+
+
     params_test = 'parameters_combinations/mnist_parameters_test_contrastive_loss.txt'
 
     parameters_mnist_classifier_BK_ratio = "parameters_combinations/mnist_classifier_ratio.txt"
@@ -847,16 +869,16 @@ if __name__ == '__main__':
     line_begin_old_gs_z_struct = 116  # first line with model custom that we want see
     line_end_old_gs_z_struct = 139  # last line with model custom that we want see
 
-    # run_exp_extraction_and_visualization_custom_BK(params_test,
-    #                                                1,
-    #                                                1,
-    #                                                list_model_test,
-    #                                                is_ratio=True)
     run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
-                                                  line_begin_bk_ratio,
-                                                  line_end_bk_ratio,
-                                                  list_model_ratio_wt_acc,
-                                                  is_ratio=True)
+                                                   80,
+                                                   99,
+                                                   list_model_test,
+                                                   is_ratio=True)
+    # run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
+    #                                               line_begin_bk_ratio,
+    #                                               line_end_bk_ratio,
+    #                                               list_model_ratio_wt_acc,
+    #                                               is_ratio=True)
     # run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
     #                                                line_begin_old_gs_z_struct,
     #                                                line_end_old_gs_z_struct,

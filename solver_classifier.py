@@ -13,7 +13,7 @@ from dataset import sampler
 from dataset.dataset_2 import get_dataloaders, get_mnist_dataset
 from models.custom_CNN import Custom_CNN
 from models.custom_CNN_BK import Custom_CNN_BK
-from models.custom_CNN_BK import compute_ratio_batch
+from models.custom_CNN_BK import compute_ratio_batch_test
 from models.default_CNN import DefaultCNN
 from pytorchtools import EarlyStopping
 from scores_classifier import compute_scores
@@ -41,7 +41,7 @@ def compute_scores_and_loss(net, train_loader, test_loader, device, train_loader
                                                                            train_test='None',
                                                                            net_type=net_type,
                                                                            return_results=True)
-        ratio_test = compute_ratio_batch(z_struct_representation_test, labels_batch_test, nb_class)
+        ratio_test = compute_ratio_batch_test(z_struct_representation_test, labels_batch_test, nb_class)
         # compute ratio on all train set:
         z_struct_representation_train, labels_batch_train = compute_z_struct(net,
                                                                              'exp_name',
@@ -49,10 +49,10 @@ def compute_scores_and_loss(net, train_loader, test_loader, device, train_loader
                                                                              train_test='None',
                                                                              net_type=net_type,
                                                                              return_results=True)
-        ratio_train = compute_ratio_batch(z_struct_representation_train,
-                                          labels_batch_train,
-                                          nb_class,
-                                          other_ratio=other_ratio)
+        ratio_train = compute_ratio_batch_test(z_struct_representation_train,
+                                               labels_batch_train,
+                                               nb_class,
+                                               other_ratio=other_ratio)
     else:
         ratio_test = 0
         ratio_train = 0
@@ -414,8 +414,6 @@ class SolverClassifier(object):
                         self.ratio = -(ratio * self.lambda_ratio_reg)
                     else:
                         self.ratio = ratio * self.lambda_ratio_reg
-                    self.ratio = Variable(self.ratio.data, requires_grad=True)
-                    self.ratio = self.ratio.to(self.device)
 
                 # total loss:
                 if self.without_acc:
@@ -439,9 +437,6 @@ class SolverClassifier(object):
                 self.optimizer.zero_grad()
                 self.total_loss.backward()
 
-                # print(self.total_loss.grad)
-                # print(self.ratio.grad)
-                # print(self.Classification_loss.grad)
                 # print(self.net.net[0].weight.grad)
 
                 if self.contrastive_loss:
