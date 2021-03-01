@@ -6,7 +6,8 @@ import numpy as np
 from models.weight_init import weight_init
 import torch
 
-EPS = 1e-12
+# EPS = 1e-12
+EPS = 1e-5
 
 
 def computre_var_distance_class(batch_z_struct, labels_batch, nb_class):
