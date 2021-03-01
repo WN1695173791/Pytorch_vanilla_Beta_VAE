@@ -474,8 +474,11 @@ class SolverClassifier(object):
 
                 # print test debug _______________________________________
                 # print(variance_distance_iter_class, ratio)
+                # print(self.Classification_loss)
                 # print(prediction[0])
                 # print(self.net.net[0].weight.grad)
+                # print(self.total_loss)
+                # print(self.loss_distance_cl, self.total_loss)
                 # print test debug _______________________________________
 
                 if self.loss_min_distance_cl:
