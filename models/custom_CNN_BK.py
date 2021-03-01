@@ -277,6 +277,8 @@ class Custom_CNN_BK(nn.Module, ABC):
         first = True
         for class_id in range(nb_class):
             z_struct_class = batch_z_struct[torch.where(labels_batch == class_id)]
+            if len(z_struct_class)<1:
+                print('hereeeeeeeeeeeeeeeeeee is zerosssssssssssssssssss')
             mean_class_iter = torch.mean(z_struct_class, axis=0).squeeze(axis=-1).squeeze(axis=-1).unsqueeze(axis=0)
             std_class_iter = torch.std(z_struct_class, axis=0).squeeze(axis=-1).squeeze(axis=-1).unsqueeze(axis=0)
             if first:
