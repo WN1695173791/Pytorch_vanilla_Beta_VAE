@@ -204,6 +204,10 @@ if __name__ == "__main__":
     parser.add_argument('--sz_embedding', default=5, type=int, help='embedding size')
     parser.add_argument('--remark', default='', help='Any remark')
     # end test ___________
+    # add new loss variance distance mean class:
+    parser.add_argument('--loss_min_distance_cl', default=False, type=str2bool,
+                        help='min variance distance inter classes mean')
+    parser.add_argument('--lambda_var_distance', default=1, type=float, help="lambda_var_distance")
 
     args = parser.parse_args()
 

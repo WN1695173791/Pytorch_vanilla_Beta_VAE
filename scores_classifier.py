@@ -17,7 +17,7 @@ def compute_scores(net, loader, device, loader_size):
             labels = labels.to(device)  # Variable(labels.to(device))
 
             # compute loss:
-            prediction, _, _ = net(data)
+            prediction, _, _, _ = net(data)
 
             # classification loss:
             classification_loss_iter = F.nll_loss(prediction, labels)

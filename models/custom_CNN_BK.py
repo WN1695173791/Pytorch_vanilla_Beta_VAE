@@ -9,6 +9,47 @@ import torch
 EPS = 1e-12
 
 
+def computre_var_distance_class(batch_z_struct, labels_batch, nb_class):
+    """
+    compute ratio of one batch:
+    ratio: to minimize, variance_inter_class / var_intra_class
+
+    :return:
+    """
+
+    batch_z_struct = torch.tensor(batch_z_struct)
+    labels_batch = torch.tensor(labels_batch)
+
+    first = True
+    for class_id in range(nb_class):
+        z_struct_class = batch_z_struct[torch.where(labels_batch == class_id)]
+        mean_class_iter = torch.mean(z_struct_class, axis=0).squeeze(axis=-1).squeeze(axis=-1).unsqueeze(axis=0)
+        if first:
+            mean_class = mean_class_iter
+        else:
+            mean_class = torch.cat((mean_class, mean_class_iter), dim=0)
+        first = False
+
+    first = True
+    # add distance between all classes:
+    for i in range(nb_class):
+        for j in range(nb_class):
+            if i == j:
+                continue
+            dist = torch.norm(mean_class[i] - mean_class[j]).unsqueeze(dim=0)
+            if first:
+                distance_inter_class = dist
+            else:
+                distance_inter_class = torch.cat((distance_inter_class, dist), dim=0)
+            first = False
+
+    std_class_distance = torch.std(distance_inter_class, axis=0)
+    variance_intra_class_distance = std_class_distance * std_class_distance
+    variance_intra_class_distance_mean = torch.mean(variance_intra_class_distance, axis=0)
+
+    return variance_intra_class_distance_mean
+
+
 def compute_ratio_batch_test(batch_z_struct, labels_batch, nb_class, other_ratio=False):
     """
     compute ratio of one batch:
@@ -39,6 +80,7 @@ def compute_ratio_batch_test(batch_z_struct, labels_batch, nb_class, other_ratio
     variance_intra_class = np.square(z_struct_std_global_per_class)  # shape: (nb_class, len(z_struct))
     variance_intra_class_mean_components = np.mean(variance_intra_class, axis=0)
     variance_inter_class = np.square(np.std(z_struct_mean_global_per_class, axis=0))
+
     if other_ratio:
         ratio = variance_inter_class / (variance_intra_class_mean_components + EPS)  # shape: (len(z_struct))
     else:
@@ -193,7 +235,7 @@ class Custom_CNN_BK(nn.Module, ABC):
                 kaiming_init(m)
 
     def forward(self, x, labels=None, nb_class=None, use_ratio=False, z_struct_out=False, z_struct_prediction=False,
-                z_struct_layer_num=None, other_ratio=False):
+                z_struct_layer_num=None, other_ratio=False, loss_min_distance_cl=False):
         """
         Forward pass of model.
         """
@@ -205,6 +247,7 @@ class Custom_CNN_BK(nn.Module, ABC):
         # initialization:
         z_struct = None
         ratio = 0
+        variance_distance_iter_class = 0
 
         if z_struct_out:
             z_struct = self.net[:z_struct_layer_num](x)
@@ -217,7 +260,10 @@ class Custom_CNN_BK(nn.Module, ABC):
         if use_ratio:
             ratio = self.compute_ratio_batch(z_struct, labels, nb_class, other_ratio=other_ratio)
 
-        return prediction, z_struct, ratio
+        if loss_min_distance_cl:
+            variance_distance_iter_class = self.computre_var_distance_class(z_struct, labels, nb_class)
+
+        return prediction, z_struct, ratio, variance_distance_iter_class
 
     def compute_ratio_batch(self, batch_z_struct, labels_batch, nb_class, other_ratio=False):
         """
@@ -253,3 +299,40 @@ class Custom_CNN_BK(nn.Module, ABC):
         ratio_variance_mean = torch.mean(ratio)
 
         return ratio_variance_mean
+
+    def computre_var_distance_class(self, batch_z_struct, labels_batch, nb_class):
+        """
+        compute ratio of one batch:
+        ratio: to minimize, variance_inter_class / var_intra_class
+
+        :return:
+        """
+
+        first = True
+        for class_id in range(nb_class):
+            z_struct_class = batch_z_struct[torch.where(labels_batch == class_id)]
+            mean_class_iter = torch.mean(z_struct_class, axis=0).squeeze(axis=-1).squeeze(axis=-1).unsqueeze(axis=0)
+            if first:
+                mean_class = mean_class_iter
+            else:
+                mean_class = torch.cat((mean_class, mean_class_iter), dim=0)
+            first = False
+
+        first = True
+        # add distance between all classes:
+        for i in range(nb_class):
+            for j in range(nb_class):
+                if i == j:
+                    continue
+                dist = torch.norm(mean_class[i]-mean_class[j]).unsqueeze(dim=0)
+                if first:
+                    distance_inter_class = dist
+                else:
+                    distance_inter_class = torch.cat((distance_inter_class, dist), dim=0)
+                first = False
+
+        std_class_distance = torch.std(distance_inter_class, axis=0)
+        variance_intra_class_distance = std_class_distance * std_class_distance
+        variance_intra_class_distance_mean = torch.mean(variance_intra_class_distance, axis=0)
+
+        return variance_intra_class_distance_mean

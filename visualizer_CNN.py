@@ -9,6 +9,7 @@ from sklearn.preprocessing import StandardScaler
 # from torch_receptive_field import receptive_field
 from torchvision.utils import make_grid
 
+
 EPS = 1e-12
 
 
@@ -73,10 +74,10 @@ def compute_z_struct(net_trained, exp_name, loader, train_test=None, net_type=No
             if torch.cuda.is_available():
                 input_data = input_data.cuda()
 
-            _, z_struct, _ = net_trained(input_data,
+            _, z_struct, _, _ = net_trained(input_data,
                                          z_struct_out=True,
                                          z_struct_layer_num=z_struct_layer_num)
-            pred, _, _ = net_trained(input_data)
+            pred, _, _, _ = net_trained(input_data)
 
             # train mode:
             net_trained.eval()
@@ -146,7 +147,7 @@ def compute_z_struct_representation_noised(net, exp_name, train_test=None, nb_re
                 z_struct_representation_noised[:, i] = std_z_struct_max[i] * torch.randn(
                     (z_struct_representation.shape[0])) \
                                                        + mean_z_struct[i]
-                pred, _, _ = net(z_struct_representation_noised, z_struct_prediction=True,
+                pred, _, _, _ = net(z_struct_representation_noised, z_struct_prediction=True,
                                  z_struct_layer_num=z_struct_layer_num)
                 prediction.append(pred.detach().numpy())
             prediction_noised.append(np.mean(np.array(prediction), axis=0))
@@ -606,8 +607,13 @@ def plot_2d_projection_z_struct(nb_class, exp_name, train_test=None, ratio=None)
     reduced = pca.fit_transform(z_struct_representation)
     t = reduced.transpose()
 
+    lim_min = np.min(t) - 1
+    lim_max = np.max(t) + 1
+
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 10), facecolor='w', edgecolor='k')
     fig.suptitle('PCA of z_struct for each images, model: {}. With ratio: {}'.format(exp_name, str(ratio)))
+
+    ax1.set(xlim=(lim_min, lim_max), ylim=(lim_min, lim_max))
 
     x = np.arange(nb_class)
     ys = [i + x + (i * x) ** 2 for i in range(10)]

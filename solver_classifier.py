@@ -13,18 +13,17 @@ from dataset import sampler
 from dataset.dataset_2 import get_dataloaders, get_mnist_dataset
 from models.custom_CNN import Custom_CNN
 from models.custom_CNN_BK import Custom_CNN_BK
-from models.custom_CNN_BK import compute_ratio_batch_test
+from models.custom_CNN_BK import compute_ratio_batch_test, computre_var_distance_class
 from models.default_CNN import DefaultCNN
 from pytorchtools import EarlyStopping
 from scores_classifier import compute_scores
 from solver import gpu_config
 from visualizer_CNN import get_layer_zstruct_num, compute_z_struct
 import numpy as np
-from torch.autograd import Variable
 
 
 def compute_scores_and_loss(net, train_loader, test_loader, device, train_loader_size, test_loader_size,
-                            net_type, nb_class, ratio_reg, other_ratio):
+                            net_type, nb_class, ratio_reg, other_ratio, loss_min_distance_cl):
     score_train, loss_train = compute_scores(net,
                                              train_loader,
                                              device,
@@ -53,15 +52,26 @@ def compute_scores_and_loss(net, train_loader, test_loader, device, train_loader
                                                labels_batch_train,
                                                nb_class,
                                                other_ratio=other_ratio)
+        if loss_min_distance_cl:
+            var_distance_classes_train = computre_var_distance_class(z_struct_representation_train, labels_batch_train,
+                                                                     nb_class)
+            var_distance_classes_test = computre_var_distance_class(z_struct_representation_test, labels_batch_test,
+                                                                    nb_class)
+        else:
+            var_distance_classes_train = 0
+            var_distance_classes_test = 0
     else:
         ratio_test = 0
         ratio_train = 0
+
 
     scores = {'train': score_train, 'test': score_test}
     losses = {'train_class': loss_train,
               'test_class': loss_test,
               'ratio_test_loss': ratio_test,
               'ratio_train_loss': ratio_train,
+              'var_distance_classes_train': var_distance_classes_train,
+              'var_distance_classes_test': var_distance_classes_test,
               'total_loss_train': loss_train + ratio_train,
               'total_loss_test': loss_test + ratio_test}
 
@@ -122,6 +132,9 @@ class SolverClassifier(object):
         self.batch_size = args.batch_size
         self.remark = args.remark
         self.contrastive_loss = args.contrastive_loss
+        # add loss min var distance mean class:
+        self.loss_min_distance_cl = args.loss_min_distance_cl
+        self.lambda_var_distance = args.lambda_var_distance
 
         # wandb parameters:
         self.use_wandb = False
@@ -289,10 +302,12 @@ class SolverClassifier(object):
             # DML Losses
             if self.loss == 'Proxy_Anchor':
                 if torch.cuda.is_available():
-                    self.criterion = losses.Proxy_Anchor(nb_classes=self.nb_class, sz_embed=self.sz_embedding, mrg=self.mrg,
+                    self.criterion = losses.Proxy_Anchor(nb_classes=self.nb_class, sz_embed=self.sz_embedding,
+                                                         mrg=self.mrg,
                                                          alpha=args.alpha).cuda()
                 else:
-                    self.criterion = losses.Proxy_Anchor(nb_classes=self.nb_class, sz_embed=self.sz_embedding, mrg=self.mrg,
+                    self.criterion = losses.Proxy_Anchor(nb_classes=self.nb_class, sz_embed=self.sz_embedding,
+                                                         mrg=self.mrg,
                                                          alpha=args.alpha)
             elif self.loss == 'Proxy_NCA':
                 if torch.cuda.is_available():
@@ -345,6 +360,8 @@ class SolverClassifier(object):
                                       'test_loss_class': [],
                                       'ratio_train_loss': [],
                                       'ratio_test_loss': [],
+                                      'var_distance_classes_train': [],
+                                      'var_distance_classes_test': [],
                                       'total_loss_train': [],
                                       'total_loss_test': []}
             with open(self.file_path_checkpoint_scores, mode='wb+') as f:
@@ -388,13 +405,15 @@ class SolverClassifier(object):
                 data = data.to(self.device)  # Variable(data.to(self.device))
                 labels = labels.to(self.device)  # Variable(labels.to(self.device))
 
-                prediction, embedding, ratio = self.net(data,
-                                                         labels=labels,
-                                                         nb_class=self.nb_class,
-                                                         use_ratio=self.ratio_reg,
-                                                         z_struct_out=self.z_struct_out,
-                                                         z_struct_layer_num=self.z_struct_layer_num,
-                                                         other_ratio=self.other_ratio)
+                prediction, embedding, ratio, \
+                variance_distance_iter_class = self.net(data,
+                                                        labels=labels,
+                                                        nb_class=self.nb_class,
+                                                        use_ratio=self.ratio_reg,
+                                                        z_struct_out=self.z_struct_out,
+                                                        z_struct_layer_num=self.z_struct_layer_num,
+                                                        other_ratio=self.other_ratio,
+                                                        loss_min_distance_cl=self.loss_min_distance_cl)
 
                 # classification loss
                 # averaged over each loss element in the batch
@@ -433,6 +452,9 @@ class SolverClassifier(object):
                         else:
                             self.total_loss = self.Classification_loss
 
+                if self.loss_min_distance_cl:
+                    self.total_loss += (variance_distance_iter_class * self.lambda_var_distance)
+
                 # backpropagation loss
                 self.optimizer.zero_grad()
                 self.total_loss.backward()
@@ -470,7 +492,8 @@ class SolverClassifier(object):
                                                                self.net_type,
                                                                self.nb_class,
                                                                self.ratio_reg,
-                                                               self.other_ratio)
+                                                               self.other_ratio,
+                                                               self.loss_min_distance_cl)
 
             if self.contrastive_loss:
                 self.losses_list.append(np.mean(losses_per_epoch))
@@ -494,7 +517,8 @@ class SolverClassifier(object):
             print_bar.write('[Save Checkpoint] epoch: [{:.1f}], Train score:{:.5f}, Test score:{:.5f}, '
                             'train loss:{:.5f}, test loss:{:.5f}, ratio_train_loss:{:.5f},'
                             'ratio_test_loss:{:.5f}, total_loss_train:{:.5f},'
-                            'total_loss_test:{:.5f}, '.format(self.epochs,
+                            'total_loss_test:{:.5f}, var distance inter class train:{:.5f},'
+                            'var distance inter class test:{:.5f}'.format(self.epochs,
                                                               self.scores['train'],
                                                               self.scores['test'],
                                                               self.losses['train_class'],
@@ -502,7 +526,9 @@ class SolverClassifier(object):
                                                               self.losses['ratio_train_loss'],
                                                               self.losses['ratio_test_loss'],
                                                               self.losses['total_loss_train'],
-                                                              self.losses['total_loss_test']))
+                                                              self.losses['total_loss_test'],
+                                                              self.losses['var_distance_classes_train'],
+                                                              self.losses['var_distance_classes_test']))
             if self.use_early_stopping:
                 if self.early_stopping.early_stop:
                     print("Early stopping")
@@ -537,6 +563,8 @@ class SolverClassifier(object):
         self.checkpoint_scores['test_loss_class'].append(self.losses['test_class'])
         self.checkpoint_scores['ratio_train_loss'].append(self.losses['ratio_train_loss'])
         self.checkpoint_scores['ratio_test_loss'].append(self.losses['ratio_test_loss'])
+        self.checkpoint_scores['var_distance_classes_train'].append(self.losses['var_distance_classes_train'])
+        self.checkpoint_scores['var_distance_classes_test'].append(self.losses['var_distance_classes_test'])
         self.checkpoint_scores['total_loss_train'].append(self.losses['total_loss_train'])
         self.checkpoint_scores['total_loss_test'].append(self.losses['total_loss_test'])
 
