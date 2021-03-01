@@ -13,17 +13,38 @@ from dataset import sampler
 from dataset.dataset_2 import get_dataloaders, get_mnist_dataset
 from models.custom_CNN import Custom_CNN
 from models.custom_CNN_BK import Custom_CNN_BK
-from models.custom_CNN_BK import compute_ratio_batch_test, computre_var_distance_class
+from models.custom_CNN_BK import compute_ratio_batch_test, compute_var_distance_class_test
 from models.default_CNN import DefaultCNN
 from pytorchtools import EarlyStopping
 from scores_classifier import compute_scores
 from solver import gpu_config
-from visualizer_CNN import get_layer_zstruct_num, compute_z_struct
+from visualizer_CNN import get_layer_zstruct_num
 import numpy as np
 
 
+def get_z_struct_representation(loader, net, z_struct_layer_num):
+    z_struct_representation = []
+    labels_list = []
+    for data, labels in loader:
+
+        with torch.no_grad():
+            input_data = data
+        if torch.cuda.is_available():
+            input_data = input_data.cuda()
+
+        _, z_struct, _, _ = net(input_data,
+                                z_struct_out=True,
+                                z_struct_layer_num=z_struct_layer_num)
+
+        z_struct_batch = z_struct.squeeze().cpu().detach().numpy()
+        z_struct_representation.extend(z_struct_batch)
+        labels_list.extend(labels.cpu().detach().numpy())
+
+    return np.array(z_struct_representation), np.array(labels_list)
+
+
 def compute_scores_and_loss(net, train_loader, test_loader, device, train_loader_size, test_loader_size,
-                            net_type, nb_class, ratio_reg, other_ratio, loss_min_distance_cl):
+                            net_type, nb_class, ratio_reg, other_ratio, loss_min_distance_cl, z_struct_layer_num):
     score_train, loss_train = compute_scores(net,
                                              train_loader,
                                              device,
@@ -34,36 +55,34 @@ def compute_scores_and_loss(net, train_loader, test_loader, device, train_loader
                                            test_loader_size)
     if ratio_reg:
         # compute ratio on all test set:
-        z_struct_representation_test, labels_batch_test = compute_z_struct(net,
-                                                                           'exp_name',
-                                                                           test_loader,
-                                                                           train_test='None',
-                                                                           net_type=net_type,
-                                                                           return_results=True)
-        ratio_test = compute_ratio_batch_test(z_struct_representation_test, labels_batch_test, nb_class)
+        z_struct_representation_test, labels_batch_test = get_z_struct_representation(test_loader,
+                                                                                      net,
+                                                                                      z_struct_layer_num)
         # compute ratio on all train set:
-        z_struct_representation_train, labels_batch_train = compute_z_struct(net,
-                                                                             'exp_name',
-                                                                             train_loader,
-                                                                             train_test='None',
-                                                                             net_type=net_type,
-                                                                             return_results=True)
+        z_struct_representation_train, labels_batch_train = get_z_struct_representation(train_loader,
+                                                                                        net,
+                                                                                        z_struct_layer_num)
+
+        ratio_test = compute_ratio_batch_test(z_struct_representation_test,
+                                              labels_batch_test,
+                                              nb_class,
+                                              other_ratio=other_ratio)
         ratio_train = compute_ratio_batch_test(z_struct_representation_train,
                                                labels_batch_train,
                                                nb_class,
                                                other_ratio=other_ratio)
         if loss_min_distance_cl:
-            var_distance_classes_train = computre_var_distance_class(z_struct_representation_train, labels_batch_train,
-                                                                     nb_class)
-            var_distance_classes_test = computre_var_distance_class(z_struct_representation_test, labels_batch_test,
-                                                                    nb_class)
+            var_distance_classes_train = compute_var_distance_class_test(z_struct_representation_train,
+                                                                         labels_batch_train,
+                                                                         nb_class)
+            var_distance_classes_test = compute_var_distance_class_test(z_struct_representation_test, labels_batch_test,
+                                                                        nb_class)
         else:
             var_distance_classes_train = 0
             var_distance_classes_test = 0
     else:
         ratio_test = 0
         ratio_train = 0
-
 
     scores = {'train': score_train, 'test': score_test}
     losses = {'train_class': loss_train,
@@ -452,6 +471,12 @@ class SolverClassifier(object):
                         else:
                             self.total_loss = self.Classification_loss
 
+                # print test debug _______________________________________
+                # print(variance_distance_iter_class, ratio)
+                # print(prediction[0])
+                # print(self.net.net[0].weight.grad)
+                # print test debug _______________________________________
+
                 if self.loss_min_distance_cl:
                     self.total_loss += (variance_distance_iter_class * self.lambda_var_distance)
 
@@ -494,13 +519,14 @@ class SolverClassifier(object):
                                                                self.nb_class,
                                                                self.ratio_reg,
                                                                self.other_ratio,
-                                                               self.loss_min_distance_cl)
+                                                               self.loss_min_distance_cl,
+                                                               self.z_struct_layer_num)
 
             if self.contrastive_loss:
                 self.losses_list.append(np.mean(losses_per_epoch))
-            self.epochs = int(self.epochs)
 
             if self.use_wandb:
+                self.epochs = int(self.epochs)
                 if self.contrastive_loss:
                     wandb.log({'contrastive loss': self.losses_list[-1]}, step=self.epochs)
                 wandb.log({'ratio': self.losses['ratio_test_loss']}, step=self.epochs)
@@ -512,24 +538,25 @@ class SolverClassifier(object):
             if self.use_early_stopping:
                 self.early_stopping(self.losses['total_loss_test'], self.net)
 
-            self.save_checkpoint_scores_loss()
-            self.net_mode(train=True)
-
             print_bar.write('[Save Checkpoint] epoch: [{:.1f}], Train score:{:.5f}, Test score:{:.5f}, '
                             'train loss:{:.5f}, test loss:{:.5f}, ratio_train_loss:{:.5f},'
                             'ratio_test_loss:{:.5f}, total_loss_train:{:.5f},'
                             'total_loss_test:{:.5f}, var distance inter class train:{:.5f},'
                             'var distance inter class test:{:.5f}'.format(self.epochs,
-                                                              self.scores['train'],
-                                                              self.scores['test'],
-                                                              self.losses['train_class'],
-                                                              self.losses['test_class'],
-                                                              self.losses['ratio_train_loss'],
-                                                              self.losses['ratio_test_loss'],
-                                                              self.losses['total_loss_train'],
-                                                              self.losses['total_loss_test'],
-                                                              self.losses['var_distance_classes_train'],
-                                                              self.losses['var_distance_classes_test']))
+                                                                          self.scores['train'],
+                                                                          self.scores['test'],
+                                                                          self.losses['train_class'],
+                                                                          self.losses['test_class'],
+                                                                          self.losses['ratio_train_loss'],
+                                                                          self.losses['ratio_test_loss'],
+                                                                          self.losses['total_loss_train'],
+                                                                          self.losses['total_loss_test'],
+                                                                          self.losses['var_distance_classes_train'],
+                                                                          self.losses['var_distance_classes_test']))
+
+            self.save_checkpoint_scores_loss()
+            self.net_mode(train=True)
+
             if self.use_early_stopping:
                 if self.early_stopping.early_stop:
                     print("Early stopping")

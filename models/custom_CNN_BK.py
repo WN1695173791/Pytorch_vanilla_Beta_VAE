@@ -6,11 +6,10 @@ import numpy as np
 from models.weight_init import weight_init
 import torch
 
-# EPS = 1e-12
-EPS = 1e-5
+EPS = 1e-12
 
 
-def computre_var_distance_class(batch_z_struct, labels_batch, nb_class):
+def compute_var_distance_class_test(batch_z_struct, labels_batch, nb_class):
     """
     compute ratio of one batch:
     ratio: to minimize, variance_inter_class / var_intra_class
@@ -262,7 +261,7 @@ class Custom_CNN_BK(nn.Module, ABC):
             ratio = self.compute_ratio_batch(z_struct, labels, nb_class, other_ratio=other_ratio)
 
         if loss_min_distance_cl:
-            variance_distance_iter_class = self.computre_var_distance_class(z_struct, labels, nb_class)
+            variance_distance_iter_class = self.compute_var_distance_class(z_struct, labels, nb_class)
 
         return prediction, z_struct, ratio, variance_distance_iter_class
 
@@ -277,8 +276,6 @@ class Custom_CNN_BK(nn.Module, ABC):
         first = True
         for class_id in range(nb_class):
             z_struct_class = batch_z_struct[torch.where(labels_batch == class_id)]
-            if len(z_struct_class)<1:
-                print('hereeeeeeeeeeeeeeeeeee is zerosssssssssssssssssss')
             mean_class_iter = torch.mean(z_struct_class, axis=0).squeeze(axis=-1).squeeze(axis=-1).unsqueeze(axis=0)
             std_class_iter = torch.std(z_struct_class, axis=0).squeeze(axis=-1).squeeze(axis=-1).unsqueeze(axis=0)
             if first:
@@ -303,7 +300,7 @@ class Custom_CNN_BK(nn.Module, ABC):
 
         return ratio_variance_mean
 
-    def computre_var_distance_class(self, batch_z_struct, labels_batch, nb_class):
+    def compute_var_distance_class(self, batch_z_struct, labels_batch, nb_class):
         """
         compute ratio of one batch:
         ratio: to minimize, variance_inter_class / var_intra_class

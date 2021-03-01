@@ -10,7 +10,7 @@ from sklearn.preprocessing import StandardScaler
 from torchvision.utils import make_grid
 
 
-EPS = 1e-5
+EPS = 1e-12
 
 
 def compute_scores_pred(prediction, labels):
@@ -78,8 +78,6 @@ def compute_z_struct(net_trained, exp_name, loader, train_test=None, net_type=No
                                          z_struct_out=True,
                                          z_struct_layer_num=z_struct_layer_num)
             pred, _, _, _ = net_trained(input_data)
-
-            break
 
             # train mode:
             net_trained.eval()
