@@ -10,7 +10,7 @@ from sklearn.preprocessing import StandardScaler
 from torchvision.utils import make_grid
 
 
-EPS = 1e-12
+EPS = 1e-5
 
 
 def compute_scores_pred(prediction, labels):
@@ -53,7 +53,7 @@ def compute_z_struct(net_trained, exp_name, loader, train_test=None, net_type=No
     :return:
     """
 
-    path_save = 'structural_representation/z_struct_representation_' + exp_name + '_' + train_test + '.npy'
+    path_save = 'structural_representation/z_struct_representation_' + exp_name + '__' + train_test + '.npy'
 
     if os.path.exists(path_save):
         print("path already exist")
@@ -78,6 +78,8 @@ def compute_z_struct(net_trained, exp_name, loader, train_test=None, net_type=No
                                          z_struct_out=True,
                                          z_struct_layer_num=z_struct_layer_num)
             pred, _, _, _ = net_trained(input_data)
+
+            break
 
             # train mode:
             net_trained.eval()
@@ -607,8 +609,8 @@ def plot_2d_projection_z_struct(nb_class, exp_name, train_test=None, ratio=None)
     reduced = pca.fit_transform(z_struct_representation)
     t = reduced.transpose()
 
-    lim_min = np.min(t) - 1
-    lim_max = np.max(t) + 1
+    lim_min = np.min(t)
+    lim_max = np.max(t)
 
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 10), facecolor='w', edgecolor='k')
     fig.suptitle('PCA of z_struct for each images, model: {}. With ratio: {}'.format(exp_name, str(ratio)))

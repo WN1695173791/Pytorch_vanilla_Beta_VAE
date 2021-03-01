@@ -479,6 +479,9 @@ class SolverClassifier(object):
 
                 self.optimizer.step()
 
+                print(ratio)
+                print(torch.min(embedding), torch.max(embedding), torch.mean(embedding))
+
             # save step
             self.save_checkpoint('last')
             self.net_mode(train=False)
