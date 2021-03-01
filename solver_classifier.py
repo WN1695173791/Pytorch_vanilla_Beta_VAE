@@ -83,6 +83,8 @@ def compute_scores_and_loss(net, train_loader, test_loader, device, train_loader
     else:
         ratio_test = 0
         ratio_train = 0
+        var_distance_classes_train = 0
+        var_distance_classes_test = 0
 
     scores = {'train': score_train, 'test': score_test}
     losses = {'train_class': loss_train,
