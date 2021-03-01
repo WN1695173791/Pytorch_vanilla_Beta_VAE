@@ -477,7 +477,8 @@ class SolverClassifier(object):
                                          100. * batch_idx / len(self.dl_tr),
                             loss.item()))
 
-                self.optimizer.step()
+                if self.use_scheduler:
+                    self.optimizer.step()
 
             # save step
             self.save_checkpoint('last')
