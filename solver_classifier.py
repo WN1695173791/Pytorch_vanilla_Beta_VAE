@@ -462,7 +462,8 @@ class SolverClassifier(object):
                 else:
                     if self.ratio_reg:
                         if self.contrastive_loss:
-                            self.total_loss = self.Classification_loss + loss  # on ne veut pas utiliser le ratio avec la contrastive loss
+                            self.total_loss = self.Classification_loss + loss  # on ne veut pas utiliser le ratio
+                            # avec la contrastive loss
                         else:
                             self.total_loss = self.Classification_loss + self.ratio
                     else:
@@ -478,7 +479,8 @@ class SolverClassifier(object):
                 # print test debug _______________________________________
 
                 if self.loss_min_distance_cl:
-                    self.total_loss += (variance_distance_iter_class * self.lambda_var_distance)
+                    self.loss_distance_cl = (variance_distance_iter_class * self.lambda_var_distance)
+                    self.total_loss += self.loss_distance_cl
 
                 # backpropagation loss
                 self.optimizer.zero_grad()
@@ -522,6 +524,9 @@ class SolverClassifier(object):
                                                                self.loss_min_distance_cl,
                                                                self.z_struct_layer_num)
 
+            self.save_checkpoint_scores_loss()
+            self.net_mode(train=True)
+
             if self.contrastive_loss:
                 self.losses_list.append(np.mean(losses_per_epoch))
 
@@ -553,9 +558,6 @@ class SolverClassifier(object):
                                                                           self.losses['total_loss_test'],
                                                                           self.losses['var_distance_classes_train'],
                                                                           self.losses['var_distance_classes_test']))
-
-            self.save_checkpoint_scores_loss()
-            self.net_mode(train=True)
 
             if self.use_early_stopping:
                 if self.early_stopping.early_stop:

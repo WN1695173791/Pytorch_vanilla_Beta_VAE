@@ -825,11 +825,11 @@ if __name__ == '__main__':
     line_end_old_gs_z_struct = 139  # last line with model custom that we want see
 
 
-    run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
-                                                   11,
-                                                   11,
-                                                   list_model_test_new_loss,
-                                                   is_ratio=True)
+    # run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
+    #                                                11,
+    #                                                11,
+    #                                                list_model_test_new_loss,
+    #                                                is_ratio=True)
 
     # run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
     #                                                80,
