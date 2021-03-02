@@ -165,6 +165,7 @@ class Custom_CNN_BK(nn.Module, ABC):
             ]
         if self.two_conv_layer:
             self.hidden_filter_GMP = self.hidden_filters_2
+            numChannels = self.hidden_filters_2
             self.model += [
                 nn.Conv2d(self.hidden_filters_1, self.hidden_filters_2, self.kernel_size_2, stride=self.stride_size),
                 nn.BatchNorm2d(self.hidden_filters_2),
@@ -181,6 +182,7 @@ class Custom_CNN_BK(nn.Module, ABC):
             ]
         if self.three_conv_layer:
             self.hidden_filter_GMP = self.hidden_filters_3
+            numChannels = self.hidden_filters_3
             self.model += [
                 nn.Conv2d(self.hidden_filters_2, self.hidden_filters_3, self.kernel_size_3, stride=self.stride_size),
                 nn.BatchNorm2d(self.hidden_filters_3),
@@ -197,7 +199,6 @@ class Custom_CNN_BK(nn.Module, ABC):
             ]
 
         if self.Binary_z:
-            numChannels = 8
             numWeights = 16
             depth = 2
             sparsity = 0.5
