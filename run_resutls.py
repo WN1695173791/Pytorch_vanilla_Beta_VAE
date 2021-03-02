@@ -180,7 +180,9 @@ def run_exp_extraction_and_visualization_custom_BK(path_parameter, line_begin, l
                 if args[31][0] == 'loss_min_distance_cl':
                     loss_min_distance_cl = True
                     lambda_var_distance = args[32][1]
-                    exp_name = args[33][-1].split('\n')[0]
+                    intra_class_variance_loss = args[33][1]
+                    lambda_intra_class_var = args[34][1]
+                    exp_name = args[35][-1].split('\n')[0]
                 else:
                     if args[30][0] == 'without_acc':
                         exp_name = args[32][-1].split('\n')[0]

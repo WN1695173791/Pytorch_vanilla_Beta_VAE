@@ -156,6 +156,10 @@ class SolverClassifier(object):
         # add loss min var distance mean class:
         self.loss_min_distance_cl = args.loss_min_distance_cl
         self.lambda_var_distance = args.lambda_var_distance
+        # intra class variance loss:
+        self.intra_class_variance_loss = args.intra_class_variance_loss
+        self.lambda_intra_class_var = args.lambda_intra_class_var
+
 
         # wandb parameters:
         self.use_wandb = False
@@ -438,6 +442,10 @@ class SolverClassifier(object):
                     Classification_loss = F.nll_loss(prediction, labels)
                     Classification_loss = Classification_loss * self.lambda_classification
                     loss += Classification_loss
+
+                if self.intra_class_variance_loss:
+                    intra_class_loss = variance_intra_class * self.lambda_intra_class_var
+                    loss += intra_class_loss
 
                 if self.contrastive_loss:
                     # loss take embedding, not prediction
