@@ -192,7 +192,7 @@ class SolverClassifier(object):
         # initialize the early_stopping object
         # early stopping patience; how long to wait after last time validation loss improved.
         if self.use_early_stopping:
-            self.patience = 20
+            self.patience = 10
             self.early_stopping = EarlyStopping(patience=self.patience, verbose=True)
 
         # logger
@@ -315,7 +315,7 @@ class SolverClassifier(object):
             self.scheduler = ReduceLROnPlateau(self.optimizer,
                                                mode='min',
                                                factor=0.2,
-                                               patience=5,
+                                               patience=10,
                                                min_lr=1e-6,
                                                verbose=True)
 
@@ -461,12 +461,11 @@ class SolverClassifier(object):
                 self.optimizer.zero_grad()
                 loss.backward()
 
-                if self.use_scheduler:
-                    self.optimizer.step()
+                self.optimizer.step()
 
                 # print test debug _______________________________________
-                # print(prediction[:10], labels[:10])
-                # print(embedding[0].shape)
+                print(prediction[:10], labels[:10])
+                print(embedding[0])
                 # print(variance_distance_iter_class, ratio)
                 # print(Classification_loss)
                 # print(prediction[0])
