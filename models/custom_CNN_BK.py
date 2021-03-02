@@ -335,8 +335,8 @@ class Custom_CNN_BK(nn.Module, ABC):
 
         first = True
         # add distance between all classes:
-        for i in range(class_tensor):
-            for j in range(class_tensor):
+        for i in range(len(class_tensor)):
+            for j in range(len(class_tensor)):
                 if i == j:
                     continue
                 dist = torch.norm(mean_class[i] - mean_class[j]).unsqueeze(dim=0)
