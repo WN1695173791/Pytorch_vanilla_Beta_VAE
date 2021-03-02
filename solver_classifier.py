@@ -32,7 +32,7 @@ def get_z_struct_representation(loader, net, z_struct_layer_num):
         if torch.cuda.is_available():
             input_data = input_data.cuda()
 
-        _, z_struct, _, _ = net(input_data,
+        _, z_struct, _, _, _ = net(input_data,
                                 z_struct_out=True,
                                 z_struct_layer_num=z_struct_layer_num)
 
