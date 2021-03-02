@@ -303,7 +303,7 @@ class Custom_CNN_BK(nn.Module, ABC):
             ratio = variance_intra_class_mean_components / (variance_inter_class + EPS)
         ratio_variance_mean = torch.mean(ratio)
 
-        return ratio_variance_mean, 1/variance_inter_class
+        return ratio_variance_mean, variance_intra_class
 
     def compute_var_distance_class(self, batch_z_struct, labels_batch, nb_class):
         """
