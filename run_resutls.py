@@ -836,9 +836,10 @@ if __name__ == '__main__':
                        # 'CNN_mnist_custom_BK_2layer_bk1_20_loss_distance_10',
                        # # nan 'CNN_mnist_custom_BK_2layer_bk1_20_loss_distance_11',
                        # nan 'CNN_mnist_custom_BK_2layer_bk1_20_loss_distance_12',
-                       'CNN_mnist_custom_BK_2layer_bk1_20_loss_distance_13',
-                       'CNN_mnist_custom_BK_2layer_bk1_20_loss_distance_14',
-                       'CNN_mnist_custom_BK_2layer_bk1_20_loss_distance_15']
+                       # 'CNN_mnist_custom_BK_2layer_bk1_20_loss_distance_13',
+                       # 'CNN_mnist_custom_BK_2layer_bk1_20_loss_distance_14',
+                       # 'CNN_mnist_custom_BK_2layer_bk1_20_loss_distance_15']
+                       'test_add_losses_1']
 
     params_test = 'parameters_combinations/mnist_parameters_test_contrastive_loss.txt'
 

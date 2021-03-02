@@ -74,10 +74,10 @@ def compute_z_struct(net_trained, exp_name, loader, train_test=None, net_type=No
             if torch.cuda.is_available():
                 input_data = input_data.cuda()
 
-            _, z_struct, _, _ = net_trained(input_data,
+            _, z_struct, _, _, _ = net_trained(input_data,
                                          z_struct_out=True,
                                          z_struct_layer_num=z_struct_layer_num)
-            pred, _, _, _ = net_trained(input_data)
+            pred, _, _, _, _ = net_trained(input_data)
 
             # train mode:
             net_trained.eval()
@@ -147,7 +147,7 @@ def compute_z_struct_representation_noised(net, exp_name, train_test=None, nb_re
                 z_struct_representation_noised[:, i] = std_z_struct_max[i] * torch.randn(
                     (z_struct_representation.shape[0])) \
                                                        + mean_z_struct[i]
-                pred, _, _, _ = net(z_struct_representation_noised, z_struct_prediction=True,
+                pred, _, _, _, _ = net(z_struct_representation_noised, z_struct_prediction=True,
                                  z_struct_layer_num=z_struct_layer_num)
                 prediction.append(pred.detach().numpy())
             prediction_noised.append(np.mean(np.array(prediction), axis=0))

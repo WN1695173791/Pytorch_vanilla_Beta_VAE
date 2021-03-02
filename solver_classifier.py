@@ -422,14 +422,15 @@ class SolverClassifier(object):
                 labels = labels.to(self.device)  # Variable(labels.to(self.device))
 
                 prediction, embedding, ratio, \
-                variance_distance_iter_class = self.net(data,
-                                                        labels=labels,
-                                                        nb_class=self.nb_class,
-                                                        use_ratio=self.ratio_reg,
-                                                        z_struct_out=self.z_struct_out,
-                                                        z_struct_layer_num=self.z_struct_layer_num,
-                                                        other_ratio=self.other_ratio,
-                                                        loss_min_distance_cl=self.loss_min_distance_cl)
+                variance_distance_iter_class,\
+                    variance_intra_class = self.net(data,
+                                                    labels=labels,
+                                                    nb_class=self.nb_class,
+                                                    use_ratio=self.ratio_reg,
+                                                    z_struct_out=self.z_struct_out,
+                                                    z_struct_layer_num=self.z_struct_layer_num,
+                                                    other_ratio=self.other_ratio,
+                                                    loss_min_distance_cl=self.loss_min_distance_cl)
                 loss = 0
                 # compute losses:
                 if not self.without_acc:

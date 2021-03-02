@@ -248,6 +248,7 @@ class Custom_CNN_BK(nn.Module, ABC):
         z_struct = None
         ratio = 0
         variance_distance_iter_class = 0
+        variance_intra_class = 0
 
         if z_struct_out:
             z_struct = self.net[:z_struct_layer_num](x)
@@ -258,12 +259,12 @@ class Custom_CNN_BK(nn.Module, ABC):
             prediction = self.net(x)
 
         if use_ratio:
-            ratio = self.compute_ratio_batch(z_struct, labels, nb_class, other_ratio=other_ratio)
+            ratio, variance_intra_class = self.compute_ratio_batch(z_struct, labels, nb_class, other_ratio=other_ratio)
 
         if loss_min_distance_cl:
             variance_distance_iter_class = self.compute_var_distance_class(z_struct, labels, nb_class)
 
-        return prediction, z_struct, ratio, variance_distance_iter_class
+        return prediction, z_struct, ratio, variance_distance_iter_class, variance_intra_class
 
     def compute_ratio_batch(self, batch_z_struct, labels_batch, nb_class, other_ratio=False):
         """
@@ -302,7 +303,7 @@ class Custom_CNN_BK(nn.Module, ABC):
             ratio = variance_intra_class_mean_components / (variance_inter_class + EPS)
         ratio_variance_mean = torch.mean(ratio)
 
-        return ratio_variance_mean
+        return ratio_variance_mean, variance_intra_class_mean_components
 
     def compute_var_distance_class(self, batch_z_struct, labels_batch, nb_class):
         """
@@ -334,8 +335,8 @@ class Custom_CNN_BK(nn.Module, ABC):
 
         first = True
         # add distance between all classes:
-        for i in class_tensor:
-            for j in class_tensor:
+        for i in range(class_tensor):
+            for j in range(class_tensor):
                 if i == j:
                     continue
                 dist = torch.norm(mean_class[i] - mean_class[j]).unsqueeze(dim=0)
