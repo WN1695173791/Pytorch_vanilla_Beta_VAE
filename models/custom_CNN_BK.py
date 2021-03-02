@@ -5,6 +5,7 @@ from binary_tools.activations import DeterministicBinaryActivation
 import numpy as np
 from models.weight_init import weight_init
 import torch
+import torch.nn.functional as F
 
 EPS = 1e-12
 
@@ -155,7 +156,8 @@ class Custom_CNN_BK(nn.Module, ABC):
         ]
         if self.Binary_z and not self.two_conv_layer:
             self.model += [
-                DeterministicBinaryActivation(estimator='ST')
+                # DeterministicBinaryActivation(estimator='ST')
+                nn.ReLU(True),
             ]
         else:
             self.model += [
@@ -170,7 +172,8 @@ class Custom_CNN_BK(nn.Module, ABC):
             ]
         if self.Binary_z and self.two_conv_layer and not self.three_conv_layer:
             self.model += [
-                DeterministicBinaryActivation(estimator='ST')
+                # DeterministicBinaryActivation(estimator='ST')
+                nn.ReLU(True),
             ]
         elif self.two_conv_layer:
             self.model += [
@@ -185,47 +188,94 @@ class Custom_CNN_BK(nn.Module, ABC):
             ]
         if self.Binary_z and self.three_conv_layer:
             self.model += [
-                DeterministicBinaryActivation(estimator='ST')
+                # DeterministicBinaryActivation(estimator='ST')
+                nn.ReLU(True),
             ]
         elif self.three_conv_layer:
             self.model += [
                 nn.ReLU(True),
             ]
-        # ----------- add GMP bloc:
-        self.model += [
-            nn.AdaptiveMaxPool2d((1, 1)),  # B, hidden_filters_1, 1, 1
-            # PrintLayer(),  # B, hidden_filters_1, 1, 1
-            View((-1, self.hidden_filter_GMP)),  # B, hidden_filters_1
-            # PrintLayer(),  # B, hidden_filters_1
-        ]
-        if self.add_linear_after_GMP:
-            self.model += [
-                nn.Linear(self.hidden_filter_GMP, self.z_struct_size),  # shape: (Batch, z_struct_size)
-                nn.BatchNorm1d(self.z_struct_size),
-                nn.ReLU(True),
-                nn.Dropout(0.4),
-                # PrintLayer(),  # B, z_struct_size
+
+        if self.Binary_z:
+            numChannels = 8
+            numWeights = 16
+            depth = 2
+            sparsity = 0.5
+            self.chain = [BlockLBP(numChannels, numWeights, sparsity) for i in range(depth)]
+
+            # ----------- add GMP bloc:
+            self.model_2 = [
+                nn.AdaptiveMaxPool2d((1, 1)),  # B, hidden_filters_1, 1, 1
+                # PrintLayer(),  # B, hidden_filters_1, 1, 1
+                View((-1, self.hidden_filter_GMP)),  # B, hidden_filters_1
+                # PrintLayer(),  # B, hidden_filters_1
             ]
+            if self.add_linear_after_GMP:
+                self.model_2 += [
+                    nn.Linear(self.hidden_filter_GMP, self.z_struct_size),  # shape: (Batch, z_struct_size)
+                    nn.BatchNorm1d(self.z_struct_size),
+                    nn.ReLU(True),
+                    nn.Dropout(0.4),
+                    # PrintLayer(),  # B, z_struct_size
+                ]
+            else:
+                self.last_linear_layer_size = self.hidden_filter_GMP
+
+            if self.add_classification_layer:
+                self.last_linear_layer_size = self.classif_layer_size
+                # ------------ add classification bloc:
+                self.model_2 += [
+                    nn.Linear(self.z_struct_size, self.classif_layer_size),  # B, classif_layer_size
+                    nn.BatchNorm1d(self.classif_layer_size),
+                    nn.ReLU(True),
+                    nn.Dropout(0.4),
+                    # PrintLayer(),  # B,
+                ]
+            # ---------- final layer for classification:
+            self.model_2 += [
+                nn.Linear(self.last_linear_layer_size, self.n_classes),  # B, nb_class
+                nn.Softmax()
+            ]
+            self.net = nn.Sequential(*self.model,
+                                     *self.chain,
+                                     *self.model_2)
         else:
-            self.last_linear_layer_size = self.hidden_filter_GMP
-
-        if self.add_classification_layer:
-            self.last_linear_layer_size = self.classif_layer_size
-            # ------------ add classification bloc:
+            # ----------- add GMP bloc:
             self.model += [
-                nn.Linear(self.z_struct_size, self.classif_layer_size),  # B, classif_layer_size
-                nn.BatchNorm1d(self.classif_layer_size),
-                nn.ReLU(True),
-                nn.Dropout(0.4),
-                # PrintLayer(),  # B,
+                nn.AdaptiveMaxPool2d((1, 1)),  # B, hidden_filters_1, 1, 1
+                # PrintLayer(),  # B, hidden_filters_1, 1, 1
+                View((-1, self.hidden_filter_GMP)),  # B, hidden_filters_1
+                # PrintLayer(),  # B, hidden_filters_1
             ]
-        # ---------- final layer for classification:
-        self.model += [
-            nn.Linear(self.last_linear_layer_size, self.n_classes),  # B, nb_class
-            nn.Softmax()
-        ]
+            if self.add_linear_after_GMP:
+                self.model += [
+                    nn.Linear(self.hidden_filter_GMP, self.z_struct_size),  # shape: (Batch, z_struct_size)
+                    nn.BatchNorm1d(self.z_struct_size),
+                    nn.ReLU(True),
+                    nn.Dropout(0.4),
+                    # PrintLayer(),  # B, z_struct_size
+                ]
+            else:
+                self.last_linear_layer_size = self.hidden_filter_GMP
 
-        self.net = nn.Sequential(*self.model)
+            if self.add_classification_layer:
+                self.last_linear_layer_size = self.classif_layer_size
+                # ------------ add classification bloc:
+                self.model += [
+                    nn.Linear(self.z_struct_size, self.classif_layer_size),  # B, classif_layer_size
+                    nn.BatchNorm1d(self.classif_layer_size),
+                    nn.ReLU(True),
+                    nn.Dropout(0.4),
+                    # PrintLayer(),  # B,
+                ]
+            # ---------- final layer for classification:
+            self.model += [
+                nn.Linear(self.last_linear_layer_size, self.n_classes),  # B, nb_class
+                nn.Softmax()
+            ]
+
+            self.net = nn.Sequential(*self.model)
+
         self.weight_init()
 
     def weight_init(self):
@@ -351,3 +401,33 @@ class Custom_CNN_BK(nn.Module, ABC):
         variance_intra_class_distance_mean = torch.mean(variance_intra_class_distance, axis=0)
 
         return variance_intra_class_distance_mean
+
+
+class BlockLBP(nn.Module):
+
+    def __init__(self, numChannels, numWeights, sparsity=0.5):
+        super().__init__()
+        self.batch_norm = nn.BatchNorm2d(numChannels)
+        self.conv_lbp = ConvLBP(numChannels, numWeights, kernel_size=3, sparsity=sparsity)
+        self.conv_1x1 = nn.Conv2d(numWeights, numChannels, kernel_size=1)
+
+    def forward(self, x):
+        residual = x
+        x = self.batch_norm(x)
+        x = F.relu(self.conv_lbp(x))
+        x = self.conv_1x1(x)
+        x.add_(residual)
+        return x
+
+
+class ConvLBP(nn.Conv2d):
+    def __init__(self, in_channels, out_channels, kernel_size=3, sparsity=0.5):
+        super().__init__(in_channels, out_channels, kernel_size, padding=1, bias=False)
+        weights = next(self.parameters())
+        matrix_proba = torch.FloatTensor(weights.data.shape).fill_(0.5)
+        binary_weights = torch.bernoulli(matrix_proba) * 2 - 1
+        mask_inactive = torch.rand(matrix_proba.shape) > sparsity
+        binary_weights.masked_fill_(mask_inactive, 0)
+        weights.data = binary_weights
+        weights.requires_grad_(False)
+
