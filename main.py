@@ -203,6 +203,7 @@ if __name__ == "__main__":
     parser.add_argument('--warm', default=1, type=int, help='Warmup training epochs')
     parser.add_argument('--sz_embedding', default=5, type=int, help='embedding size')
     parser.add_argument('--remark', default='', help='Any remark')
+    parser.add_argument('--lambda_contrastive_loss', default=1, type=float, help="lambda for contrastive loss")
     # end test ___________
     # add new loss variance distance mean class:
     parser.add_argument('--loss_min_distance_cl', default=False, type=str2bool,

@@ -395,11 +395,6 @@ class SolverClassifier(object):
         # other parameters for train:
         self.global_iter = 0
         self.epochs = 0
-        self.Classification_loss = 0
-        self.Total_loss = 0
-        self.scores = 0
-        self.losses = 0
-        self.ratio = 0
 
         if self.contrastive_loss:
             self.pbar = tqdm(enumerate(self.dl_tr))
@@ -435,84 +430,64 @@ class SolverClassifier(object):
                                                         z_struct_layer_num=self.z_struct_layer_num,
                                                         other_ratio=self.other_ratio,
                                                         loss_min_distance_cl=self.loss_min_distance_cl)
-
-                # classification loss
-                # averaged over each loss element in the batch
-                self.Classification_loss = F.nll_loss(prediction, labels)
-                self.Classification_loss = self.lambda_classification * self.Classification_loss
+                loss = 0
+                # compute losses:
+                if not self.without_acc:
+                    # averaged over each loss element in the batch
+                    Classification_loss = F.nll_loss(prediction, labels)
+                    Classification_loss = Classification_loss * self.lambda_classification
+                    loss += Classification_loss
 
                 if self.contrastive_loss:
-                    # loss take emnedding, not prediciton
+                    # loss take embedding, not prediction
                     embedding = embedding.squeeze(axis=-1).squeeze(axis=-1)
-                    loss = self.criterion(embedding, labels)
-                    # pour aller plus vite j'utilise ratio reg mais il faudra ajotuer cette variable:
-                    loss = loss * self.lambda_ratio_reg
+                    contrastive_loss = self.criterion(embedding, labels)
+                    contrastive_loss = contrastive_loss * self.lambda_contrastive_loss
+                    loss += contrastive_loss
 
                 if self.ratio_reg:
                     # ratio loss:
                     if self.other_ratio:
-                        self.ratio = -(ratio * self.lambda_ratio_reg)
+                        ratio = -(ratio * self.lambda_ratio_reg)
                     else:
-                        self.ratio = ratio * self.lambda_ratio_reg
-
-                # total loss:
-                if self.without_acc:
-                    if self.contrastive_loss:
-                        self.total_loss = loss + self.ratio
-                    else:
-                        self.total_loss = self.ratio
-                else:
-                    if self.ratio_reg:
-                        if self.contrastive_loss:
-                            self.total_loss = self.Classification_loss + loss  # on ne veut pas utiliser le ratio
-                            # avec la contrastive loss
-                        else:
-                            self.total_loss = self.Classification_loss + self.ratio
-                    else:
-                        if self.contrastive_loss:
-                            self.total_loss = self.Classification_loss + loss
-                        else:
-                            self.total_loss = self.Classification_loss
-
-                # print test debug _______________________________________
-                print(prediction[:10], labels[:10])
-                print(embedding[0].shape)
-                # print(variance_distance_iter_class, ratio)
-                # print(self.Classification_loss)
-                # print(prediction[0])
-                # print(self.net.net[0].weight.grad)
-                # print(self.total_loss)
-                # print(self.loss_distance_cl, self.total_loss)
-                # print test debug _______________________________________
+                        ratio = ratio * self.lambda_ratio_reg
+                    loss += ratio
 
                 if self.loss_min_distance_cl:
-                    self.loss_distance_cl = (variance_distance_iter_class * self.lambda_var_distance)
-                    self.total_loss += self.loss_distance_cl
+                    loss_distance_cl = variance_distance_iter_class * self.lambda_var_distance
+                    loss += loss_distance_cl
 
                 # backpropagation loss
                 self.optimizer.zero_grad()
-                self.total_loss.backward()
+                loss.backward()
 
+                if self.use_scheduler:
+                    self.optimizer.step()
+
+                # print test debug _______________________________________
+                # print(prediction[:10], labels[:10])
+                # print(embedding[0].shape)
+                # print(variance_distance_iter_class, ratio)
+                # print(Classification_loss)
+                # print(prediction[0])
                 # print(self.net.net[0].weight.grad)
+                # print(loss)
+                # print(loss_distance_cl, loss)
+                # print test debug _______________________________________
 
                 if self.contrastive_loss:
                     torch.nn.utils.clip_grad_value_(self.net.parameters(), 10)
                     if self.loss == 'Proxy_Anchor':
                         torch.nn.utils.clip_grad_value_(self.criterion.parameters(), 10)
-
                     if torch.cuda.is_available():
-                        losses_per_epoch.append(loss.data.cpu().numpy())
+                        losses_per_epoch.append(contrastive_loss.data.cpu().numpy())
                     else:
-                        losses_per_epoch.append(loss.data.numpy())
-
+                        losses_per_epoch.append(contrastive_loss.data.numpy())
                     self.pbar.set_description(
-                        'Train Epoch: {} [{}/{} ({:.0f}%)] Loss: {:.6f}'.format(
+                        'Train Epoch: {} [{}/{} ({:.0f}%)] Contrastive Loss: {:.6f}'.format(
                             self.epochs, batch_idx + 1, len(self.dl_tr),
                                          100. * batch_idx / len(self.dl_tr),
-                            loss.item()))
-
-                if self.use_scheduler:
-                    self.optimizer.step()
+                            contrastive_loss.item()))
 
             # save step
             self.save_checkpoint('last')
