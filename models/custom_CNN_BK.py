@@ -312,9 +312,9 @@ class Custom_CNN_BK(nn.Module, ABC):
         :return:
         """
 
-        new_class_tensor = None
         first = True
         class_tensor = torch.arange(nb_class)
+        new_class_tensor = torch.arange(nb_class)
         for class_id in class_tensor:
             z_struct_class = batch_z_struct[torch.where(labels_batch == class_id)]
             if len(z_struct_class) < 2:
