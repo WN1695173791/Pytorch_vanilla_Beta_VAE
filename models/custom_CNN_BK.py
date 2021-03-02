@@ -263,11 +263,6 @@ class Custom_CNN_BK(nn.Module, ABC):
         if loss_min_distance_cl:
             variance_distance_iter_class = self.compute_var_distance_class(z_struct, labels, nb_class)
 
-        # TODO: debug NaN value:
-        # print('print values', prediction[0], z_struct[0], ratio, variance_distance_iter_class)
-        # print('other layer shape:', x.shape, self.net[:1](x).shape)
-        # print('other layer shape:', x[0], self.net[:1](x)[0])
-
         return prediction, z_struct, ratio, variance_distance_iter_class
 
     def compute_ratio_batch(self, batch_z_struct, labels_batch, nb_class, other_ratio=False):
@@ -318,10 +313,12 @@ class Custom_CNN_BK(nn.Module, ABC):
         """
 
         first = True
-        for class_id in range(nb_class):
+        class_tensor = torch.arange(nb_class)
+        for class_id in class_tensor:
             z_struct_class = batch_z_struct[torch.where(labels_batch == class_id)]
             if len(z_struct_class) < 2:
                 print("Variance: Class {} with zeros or only one example so we don't use it !!!!".format(class_id))
+                new_class_tensor = class_tensor[class_tensor != class_id]
                 continue
             else:
                 mean_class_iter = torch.mean(z_struct_class, axis=0).squeeze(axis=-1).squeeze(axis=-1).unsqueeze(axis=0)
@@ -331,13 +328,15 @@ class Custom_CNN_BK(nn.Module, ABC):
                     mean_class = torch.cat((mean_class, mean_class_iter), dim=0)
                 first = False
 
+        class_tensor = new_class_tensor
+
         first = True
         # add distance between all classes:
-        for i in range(nb_class):
-            for j in range(nb_class):
+        for i in class_tensor:
+            for j in class_tensor:
                 if i == j:
                     continue
-                dist = torch.norm(mean_class[i]-mean_class[j]).unsqueeze(dim=0)
+                dist = torch.norm(mean_class[i] - mean_class[j]).unsqueeze(dim=0)
                 if first:
                     distance_inter_class = dist
                 else:

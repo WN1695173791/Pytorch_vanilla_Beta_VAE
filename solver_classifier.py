@@ -464,18 +464,16 @@ class SolverClassifier(object):
                 self.optimizer.step()
 
                 # print test debug _______________________________________
+                # print('gradient value', self.net.net[0].weight.grad)
+                # print('value parameters layer', self.net.net[0].weight)
                 # print(prediction[:10], labels[:10])
                 # print(embedding[0])
                 # print(variance_distance_iter_class, ratio)
                 # print(Classification_loss)
                 # print(prediction[0])
-                # print('gradient value', self.net.net[1].weight.grad)
-                # print('value parameters layer', self.net.net[1].weight)
                 # print(loss)
                 # print(loss_distance_cl, loss)
                 # print test debug _______________________________________
-
-                # break  # TODO: remove break
 
                 if self.contrastive_loss:
                     torch.nn.utils.clip_grad_value_(self.net.parameters(), 10)
