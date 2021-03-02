@@ -153,6 +153,7 @@ class SolverClassifier(object):
         self.batch_size = args.batch_size
         self.remark = args.remark
         self.contrastive_loss = args.contrastive_loss
+        self.lambda_contrastive_loss = args.self.lambda_contrastive_loss
         # add loss min var distance mean class:
         self.loss_min_distance_cl = args.loss_min_distance_cl
         self.lambda_var_distance = args.lambda_var_distance
