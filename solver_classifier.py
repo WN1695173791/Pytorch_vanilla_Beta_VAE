@@ -475,6 +475,8 @@ class SolverClassifier(object):
                             self.total_loss = self.Classification_loss
 
                 # print test debug _______________________________________
+                # print(prediction[:10], labels[:10])
+                # print(embedding[0].shape)
                 # print(variance_distance_iter_class, ratio)
                 # print(self.Classification_loss)
                 # print(prediction[0])
