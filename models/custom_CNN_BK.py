@@ -329,7 +329,7 @@ class Custom_CNN_BK(nn.Module, ABC):
                     mean_class = torch.cat((mean_class, mean_class_iter), dim=0)
                 first = False
 
-        if torch.is_tensor(new_class_tensor):
+        if len(class_tensor) > len(new_class_tensor):
             class_tensor = new_class_tensor
 
         first = True
