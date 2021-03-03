@@ -229,7 +229,7 @@ class Custom_CNN_BK(nn.Module, ABC):
                 self.last_linear_layer_size = self.classif_layer_size
                 # ------------ add classification bloc:
                 self.model_2 += [
-                    nn.Linear(self.z_struct_size, self.classif_layer_size),  # B, classif_layer_size
+                    nn.Linear(self.z_struct_size, self.classif_layer_size),  # B, classify_layer_size
                     nn.BatchNorm1d(self.classif_layer_size),
                     nn.ReLU(True),
                     nn.Dropout(0.4),

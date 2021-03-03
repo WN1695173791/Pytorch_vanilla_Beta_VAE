@@ -26,7 +26,7 @@ class DeterministicBinaryActivation(nn.Module):
             x = input
             slope = 1.0
         x = self.act(slope * x)
-        x = self.binarizer(x)
+        # x = self.binarizer(x)
         if self.estimator == 'REINFORCE':
             x = x.sample()
         return x
