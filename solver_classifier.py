@@ -442,10 +442,10 @@ class SolverClassifier(object):
                 data = data.to(self.device)  # Variable(data.to(self.device))
                 labels = labels.to(self.device)  # Variable(labels.to(self.device))
 
-                print(labels)
-                for i in range(self.nb_class):
-                    n = labels[labels == i]
-                    print(len(n))
+                # print(labels)
+                # for i in range(self.nb_class):
+                #     n = labels[labels == i]
+                #     print(len(n))
 
                 # TODO: create function to get same images number per classes
 
