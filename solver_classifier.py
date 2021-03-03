@@ -242,23 +242,25 @@ class SolverClassifier(object):
         self.test_loader_size = len(self.test_loader.dataset)
 
         if self.contrastive_loss:
+            self.train_loader_bf, _ = get_mnist_dataset(batch_size=self.batch_size,
+                                                        return_Dataloader=False)
             if self.IPC:
-                balanced_sampler = sampler.BalancedSampler(self.train_loader,
+                balanced_sampler = sampler.BalancedSampler(self.train_loader_bf,
                                                            batch_size=self.batch_size,
-                                                           images_per_class=self.IPC)
+                                                           images_per_class=3)
                 batch_sampler = BatchSampler(balanced_sampler,
                                              batch_size=self.batch_size,
                                              drop_last=True)
-                self.dl_tr = torch.utils.data.DataLoader(
-                    self.train_loader,
+                self.train_loader = torch.utils.data.DataLoader(
+                    self.train_loader_bf,
                     num_workers=self.num_workers,
                     pin_memory=True,
                     batch_sampler=batch_sampler
                 )
                 print('Balanced Sampling')
             else:
-                self.dl_tr = torch.utils.data.DataLoader(
-                    self.train_loader,
+                self.train_loader = torch.utils.data.DataLoader(
+                    self.train_loader_bf,
                     batch_size=self.batch_size,
                     shuffle=True,
                     num_workers=self.num_workers,
@@ -418,7 +420,7 @@ class SolverClassifier(object):
         self.epochs = 0
 
         if self.contrastive_loss:
-            self.pbar = tqdm(enumerate(self.dl_tr))
+            self.pbar = tqdm(enumerate(self.train_loader))
         self.losses_list = []
         self.best_recall = [0]
         self.best_epoch = 0
@@ -521,8 +523,8 @@ class SolverClassifier(object):
                         losses_per_epoch.append(contrastive_loss.data.numpy())
                     self.pbar.set_description(
                         'Train Epoch: {} [{}/{} ({:.0f}%)] Contrastive Loss: {:.6f}'.format(
-                            self.epochs, batch_idx + 1, len(self.dl_tr),
-                                         100. * batch_idx / len(self.dl_tr),
+                            self.epochs, batch_idx + 1, len(self.train_loader),
+                                         100. * batch_idx / len(self.train_loader),
                             contrastive_loss.item()))
 
             # save step

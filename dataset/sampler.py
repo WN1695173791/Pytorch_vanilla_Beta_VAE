@@ -6,12 +6,14 @@ import torch
 class BalancedSampler(Sampler):
     def __init__(self, data_source, batch_size, images_per_class=3):
         self.data_source = data_source
-        self.ys = data_source.ys
+        self.ys = self.data_source.train_labels
         self.num_groups = batch_size // images_per_class
         self.batch_size = batch_size
         self.num_instances = images_per_class
         self.num_samples = len(self.ys)
-        self.num_classes = len(set(self.ys))
+        self.num_classes = len(torch.unique(self.ys))
+        if self.num_groups > self.num_classes:
+            self.num_groups = self.num_classes
 
     def __len__(self):
         return self.num_samples

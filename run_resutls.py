@@ -158,6 +158,7 @@ def run_exp_extraction_and_visualization_custom_BK(path_parameter, line_begin, l
 
         args = arguments_2[key]
         batch_size = args[4]
+        Binary_z = False
         if is_ratio:
             ratio_reg = True
             lambda_ratio = args[28][1]
@@ -846,9 +847,10 @@ if __name__ == '__main__':
                        # 'CNN_mnist_custom_BK_2layer_bk1_20_loss_distance_13',
                        # 'CNN_mnist_custom_BK_2layer_bk1_20_loss_distance_14',
                        # 'CNN_mnist_custom_BK_2layer_bk1_20_loss_distance_15']
-                       'test_add_losses_binary_ratio_distance_depth_1_2',
-                       'test_add_losses_binary_ratio_distance_var_depth_1_2',
-                       'test_add_losses_binary_depth_1_1']
+                       # 'test_add_losses_binary_ratio_distance_depth_1_2',
+                       # 'test_add_losses_binary_ratio_distance_var_depth_1_2',
+                       # 'test_add_losses_binary_depth_1_1',
+                       'test_add_losses_balance_data_1']
 
     params_test = 'parameters_combinations/mnist_parameters_test_contrastive_loss.txt'
 
@@ -877,8 +879,8 @@ if __name__ == '__main__':
     #                                               list_model_ratio_wt_acc,
     #                                               is_ratio=True)
     run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
-                                                   15,
-                                                   17,
+                                                   2,
+                                                   2,
                                                    list_model_test,
                                                    is_ratio=True)
 
