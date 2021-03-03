@@ -436,6 +436,9 @@ class SolverClassifier(object):
                                                     z_struct_layer_num=self.z_struct_layer_num,
                                                     other_ratio=self.other_ratio,
                                                     loss_min_distance_cl=self.loss_min_distance_cl)
+
+                print(embedding[0])
+
                 loss = 0
                 # compute losses:
                 if not self.without_acc:

@@ -203,6 +203,9 @@ class Custom_CNN_BK(nn.Module, ABC):
             depth = 1
             sparsity = 0.5
             self.chain = [BlockLBP(numChannels, numWeights, sparsity) for i in range(depth)]
+            self.chain += [
+                DeterministicBinaryActivation(estimator='ST')
+            ]
 
             # ----------- add GMP bloc:
             self.model_2 = [
