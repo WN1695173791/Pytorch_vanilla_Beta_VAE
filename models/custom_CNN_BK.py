@@ -200,7 +200,7 @@ class Custom_CNN_BK(nn.Module, ABC):
 
         if self.Binary_z:
             numWeights = 16
-            depth = 2
+            depth = 1
             sparsity = 0.5
             self.chain = [BlockLBP(numChannels, numWeights, sparsity) for i in range(depth)]
 
