@@ -437,7 +437,7 @@ class SolverClassifier(object):
                                                     other_ratio=self.other_ratio,
                                                     loss_min_distance_cl=self.loss_min_distance_cl)
 
-                print(embedding[0])
+                # print(embedding[0])
 
                 loss = 0
                 # compute losses:
