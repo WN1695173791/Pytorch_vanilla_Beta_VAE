@@ -33,8 +33,8 @@ def get_z_struct_representation(loader, net, z_struct_layer_num):
             input_data = input_data.cuda()
 
         _, z_struct, _, _, _ = net(input_data,
-                                z_struct_out=True,
-                                z_struct_layer_num=z_struct_layer_num)
+                                   z_struct_out=True,
+                                   z_struct_layer_num=z_struct_layer_num)
 
         z_struct_batch = z_struct.squeeze().cpu().detach().numpy()
         z_struct_representation.extend(z_struct_batch)
@@ -161,7 +161,6 @@ class SolverClassifier(object):
         self.intra_class_variance_loss = args.intra_class_variance_loss
         self.lambda_intra_class_var = args.lambda_intra_class_var
 
-
         # wandb parameters:
         self.use_wandb = False
         if self.use_wandb:
@@ -209,14 +208,31 @@ class SolverClassifier(object):
         stream.setFormatter(formatter)
         logger.addHandler(stream)
 
+        self.balance_samples_per_class = True
+
         # load dataset:
-        if args.dataset == 'mnist':
+        if args.dataset == 'mnist' and not self.balance_samples_per_class:
             self.valid_loader = 0
             self.train_loader, self.test_loader = get_mnist_dataset(batch_size=self.batch_size)
         else:
             self.train_loader, self.valid_loader, self.test_loader = get_dataloaders(args.dataset,
                                                                                      batch_size=self.batch_size,
                                                                                      logger=logger)
+
+        if self.balance_samples_per_class and args.dataset == 'mnist':
+            self.train_loader_bf, self.test_loader_bf = get_mnist_dataset(batch_size=self.batch_size,
+                                                                          return_Dataloader=False)
+            balanced_sampler = sampler.BalanceSamplesPerClass(self.train_loader_bf,
+                                                              batch_size=120)
+            batch_sampler = BatchSampler(balanced_sampler,
+                                         batch_size=120,
+                                         drop_last=True)
+            self.train_loader = torch.utils.data.DataLoader(
+                self.train_loader_bf,
+                num_workers=self.num_workers,
+                pin_memory=True,
+                batch_sampler=batch_sampler)
+            print('Balanced samples per class')
 
         self.train_loader_size = len(self.train_loader.dataset)
         if self.valid_loader == 0:
@@ -426,16 +442,23 @@ class SolverClassifier(object):
                 data = data.to(self.device)  # Variable(data.to(self.device))
                 labels = labels.to(self.device)  # Variable(labels.to(self.device))
 
+                print(labels)
+                for i in range(self.nb_class):
+                    n = labels[labels == i]
+                    print(len(n))
+
+                # TODO: create function to get same images number per classes
+
                 prediction, embedding, ratio, \
-                variance_distance_iter_class,\
-                    variance_intra_class = self.net(data,
-                                                    labels=labels,
-                                                    nb_class=self.nb_class,
-                                                    use_ratio=self.ratio_reg,
-                                                    z_struct_out=self.z_struct_out,
-                                                    z_struct_layer_num=self.z_struct_layer_num,
-                                                    other_ratio=self.other_ratio,
-                                                    loss_min_distance_cl=self.loss_min_distance_cl)
+                variance_distance_iter_class, \
+                variance_intra_class = self.net(data,
+                                                labels=labels,
+                                                nb_class=self.nb_class,
+                                                use_ratio=self.ratio_reg,
+                                                z_struct_out=self.z_struct_out,
+                                                z_struct_layer_num=self.z_struct_layer_num,
+                                                other_ratio=self.other_ratio,
+                                                loss_min_distance_cl=self.loss_min_distance_cl)
 
                 # print(embedding[0])
 

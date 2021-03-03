@@ -410,7 +410,7 @@ def preprocess(root, size=(64, 64), img_format='JPEG', center_crop=None):
         img.save(img_path, img_format)
 
 
-def get_mnist_dataset(batch_size=64):
+def get_mnist_dataset(batch_size=64, return_Dataloader=True):
     mnist_trainset = datasets.MNIST(root='data/mnist/',
                                     train=True,
                                     download=False,
@@ -424,10 +424,14 @@ def get_mnist_dataset(batch_size=64):
                                                                  transforms.ToTensor(),
                                                                  transforms.Normalize((0.1307,), (0.3081,))]))
 
-    train_loader = torch.utils.data.DataLoader(dataset=mnist_trainset,
-                                               batch_size=batch_size,
-                                               shuffle=True)
-    test_loader = torch.utils.data.DataLoader(dataset=mnist_testset,
-                                              batch_size=batch_size,
-                                              shuffle=False)
+    if return_Dataloader:
+        train_loader = torch.utils.data.DataLoader(dataset=mnist_trainset,
+                                                   batch_size=batch_size,
+                                                   shuffle=True)
+        test_loader = torch.utils.data.DataLoader(dataset=mnist_testset,
+                                                  batch_size=batch_size,
+                                                  shuffle=False)
+    else:
+        train_loader = mnist_trainset
+        test_loader = mnist_testset
     return train_loader, test_loader
