@@ -850,7 +850,8 @@ if __name__ == '__main__':
                        # 'test_add_losses_binary_ratio_distance_depth_1_2',
                        # 'test_add_losses_binary_ratio_distance_var_depth_1_2',
                        # 'test_add_losses_binary_depth_1_1',
-                       'test_add_losses_balance_data_1']
+                       'test_add_losses_binary_depth_contrastive_1',
+                       'test_add_losses__contrastive_1']
 
     params_test = 'parameters_combinations/mnist_parameters_test_contrastive_loss.txt'
 
@@ -879,8 +880,8 @@ if __name__ == '__main__':
     #                                               list_model_ratio_wt_acc,
     #                                               is_ratio=True)
     run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
-                                                   2,
-                                                   2,
+                                                   19,
+                                                   20,
                                                    list_model_test,
                                                    is_ratio=True)
 

@@ -160,6 +160,7 @@ class SolverClassifier(object):
         # intra class variance loss:
         self.intra_class_variance_loss = args.intra_class_variance_loss
         self.lambda_intra_class_var = args.lambda_intra_class_var
+        self.dataset_balanced = args.dataset_balanced
 
         # wandb parameters:
         self.use_wandb = False
@@ -208,10 +209,8 @@ class SolverClassifier(object):
         stream.setFormatter(formatter)
         logger.addHandler(stream)
 
-        self.balance_samples_per_class = True
-
         # load dataset:
-        if args.dataset == 'mnist' and not self.balance_samples_per_class:
+        if args.dataset == 'mnist' and not self.dataset_balanced:
             self.valid_loader = 0
             self.train_loader, self.test_loader = get_mnist_dataset(batch_size=self.batch_size)
         else:
@@ -219,7 +218,7 @@ class SolverClassifier(object):
                                                                                      batch_size=self.batch_size,
                                                                                      logger=logger)
 
-        if self.balance_samples_per_class and args.dataset == 'mnist':
+        if self.dataset_balanced and args.dataset == 'mnist':
             self.train_loader_bf, self.test_loader_bf = get_mnist_dataset(batch_size=self.batch_size,
                                                                           return_Dataloader=False)
             balanced_sampler = sampler.BalanceSamplesPerClass(self.train_loader_bf,
@@ -444,13 +443,6 @@ class SolverClassifier(object):
                 data = data.to(self.device)  # Variable(data.to(self.device))
                 labels = labels.to(self.device)  # Variable(labels.to(self.device))
 
-                # print(labels)
-                # for i in range(self.nb_class):
-                #     n = labels[labels == i]
-                #     print(len(n))
-
-                # TODO: create function to get same images number per classes
-
                 prediction, embedding, ratio, \
                 variance_distance_iter_class, \
                 variance_intra_class = self.net(data,
@@ -461,8 +453,6 @@ class SolverClassifier(object):
                                                 z_struct_layer_num=self.z_struct_layer_num,
                                                 other_ratio=self.other_ratio,
                                                 loss_min_distance_cl=self.loss_min_distance_cl)
-
-                # print(embedding[0])
 
                 loss = 0
                 # compute losses:

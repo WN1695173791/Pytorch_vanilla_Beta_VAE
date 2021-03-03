@@ -164,6 +164,8 @@ if __name__ == "__main__":
                                                                                           'directory')
 
     parser.add_argument("--gpu_devices", type=int, nargs='+', default=None, help="GPU devices available")
+    parser.add_argument('--dataset_balanced', default=False, type=str2bool,
+                        help='if dataset is balanced or not for ratio loss')
 
     # parameters for classifier:
     parser.add_argument('--model', default='VAE', type=str, help='model name')
