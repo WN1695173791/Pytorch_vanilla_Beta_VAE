@@ -874,7 +874,7 @@ def get_receptive_field(net, img_size):
     return receptive_field_dict
 
 
-def ratio(exp_name, train_test=None, cat=None, other_ratio=False):
+def ratio(exp_name, train_test=None, cat=None, other_ratio=False, normalized=False):
     """
     compute the ratio between std of one class and std of all data.
     :param exp_name:
@@ -884,6 +884,16 @@ def ratio(exp_name, train_test=None, cat=None, other_ratio=False):
     z_struct_representation, label_list, _ = load_z_struct_representation(exp_name, train_test=train_test)
     representation_z_struct_class = load_z_struct_representation_per_class(exp_name, train_test=train_test)
     nb_class = len(representation_z_struct_class)
+
+    if normalized:
+        # we normalized z_struct to compare variacne value objectively
+        print('normalized z_struct')
+        # norm = np.linalg.norm(z_struct_representation)
+        # z_struct_representation = z_struct_representation / norm
+        # representation_z_struct_class = representation_z_struct_class / norm
+
+        z_struct_representation = (z_struct_representation - z_struct_representation.min()) / (z_struct_representation.max() - z_struct_representation.min())
+        representation_z_struct_class = (representation_z_struct_class - z_struct_representation.min()) / (z_struct_representation.max() - z_struct_representation.min())
 
     z_struct_mean_global = np.mean(z_struct_representation, axis=0)
     z_struct_std_global = np.std(z_struct_representation, axis=0)
@@ -1656,7 +1666,8 @@ def plot_resume(net, exp_name, is_ratio, is_distance_loss, cat=None, train_test=
 
     ratio_variance_mean, variance_intra_class, variance_inter_class = ratio(exp_name,
                                                                             train_test=train_test,
-                                                                            cat=cat)
+                                                                            cat=cat,
+                                                                            normalized=True)
 
     variance_intra_class_mean_per_class = np.mean(variance_intra_class, axis=1)
     variance_intra_class_mean = np.mean(variance_intra_class_mean_per_class)

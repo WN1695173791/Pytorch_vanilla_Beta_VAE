@@ -215,6 +215,10 @@ if __name__ == "__main__":
     parser.add_argument('--intra_class_variance_loss', default=False, type=str2bool,
                         help='min variance distance inter classes mean')
     parser.add_argument('--lambda_intra_class_var', default=1, type=float, help="lambda_var_distance")
+    # add intra class mean loss:
+    parser.add_argument('--loss_distance_mean', default=False, type=str2bool,
+                        help='mean distance inter classes mean')
+    parser.add_argument('--lambda_distance_mean', default=1, type=float, help="lambda_distance_mean")
 
     args = parser.parse_args()
 

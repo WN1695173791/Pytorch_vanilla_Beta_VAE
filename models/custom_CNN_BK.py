@@ -316,9 +316,9 @@ class Custom_CNN_BK(nn.Module, ABC):
             ratio, variance_intra_class = self.compute_ratio_batch(z_struct, labels, nb_class, other_ratio=other_ratio)
 
         if loss_min_distance_cl:
-            variance_distance_iter_class = self.compute_var_distance_class(z_struct, labels, nb_class)
+            variance_distance_iter_class, mean_distance_intra_class = self.compute_var_distance_class(z_struct, labels, nb_class)
 
-        return prediction, z_struct, ratio, variance_distance_iter_class, variance_intra_class
+        return prediction, z_struct, ratio, variance_distance_iter_class, variance_intra_class, mean_distance_intra_class
 
     def compute_ratio_batch(self, batch_z_struct, labels_batch, nb_class, other_ratio=False):
         """
@@ -404,7 +404,7 @@ class Custom_CNN_BK(nn.Module, ABC):
         variance_intra_class_distance = std_class_distance * std_class_distance
         variance_intra_class_distance_mean = torch.mean(variance_intra_class_distance, axis=0)
 
-        return variance_intra_class_distance_mean
+        return variance_intra_class_distance_mean, torch.mean(distance_inter_class)
 
 
 class BlockLBP(nn.Module):
