@@ -8,7 +8,7 @@ from matplotlib import cm
 from sklearn.preprocessing import StandardScaler
 # from torch_receptive_field import receptive_field
 from torchvision.utils import make_grid
-
+from visualizer import get_checkpoints_scores_CNN
 
 EPS = 1e-12
 
@@ -75,8 +75,8 @@ def compute_z_struct(net_trained, exp_name, loader, train_test=None, net_type=No
                 input_data = input_data.cuda()
 
             _, z_struct, _, _, _ = net_trained(input_data,
-                                         z_struct_out=True,
-                                         z_struct_layer_num=z_struct_layer_num)
+                                               z_struct_out=True,
+                                               z_struct_layer_num=z_struct_layer_num)
             pred, _, _, _, _ = net_trained(input_data)
 
             # train mode:
@@ -148,7 +148,7 @@ def compute_z_struct_representation_noised(net, exp_name, train_test=None, nb_re
                     (z_struct_representation.shape[0])) \
                                                        + mean_z_struct[i]
                 pred, _, _, _, _ = net(z_struct_representation_noised, z_struct_prediction=True,
-                                 z_struct_layer_num=z_struct_layer_num)
+                                       z_struct_layer_num=z_struct_layer_num)
                 prediction.append(pred.detach().numpy())
             prediction_noised.append(np.mean(np.array(prediction), axis=0))
 
@@ -916,6 +916,8 @@ def ratio(exp_name, train_test=None, cat=None, other_ratio=False):
     # save loss max of max of each component:
     path_save_ratio_variance = 'values_CNNs_to_compare/' + str(cat) + '/ratio_variance_' + exp_name \
                                + train_test + '.npy'
+    path_save_variance = 'values_CNNs_to_compare/' + str(cat) + '/variance_intra_class_' + exp_name \
+                         + train_test + '.npy'
 
     if not os.path.exists(path_save_ratio_variance):
 
@@ -923,7 +925,8 @@ def ratio(exp_name, train_test=None, cat=None, other_ratio=False):
         variance_intra_class_mean_components = np.mean(variance_intra_class, axis=0)  # shape: (len(z_struct))
         variance_inter_class = np.square(np.std(z_struct_mean_global_per_class, axis=0))  # shape: len(z_struct)
         if other_ratio:
-            ratio_variance = variance_inter_class / (variance_intra_class_mean_components + EPS)  # shape: (len(z_struct))
+            ratio_variance = variance_inter_class / (
+                    variance_intra_class_mean_components + EPS)  # shape: (len(z_struct))
         else:
             ratio_variance = variance_intra_class_mean_components / (variance_inter_class + EPS)
         ratio_variance_mean = np.mean(ratio_variance)
@@ -952,16 +955,23 @@ def ratio(exp_name, train_test=None, cat=None, other_ratio=False):
         variance_intra_class_normalized = np.square(z_struct_std_global_per_class_normalized)
         variance_intra_class_normalized_mean_components = np.mean(variance_intra_class_normalized, axis=0)
         variance_inter_class_normalized = np.square(np.std(z_struct_mean_global_per_class_normalized, axis=0))
-        ratio_variance_normalized = variance_intra_class_normalized_mean_components /\
+        ratio_variance_normalized = variance_intra_class_normalized_mean_components / \
                                     (variance_inter_class_normalized + EPS)
         ratio_variance_normalized_mean = np.mean(ratio_variance_normalized)
 
-        np.save(path_save_ratio_variance, np.mean(ratio_variance_mean))
+        np.save(path_save_ratio_variance, ratio_variance_mean)
+        np.save(path_save_variance, variance_intra_class)
+        np.save('values_CNNs_to_compare/' + str(cat) + '/variance_inter_class_' + exp_name \
+                         + train_test + '.npy', variance_inter_class)
     else:
         ratio_variance_mean = np.load(path_save_ratio_variance, allow_pickle=True)
+        variance_intra_class = np.load(path_save_variance, allow_pickle=True)
+        variance_inter_class = np.load('values_CNNs_to_compare/' + str(cat) + '/variance_inter_class_' + exp_name \
+                         + train_test + '.npy', allow_pickle=True)
         print('ratio (Var intra / Var inter) for model {}: {}'.format(exp_name, ratio_variance_mean))
+        print('variance_intra_class shape for model {}: {}'.format(exp_name, variance_intra_class.shape))
 
-    return ratio_variance_mean
+    return ratio_variance_mean, variance_intra_class, variance_inter_class
 
 
 def get_filter_id(net, exp_name):
@@ -1600,5 +1610,160 @@ def plot_histograms_models(criterion_corr_filter_20, criterion_corr_filter_50, c
             model_selected_ratio_variance_20)
     np.save('list_model_selected/criterion_ratio_variance_list_model_z_struct_50.npy',
             model_selected_ratio_variance_50)
+
+    return
+
+
+def distance_matrix(net, exp_name, train_test=None, plot_fig=False):
+    """
+    Distance matrix between all classes (nb_class * nb_class-1) distances.
+    :return:
+    """
+    # define all distances between mean classes:
+    average_representation_z_struct_class, _ = load_average_z_struct_representation(exp_name, train_test=train_test)
+    nb_class = len(average_representation_z_struct_class)
+
+    distance_inter_class = np.ones((nb_class, nb_class))
+    for i in range(nb_class):
+        dist_class = []
+        for j in range(nb_class):
+            dist = np.linalg.norm(average_representation_z_struct_class[i] - average_representation_z_struct_class[j])
+            dist_class.append(dist)
+        distance_inter_class[i] = dist_class
+
+    if plot_fig:
+        fig, ax = plt.subplots(figsize=(15, 10), facecolor='w', edgecolor='k')
+        ax.set(title=('Model: {}, distances matrix:'.format(exp_name)))
+
+        img = ax.matshow(distance_inter_class, cmap=plt.cm.rainbow)
+        plt.colorbar(img, ticks=[-1, 0, 1], fraction=0.045)
+        for x in range(distance_inter_class.shape[0]):
+            for y in range(distance_inter_class.shape[1]):
+                plt.text(x, y, "%0.2f" % distance_inter_class[x, y], size=12, color='black', ha="center", va="center")
+        plt.show()
+
+    return distance_inter_class
+
+
+def plot_resume(net, exp_name, is_ratio, is_distance_loss, cat=None, train_test=None, path_scores=None, save=True):
+    """
+    plot interesting values to resume experiementation behavior: distance matrix, loss, acc, ratio, var intra, var inter
+    :param net:
+    :param exp_name:
+    :param train_test:
+    :return:
+    """
+
+    ratio_variance_mean, variance_intra_class, variance_inter_class = ratio(exp_name,
+                                                                            train_test=train_test,
+                                                                            cat=cat)
+
+    variance_intra_class_mean_per_class = np.mean(variance_intra_class, axis=1)
+    variance_intra_class_mean = np.mean(variance_intra_class_mean_per_class)
+    variance_inter_class_mean = np.mean(variance_inter_class)
+
+    nb_class = len(variance_intra_class)
+
+    # print('ratio:', ratio_variance_mean)
+    # print('vari intra mean per class:', variance_intra_class_mean_per_class.shape)
+    # print('var intra mean', variance_intra_class_mean)
+    # print('var inter', variance_inter_class.shape)
+    # print('var inter mean', variance_inter_class_mean)
+
+    # define figure:____________________________________________________________________________________________________
+    fig, axs = plt.subplots(nrows=2, ncols=2, gridspec_kw={'width_ratios': [2, 1.5], 'height_ratios': [1, 1]},
+                            figsize=(30, 20), facecolor='w', edgecolor='k')
+    fig.suptitle('Resume results for model: {}'.format(exp_name), fontsize=16)
+
+    # loss and acc:____________________________________________________________________________________________________
+    _, epochs, train_score, test_score, total_loss_train, total_loss_test, ratio_train_loss, \
+    ratio_test_loss, class_loss_train, class_loss_test, \
+    var_distance_classes_train, var_distance_classes_test = get_checkpoints_scores_CNN(net,
+                                                                                       path_scores,
+                                                                                       exp_name,
+                                                                                       is_ratio=is_ratio,
+                                                                                       is_distance_loss=is_distance_loss)
+    # get accuracy train and test:
+    acc_train_last_epoch = train_score[-1]
+    acc_test_last_epoch = test_score[-1]
+
+    axs[0, 0].set(xlabel='nb_iter', ylabel='loss', title=('Losses: ' + exp_name))
+    axs[0, 0].plot(epochs, total_loss_train, label='train')
+    axs[0, 0].plot(epochs, total_loss_test, label='test')
+    if is_ratio:
+        axs[0, 0].plot(epochs, ratio_train_loss, label='ratio loss train')
+        axs[0, 0].plot(epochs, ratio_test_loss, label='ratio loss test')
+        axs[0, 0].plot(epochs, class_loss_train, label='classification loss train')
+        axs[0, 0].plot(epochs, class_loss_test, label='classification loss test')
+    if is_distance_loss:
+        axs[0, 0].plot(epochs, var_distance_classes_train, label='distance between class train')
+        axs[0, 0].plot(epochs, var_distance_classes_test, label='distance between class train')
+    axs[0, 0].legend(loc=1)
+
+    # 2d projection:____________________________________________________________________________________________________
+    z_struct_representation, label_list, _ = load_z_struct_representation(exp_name, train_test=train_test)
+
+    pca = PCA(n_components=3)
+    reduced = pca.fit_transform(z_struct_representation)
+    t = reduced.transpose()
+
+    lim_min = np.min(t)
+    lim_max = np.max(t)
+
+    axs[1, 0].set(xlabel='nb_iter', ylabel='loss', title='PCA of z_struct for each images')
+    axs[1, 0].set(xlim=(lim_min, lim_max), ylim=(lim_min, lim_max))
+
+    x = np.arange(nb_class)
+    ys = [i + x + (i * x) ** 2 for i in range(10)]
+    colors = cm.rainbow(np.linspace(0, 1, len(ys)))
+
+    for c, color in zip(range(nb_class), colors):
+        x = np.array(t[0])[np.concatenate(np.argwhere(np.array(label_list) == c)).ravel()]
+        y = np.array(t[1])[np.concatenate(np.argwhere(np.array(label_list) == c)).ravel()]
+        axs[1, 0].scatter(x, y, alpha=0.6, color=color, label='class ' + str(c))
+    axs[1, 0].legend(loc=1)
+
+    # distance matrix: _________________________________________________________________________________________________
+    distance_inter_class = distance_matrix(net, exp_name, train_test=train_test, plot_fig=False)
+
+    axs[0, 1].set(title='Distances matrix between mean classes')
+    img = axs[0, 1].matshow(distance_inter_class, cmap=plt.cm.rainbow)
+    fig.colorbar(img, ticks=[-1, 0, 1], fraction=0.045, ax=axs[0, 1])
+    for x in range(distance_inter_class.shape[0]):
+        for y in range(distance_inter_class.shape[1]):
+            axs[0, 1].text(x, y, "%0.2f" % distance_inter_class[x, y], size=12, color='black', ha="center", va="center")
+
+    # values in array: _________________________________________________________________________________________________
+    axs[1, 1].set(title='Statistics')
+
+    text_titles = ["Ratio: ",
+                   "Variance intra class mean: ",
+                   # "Variance intra class mean per class: ",
+                   "Variance inter class mean: ",
+                   "Accuracy train: ",
+                   "Accuracy test: "]
+    n_lines = len(text_titles)
+
+    text_values = [ratio_variance_mean,
+                   variance_intra_class_mean,
+                   # variance_intra_class_mean_per_class,
+                   variance_inter_class_mean,
+                   acc_train_last_epoch,
+                   acc_test_last_epoch]
+
+    for y in range(n_lines):
+        axs[1, 1].text(.1,
+                       1 - (y + 0.4) / n_lines,
+                       text_titles[y] + str(text_values[y]),
+                       size=20,
+                       color='black',
+                       va="center")
+
+    fig.tight_layout()
+    plt.show()
+
+    path_save = 'fig_results/resume/plot_resume_' + exp_name + '_' + train_test + '.png'
+    if save and not os.path.exists(path_save):
+        fig.savefig(path_save)
 
     return

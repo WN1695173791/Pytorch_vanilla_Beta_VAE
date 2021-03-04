@@ -230,7 +230,8 @@ class SolverClassifier(object):
                 self.train_loader_bf,
                 num_workers=self.num_workers,
                 pin_memory=True,
-                batch_sampler=batch_sampler)
+                batch_sampler=batch_sampler,
+                shuffle=False)
             print('Balanced samples per class')
 
         self.train_loader_size = len(self.train_loader.dataset)
@@ -442,6 +443,10 @@ class SolverClassifier(object):
 
                 data = data.to(self.device)  # Variable(data.to(self.device))
                 labels = labels.to(self.device)  # Variable(labels.to(self.device))
+
+                # print(labels)
+                # for i in range(self.nb_class):
+                #     print(len(labels[labels == i]))
 
                 prediction, embedding, ratio, \
                 variance_distance_iter_class, \

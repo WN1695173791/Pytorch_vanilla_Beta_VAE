@@ -45,6 +45,7 @@ class BalanceSamplesPerClass(Sampler):
         while num_batches > 0:
             classes = np.arange(self.num_classes)
             sampled_classes = classes.repeat(self.num_groups, axis=0)
+            np.random.shuffle(sampled_classes)
             for i in range(len(sampled_classes)):
                 ith_class_idxs = np.nonzero(np.array(self.labels) == sampled_classes[i])[0]
                 class_sel = np.random.choice(ith_class_idxs, 1, replace=True)
