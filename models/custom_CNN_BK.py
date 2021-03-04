@@ -374,7 +374,7 @@ class Custom_CNN_BK(nn.Module, ABC):
             z_struct_class = batch_z_struct[torch.where(labels_batch == class_id)]
             if len(z_struct_class) < 2:
                 print("Variance: Class {} with zeros or only one example so we don't use it !!!!".format(class_id))
-                new_class_tensor = class_tensor[class_tensor != class_id]
+                new_class_tensor = new_class_tensor[new_class_tensor != class_id]
                 continue
             else:
                 mean_class_iter = torch.mean(z_struct_class, axis=0).squeeze(axis=-1).squeeze(axis=-1).unsqueeze(axis=0)
