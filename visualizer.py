@@ -32,7 +32,8 @@ def get_checkpoints(net, path, expe_name):
     return net, nb_iter, nb_epochs
 
 
-def get_checkpoints_scores_CNN(net, path_scores, expe_name, is_ratio=False, is_distance_loss=False):
+def get_checkpoints_scores_CNN(net, path_scores, expe_name, is_ratio=False, is_distance_loss=False,
+                               loss_distance_mean=False):
     file_path = os.path.join(path_scores, expe_name, 'last')
     checkpoints_scores = torch.load(file_path, map_location=torch.device(device))
 
@@ -61,9 +62,17 @@ def get_checkpoints_scores_CNN(net, path_scores, expe_name, is_ratio=False, is_d
     else:
         var_distance_classes_train = 0
         var_distance_classes_test = 0
+    if loss_distance_mean:
+        mean_distance_intra_class_train = checkpoints_scores['mean_distance_intra_class_train']
+        mean_distance_intra_class_test = checkpoints_scores['mean_distance_intra_class_test']
+    else:
+        mean_distance_intra_class_train = 0
+        mean_distance_intra_class_test = 0
 
     return global_iter, epochs, train_score, test_score, total_loss_train, total_loss_test, ratio_train_loss, \
-           class_loss_train, class_loss_test, ratio_test_loss, var_distance_classes_train, var_distance_classes_test
+           class_loss_train, class_loss_test, ratio_test_loss, var_distance_classes_train, var_distance_classes_test, \
+           mean_distance_intra_class_train, mean_distance_intra_class_test
+
 
 
 def get_checkpoints_scores(net, path_scores, expe_name):
@@ -420,7 +429,9 @@ def plot_scores_results_CNN(epochs, train_score, test_score, expe_name, save):
 
 def plot_loss_results_CNN(epochs, total_loss_train, total_loss_test, ratio_train_loss, ratio_test_loss,
                           class_loss_train, class_loss_test, var_distance_classes_train, var_distance_classes_test,
-                          expe_name, save, is_ratio=False, is_distance_loss=False):
+                          mean_distance_intra_class_train,
+                          mean_distance_intra_class_test,
+                          expe_name, save, is_ratio=False, is_distance_loss=False, loss_distance_mean=False):
 
     fig, ax = plt.subplots(figsize=(15, 10), facecolor='w', edgecolor='k')
 
@@ -435,8 +446,11 @@ def plot_loss_results_CNN(epochs, total_loss_train, total_loss_test, ratio_train
         ax.plot(epochs, class_loss_train, label='classification loss train')
         ax.plot(epochs, class_loss_test, label='classification loss test')
     if is_distance_loss:
-        ax.plot(epochs, var_distance_classes_train, label='distance between class train')
-        ax.plot(epochs, var_distance_classes_test, label='distance between class train')
+        ax.plot(epochs, var_distance_classes_train, label='std distance between class train')
+        ax.plot(epochs, var_distance_classes_test, label='std distance between class train')
+    if loss_distance_mean:
+        ax.plot(epochs, mean_distance_intra_class_train, label='mean distance between class train')
+        ax.plot(epochs, mean_distance_intra_class_test, label='mean distance between class train')
 
     ax.legend(loc=1)
     plt.show()
@@ -636,22 +650,26 @@ def plot_scores_and_loss(net, expe_name, path_scores, is_wt_random=False, is_bot
 
 
 def plot_scores_and_loss_CNN(net, expe_name, path_scores, is_ratio=False, save=False, return_score=False,
-                             is_distance_loss=False):
+                             is_distance_loss=False, loss_distance_mean=False):
 
     _, epochs, train_score, test_score, total_loss_train, total_loss_test, ratio_train_loss, \
     ratio_test_loss, class_loss_train, class_loss_test, \
-    var_distance_classes_train, var_distance_classes_test = get_checkpoints_scores_CNN(net,
+    var_distance_classes_train, var_distance_classes_test,\
+        mean_distance_intra_class_train, mean_distance_intra_class_test = get_checkpoints_scores_CNN(net,
                                                                                        path_scores,
                                                                                        expe_name,
                                                                                        is_ratio=is_ratio,
-                                                                                       is_distance_loss=is_distance_loss)
+                                                                                       is_distance_loss=is_distance_loss,
+                                                                                       loss_distance_mean=loss_distance_mean)
 
     if return_score:
         return train_score[-1], test_score[-1]
     else:
         plot_loss_results_CNN(epochs, total_loss_train, total_loss_test, ratio_train_loss, ratio_test_loss,
                               class_loss_train, class_loss_test, var_distance_classes_train,
-                              var_distance_classes_test, expe_name, save, is_ratio=is_ratio)
+                              var_distance_classes_test, mean_distance_intra_class_train,
+                              mean_distance_intra_class_test, expe_name, save, is_ratio=is_ratio,
+                              is_distance_loss=is_distance_loss, loss_distance_mean=loss_distance_mean)
 
         plot_scores_results_CNN(epochs, train_score, test_score, expe_name, save)
 

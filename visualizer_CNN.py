@@ -74,10 +74,10 @@ def compute_z_struct(net_trained, exp_name, loader, train_test=None, net_type=No
             if torch.cuda.is_available():
                 input_data = input_data.cuda()
 
-            _, z_struct, _, _, _ = net_trained(input_data,
+            _, z_struct, _, _, _, _ = net_trained(input_data,
                                                z_struct_out=True,
                                                z_struct_layer_num=z_struct_layer_num)
-            pred, _, _, _, _ = net_trained(input_data)
+            pred, _, _, _, _, _ = net_trained(input_data)
 
             # train mode:
             net_trained.eval()
@@ -147,7 +147,7 @@ def compute_z_struct_representation_noised(net, exp_name, train_test=None, nb_re
                 z_struct_representation_noised[:, i] = std_z_struct_max[i] * torch.randn(
                     (z_struct_representation.shape[0])) \
                                                        + mean_z_struct[i]
-                pred, _, _, _, _ = net(z_struct_representation_noised, z_struct_prediction=True,
+                pred, _, _, _, _, _ = net(z_struct_representation_noised, z_struct_prediction=True,
                                        z_struct_layer_num=z_struct_layer_num)
                 prediction.append(pred.detach().numpy())
             prediction_noised.append(np.mean(np.array(prediction), axis=0))
@@ -891,12 +891,11 @@ def ratio(exp_name, train_test=None, cat=None, other_ratio=False, normalized=Fal
         # norm = np.linalg.norm(z_struct_representation)
         # z_struct_representation = z_struct_representation / norm
         # representation_z_struct_class = representation_z_struct_class / norm
+        min_norm = z_struct_representation.min()
+        max_norm = z_struct_representation.max()
+        representation_z_struct_class = (representation_z_struct_class - min_norm) / (max_norm - min_norm)
 
-        z_struct_representation = (z_struct_representation - z_struct_representation.min()) / (z_struct_representation.max() - z_struct_representation.min())
-        representation_z_struct_class = (representation_z_struct_class - z_struct_representation.min()) / (z_struct_representation.max() - z_struct_representation.min())
-
-    z_struct_mean_global = np.mean(z_struct_representation, axis=0)
-    z_struct_std_global = np.std(z_struct_representation, axis=0)
+    # print(representation_z_struct_class[0][125])
 
     z_struct_mean_global_per_class = []
     z_struct_std_global_per_class = []
@@ -907,20 +906,8 @@ def ratio(exp_name, train_test=None, cat=None, other_ratio=False, normalized=Fal
     z_struct_mean_global_per_class = np.array(z_struct_mean_global_per_class)
     z_struct_std_global_per_class = np.array(z_struct_std_global_per_class)
 
-    ratio_std_per_class = []
-    for class_id in range(nb_class):
-        ratio_std_per_class.append(z_struct_std_global_per_class[class_id] / z_struct_std_global)
-
-    ratio_std_per_class = np.array(ratio_std_per_class)
-
-    path_save = 'values_CNNs_to_compare/' + str(cat) + '/ratio_std_each_class_' + exp_name + train_test + '.npy'
-    np.save(path_save, ratio_std_per_class)
-    path_save = 'values_CNNs_to_compare/' + str(cat) + '/ratio_std_mean_' + exp_name + train_test + '.npy'
-    np.save(path_save, np.mean(ratio_std_per_class))
-    path_save = 'values_CNNs_to_compare/' + str(cat) + '/std_per_class_' + exp_name + train_test + '.npy'
-    np.save(path_save, z_struct_std_global_per_class)
-    path_save = 'values_CNNs_to_compare/' + str(cat) + '/std_global_' + exp_name + train_test + '.npy'
-    np.save(path_save, np.mean(z_struct_std_global))
+    # print(z_struct_mean_global_per_class)
+    # print(z_struct_std_global_per_class)
 
     # compute ratio inter-class/intra-class:
     # save loss max of max of each component:
@@ -945,39 +932,15 @@ def ratio(exp_name, train_test=None, cat=None, other_ratio=False, normalized=Fal
         print('Var inter class shape: ', variance_inter_class.shape)
         print('ratio Var intra / Var inter: ', ratio_variance.shape, ratio_variance_mean)
 
-        # normalized z_struct:
-        z_struct_representation_normalized = z_struct_representation / np.linalg.norm(z_struct_representation)
-        representation_z_struct_class_normalized = []
-        for class_id in range(nb_class):
-            z_struct_class = z_struct_representation_normalized[np.where(label_list == class_id)]
-            representation_z_struct_class_normalized.append(z_struct_class)
-
-        representation_z_struct_class_normalized = np.array(representation_z_struct_class_normalized)
-
-        z_struct_mean_global_per_class_normalized = []
-        z_struct_std_global_per_class_normalized = []
-        for class_id in range(nb_class):
-            z_struct_mean_global_per_class_normalized.append(np.mean(representation_z_struct_class_normalized[class_id],
-                                                                     axis=0))
-            z_struct_std_global_per_class_normalized.append(np.std(representation_z_struct_class_normalized[class_id],
-                                                                   axis=0))
-
-        variance_intra_class_normalized = np.square(z_struct_std_global_per_class_normalized)
-        variance_intra_class_normalized_mean_components = np.mean(variance_intra_class_normalized, axis=0)
-        variance_inter_class_normalized = np.square(np.std(z_struct_mean_global_per_class_normalized, axis=0))
-        ratio_variance_normalized = variance_intra_class_normalized_mean_components / \
-                                    (variance_inter_class_normalized + EPS)
-        ratio_variance_normalized_mean = np.mean(ratio_variance_normalized)
-
         np.save(path_save_ratio_variance, ratio_variance_mean)
         np.save(path_save_variance, variance_intra_class)
         np.save('values_CNNs_to_compare/' + str(cat) + '/variance_inter_class_' + exp_name \
-                         + train_test + '.npy', variance_inter_class)
+                + train_test + '.npy', variance_inter_class)
     else:
         ratio_variance_mean = np.load(path_save_ratio_variance, allow_pickle=True)
         variance_intra_class = np.load(path_save_variance, allow_pickle=True)
         variance_inter_class = np.load('values_CNNs_to_compare/' + str(cat) + '/variance_inter_class_' + exp_name \
-                         + train_test + '.npy', allow_pickle=True)
+                                       + train_test + '.npy', allow_pickle=True)
         print('ratio (Var intra / Var inter) for model {}: {}'.format(exp_name, ratio_variance_mean))
         print('variance_intra_class shape for model {}: {}'.format(exp_name, variance_intra_class.shape))
 
@@ -1655,7 +1618,8 @@ def distance_matrix(net, exp_name, train_test=None, plot_fig=False):
     return distance_inter_class
 
 
-def plot_resume(net, exp_name, is_ratio, is_distance_loss, cat=None, train_test=None, path_scores=None, save=True):
+def plot_resume(net, exp_name, is_ratio, is_distance_loss, loss_distance_mean, cat=None, train_test=None,
+                path_scores=None, save=True):
     """
     plot interesting values to resume experiementation behavior: distance matrix, loss, acc, ratio, var intra, var inter
     :param net:
@@ -1689,11 +1653,13 @@ def plot_resume(net, exp_name, is_ratio, is_distance_loss, cat=None, train_test=
     # loss and acc:____________________________________________________________________________________________________
     _, epochs, train_score, test_score, total_loss_train, total_loss_test, ratio_train_loss, \
     ratio_test_loss, class_loss_train, class_loss_test, \
-    var_distance_classes_train, var_distance_classes_test = get_checkpoints_scores_CNN(net,
+    var_distance_classes_train, var_distance_classes_test,\
+        mean_distance_intra_class_train, mean_distance_intra_class_test = get_checkpoints_scores_CNN(net,
                                                                                        path_scores,
                                                                                        exp_name,
                                                                                        is_ratio=is_ratio,
-                                                                                       is_distance_loss=is_distance_loss)
+                                                                                       is_distance_loss=is_distance_loss,
+                                                                                       loss_distance_mean=loss_distance_mean)
     # get accuracy train and test:
     acc_train_last_epoch = train_score[-1]
     acc_test_last_epoch = test_score[-1]
@@ -1707,8 +1673,11 @@ def plot_resume(net, exp_name, is_ratio, is_distance_loss, cat=None, train_test=
         axs[0, 0].plot(epochs, class_loss_train, label='classification loss train')
         axs[0, 0].plot(epochs, class_loss_test, label='classification loss test')
     if is_distance_loss:
-        axs[0, 0].plot(epochs, var_distance_classes_train, label='distance between class train')
-        axs[0, 0].plot(epochs, var_distance_classes_test, label='distance between class train')
+        axs[0, 0].plot(epochs, var_distance_classes_train, label='std distance between class train')
+        axs[0, 0].plot(epochs, var_distance_classes_test, label='std distance between class train')
+    if loss_distance_mean:
+        axs[0, 0].plot(epochs, mean_distance_intra_class_train, label='mean distance between class train')
+        axs[0, 0].plot(epochs, mean_distance_intra_class_test, label='mean distance between class train')
     axs[0, 0].legend(loc=1)
 
     # 2d projection:____________________________________________________________________________________________________

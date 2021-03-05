@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name="VAE"      # Job Name
+#SBATCH --job-name="structural_z"      # Job Name
 #SBATCH --partition=gpu                  # Name of the Slurm partition used
 #SBATCH --gres=gpu:1                # nombre de GPU a reserver
 #SBATCH --time=00:30:00                # time (DD-HH:MM)
@@ -9,7 +9,7 @@
 #BATCH --mail-type=ALL                  # Mail notification of the events concerning the job : start time, end time,?~@?
 #SBATCH --mail-user=julien.dejasmin@lis-lab.fr
 
-#SBATCH --array=2-37%10   # % for run n jobs in same time
+#SBATCH --array=42-62%10   # % for run n jobs in same time
 
 echo "$SLURM_ARRAY_TASK_ID"
 

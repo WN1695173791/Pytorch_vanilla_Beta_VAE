@@ -62,7 +62,7 @@ def compute_scores_and_loss(net, train_loader, test_loader, device, train_loader
                                                                            nb_class,
                                                                            z_struct_out,
                                                                            z_struct_layer_num)
-    if ratio_reg:
+    if ratio_reg or loss_min_distance_cl:
         # compute ratio on all test set:
         z_struct_representation_test, labels_batch_test = get_z_struct_representation(test_loader,
                                                                                       net,
@@ -72,6 +72,7 @@ def compute_scores_and_loss(net, train_loader, test_loader, device, train_loader
                                                                                         net,
                                                                                         z_struct_layer_num)
 
+    if ratio_reg:
         ratio_test = compute_ratio_batch_test(z_struct_representation_test,
                                               labels_batch_test,
                                               nb_class,
@@ -80,18 +81,17 @@ def compute_scores_and_loss(net, train_loader, test_loader, device, train_loader
                                                labels_batch_train,
                                                nb_class,
                                                other_ratio=other_ratio)
-        if loss_min_distance_cl:
-            var_distance_classes_train = compute_var_distance_class_test(z_struct_representation_train,
-                                                                         labels_batch_train,
-                                                                         nb_class)
-            var_distance_classes_test = compute_var_distance_class_test(z_struct_representation_test, labels_batch_test,
-                                                                        nb_class)
-        else:
-            var_distance_classes_train = 0
-            var_distance_classes_test = 0
     else:
         ratio_test = 0
         ratio_train = 0
+
+    if loss_min_distance_cl:
+        var_distance_classes_train = compute_var_distance_class_test(z_struct_representation_train,
+                                                                     labels_batch_train,
+                                                                     nb_class)
+        var_distance_classes_test = compute_var_distance_class_test(z_struct_representation_test, labels_batch_test,
+                                                                    nb_class)
+    else:
         var_distance_classes_train = 0
         var_distance_classes_test = 0
 

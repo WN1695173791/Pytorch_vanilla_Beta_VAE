@@ -303,6 +303,10 @@ class Custom_CNN_BK(nn.Module, ABC):
         ratio = 0
         variance_distance_iter_class = 0
         variance_intra_class = 0
+        mean_distance_intra_class = 0
+
+        # parameters:
+        seuil_min_image = 10   # nombre minimal d'images pour calculer le ratio (ou variance)
 
         if z_struct_out:
             z_struct = self.net[:z_struct_layer_num](x)
@@ -313,14 +317,21 @@ class Custom_CNN_BK(nn.Module, ABC):
             prediction = self.net(x)
 
         if use_ratio:
-            ratio, variance_intra_class = self.compute_ratio_batch(z_struct, labels, nb_class, other_ratio=other_ratio)
+            ratio, variance_intra_class = self.compute_ratio_batch(z_struct,
+                                                                   labels,
+                                                                   nb_class,
+                                                                   other_ratio=other_ratio,
+                                                                   seuil_min_image=seuil_min_image)
 
         if loss_min_distance_cl:
-            variance_distance_iter_class, mean_distance_intra_class = self.compute_var_distance_class(z_struct, labels, nb_class)
+            variance_distance_iter_class, mean_distance_intra_class = self.compute_var_distance_class(z_struct,
+                                                                                                      labels,
+                                                                                                      nb_class,
+                                                                                                      seuil_min_image=seuil_min_image)
 
         return prediction, z_struct, ratio, variance_distance_iter_class, variance_intra_class, mean_distance_intra_class
 
-    def compute_ratio_batch(self, batch_z_struct, labels_batch, nb_class, other_ratio=False):
+    def compute_ratio_batch(self, batch_z_struct, labels_batch, nb_class, other_ratio=False, seuil_min_image=2):
         """
         compute ratio of one batch:
         ratio: to minimize, variance_inter_class / var_intra_class
@@ -331,8 +342,9 @@ class Custom_CNN_BK(nn.Module, ABC):
         first = True
         for class_id in range(nb_class):
             z_struct_class = batch_z_struct[torch.where(labels_batch == class_id)]
-            if len(z_struct_class) < 2:
-                print("Ratio: Class {} with zeros or only one example so we don't use it !!!!".format(class_id))
+            if len(z_struct_class) < seuil_min_image:
+                print("Ratio: In this batch for class {}, they are less images than {}. Don't use it to compute "
+                      "ratio!!!!".format(class_id, seuil_min_image))
                 continue
             else:
                 mean_class_iter = torch.mean(z_struct_class, axis=0).squeeze(axis=-1).squeeze(axis=-1).unsqueeze(axis=0)
@@ -355,11 +367,12 @@ class Custom_CNN_BK(nn.Module, ABC):
             ratio = variance_inter_class / (variance_intra_class_mean_components + EPS)  # shape: (len(z_struct))
         else:
             ratio = variance_intra_class_mean_components / (variance_inter_class + EPS)
+
         ratio_variance_mean = torch.mean(ratio)
 
         return ratio_variance_mean, variance_intra_class
 
-    def compute_var_distance_class(self, batch_z_struct, labels_batch, nb_class):
+    def compute_var_distance_class(self, batch_z_struct, labels_batch, nb_class, seuil_min_image=2):
         """
         compute ratio of one batch:
         ratio: to minimize, variance_inter_class / var_intra_class
@@ -372,8 +385,9 @@ class Custom_CNN_BK(nn.Module, ABC):
         new_class_tensor = torch.arange(nb_class)
         for class_id in class_tensor:
             z_struct_class = batch_z_struct[torch.where(labels_batch == class_id)]
-            if len(z_struct_class) < 2:
-                print("Variance: Class {} with zeros or only one example so we don't use it !!!!".format(class_id))
+            if len(z_struct_class) < seuil_min_image:
+                print("Variance: In this batch for class {}, they are less images than {}. Don't use it to compute "
+                      "ratio!!!!".format(class_id, seuil_min_image))
                 new_class_tensor = new_class_tensor[new_class_tensor != class_id]
                 continue
             else:
@@ -384,13 +398,10 @@ class Custom_CNN_BK(nn.Module, ABC):
                     mean_class = torch.cat((mean_class, mean_class_iter), dim=0)
                 first = False
 
-        if len(class_tensor) > len(new_class_tensor):
-            class_tensor = new_class_tensor
-
         first = True
         # add distance between all classes:
-        for i in range(len(class_tensor)):
-            for j in range(len(class_tensor)):
+        for i in range(len(new_class_tensor)):
+            for j in range(len(new_class_tensor)):
                 if i == j:
                     continue
                 dist = torch.norm(mean_class[i] - mean_class[j]).unsqueeze(dim=0)
