@@ -20,7 +20,7 @@ from scores_classifier import compute_scores
 from solver import gpu_config
 from visualizer_CNN import get_layer_zstruct_num
 import numpy as np
-from dataset.sampler import BalancedBatchSampler, BalancedSampler, BalanceSamplesPerClass
+from dataset.sampler import BalancedBatchSampler, BalancedSampler
 
 
 def get_z_struct_representation(loader, net, z_struct_layer_num):
