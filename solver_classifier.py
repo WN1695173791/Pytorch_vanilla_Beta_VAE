@@ -20,6 +20,7 @@ from scores_classifier import compute_scores
 from solver import gpu_config
 from visualizer_CNN import get_layer_zstruct_num
 import numpy as np
+from dataset.sampler import BalancedBatchSampler, BalancedSampler, BalanceSamplesPerClass
 
 
 def get_z_struct_representation(loader, net, z_struct_layer_num):
@@ -235,17 +236,11 @@ class SolverClassifier(object):
         if self.dataset_balanced and args.dataset == 'mnist':
             self.train_loader_bf, self.test_loader_bf = get_mnist_dataset(batch_size=self.batch_size,
                                                                           return_Dataloader=False)
-            balanced_sampler = sampler.BalanceSamplesPerClass(self.train_loader_bf,
-                                                              batch_size=120)
-            batch_sampler = BatchSampler(balanced_sampler,
-                                         batch_size=120,
-                                         drop_last=True)
-            self.train_loader = torch.utils.data.DataLoader(
-                self.train_loader_bf,
-                num_workers=self.num_workers,
-                pin_memory=True,
-                batch_sampler=batch_sampler,
-                shuffle=False)
+
+            self.train_loader = torch.utils.data.DataLoader(self.train_loader_bf,
+                                                            sampler=BalancedBatchSampler(self.train_loader_bf),
+                                                            batch_size=self.batch_size)
+
             print('Balanced samples per class')
 
         self.train_loader_size = len(self.train_loader.dataset)

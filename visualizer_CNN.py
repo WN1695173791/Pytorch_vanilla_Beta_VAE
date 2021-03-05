@@ -888,12 +888,12 @@ def ratio(exp_name, train_test=None, cat=None, other_ratio=False, normalized=Fal
     if normalized:
         # we normalized z_struct to compare variacne value objectively
         print('normalized z_struct')
-        # norm = np.linalg.norm(z_struct_representation)
-        # z_struct_representation = z_struct_representation / norm
-        # representation_z_struct_class = representation_z_struct_class / norm
-        min_norm = z_struct_representation.min()
-        max_norm = z_struct_representation.max()
-        representation_z_struct_class = (representation_z_struct_class - min_norm) / (max_norm - min_norm)
+        for i in range(len(z_struct_representation)):
+            norm = np.linalg.norm(z_struct_representation[i], ord=1)
+            z_struct_representation[i] = z_struct_representation[i] / norm
+        # min_norm = z_struct_representation.min()
+        # max_norm = z_struct_representation.max()
+        # representation_z_struct_class = (representation_z_struct_class - min_norm) / (max_norm - min_norm)
 
     # print(representation_z_struct_class[0][125])
 
@@ -1651,12 +1651,13 @@ def plot_resume(net, exp_name, is_ratio, is_distance_loss, loss_distance_mean, c
     fig.suptitle('Resume results for model: {}'.format(exp_name), fontsize=16)
 
     # loss and acc:____________________________________________________________________________________________________
+    exp_name_chkpts = exp_name.split('_normalized_l1_')[0]
     _, epochs, train_score, test_score, total_loss_train, total_loss_test, ratio_train_loss, \
     ratio_test_loss, class_loss_train, class_loss_test, \
     var_distance_classes_train, var_distance_classes_test,\
         mean_distance_intra_class_train, mean_distance_intra_class_test = get_checkpoints_scores_CNN(net,
                                                                                        path_scores,
-                                                                                       exp_name,
+                                                                                       exp_name_chkpts,
                                                                                        is_ratio=is_ratio,
                                                                                        is_distance_loss=is_distance_loss,
                                                                                        loss_distance_mean=loss_distance_mean)
