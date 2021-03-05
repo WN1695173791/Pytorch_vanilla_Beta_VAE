@@ -241,6 +241,8 @@ class SolverClassifier(object):
                                                             sampler=BalancedBatchSampler(self.train_loader_bf),
                                                             batch_size=self.batch_size)
 
+            _, self.test_loader = get_mnist_dataset(batch_size=self.batch_size)
+
             print('Balanced samples per class')
 
         self.train_loader_size = len(self.train_loader.dataset)

@@ -328,10 +328,11 @@ def run_viz_expes(exp_name, net, is_ratio, is_distance_loss, loss_distance_mean,
     loader_size = len(loader.dataset)
 
     # scores and losses:
-    # plot_scores_and_loss_CNN(net_trained, exp_name, path_scores, is_ratio=ratio_reg, save=True,
-    #                          is_distance_loss=is_distance_loss, loss_distance_mean=loss_distance_mean)
-    # score, _ = compute_scores(net_trained, loader, device, loader_size)
-    # print('score Test acc: {:.3f}%'.format(score))
+    plot_scores_and_loss_CNN(net_trained, exp_name, path_scores, is_ratio=ratio_reg, save=True,
+                             is_distance_loss=is_distance_loss, loss_distance_mean=loss_distance_mean)
+    score, _, _ = compute_scores(net_trained, loader, device, loader_size,
+                              False, nb_class, False, 0)
+    print('score Test acc: {:.3f}%'.format(score))
 
     # compute features:
     # compute_z_struct(net_trained, exp_name, loader, train_test=train_test, net_type=net_type)
@@ -373,8 +374,8 @@ def run_viz_expes(exp_name, net, is_ratio, is_distance_loss, loss_distance_mean,
 
     # _ = distance_matrix(net_trained, exp_name, train_test=train_test, plot_fig=True)
 
-    plot_resume(net_trained, exp_name, is_ratio, is_distance_loss, loss_distance_mean, cat=cat,
-                train_test=train_test, path_scores=path_scores)
+    # plot_resume(net_trained, exp_name, is_ratio, is_distance_loss, loss_distance_mean, cat=cat,
+    #             train_test=train_test, path_scores=path_scores)
 
     return
 
@@ -879,7 +880,7 @@ if __name__ == '__main__':
                              'mnist_classif_var_intra_class_2_6',
                              'mnist_classif_var_intra_class_2_7']
 
-
+    exp_classif_var_intra_2 = ['mnist_classif_ratio_dataset_balanced_1']
 
     parameters_mnist_classifier_BK_ratio = "parameters_combinations/mnist_classifier_ratio.txt"
 
@@ -889,24 +890,30 @@ if __name__ == '__main__':
     #                                                exp_baseline,
     #                                                is_ratio=True)
 
-    run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
-                                                   2,
-                                                   8,
-                                                   exp_classif_ratio_2,
-                                                   is_ratio=True)
-    run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
-                                                   9,
-                                                   15,
-                                                   exp_classif_distance_2,
-                                                   is_ratio=True)
-    run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
-                                                   16,
-                                                   22,
-                                                   exp_classif_var_intra_2,
-                                                   is_ratio=True)
+    # run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
+    #                                                2,
+    #                                                8,
+    #                                                exp_classif_ratio_2,
+    #                                                is_ratio=True)
+    # run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
+    #                                                9,
+    #                                                15,
+    #                                                exp_classif_distance_2,
+    #                                                is_ratio=True)
+    # run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
+    #                                                16,
+    #                                                22,
+    #                                                exp_classif_var_intra_2,
+    #                                                is_ratio=True)
 
     # run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
     #                                                2,
     #                                                37,
     #                                                exp_distance_intra_class_max_mean,
     #                                                is_ratio=True)
+
+    run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
+                                                   88,
+                                                   88,
+                                                   exp_classif_var_intra_2,
+                                                   is_ratio=True)
