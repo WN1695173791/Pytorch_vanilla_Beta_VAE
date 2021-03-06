@@ -23,6 +23,8 @@ import numpy as np
 from dataset.sampler import BalancedBatchSampler, BalancedSampler
 
 
+EPS = 1e-12
+
 def get_z_struct_representation(loader, net, z_struct_layer_num):
     z_struct_representation = []
     labels_list = []
@@ -504,7 +506,9 @@ class SolverClassifier(object):
                     loss += loss_distance_cl
 
                 if self.loss_distance_mean:
-                    loss_distance_mean = -(mean_distance_intra_class * self.lambda_distance_mean)
+                    # to avoid distance mean be too hight we want distance closest to target_mean value
+                    target_mean = torch.tensor(10)
+                    loss_distance_mean = -(torch.abs(1/(target_mean - mean_distance_intra_class + EPS))) * self.lambda_distance_mean
                     loss += loss_distance_mean
 
                 # backpropagation loss
