@@ -492,7 +492,6 @@ class SolverClassifier(object):
 
                 if self.intra_class_variance_loss:
                     intra_class_loss = variance_intra_class * self.lambda_intra_class_var
-                    # print(intra_class_loss)
                     loss += intra_class_loss
 
                 if self.contrastive_loss:
