@@ -48,24 +48,12 @@ def get_z_struct_representation(loader, net, z_struct_layer_num):
 
 def compute_scores_and_loss(net, train_loader, test_loader, device, train_loader_size, test_loader_size,
                             net_type, nb_class, ratio_reg, other_ratio, loss_min_distance_cl, z_struct_layer_num,
-                            loss_distance_mean, z_struct_out):
-    score_train, loss_train, mean_distance_intra_class_train = compute_scores(net,
-                                                                              train_loader,
-                                                                              device,
-                                                                              train_loader_size,
-                                                                              loss_distance_mean,
-                                                                              nb_class,
-                                                                              z_struct_out,
-                                                                              z_struct_layer_num)
-    score_test, loss_test, mean_distance_intra_class_test = compute_scores(net,
-                                                                           test_loader,
-                                                                           device,
-                                                                           test_loader_size,
-                                                                           loss_distance_mean,
-                                                                           nb_class,
-                                                                           z_struct_out,
-                                                                           z_struct_layer_num)
-    if ratio_reg or loss_min_distance_cl:
+                            loss_distance_mean):
+
+    score_train, loss_train = compute_scores(net, train_loader, device, train_loader_size)
+    score_test, loss_test = compute_scores(net, test_loader, device, test_loader_size)
+
+    if ratio_reg or loss_min_distance_cl or loss_distance_mean:
         # compute ratio on all test set:
         z_struct_representation_test, labels_batch_test = get_z_struct_representation(test_loader,
                                                                                       net,
@@ -89,14 +77,26 @@ def compute_scores_and_loss(net, train_loader, test_loader, device, train_loader
         ratio_train = 0
 
     if loss_min_distance_cl:
-        var_distance_classes_train = compute_var_distance_class_test(z_struct_representation_train,
-                                                                     labels_batch_train,
-                                                                     nb_class)
-        var_distance_classes_test = compute_var_distance_class_test(z_struct_representation_test, labels_batch_test,
-                                                                    nb_class)
+        var_distance_classes_train, _ = compute_var_distance_class_test(z_struct_representation_train,
+                                                                        labels_batch_train,
+                                                                        nb_class)
+        var_distance_classes_test, _ = compute_var_distance_class_test(z_struct_representation_test,
+                                                                       labels_batch_test,
+                                                                       nb_class)
     else:
         var_distance_classes_train = 0
         var_distance_classes_test = 0
+
+    if loss_distance_mean:
+        _, mean_distance_intra_class_train = compute_var_distance_class_test(z_struct_representation_train,
+                                                                             labels_batch_train,
+                                                                             nb_class)
+        _, mean_distance_intra_class_test = compute_var_distance_class_test(z_struct_representation_test,
+                                                                            labels_batch_test,
+                                                                            nb_class)
+    else:
+        mean_distance_intra_class_train = 0
+        mean_distance_intra_class_test = 0
 
     scores = {'train': score_train, 'test': score_test}
     losses = {'train_class': loss_train,
@@ -459,6 +459,14 @@ class SolverClassifier(object):
                 data = data.to(self.device)  # Variable(data.to(self.device))
                 labels = labels.to(self.device)  # Variable(labels.to(self.device))
 
+                if self.ratio_reg or self.loss_distance_mean:
+                    if len(labels) < self.batch_size:
+                        # si on utilise la loss ratio ou variance distance:
+                        # selon la loss qu'on veut calculer si on a un batch size trop faible
+                        # il y aura trop d'exemple par class et la loss ne pourra pas etre caclulée et donc
+                        # l'execution va s'arréter avec une erreur
+                        continue
+
                 # print(labels)
                 # for i in range(self.nb_class):
                 #     print(len(labels[labels == i]))
@@ -484,6 +492,7 @@ class SolverClassifier(object):
 
                 if self.intra_class_variance_loss:
                     intra_class_loss = variance_intra_class * self.lambda_intra_class_var
+                    # print(intra_class_loss)
                     loss += intra_class_loss
 
                 if self.contrastive_loss:
@@ -508,6 +517,7 @@ class SolverClassifier(object):
                 if self.loss_distance_mean:
                     # to avoid distance mean be too hight we want distance closest to target_mean value
                     target_mean = torch.tensor(10)
+                    target_mean = target_mean.to(self.device)
                     loss_distance_mean = -(torch.abs(1/(target_mean - mean_distance_intra_class + EPS))) * self.lambda_distance_mean
                     loss += loss_distance_mean
 
@@ -559,8 +569,7 @@ class SolverClassifier(object):
                                                                self.other_ratio,
                                                                self.loss_min_distance_cl,
                                                                self.z_struct_layer_num,
-                                                               self.loss_distance_mean,
-                                                               self.z_struct_out)
+                                                               self.loss_distance_mean)
 
             self.save_checkpoint_scores_loss()
             self.net_mode(train=True)

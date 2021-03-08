@@ -48,7 +48,7 @@ def compute_var_distance_class_test(batch_z_struct, labels_batch, nb_class):
     variance_intra_class_distance = std_class_distance * std_class_distance
     variance_intra_class_distance_mean = torch.mean(variance_intra_class_distance, axis=0)
 
-    return variance_intra_class_distance_mean
+    return variance_intra_class_distance_mean, torch.mean(distance_inter_class)
 
 
 def compute_ratio_batch_test(batch_z_struct, labels_batch, nb_class, other_ratio=False):
@@ -370,7 +370,7 @@ class Custom_CNN_BK(nn.Module, ABC):
 
         ratio_variance_mean = torch.mean(ratio)
 
-        return ratio_variance_mean, variance_intra_class
+        return ratio_variance_mean, torch.mean(torch.mean(variance_intra_class, axis=1))
 
     def compute_var_distance_class(self, batch_z_struct, labels_batch, nb_class, seuil_min_image=2):
         """

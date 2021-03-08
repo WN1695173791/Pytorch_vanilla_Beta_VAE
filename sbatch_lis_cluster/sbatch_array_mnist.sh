@@ -9,7 +9,7 @@
 #BATCH --mail-type=ALL                  # Mail notification of the events concerning the job : start time, end time,?~@?
 #SBATCH --mail-user=julien.dejasmin@lis-lab.fr
 
-#SBATCH --array=2-335%5   # % for run n jobs in same time
+#SBATCH --array=19-168%6  # 186-335%6 # % for run n jobs in same time
 
 echo "$SLURM_ARRAY_TASK_ID"
 
