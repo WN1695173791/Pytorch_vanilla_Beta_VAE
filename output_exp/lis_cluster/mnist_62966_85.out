@@ -1,0 +1,213 @@
+85
+--dataset mnist --model CNN --gpu_devices 0 1 --max_iter 50 --batch_size 256 --ckpt_dir checkpoints_CNN --ckpt_dir_scores checkpoint_scores_CNN --use_scheduler True --GMP True --lr 1e-3 --z_struct_size 20 --add_classification_layer True --classif_layer_size 30 --is_default_model False --is_custom_model False --is_custom_model_BK True --big_kernel_size 8 --two_conv_layer True --three_conv_layer False --BK_in_first_layer True --BK_in_second_layer False --BK_in_third_layer False --stride_size 1 --hidden_filters_layer1 32 --hidden_filters_layer2 32 --hidden_filters_layer3 32 --ratio_reg True --lambda_ratio_reg 0.1 --lambda_class 1 --other_ratio False --loss_min_distance_cl False --lambda_var_distance 1 --intra_class_variance_loss True --lambda_intra_class_var 0.001 --contrastive_loss False --lambda_contrastive_loss 1 --alpha 32 --loss Proxy_Anchor --optimizer adamw --mrg 0.1 --IPC False --warm 1 --sz_embedding 32 --dataset_balanced False --exp_name mnist_classif_ratio_variacnce_intra_5_3
+Namespace(BK_in_first_layer=True, BK_in_second_layer=False, BK_in_third_layer=False, BN=False, C_max=25, C_stop_iter=100000.0, E1_AE=False, E1_VAE=False, E1_conv=False, E1_dense=False, E1_second_conv=False, E1_second_conv_adapt=False, GMP=True, IPC=False, L1_norm_act=False, L1_norm_weights=False, L3_without_random=False, LOG_DIR='logs', adapt_lr=False, add_classification_layer=True, add_linear_after_GMP=True, add_z_struct_bottleneck=False, alpha=32.0, batch_size=256, beta=1, beta1=0.9, beta2=0.999, big_kernel=False, big_kernel_size=[8], binary_z=False, ckpt_dir='checkpoints_CNN', ckpt_dir_scores='checkpoint_scores_CNN', classif_layer_size=30, contrastive_loss=False, cuda=True, dataset='mnist', dataset_balanced=False, display_step=10000, dset_dir='data', exp_name='mnist_classif_ratio_variacnce_intra_5_3', gamma=1000, gpu_devices=[0, 1], hidden_filters_layer1=32, hidden_filters_layer2=32, hidden_filters_layer3=32, image_size=64, intra_class_variance_loss=True, is_C=True, is_E1=False, is_binary_structural_latent=False, is_custom_model=False, is_custom_model_BK=True, is_default_model=False, is_noise_stats=False, is_partial_rand_class=False, is_perturbed_score=False, is_zvar_sim_loss=False, just_train=False, kernel_size=4, lambda_Kl_struct=1, lambda_Kl_var=1, lambda_L1=0.01, lambda_VAE=1, lambda_class=1.0, lambda_contrastive_loss=1.0, lambda_distance_mean=1, lambda_intra_class_var=0.001, lambda_partial_class=1, lambda_ratio_reg=0.1, lambda_recon_wt_rand=1, lambda_recons=1, lambda_var_distance=1.0, lambda_zvar_sim=1, latent_spec_cont=None, latent_spec_cont_class=None, latent_spec_cont_var=None, latent_spec_disc=None, latent_spec_disc_class=None, latent_spec_disc_var=None, log_level='info', loss='Proxy_Anchor', loss_distance_mean=False, loss_min_distance_cl=False, lr=0.001, max_iter=50.0, model='CNN', mrg=0.1, num_workers=2, old_weighted=False, optimizer='adamw', other_ratio=False, random_percentage=0.2, ratio_reg=True, remark='', save_step=10000, second_layer_C=False, seed=1, stride_size=1, sz_embedding=32, three_conv_layer=False, train=True, two_conv_layer=True, two_encoder=False, use_early_stopping=True, use_scheduler=True, warm=1, without_acc=False, z_struct_size=20, zeros_W_Classif=False, zvar_sim_change_zvar=False, zvar_sim_loss_for_all_model=False, zvar_sim_loss_only_for_encoder=False, zvar_sim_normal=False, zvar_sim_var_rand=False)
+CUDA Visible devices !
+Custom_CNN_BK(
+  (net): Sequential(
+    (0): Conv2d(1, 32, kernel_size=(8, 8), stride=(1, 1))
+    (1): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (2): ReLU(inplace=True)
+    (3): Conv2d(32, 32, kernel_size=(4, 4), stride=(1, 1))
+    (4): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (5): ReLU(inplace=True)
+    (6): AdaptiveMaxPool2d(output_size=(1, 1))
+    (7): View()
+    (8): Linear(in_features=32, out_features=20, bias=True)
+    (9): BatchNorm1d(20, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (10): ReLU(inplace=True)
+    (11): Dropout(p=0.4, inplace=False)
+    (12): Linear(in_features=20, out_features=30, bias=True)
+    (13): BatchNorm1d(30, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (14): ReLU(inplace=True)
+    (15): Dropout(p=0.4, inplace=False)
+    (16): Linear(in_features=30, out_features=10, bias=True)
+    (17): Softmax(dim=None)
+  )
+)
+The number of parameters of model is 20324
+use 1 gpu who named: GeForce RTX 2080 Ti
+=> loaded sample_scores and losses
+=> no checkpoint found at 'checkpoints_CNN/mnist_classif_ratio_variacnce_intra_5_3/last'
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 235, epoch 1.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 235, epoch 1.0)
+[Save Checkpoint] epoch: [1.0], Train score:83.38167, Test score:83.79000, train loss:-0.74493, test loss:-0.74668, ratio_train_loss:0.43371,ratio_test_loss:0.41011, total_loss_train:-0.31122,total_loss_test:-0.33657, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 470, epoch 2.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 470, epoch 2.0)
+[Save Checkpoint] epoch: [2.0], Train score:87.55333, Test score:87.71000, train loss:-0.85734, test loss:-0.86055, ratio_train_loss:0.34557,ratio_test_loss:0.32410, total_loss_train:-0.51177,total_loss_test:-0.53645, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 705, epoch 3.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 705, epoch 3.0)
+[Save Checkpoint] epoch: [3.0], Train score:87.79167, Test score:88.09000, train loss:-0.87037, test loss:-0.87343, ratio_train_loss:0.30140,ratio_test_loss:0.28130, total_loss_train:-0.56898,total_loss_test:-0.59214, var distance inter class train:0.00000,var distance inter class test:0.00000
+Ratio: In this batch for class 4, they are less images than 10. Don't use it to compute ratio!!!!
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 940, epoch 4.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 940, epoch 4.0)
+[Save Checkpoint] epoch: [4.0], Train score:88.27333, Test score:88.46000, train loss:-0.87871, test loss:-0.88028, ratio_train_loss:0.27440,ratio_test_loss:0.25682, total_loss_train:-0.60431,total_loss_test:-0.62346, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 1175, epoch 5.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 1175, epoch 5.0)
+[Save Checkpoint] epoch: [5.0], Train score:88.47167, Test score:88.61000, train loss:-0.88182, test loss:-0.88192, ratio_train_loss:0.25942,ratio_test_loss:0.24272, total_loss_train:-0.62240,total_loss_test:-0.63921, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 1410, epoch 6.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 1410, epoch 6.0)
+[Save Checkpoint] epoch: [6.0], Train score:88.23167, Test score:88.42000, train loss:-0.87953, test loss:-0.88104, ratio_train_loss:0.25010,ratio_test_loss:0.23434, total_loss_train:-0.62944,total_loss_test:-0.64670, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 1645, epoch 7.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 1645, epoch 7.0)
+[Save Checkpoint] epoch: [7.0], Train score:94.67833, Test score:94.58000, train loss:-0.93462, test loss:-0.93482, ratio_train_loss:0.24128,ratio_test_loss:0.22544, total_loss_train:-0.69335,total_loss_test:-0.70938, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 1880, epoch 8.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 1880, epoch 8.0)
+[Save Checkpoint] epoch: [8.0], Train score:96.69000, Test score:96.86000, train loss:-0.96211, test loss:-0.96411, ratio_train_loss:0.24270,ratio_test_loss:0.22504, total_loss_train:-0.71941,total_loss_test:-0.73907, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 2115, epoch 9.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 2115, epoch 9.0)
+[Save Checkpoint] epoch: [9.0], Train score:96.99333, Test score:96.90000, train loss:-0.96690, test loss:-0.96699, ratio_train_loss:0.22537,ratio_test_loss:0.20972, total_loss_train:-0.74153,total_loss_test:-0.75727, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 2350, epoch 10.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 2350, epoch 10.0)
+EarlyStopping counter: 1 out of 10
+[Save Checkpoint] epoch: [10.0], Train score:97.11167, Test score:96.81000, train loss:-0.96870, test loss:-0.96691, ratio_train_loss:0.22971,ratio_test_loss:0.21476, total_loss_train:-0.73899,total_loss_test:-0.75215, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 2585, epoch 11.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 2585, epoch 11.0)
+[Save Checkpoint] epoch: [11.0], Train score:97.65000, Test score:97.34000, train loss:-0.97447, test loss:-0.97254, ratio_train_loss:0.22558,ratio_test_loss:0.21133, total_loss_train:-0.74889,total_loss_test:-0.76120, var distance inter class train:0.00000,var distance inter class test:0.00000
+Ratio: In this batch for class 5, they are less images than 10. Don't use it to compute ratio!!!!
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 2820, epoch 12.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 2820, epoch 12.0)
+[Save Checkpoint] epoch: [12.0], Train score:97.48167, Test score:97.41000, train loss:-0.97295, test loss:-0.97270, ratio_train_loss:0.22145,ratio_test_loss:0.20717, total_loss_train:-0.75151,total_loss_test:-0.76552, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 3055, epoch 13.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 3055, epoch 13.0)
+[Save Checkpoint] epoch: [13.0], Train score:97.58500, Test score:97.39000, train loss:-0.97442, test loss:-0.97377, ratio_train_loss:0.22124,ratio_test_loss:0.20621, total_loss_train:-0.75318,total_loss_test:-0.76756, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 3290, epoch 14.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 3290, epoch 14.0)
+[Save Checkpoint] epoch: [14.0], Train score:97.63333, Test score:97.46000, train loss:-0.97519, test loss:-0.97451, ratio_train_loss:0.21953,ratio_test_loss:0.20424, total_loss_train:-0.75567,total_loss_test:-0.77027, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 3525, epoch 15.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 3525, epoch 15.0)
+[Save Checkpoint] epoch: [15.0], Train score:97.71333, Test score:97.59000, train loss:-0.97607, test loss:-0.97516, ratio_train_loss:0.21547,ratio_test_loss:0.20062, total_loss_train:-0.76060,total_loss_test:-0.77454, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 3760, epoch 16.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 3760, epoch 16.0)
+EarlyStopping counter: 1 out of 10
+[Save Checkpoint] epoch: [16.0], Train score:97.47667, Test score:97.16000, train loss:-0.97353, test loss:-0.97114, ratio_train_loss:0.21338,ratio_test_loss:0.19927, total_loss_train:-0.76016,total_loss_test:-0.77187, var distance inter class train:0.00000,var distance inter class test:0.00000
+Ratio: In this batch for class 5, they are less images than 10. Don't use it to compute ratio!!!!
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 3995, epoch 17.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 3995, epoch 17.0)
+[Save Checkpoint] epoch: [17.0], Train score:97.97833, Test score:97.85000, train loss:-0.97885, test loss:-0.97799, ratio_train_loss:0.21437,ratio_test_loss:0.19995, total_loss_train:-0.76448,total_loss_test:-0.77803, var distance inter class train:0.00000,var distance inter class test:0.00000
+Ratio: In this batch for class 4, they are less images than 10. Don't use it to compute ratio!!!!
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 4230, epoch 18.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 4230, epoch 18.0)
+[Save Checkpoint] epoch: [18.0], Train score:97.32333, Test score:97.34000, train loss:-0.97209, test loss:-0.97255, ratio_train_loss:0.20790,ratio_test_loss:0.19241, total_loss_train:-0.76419,total_loss_test:-0.78014, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 4465, epoch 19.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 4465, epoch 19.0)
+[Save Checkpoint] epoch: [19.0], Train score:97.78167, Test score:97.44000, train loss:-0.97683, test loss:-0.97415, ratio_train_loss:0.20324,ratio_test_loss:0.19016, total_loss_train:-0.77358,total_loss_test:-0.78398, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 4700, epoch 20.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 4700, epoch 20.0)
+[Save Checkpoint] epoch: [20.0], Train score:97.72167, Test score:97.54000, train loss:-0.97641, test loss:-0.97515, ratio_train_loss:0.20458,ratio_test_loss:0.19063, total_loss_train:-0.77183,total_loss_test:-0.78452, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 4935, epoch 21.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 4935, epoch 21.0)
+[Save Checkpoint] epoch: [21.0], Train score:97.99500, Test score:97.71000, train loss:-0.97889, test loss:-0.97733, ratio_train_loss:0.20482,ratio_test_loss:0.19138, total_loss_train:-0.77407,total_loss_test:-0.78595, var distance inter class train:0.00000,var distance inter class test:0.00000
+Ratio: In this batch for class 0, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 4, they are less images than 10. Don't use it to compute ratio!!!!
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 5170, epoch 22.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 5170, epoch 22.0)
+[Save Checkpoint] epoch: [22.0], Train score:97.86167, Test score:97.61000, train loss:-0.97772, test loss:-0.97564, ratio_train_loss:0.19895,ratio_test_loss:0.18475, total_loss_train:-0.77877,total_loss_test:-0.79089, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 5405, epoch 23.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 5405, epoch 23.0)
+EarlyStopping counter: 1 out of 10
+[Save Checkpoint] epoch: [23.0], Train score:97.79500, Test score:97.57000, train loss:-0.97697, test loss:-0.97518, ratio_train_loss:0.20664,ratio_test_loss:0.19291, total_loss_train:-0.77033,total_loss_test:-0.78227, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 5640, epoch 24.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 5640, epoch 24.0)
+EarlyStopping counter: 2 out of 10
+[Save Checkpoint] epoch: [24.0], Train score:98.15500, Test score:97.81000, train loss:-0.98068, test loss:-0.97782, ratio_train_loss:0.20029,ratio_test_loss:0.18734, total_loss_train:-0.78039,total_loss_test:-0.79047, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 5875, epoch 25.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 5875, epoch 25.0)
+[Save Checkpoint] epoch: [25.0], Train score:97.95333, Test score:97.80000, train loss:-0.97885, test loss:-0.97753, ratio_train_loss:0.19692,ratio_test_loss:0.18289, total_loss_train:-0.78193,total_loss_test:-0.79463, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 6110, epoch 26.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 6110, epoch 26.0)
+EarlyStopping counter: 1 out of 10
+[Save Checkpoint] epoch: [26.0], Train score:97.56500, Test score:97.33000, train loss:-0.97486, test loss:-0.97328, ratio_train_loss:0.19789,ratio_test_loss:0.18407, total_loss_train:-0.77697,total_loss_test:-0.78922, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 6345, epoch 27.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 6345, epoch 27.0)
+[Save Checkpoint] epoch: [27.0], Train score:97.90667, Test score:97.78000, train loss:-0.97860, test loss:-0.97762, ratio_train_loss:0.19534,ratio_test_loss:0.18169, total_loss_train:-0.78326,total_loss_test:-0.79593, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 6580, epoch 28.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 6580, epoch 28.0)
+EarlyStopping counter: 1 out of 10
+[Save Checkpoint] epoch: [28.0], Train score:98.01333, Test score:97.77000, train loss:-0.97942, test loss:-0.97754, ratio_train_loss:0.19513,ratio_test_loss:0.18254, total_loss_train:-0.78429,total_loss_test:-0.79500, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 6815, epoch 29.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 6815, epoch 29.0)
+EarlyStopping counter: 2 out of 10
+[Save Checkpoint] epoch: [29.0], Train score:98.13500, Test score:97.87000, train loss:-0.98081, test loss:-0.97902, ratio_train_loss:0.19921,ratio_test_loss:0.18648, total_loss_train:-0.78160,total_loss_test:-0.79254, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 7050, epoch 30.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 7050, epoch 30.0)
+[Save Checkpoint] epoch: [30.0], Train score:97.94833, Test score:97.78000, train loss:-0.97899, test loss:-0.97757, ratio_train_loss:0.19174,ratio_test_loss:0.17859, total_loss_train:-0.78725,total_loss_test:-0.79898, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 7285, epoch 31.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 7285, epoch 31.0)
+[Save Checkpoint] epoch: [31.0], Train score:97.96667, Test score:97.67000, train loss:-0.97888, test loss:-0.97653, ratio_train_loss:0.19001,ratio_test_loss:0.17708, total_loss_train:-0.78888,total_loss_test:-0.79946, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 7520, epoch 32.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 7520, epoch 32.0)
+EarlyStopping counter: 1 out of 10
+[Save Checkpoint] epoch: [32.0], Train score:97.82333, Test score:97.44000, train loss:-0.97751, test loss:-0.97433, ratio_train_loss:0.19513,ratio_test_loss:0.18159, total_loss_train:-0.78237,total_loss_test:-0.79275, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 7755, epoch 33.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 7755, epoch 33.0)
+EarlyStopping counter: 2 out of 10
+[Save Checkpoint] epoch: [33.0], Train score:97.76833, Test score:97.70000, train loss:-0.97709, test loss:-0.97714, ratio_train_loss:0.19749,ratio_test_loss:0.18337, total_loss_train:-0.77960,total_loss_test:-0.79377, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 7990, epoch 34.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 7990, epoch 34.0)
+[Save Checkpoint] epoch: [34.0], Train score:98.10667, Test score:97.93000, train loss:-0.98066, test loss:-0.97930, ratio_train_loss:0.18988,ratio_test_loss:0.17506, total_loss_train:-0.79078,total_loss_test:-0.80425, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 8225, epoch 35.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 8225, epoch 35.0)
+[Save Checkpoint] epoch: [35.0], Train score:98.24667, Test score:97.96000, train loss:-0.98199, test loss:-0.97999, ratio_train_loss:0.18835,ratio_test_loss:0.17569, total_loss_train:-0.79364,total_loss_test:-0.80430, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 8460, epoch 36.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 8460, epoch 36.0)
+[Save Checkpoint] epoch: [36.0], Train score:98.34333, Test score:97.92000, train loss:-0.98305, test loss:-0.97953, ratio_train_loss:0.18602,ratio_test_loss:0.17444, total_loss_train:-0.79703,total_loss_test:-0.80509, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 8695, epoch 37.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 8695, epoch 37.0)
+[Save Checkpoint] epoch: [37.0], Train score:98.23333, Test score:97.92000, train loss:-0.98198, test loss:-0.97921, ratio_train_loss:0.18263,ratio_test_loss:0.16964, total_loss_train:-0.79935,total_loss_test:-0.80956, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 8930, epoch 38.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 8930, epoch 38.0)
+EarlyStopping counter: 1 out of 10
+[Save Checkpoint] epoch: [38.0], Train score:98.22500, Test score:97.87000, train loss:-0.98173, test loss:-0.97878, ratio_train_loss:0.18354,ratio_test_loss:0.17030, total_loss_train:-0.79819,total_loss_test:-0.80848, var distance inter class train:0.00000,var distance inter class test:0.00000
+Ratio: In this batch for class 8, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 5, they are less images than 10. Don't use it to compute ratio!!!!
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 9165, epoch 39.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 9165, epoch 39.0)
+[Save Checkpoint] epoch: [39.0], Train score:98.25500, Test score:97.95000, train loss:-0.98213, test loss:-0.97958, ratio_train_loss:0.18075,ratio_test_loss:0.16748, total_loss_train:-0.80138,total_loss_test:-0.81210, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 9400, epoch 40.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 9400, epoch 40.0)
+EarlyStopping counter: 1 out of 10
+[Save Checkpoint] epoch: [40.0], Train score:98.28833, Test score:97.89000, train loss:-0.98241, test loss:-0.97891, ratio_train_loss:0.19254,ratio_test_loss:0.17907, total_loss_train:-0.78986,total_loss_test:-0.79984, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 9635, epoch 41.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 9635, epoch 41.0)
+EarlyStopping counter: 2 out of 10
+[Save Checkpoint] epoch: [41.0], Train score:98.35833, Test score:98.08000, train loss:-0.98317, test loss:-0.98063, ratio_train_loss:0.19144,ratio_test_loss:0.17883, total_loss_train:-0.79173,total_loss_test:-0.80181, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 9870, epoch 42.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 9870, epoch 42.0)
+EarlyStopping counter: 3 out of 10
+[Save Checkpoint] epoch: [42.0], Train score:98.28167, Test score:98.00000, train loss:-0.98234, test loss:-0.98016, ratio_train_loss:0.18295,ratio_test_loss:0.17027, total_loss_train:-0.79939,total_loss_test:-0.80989, var distance inter class train:0.00000,var distance inter class test:0.00000
+Ratio: In this batch for class 5, they are less images than 10. Don't use it to compute ratio!!!!
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 10105, epoch 43.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 10105, epoch 43.0)
+EarlyStopping counter: 4 out of 10
+[Save Checkpoint] epoch: [43.0], Train score:97.74167, Test score:97.38000, train loss:-0.97674, test loss:-0.97388, ratio_train_loss:0.18371,ratio_test_loss:0.16990, total_loss_train:-0.79303,total_loss_test:-0.80398, var distance inter class train:0.00000,var distance inter class test:0.00000
+Ratio: In this batch for class 8, they are less images than 10. Don't use it to compute ratio!!!!
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 10340, epoch 44.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 10340, epoch 44.0)
+EarlyStopping counter: 5 out of 10
+[Save Checkpoint] epoch: [44.0], Train score:98.18833, Test score:97.82000, train loss:-0.98140, test loss:-0.97816, ratio_train_loss:0.18578,ratio_test_loss:0.17341, total_loss_train:-0.79562,total_loss_test:-0.80475, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 10575, epoch 45.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 10575, epoch 45.0)
+EarlyStopping counter: 6 out of 10
+[Save Checkpoint] epoch: [45.0], Train score:95.49833, Test score:95.11000, train loss:-0.95423, test loss:-0.95129, ratio_train_loss:0.18321,ratio_test_loss:0.17057, total_loss_train:-0.77102,total_loss_test:-0.78071, var distance inter class train:0.00000,var distance inter class test:0.00000
+Ratio: In this batch for class 4, they are less images than 10. Don't use it to compute ratio!!!!
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 10810, epoch 46.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 10810, epoch 46.0)
+EarlyStopping counter: 7 out of 10
+[Save Checkpoint] epoch: [46.0], Train score:98.12000, Test score:97.81000, train loss:-0.98070, test loss:-0.97813, ratio_train_loss:0.18737,ratio_test_loss:0.17431, total_loss_train:-0.79333,total_loss_test:-0.80383, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 11045, epoch 47.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 11045, epoch 47.0)
+EarlyStopping counter: 8 out of 10
+[Save Checkpoint] epoch: [47.0], Train score:98.22833, Test score:97.98000, train loss:-0.98182, test loss:-0.97986, ratio_train_loss:0.18205,ratio_test_loss:0.16884, total_loss_train:-0.79976,total_loss_test:-0.81102, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 11280, epoch 48.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 11280, epoch 48.0)
+EarlyStopping counter: 9 out of 10
+[Save Checkpoint] epoch: [48.0], Train score:98.14000, Test score:97.59000, train loss:-0.98106, test loss:-0.97615, ratio_train_loss:0.18295,ratio_test_loss:0.16959, total_loss_train:-0.79811,total_loss_test:-0.80656, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 11515, epoch 49.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 11515, epoch 49.0)
+[Save Checkpoint] epoch: [49.0], Train score:98.30167, Test score:97.96000, train loss:-0.98273, test loss:-0.97987, ratio_train_loss:0.17510,ratio_test_loss:0.16255, total_loss_train:-0.80763,total_loss_test:-0.81732, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 11750, epoch 50.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_ratio_variacnce_intra_5_3/last' (iter 11750, epoch 50.0)
+EarlyStopping counter: 1 out of 10
+[Save Checkpoint] epoch: [50.0], Train score:98.06833, Test score:97.82000, train loss:-0.98042, test loss:-0.97850, ratio_train_loss:0.18212,ratio_test_loss:0.16836, total_loss_train:-0.79830,total_loss_test:-0.81013, var distance inter class train:0.00000,var distance inter class test:0.00000
+[Training Finished]
+All Done!
