@@ -322,6 +322,7 @@ def run_viz_expes(exp_name, net, is_ratio, is_distance_loss, loss_distance_mean,
     path_scores = 'checkpoint_scores_CNN'
     net_trained, _, nb_epochs = get_checkpoints(net, path, exp_name)
     # print(net)
+    net_trained.eval()
 
     train_test = 'test'
     loader = test_loader
@@ -330,9 +331,9 @@ def run_viz_expes(exp_name, net, is_ratio, is_distance_loss, loss_distance_mean,
     # scores and losses:
     # plot_scores_and_loss_CNN(net_trained, exp_name, path_scores, is_ratio=ratio_reg, save=True,
     #                          is_distance_loss=is_distance_loss, loss_distance_mean=loss_distance_mean)
-    # score, _, _ = compute_scores(net_trained, loader, device, loader_size,
-    #                           False, nb_class, False, 0)
-    # print('score Test acc: {:.3f}%'.format(score))
+    # score_test, _ = compute_scores(net_trained, loader, device, loader_size)
+    # score_train, _ = compute_scores(net_trained, train_loader, device, len(train_loader.dataset))
+    # print('score Test acc: {:.3f}% and Train set acc: {:.3f}%'.format(score_test, score_train))
 
     # compute features:
     # compute_z_struct(net_trained, exp_name, loader, train_test=train_test, net_type=net_type)
@@ -374,8 +375,8 @@ def run_viz_expes(exp_name, net, is_ratio, is_distance_loss, loss_distance_mean,
 
     # _ = distance_matrix(net_trained, exp_name, train_test=train_test, plot_fig=True)
 
-    # plot_resume(net_trained, exp_name, is_ratio, is_distance_loss, loss_distance_mean, cat=cat,
-    #             train_test=train_test, path_scores=path_scores)
+    # plot_resume(net_trained, exp_name, is_ratio, is_distance_loss, loss_distance_mean, loader, train_loader,
+    #             device, cat=cat, train_test=train_test, path_scores=path_scores)
 
     return
 
@@ -385,6 +386,9 @@ def visualize_regions_of_interest(exp_name, net, net_type=None):
     path = 'checkpoints_CNN/'
     net_trained, _, nb_epochs = get_checkpoints(net, path, exp_name)
     loader = test_loader
+    print(net_trained)
+
+    net_trained.eval()
 
     visualize_regions(exp_name, net_trained, len_img_h, len_img_w, loader, plot_activation_value=True,
                       plot_correlation_regions=True, percentage=1)
@@ -401,20 +405,20 @@ def visualize_regions_of_interest(exp_name, net, net_type=None):
     plot_activation_value = True  # if we plot diagram with bar to see activation value in order to see the most active
     plot_correlation_regions = True  # if plot correlation between region extracted to see redundancy
 
-    # viz_region_im(exp_name,
-    #               net_trained,
-    #               random_index=random_index,
-    #               choice_label=choice_label,
-    #               label=label,
-    #               nb_im=nb_im,
-    #               best_region=best_region,
-    #               worst_regions=worst_regions,
-    #               any_label=any_label,
-    #               average_result=average_result,
-    #               plot_activation_value=plot_activation_value,
-    #               plot_correlation_regions=plot_correlation_regions,
-    #               same_im=same_im,
-    #               net_type=net_type)
+    viz_region_im(exp_name,
+                  net_trained,
+                  random_index=random_index,
+                  choice_label=choice_label,
+                  label=label,
+                  nb_im=nb_im,
+                  best_region=best_region,
+                  worst_regions=worst_regions,
+                  any_label=any_label,
+                  average_result=average_result,
+                  plot_activation_value=plot_activation_value,
+                  plot_correlation_regions=plot_correlation_regions,
+                  same_im=same_im,
+                  net_type=net_type)
     return
 
 
@@ -534,8 +538,8 @@ def selection(net, exp_name):
 # parameters:
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 batch = torch.load('data/batch_mnist.pt')
-batch_size = 10000  # 10000 to run regions visualization (we must have only one so all data set test in one batch)
-_, test_loader = get_mnist_dataset(batch_size=batch_size)
+batch_size = 32  # 10000 to run regions visualization (we must have only one so all data set test in one batch)
+train_loader, test_loader = get_mnist_dataset(batch_size=batch_size)
 
 if batch_size == 10000:
     path_image_save = 'regions_of_interest/images/images.npy'
@@ -1132,11 +1136,11 @@ if __name__ == '__main__':
                                                             'mnist_classif_ratio_distance_intra_class_max_mean_2_6_5_balanced_dataset',
                                                             'mnist_classif_ratio_distance_intra_class_max_mean_2_6_6_balanced_dataset']
 
-    list_selected_exp = [# 'mnist_classif_ratio_distance_intra_class_max_mean_2_4_3_balanced_dataset']
+    list_selected_exp = [# 'mnist_classif_ratio_distance_intra_class_max_mean_2_4_3_balanced_dataset',
                          # 'mnist_classif_ratio_distance_intra_class_max_mean_2_6_3_balanced_dataset',
-                         # 'mnist_classif_ratio_distance_intra_class_max_mean_2_3_4_balanced_dataset']
-                         'mnist_classif_ratio_distance_intra_class_max_mean_1_4_5',
-                         'mnist_classif_ratio_distance_intra_class_max_mean_1_6_4']
+                         # 'mnist_classif_ratio_distance_intra_class_max_mean_2_3_4_balanced_dataset',
+                         # 'mnist_classif_ratio_distance_intra_class_max_mean_1_4_5',
+                         # 'mnist_classif_ratio_distance_intra_class_max_mean_1_6_4',
                          # 'mnist_classif_ratio_distance_intra_class_max_mean_1_3_2_balanced_dataset',
                          # 'mnist_classif_ratio_distance_intra_class_max_mean_1_3_3_balanced_dataset',
                          # 'mnist_classif_ratio_distance_intra_class_max_mean_1_3_4_balanced_dataset',
@@ -1146,7 +1150,17 @@ if __name__ == '__main__':
                          # 'mnist_classif_ratio_distance_intra_class_max_mean_1_5_4_balanced_dataset',
                          # 'mnist_classif_ratio_distance_intra_class_max_mean_1_5_5_balanced_dataset',
                          # 'mnist_classif_ratio_distance_intra_class_max_mean_1_6_3_balanced_dataset',
-                         # 'mnist_classif_ratio_distance_intra_class_max_mean_1_6_4_balanced_dataset']
+                         'mnist_classif_ratio_distance_intra_class_max_mean_1_6_4_balanced_dataset']
+
+    list_selected_exp_search_target_vlaue = ['mnist_classif_ratio_distance_intra_class_max_mean_target_1_num_1_5_3_balanced_dataset',
+                                             'mnist_classif_ratio_distance_intra_class_max_mean_target_1_num_1_5_3_balanced_dataset',
+                                             'mnist_classif_ratio_distance_intra_class_max_mean_target_2_num_1_5_3_balanced_dataset',
+                                             'mnist_classif_ratio_distance_intra_class_max_mean_target_2_num_1_6_4_balanced_dataset',
+                                             'mnist_classif_ratio_distance_intra_class_max_mean_target_5_num_1_5_3_balanced_dataset',
+                                             'mnist_classif_ratio_distance_intra_class_max_mean_target_5_num_1_6_4_balanced_dataset',
+                                             'mnist_classif_ratio_distance_intra_class_max_mean_target_7_num_1_6_4_balanced_dataset',
+                                             'mnist_classif_ratio_distance_intra_class_max_mean_target_50_num_1_5_3_balanced_dataset',
+                                             'mnist_classif_ratio_distance_intra_class_max_mean_target_50_num_1_6_4_balanced_dataset',]
 
     parameters_mnist_classifier_BK_ratio = "parameters_combinations/mnist_classifier_ratio.txt"
 
@@ -1155,6 +1169,12 @@ if __name__ == '__main__':
                                                    16,
                                                    list_selected_exp,
                                                    is_ratio=True)
+
+    # run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
+    #                                                18,
+    #                                                27,
+    #                                                list_selected_exp_search_target_vlaue,
+    #                                                is_ratio=True)
 
     # run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
     #                                                2,

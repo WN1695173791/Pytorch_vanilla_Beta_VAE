@@ -21,8 +21,36 @@ from solver import gpu_config
 from visualizer_CNN import get_layer_zstruct_num
 import numpy as np
 from dataset.sampler import BalancedBatchSampler
+import random
 
 EPS = 1e-12
+worker_id = 0
+
+
+def seed_all(seed):
+    if not seed:
+        seed = 10
+
+    print("[ Using Seed : ", seed, " ]")
+
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    torch.cuda.manual_seed(seed)
+    np.random.seed(seed)
+    random.seed(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+
+
+def seed_worker(worker_id):
+    """
+    To use for DataLoader reproducibility.
+    :param worker_id:
+    :return:
+    """
+    worker_seed = torch.initial_seed() % 2**32
+    np.random.seed(worker_seed)
+    random.seed(worker_seed)
 
 
 def get_z_struct_representation(loader, net, z_struct_layer_num):

@@ -9,6 +9,7 @@ from sklearn.preprocessing import StandardScaler
 # from torch_receptive_field import receptive_field
 from torchvision.utils import make_grid
 from visualizer import get_checkpoints_scores_CNN
+from scores_classifier import compute_scores
 
 EPS = 1e-12
 
@@ -1618,8 +1619,8 @@ def distance_matrix(net, exp_name, train_test=None, plot_fig=False):
     return distance_inter_class
 
 
-def plot_resume(net, exp_name, is_ratio, is_distance_loss, loss_distance_mean, cat=None, train_test=None,
-                path_scores=None, save=True):
+def plot_resume(net, exp_name, is_ratio, is_distance_loss, loss_distance_mean, loader,
+                loader_train, device, cat=None, train_test=None, path_scores=None, save=True):
     """
     plot interesting values to resume experiementation behavior: distance matrix, loss, acc, ratio, var intra, var inter
     :param net:
@@ -1662,9 +1663,13 @@ def plot_resume(net, exp_name, is_ratio, is_distance_loss, loss_distance_mean, c
                                                                                        is_distance_loss=is_distance_loss,
                                                                                        loss_distance_mean=loss_distance_mean)
     # get accuracy train and test:
-    acc_train_last_epoch = train_score[-1]
-    acc_test_last_epoch = test_score[-1]
+    # acc_train_last_epoch = train_score[-1]
+    # acc_test_last_epoch = test_score[-1]
+    print('Computing scores...')
+    score_test, _ = compute_scores(net, loader, device, len(loader.dataset))
+    score_train, _ = compute_scores(net, loader_train, device, len(loader_train.dataset))
 
+    # losses:
     axs[0, 0].set(xlabel='nb_iter', ylabel='loss', title=('Losses: ' + exp_name))
     axs[0, 0].plot(epochs, total_loss_train, label='train')
     axs[0, 0].plot(epochs, total_loss_test, label='test')
@@ -1729,8 +1734,8 @@ def plot_resume(net, exp_name, is_ratio, is_distance_loss, loss_distance_mean, c
                    variance_intra_class_mean,
                    # variance_intra_class_mean_per_class,
                    variance_inter_class_mean,
-                   acc_train_last_epoch,
-                   acc_test_last_epoch]
+                   score_train,
+                   score_test]
 
     for y in range(n_lines):
         axs[1, 1].text(.1,

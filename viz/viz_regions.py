@@ -486,7 +486,7 @@ def viz_region_im(exp_name, net, random_index=False, choice_label=None, label=No
             plt.ioff()
             plt.show()
         else:
-            visTensor(regions_selected, ch=0, allkernels=False, nrow=8, save=False, path_save=None)
+            visTensor(torch.tensor(regions_selected), ch=0, allkernels=False, nrow=8, save=False, path_save=None)
             plt.ioff()
             plt.show()
         if plot_correlation_regions:
