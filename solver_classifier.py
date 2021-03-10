@@ -8,7 +8,7 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.utils.data.sampler import BatchSampler
 from tqdm import tqdm
 
-import losses
+# import losses
 from dataset import sampler
 from dataset.dataset_2 import get_dataloaders, get_mnist_dataset
 from models.custom_CNN import Custom_CNN
@@ -20,7 +20,7 @@ from scores_classifier import compute_scores
 from solver import gpu_config
 from visualizer_CNN import get_layer_zstruct_num
 import numpy as np
-from dataset.sampler import BalancedBatchSampler, BalancedSampler
+from dataset.sampler import BalancedBatchSampler
 
 
 EPS = 1e-12

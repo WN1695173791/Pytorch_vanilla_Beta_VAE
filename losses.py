@@ -1,7 +1,11 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from pytorch_metric_learning import miners, losses
+is_pytorch_metric_learning= True
+try:
+    from pytorch_metric_learning import miners, losses
+except:
+    is_pytorch_metric_learning = False
 
 
 def binarize(T, nb_classes):
