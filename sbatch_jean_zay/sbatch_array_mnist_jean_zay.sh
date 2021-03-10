@@ -2,7 +2,7 @@
 #SBATCH --job-name="mnist"       # Job Name
 #SBATCH --partition=gpu_p2             # partition name
 #SBATCH --qos=qos_gpu-t4             # for jean-zay
-#SBATCH --gres=gpu:2                # nombre de GPU a reserver
+#SBATCH --gres=gpu:1                # nombre de GPU a reserver
 #SBATCH --cpus-per-task=3          # nombre de coeurs CPU par tache
 #SBATCH --time=00:30:00                  # time (DD-HH:MM)
 #SBATCH --output=output_exp/jean_zay/mnist_%A_%a.out       # STDOUT
