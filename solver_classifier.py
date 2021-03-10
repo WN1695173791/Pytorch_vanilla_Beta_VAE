@@ -178,6 +178,7 @@ class SolverClassifier(object):
         self.lambda_distance_mean = args.lambda_distance_mean
         self.loss_distance_mean = args.loss_distance_mean
         self.dataset_balanced = args.dataset_balanced
+        self.value_target_distance_mean = args.value_target_distance_mean
 
         # wandb parameters:
         self.use_wandb = False
@@ -515,7 +516,7 @@ class SolverClassifier(object):
 
                 if self.loss_distance_mean:
                     # to avoid distance mean be too hight we want distance closest to target_mean value
-                    target_mean = torch.tensor(10)
+                    target_mean = torch.tensor(self.value_target_distance_mean)
                     target_mean = target_mean.to(self.device)
                     loss_distance_mean = -(torch.abs(1/(target_mean - mean_distance_intra_class + EPS))) * self.lambda_distance_mean
                     loss += loss_distance_mean

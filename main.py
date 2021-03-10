@@ -219,6 +219,7 @@ if __name__ == "__main__":
     parser.add_argument('--loss_distance_mean', default=False, type=str2bool,
                         help='mean distance inter classes mean')
     parser.add_argument('--lambda_distance_mean', default=1, type=float, help="lambda_distance_mean")
+    parser.add_argument('--value_target_distance_mean', default=1, type=float, help="lambda_distance_mean")
 
     args = parser.parse_args()
 
