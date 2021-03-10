@@ -1133,20 +1133,20 @@ if __name__ == '__main__':
                                                             'mnist_classif_ratio_distance_intra_class_max_mean_2_6_6_balanced_dataset']
 
     list_selected_exp = [# 'mnist_classif_ratio_distance_intra_class_max_mean_2_4_3_balanced_dataset']
-                         'mnist_classif_ratio_distance_intra_class_max_mean_2_6_3_balanced_dataset',
-                         'mnist_classif_ratio_distance_intra_class_max_mean_2_3_4_balanced_dataset',
+                         # 'mnist_classif_ratio_distance_intra_class_max_mean_2_6_3_balanced_dataset',
+                         # 'mnist_classif_ratio_distance_intra_class_max_mean_2_3_4_balanced_dataset']
                          'mnist_classif_ratio_distance_intra_class_max_mean_1_4_5',
-                         'mnist_classif_ratio_distance_intra_class_max_mean_1_6_4',
-                         'mnist_classif_ratio_distance_intra_class_max_mean_1_3_2_balanced_dataset',
-                         'mnist_classif_ratio_distance_intra_class_max_mean_1_3_3_balanced_dataset',
-                         'mnist_classif_ratio_distance_intra_class_max_mean_1_3_4_balanced_dataset',
-                         'mnist_classif_ratio_distance_intra_class_max_mean_1_4_4_balanced_dataset',
-                         'mnist_classif_ratio_distance_intra_class_max_mean_1_4_5_balanced_dataset',
-                         'mnist_classif_ratio_distance_intra_class_max_mean_1_5_3_balanced_dataset',
-                         'mnist_classif_ratio_distance_intra_class_max_mean_1_5_4_balanced_dataset',
-                         'mnist_classif_ratio_distance_intra_class_max_mean_1_5_5_balanced_dataset',
-                         'mnist_classif_ratio_distance_intra_class_max_mean_1_6_3_balanced_dataset',
-                         'mnist_classif_ratio_distance_intra_class_max_mean_1_6_4_balanced_dataset']
+                         'mnist_classif_ratio_distance_intra_class_max_mean_1_6_4']
+                         # 'mnist_classif_ratio_distance_intra_class_max_mean_1_3_2_balanced_dataset',
+                         # 'mnist_classif_ratio_distance_intra_class_max_mean_1_3_3_balanced_dataset',
+                         # 'mnist_classif_ratio_distance_intra_class_max_mean_1_3_4_balanced_dataset',
+                         # 'mnist_classif_ratio_distance_intra_class_max_mean_1_4_4_balanced_dataset',
+                         # 'mnist_classif_ratio_distance_intra_class_max_mean_1_4_5_balanced_dataset',
+                         # 'mnist_classif_ratio_distance_intra_class_max_mean_1_5_3_balanced_dataset',
+                         # 'mnist_classif_ratio_distance_intra_class_max_mean_1_5_4_balanced_dataset',
+                         # 'mnist_classif_ratio_distance_intra_class_max_mean_1_5_5_balanced_dataset',
+                         # 'mnist_classif_ratio_distance_intra_class_max_mean_1_6_3_balanced_dataset',
+                         # 'mnist_classif_ratio_distance_intra_class_max_mean_1_6_4_balanced_dataset']
 
     parameters_mnist_classifier_BK_ratio = "parameters_combinations/mnist_classifier_ratio.txt"
 
