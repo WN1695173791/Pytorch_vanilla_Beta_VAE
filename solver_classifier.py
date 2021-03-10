@@ -22,8 +22,8 @@ from visualizer_CNN import get_layer_zstruct_num
 import numpy as np
 from dataset.sampler import BalancedBatchSampler
 
-
 EPS = 1e-12
+
 
 def get_z_struct_representation(loader, net, z_struct_layer_num):
     z_struct_representation = []
@@ -36,8 +36,8 @@ def get_z_struct_representation(loader, net, z_struct_layer_num):
             input_data = input_data.cuda()
 
         _, z_struct, _, _, _, _ = net(input_data,
-                                   z_struct_out=True,
-                                   z_struct_layer_num=z_struct_layer_num)
+                                      z_struct_out=True,
+                                      z_struct_layer_num=z_struct_layer_num)
 
         z_struct_batch = z_struct.squeeze().cpu().detach().numpy()
         z_struct_representation.extend(z_struct_batch)
@@ -49,7 +49,6 @@ def get_z_struct_representation(loader, net, z_struct_layer_num):
 def compute_scores_and_loss(net, train_loader, test_loader, device, train_loader_size, test_loader_size,
                             net_type, nb_class, ratio_reg, other_ratio, loss_min_distance_cl, z_struct_layer_num,
                             loss_distance_mean):
-
     score_train, loss_train = compute_scores(net, train_loader, device, train_loader_size)
     score_test, loss_test = compute_scores(net, test_loader, device, test_loader_size)
 
@@ -518,7 +517,8 @@ class SolverClassifier(object):
                     # to avoid distance mean be too hight we want distance closest to target_mean value
                     target_mean = torch.tensor(self.value_target_distance_mean)
                     target_mean = target_mean.to(self.device)
-                    loss_distance_mean = -(torch.abs(1/(target_mean - mean_distance_intra_class + EPS))) * self.lambda_distance_mean
+                    loss_distance_mean = -(
+                        torch.abs(1 / (target_mean - mean_distance_intra_class + EPS))) * self.lambda_distance_mean
                     loss += loss_distance_mean
 
                 # backpropagation loss
