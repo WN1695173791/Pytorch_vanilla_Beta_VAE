@@ -193,6 +193,8 @@ if __name__ == "__main__":
     parser.add_argument('--ratio_reg', default=False, type=str2bool, help='if add ratio to regularization')
     parser.add_argument('--lambda_ratio_reg', default=1, type=float, help="lambda ratio regularization value")
     parser.add_argument('--other_ratio', default=False, type=str2bool, help='other ratio (inverse)')
+    parser.add_argument('--lambda_var_intra', default=1, type=float, help="lambda variance intra class")
+    parser.add_argument('--lambda_var_inter', default=1, type=float, help="lambda variance inter class")
 
     # add to test:
     parser.add_argument('--LOG_DIR', default='logs', help='Path to log folder')

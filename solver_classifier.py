@@ -63,7 +63,7 @@ def get_z_struct_representation(loader, net, z_struct_layer_num):
         if torch.cuda.is_available():
             input_data = input_data.cuda()
 
-        _, z_struct, _, _, _, _ = net(input_data,
+        _, z_struct, _, _, _, _, _ = net(input_data,
                                       z_struct_out=True,
                                       z_struct_layer_num=z_struct_layer_num)
 
@@ -178,6 +178,8 @@ class SolverClassifier(object):
         self.ratio_reg = args.ratio_reg
         self.lambda_ratio_reg = args.lambda_ratio_reg
         self.other_ratio = args.other_ratio
+        self.lambda_var_intra = args.lambda_var_intra
+        self.lambda_var_inter = args.lambda_var_inter
         # Contrastive loss parameters:
         self.IPC = args.IPC
         self.num_workers = args.num_workers
@@ -501,14 +503,15 @@ class SolverClassifier(object):
 
                 prediction, embedding, ratio, \
                 variance_distance_iter_class, \
-                variance_intra_class, mean_distance_intra_class = self.net(data,
-                                                                           labels=labels,
-                                                                           nb_class=self.nb_class,
-                                                                           use_ratio=self.ratio_reg,
-                                                                           z_struct_out=self.z_struct_out,
-                                                                           z_struct_layer_num=self.z_struct_layer_num,
-                                                                           other_ratio=self.other_ratio,
-                                                                           loss_min_distance_cl=self.loss_min_distance_cl)
+                variance_intra, mean_distance_intra_class, \
+                variance_inter = self.net(data,
+                                          labels=labels,
+                                          nb_class=self.nb_class,
+                                          use_ratio=self.ratio_reg,
+                                          z_struct_out=self.z_struct_out,
+                                          z_struct_layer_num=self.z_struct_layer_num,
+                                          other_ratio=self.other_ratio,
+                                          loss_min_distance_cl=self.loss_min_distance_cl)
 
                 loss = 0
                 # compute losses:
@@ -519,7 +522,7 @@ class SolverClassifier(object):
                     loss += Classification_loss
 
                 if self.intra_class_variance_loss:
-                    intra_class_loss = variance_intra_class * self.lambda_intra_class_var
+                    intra_class_loss = variance_intra * self.lambda_intra_class_var
                     loss += intra_class_loss
 
                 if self.contrastive_loss:
@@ -531,11 +534,13 @@ class SolverClassifier(object):
 
                 if self.ratio_reg:
                     # ratio loss:
-                    if self.other_ratio:
-                        ratio = -(ratio * self.lambda_ratio_reg)
-                    else:
-                        ratio = ratio * self.lambda_ratio_reg
-                    loss += ratio
+                    # if self.other_ratio:
+                    #     ratio = -(ratio * self.lambda_ratio_reg)
+                    # else:
+                    #     ratio = ratio * self.lambda_ratio_reg
+                    loss_ratio = (self.lambda_var_intra * variance_intra) - (self.lambda_var_inter * variance_inter)
+                    print(loss_ratio)
+                    loss += loss_ratio
 
                 if self.loss_min_distance_cl:
                     loss_distance_cl = variance_distance_iter_class * self.lambda_var_distance

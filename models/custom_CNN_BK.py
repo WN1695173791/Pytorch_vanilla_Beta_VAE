@@ -302,8 +302,9 @@ class Custom_CNN_BK(nn.Module, ABC):
         z_struct = None
         ratio = 0
         variance_distance_iter_class = 0
-        variance_intra_class = 0
+        variance_intra = 0
         mean_distance_intra_class = 0
+        variance_inter = 0
 
         # parameters:
         seuil_min_image = 10   # nombre minimal d'images pour calculer le ratio (ou variance)
@@ -317,11 +318,11 @@ class Custom_CNN_BK(nn.Module, ABC):
             prediction = self.net(x)
 
         if use_ratio:
-            ratio, variance_intra_class = self.compute_ratio_batch(z_struct,
-                                                                   labels,
-                                                                   nb_class,
-                                                                   other_ratio=other_ratio,
-                                                                   seuil_min_image=seuil_min_image)
+            ratio,  variance_intra, variance_inter = self.compute_ratio_batch(z_struct,
+                                                                                    labels,
+                                                                                    nb_class,
+                                                                                    other_ratio=other_ratio,
+                                                                                    seuil_min_image=seuil_min_image)
 
         if loss_min_distance_cl:
             variance_distance_iter_class, mean_distance_intra_class = self.compute_var_distance_class(z_struct,
@@ -329,7 +330,7 @@ class Custom_CNN_BK(nn.Module, ABC):
                                                                                                       nb_class,
                                                                                                       seuil_min_image=seuil_min_image)
 
-        return prediction, z_struct, ratio, variance_distance_iter_class, variance_intra_class, mean_distance_intra_class
+        return prediction, z_struct, ratio, variance_distance_iter_class, variance_intra, mean_distance_intra_class, variance_inter
 
     def compute_ratio_batch(self, batch_z_struct, labels_batch, nb_class, other_ratio=False, seuil_min_image=2):
         """
@@ -370,7 +371,7 @@ class Custom_CNN_BK(nn.Module, ABC):
 
         ratio_variance_mean = torch.mean(ratio)
 
-        return ratio_variance_mean, torch.mean(torch.mean(variance_intra_class, axis=1))
+        return ratio_variance_mean, torch.mean(variance_intra_class_mean_components), torch.mean(variance_inter_class)
 
     def compute_var_distance_class(self, batch_z_struct, labels_batch, nb_class, seuil_min_image=2):
         """

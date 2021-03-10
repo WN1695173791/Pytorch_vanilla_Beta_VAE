@@ -336,15 +336,15 @@ def run_viz_expes(exp_name, net, is_ratio, is_distance_loss, loss_distance_mean,
     # print('score Test acc: {:.3f}% and Train set acc: {:.3f}%'.format(score_test, score_train))
 
     # compute features:
-    # compute_z_struct(net_trained, exp_name, loader, train_test=train_test, net_type=net_type)
-    # compute_z_struct_representation_noised(net, exp_name, train_test=train_test, nb_repeat=10, nb_class=nb_class,
-    #                                        net_type=net_type)
-    # get_z_struct_per_class(exp_name, train_test=train_test, nb_class=nb_class)
-    # get_average_z_struct_per_classes(exp_name=exp_name, train_test=train_test)
-    # get_prediction_per_classes(exp_name, train_test=train_test)
-    # get_prediction_noised_per_class(exp_name, train_test=train_test)
-    # compute_all_score_acc(exp_name, train_test=train_test)
-    # compute_mean_std_prediction(exp_name, train_test=train_test)
+    compute_z_struct(net_trained, exp_name, loader, train_test=train_test, net_type=net_type)
+    compute_z_struct_representation_noised(net, exp_name, train_test=train_test, nb_repeat=10, nb_class=nb_class,
+                                           net_type=net_type)
+    get_z_struct_per_class(exp_name, train_test=train_test, nb_class=nb_class)
+    get_average_z_struct_per_classes(exp_name=exp_name, train_test=train_test)
+    get_prediction_per_classes(exp_name, train_test=train_test)
+    get_prediction_noised_per_class(exp_name, train_test=train_test)
+    compute_all_score_acc(exp_name, train_test=train_test)
+    compute_mean_std_prediction(exp_name, train_test=train_test)
 
     # receptive_field = get_receptive_field(net_trained, img_size, net_type=net_type)
 
@@ -375,8 +375,8 @@ def run_viz_expes(exp_name, net, is_ratio, is_distance_loss, loss_distance_mean,
 
     # _ = distance_matrix(net_trained, exp_name, train_test=train_test, plot_fig=True)
 
-    # plot_resume(net_trained, exp_name, is_ratio, is_distance_loss, loss_distance_mean, loader, train_loader,
-    #             device, cat=cat, train_test=train_test, path_scores=path_scores)
+    plot_resume(net_trained, exp_name, is_ratio, is_distance_loss, loss_distance_mean, loader, train_loader,
+                device, cat=cat, train_test=train_test, path_scores=path_scores)
 
     return
 
@@ -390,8 +390,8 @@ def visualize_regions_of_interest(exp_name, net, net_type=None):
 
     net_trained.eval()
 
-    visualize_regions(exp_name, net_trained, len_img_h, len_img_w, loader, plot_activation_value=True,
-                      plot_correlation_regions=True, percentage=1)
+    # visualize_regions(exp_name, net_trained, len_img_h, len_img_w, loader, plot_activation_value=True,
+    #                   plot_correlation_regions=True, percentage=1)
 
     random_index = False  # select one random index just for see a random regions for a random image
     choice_label = True  # Choose a specific label to see images of this label
@@ -405,20 +405,20 @@ def visualize_regions_of_interest(exp_name, net, net_type=None):
     plot_activation_value = True  # if we plot diagram with bar to see activation value in order to see the most active
     plot_correlation_regions = True  # if plot correlation between region extracted to see redundancy
 
-    viz_region_im(exp_name,
-                  net_trained,
-                  random_index=random_index,
-                  choice_label=choice_label,
-                  label=label,
-                  nb_im=nb_im,
-                  best_region=best_region,
-                  worst_regions=worst_regions,
-                  any_label=any_label,
-                  average_result=average_result,
-                  plot_activation_value=plot_activation_value,
-                  plot_correlation_regions=plot_correlation_regions,
-                  same_im=same_im,
-                  net_type=net_type)
+    # viz_region_im(exp_name,
+    #               net_trained,
+    #               random_index=random_index,
+    #               choice_label=choice_label,
+    #               label=label,
+    #               nb_im=nb_im,
+    #               best_region=best_region,
+    #               worst_regions=worst_regions,
+    #               any_label=any_label,
+    #               average_result=average_result,
+    #               plot_activation_value=plot_activation_value,
+    #               plot_correlation_regions=plot_correlation_regions,
+    #               same_im=same_im,
+    #               net_type=net_type)
     return
 
 
@@ -1162,17 +1162,25 @@ if __name__ == '__main__':
                                              'mnist_classif_ratio_distance_intra_class_max_mean_target_50_num_1_5_3_balanced_dataset',
                                              'mnist_classif_ratio_distance_intra_class_max_mean_target_50_num_1_6_4_balanced_dataset',]
 
+    list_selected_exp_search_target_vlaue = ['mnist_classif_new_baseline_1']
+
     parameters_mnist_classifier_BK_ratio = "parameters_combinations/mnist_classifier_ratio.txt"
 
     run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
                                                    2,
-                                                   16,
-                                                   list_selected_exp,
+                                                   2,
+                                                   list_selected_exp_search_target_vlaue,
                                                    is_ratio=True)
 
     # run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
-    #                                                18,
-    #                                                27,
+    #                                                5,
+    #                                                19,
+    #                                                list_selected_exp,
+    #                                                is_ratio=True)
+
+    # run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
+    #                                                21,
+    #                                                30,
     #                                                list_selected_exp_search_target_vlaue,
     #                                                is_ratio=True)
 
