@@ -374,8 +374,8 @@ def run_viz_expes(exp_name, net, is_ratio, is_distance_loss, loss_distance_mean,
 
     # _ = distance_matrix(net_trained, exp_name, train_test=train_test, plot_fig=True)
 
-    plot_resume(net_trained, exp_name, is_ratio, is_distance_loss, loss_distance_mean, cat=cat,
-                train_test=train_test, path_scores=path_scores)
+    # plot_resume(net_trained, exp_name, is_ratio, is_distance_loss, loss_distance_mean, cat=cat,
+    #             train_test=train_test, path_scores=path_scores)
 
     return
 
@@ -386,8 +386,8 @@ def visualize_regions_of_interest(exp_name, net, net_type=None):
     net_trained, _, nb_epochs = get_checkpoints(net, path, exp_name)
     loader = test_loader
 
-    # visualize_regions(exp_name, net_trained, len_img_h, len_img_w, loader, plot_activation_value=True,
-    #                   plot_correlation_regions=True, percentage=1)
+    visualize_regions(exp_name, net_trained, len_img_h, len_img_w, loader, plot_activation_value=True,
+                      plot_correlation_regions=True, percentage=1)
 
     random_index = False  # select one random index just for see a random regions for a random image
     choice_label = True  # Choose a specific label to see images of this label
@@ -534,23 +534,24 @@ def selection(net, exp_name):
 # parameters:
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 batch = torch.load('data/batch_mnist.pt')
-batch_size = 32  # 10000
+batch_size = 10000  # 10000 to run regions visualization (we must have only one so all data set test in one batch)
 _, test_loader = get_mnist_dataset(batch_size=batch_size)
 
-path_image_save = 'regions_of_interest/images/images.npy'
-if not os.path.exists(path_image_save):
-    _, test_loader = get_mnist_dataset(batch_size=batch_size)
-    dataiter_test = iter(test_loader)
-    images_test, label_test = dataiter_test.next()
+if batch_size == 10000:
+    path_image_save = 'regions_of_interest/images/images.npy'
+    if not os.path.exists(path_image_save):
+        _, test_loader = get_mnist_dataset(batch_size=batch_size)
+        dataiter_test = iter(test_loader)
+        images_test, label_test = dataiter_test.next()
 
-    print('load mnist dataset test with images shape: {}', images_test.shape)
+        print('load mnist dataset test with images shape: {}', images_test.shape)
 
-    np.save('regions_of_interest/labels/labels.npy', label_test)
-    np.save(path_image_save, images_test)
-else:
-    # load labels:
-    label_test = np.load('regions_of_interest/labels/labels.npy', allow_pickle=True)
-    images_test = torch.tensor(np.load('regions_of_interest/images/images.npy', allow_pickle=True))
+        np.save('regions_of_interest/labels/labels.npy', label_test)
+        np.save(path_image_save, images_test)
+    else:
+        # load labels:
+        label_test = np.load('regions_of_interest/labels/labels.npy', allow_pickle=True)
+        images_test = torch.tensor(np.load('regions_of_interest/images/images.npy', allow_pickle=True))
 
 # parameters:
 img_size = (1, 32, 32)
@@ -1131,7 +1132,7 @@ if __name__ == '__main__':
                                                             'mnist_classif_ratio_distance_intra_class_max_mean_2_6_5_balanced_dataset',
                                                             'mnist_classif_ratio_distance_intra_class_max_mean_2_6_6_balanced_dataset']
 
-    list_selected_exp = ['mnist_classif_ratio_distance_intra_class_max_mean_2_4_3_balanced_dataset',
+    list_selected_exp = [# 'mnist_classif_ratio_distance_intra_class_max_mean_2_4_3_balanced_dataset']
                          'mnist_classif_ratio_distance_intra_class_max_mean_2_6_3_balanced_dataset',
                          'mnist_classif_ratio_distance_intra_class_max_mean_2_3_4_balanced_dataset',
                          'mnist_classif_ratio_distance_intra_class_max_mean_1_4_5',
