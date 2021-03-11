@@ -539,7 +539,7 @@ class SolverClassifier(object):
                     # else:
                     #     ratio = ratio * self.lambda_ratio_reg
                     loss_ratio = (self.lambda_var_intra * variance_intra) - (self.lambda_var_inter * variance_inter)
-                    print(loss_ratio)
+                    # print(loss_ratio)
                     loss += loss_ratio
 
                 if self.loss_min_distance_cl:
