@@ -22,7 +22,7 @@ from visualizer_CNN import get_layer_zstruct_num
 import numpy as np
 from dataset.sampler import BalancedBatchSampler
 import random
-from models.add_decoder import Add_decoder
+from models.Encoder_decoder import Encoder_decoder
 import torch.nn as nn
 
 EPS = 1e-12
@@ -213,21 +213,6 @@ class SolverClassifier(object):
         # decoder:
         self.use_decoder = args.use_decoder
 
-        # dataset parameters:
-        if args.dataset.lower() == 'mnist':
-            self.img_size = (1, 32, 32)
-            self.nb_class = 10
-            self.nc = 1
-        else:
-            raise NotImplementedError
-        self.nb_pixels = self.img_size[1] * self.img_size[2]
-
-        # initialize the early_stopping object
-        # early stopping patience; how long to wait after last time validation loss improved.
-        if self.use_early_stopping:
-            self.patience = 10
-            self.early_stopping = EarlyStopping(patience=self.patience, verbose=True)
-
         # logger
         formatter = logging.Formatter('%(asc_time)s %(level_name)s - %(funcName)s: %(message)s', "%H:%M:%S")
         logger = logging.getLogger(__name__)
@@ -238,6 +223,15 @@ class SolverClassifier(object):
         logger.addHandler(stream)
 
         # load dataset:
+        # dataset parameters:
+        if args.dataset.lower() == 'mnist':
+            self.img_size = (1, 32, 32)
+            self.nb_class = 10
+            self.nc = 1
+        else:
+            raise NotImplementedError
+        self.nb_pixels = self.img_size[1] * self.img_size[2]
+
         if args.dataset == 'mnist' and not self.dataset_balanced:
             self.valid_loader = 0
             self.train_loader, self.test_loader = get_mnist_dataset(batch_size=self.batch_size)
@@ -255,7 +249,6 @@ class SolverClassifier(object):
                                                             batch_size=self.batch_size)
 
             _, self.test_loader = get_mnist_dataset(batch_size=self.batch_size)
-
             print('Balanced samples per class')
 
         self.train_loader_size = len(self.train_loader.dataset)
@@ -299,7 +292,7 @@ class SolverClassifier(object):
                                            self.valid_loader_size,
                                            self.test_loader_size))
 
-        # create model
+        # create model:
         if self.is_default_model:
             self.net_type = 'default'
             net = DefaultCNN(add_z_struct_bottleneck=self.add_z_struct_bottleneck,
@@ -335,17 +328,9 @@ class SolverClassifier(object):
                              two_conv_layer=self.two_conv_layer,
                              three_conv_layer=self.three_conv_layer)
 
-        # print model characteristics:
-        print(net)
-        num_params = sum(p.numel() for p in net.parameters() if p.requires_grad)
-        print('The number of parameters of model is', num_params)
-
         # get layer num to extract z_struct:
         self.z_struct_out = True
         self.z_struct_layer_num = get_layer_zstruct_num(net, self.net_type)
-
-        # config gpu:
-        self.net, self.device = gpu_config(net)
 
         if self.contrastive_loss:
             # DML Losses
@@ -384,13 +369,11 @@ class SolverClassifier(object):
                 else:
                     self.criterion = losses.NPairLoss()
 
-        if 'parallel' in str(type(self.net)):
-            self.net = self.net.module
+        # experience name:
+        if self.use_decoder:
+            self.checkpoint_dir = os.path.join(args.ckpt_dir, args.exp_name.split('_decoder')[0])
         else:
-            self.net = self.net
-
-        # experience name
-        self.checkpoint_dir = os.path.join(args.ckpt_dir, args.exp_name)
+            self.checkpoint_dir = os.path.join(args.ckpt_dir, args.exp_name)
 
         if not os.path.exists(self.checkpoint_dir):
             os.makedirs(self.checkpoint_dir, exist_ok=True)
@@ -399,63 +382,92 @@ class SolverClassifier(object):
         if not os.path.exists(self.checkpoint_dir_scores):
             os.makedirs(self.checkpoint_dir_scores, exist_ok=True)
 
-        # checkpoint save
+        # checkpoint save:
         self.file_path_checkpoint_scores = os.path.join(self.checkpoint_dir_scores, 'last')
         if not os.path.exists(self.file_path_checkpoint_scores):
-            self.checkpoint_scores = {'iter': [],
-                                      'epochs': [],
-                                      'train_score': [],
-                                      'train_loss_class': [],
-                                      'test_score': [],
-                                      'test_loss_class': [],
-                                      'ratio_train_loss': [],
-                                      'ratio_test_loss': [],
-                                      'var_distance_classes_train': [],
-                                      'var_distance_classes_test': [],
-                                      'mean_distance_intra_class_train': [],
-                                      'mean_distance_intra_class_test': [],
-                                      'total_loss_train': [],
-                                      'total_loss_test': [],
-                                      'MSE_decoder': []}
+            if self.use_decoder:
+                self.checkpoint_scores = {'iter': [],
+                                          'epochs': [],
+                                          'MSE_decoder': []}
+            else:
+                self.checkpoint_scores = {'iter': [],
+                                          'epochs': [],
+                                          'train_score': [],
+                                          'train_loss_class': [],
+                                          'test_score': [],
+                                          'test_loss_class': [],
+                                          'ratio_train_loss': [],
+                                          'ratio_test_loss': [],
+                                          'var_distance_classes_train': [],
+                                          'var_distance_classes_test': [],
+                                          'mean_distance_intra_class_train': [],
+                                          'mean_distance_intra_class_test': [],
+                                          'total_loss_train': [],
+                                          'total_loss_test': []}
             with open(self.file_path_checkpoint_scores, mode='wb+') as f:
                 torch.save(self.checkpoint_scores, f)
+
+        # config gpu:
+        self.net, self.device = gpu_config(net)
 
         # load checkpoints:
         self.load_checkpoint_scores('last')
         self.load_checkpoint('last')
 
-        # add decoder to pre trained model:
+        # create encoder + decoder decoder:
         if self.use_decoder:
-            print('We add decoder:')
-            pre_trained_model = nn.Sequential(*[self.net.model[i] for i in range(self.z_struct_layer_num+1)])
+            pre_trained_model = nn.Sequential(*[self.net.model[i] for i in range(self.z_struct_layer_num + 1)])
             input_test = torch.rand(*self.img_size).to(self.device)
             before_GMP_shape = self.net.net[:self.z_struct_layer_num-2](input_test.unsqueeze(0)).data.shape
-            print(pre_trained_model)
-            net_decoder = Add_decoder(z_struct_size=self.z_struct_size,
-                                      big_kernel_size=self.big_kernel_size,
-                                      stride_size=self.stride_size,
-                                      classif_layer_size=self.classif_layer_size,
-                                      add_classification_layer=self.add_classification_layer,
-                                      hidden_filters_1=self.hidden_filters_1,
-                                      hidden_filters_2=self.hidden_filters_2,
-                                      hidden_filters_3=self.hidden_filters_3,
-                                      BK_in_first_layer=self.BK_in_first_layer,
-                                      two_conv_layer=self.two_conv_layer,
-                                      three_conv_layer=self.three_conv_layer,
-                                      BK_in_second_layer=self.BK_in_second_layer,
-                                      BK_in_third_layer=self.BK_in_third_layer,
-                                      Binary_z=self.binary_z,
-                                      add_linear_after_GMP=self.add_linear_after_GMP,
-                                      pre_trained_model=pre_trained_model,
-                                      before_GMP_shape=before_GMP_shape)
 
-            # print model characteristics:
-            print(net_decoder)
-            num_params = sum(p.numel() for p in net_decoder.parameters() if p.requires_grad)
-            print('With decoder: the new number of parameters is', num_params)
+            net = Encoder_decoder(z_struct_size=self.z_struct_size,
+                                  big_kernel_size=self.big_kernel_size,
+                                  stride_size=self.stride_size,
+                                  classif_layer_size=self.classif_layer_size,
+                                  add_classification_layer=self.add_classification_layer,
+                                  hidden_filters_1=self.hidden_filters_1,
+                                  hidden_filters_2=self.hidden_filters_2,
+                                  hidden_filters_3=self.hidden_filters_3,
+                                  BK_in_first_layer=self.BK_in_first_layer,
+                                  two_conv_layer=self.two_conv_layer,
+                                  three_conv_layer=self.three_conv_layer,
+                                  BK_in_second_layer=self.BK_in_second_layer,
+                                  BK_in_third_layer=self.BK_in_third_layer,
+                                  Binary_z=self.binary_z,
+                                  add_linear_after_GMP=self.add_linear_after_GMP,
+                                  before_GMP_shape=before_GMP_shape)
 
-            # config gpu:
-            self.net, self.device = gpu_config(net_decoder)
+            self.checkpoint_dir = os.path.join(args.ckpt_dir, args.exp_name)
+            file_path = os.path.join(self.checkpoint_dir, 'last')
+            if os.path.isfile(file_path):
+                print("encoder decoder already exist load it !")
+                # config gpu:
+                self.net, self.device = gpu_config(net)
+                self.load_checkpoint('last')
+
+                print(type(self.net))
+            else:
+                print("encoder decoder doesn't exist load encoder weighs !")
+                # checkpoint save:
+                if not os.path.exists(self.checkpoint_dir):
+                    os.makedirs(self.checkpoint_dir, exist_ok=True)
+                pretrained_dict = pre_trained_model.state_dict()
+                model_dict = net.encoder.state_dict()
+                pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict}
+                model_dict.update(pretrained_dict)
+                net.encoder.load_state_dict(model_dict)
+                self.net, self.device = gpu_config(net)
+
+        # print model characteristics:
+        print(self.net)
+        num_params = sum(p.numel() for p in self.net.parameters() if p.requires_grad)
+        print('The number of parameters of model is', num_params)
+
+        # for data parallel
+        if 'parallel' in str(type(self.net)):
+            self.net = self.net.module
+        else:
+            self.net = self.net
 
         # TODO: add optimizer choice
         self.optimizer = optimizer.Adam(self.net.parameters(), lr=self.lr)
@@ -476,10 +488,15 @@ class SolverClassifier(object):
                                                min_lr=1e-6,
                                                verbose=True)
 
+        # initialize the early_stopping object
+        # early stopping patience; how long to wait after last time validation loss improved.
+        if self.use_early_stopping:
+            self.patience = 10
+            self.early_stopping = EarlyStopping(patience=self.patience, verbose=True)
+
         # other parameters for train:
         self.global_iter = 0
         self.epochs = 0
-
         if self.contrastive_loss:
             self.pbar = tqdm(enumerate(self.train_loader))
         self.losses_list = []
@@ -578,27 +595,33 @@ class SolverClassifier(object):
 
                 # freeze encoder if train decoder:
                 if self.use_decoder:
-                    for params in self.net.pre_trained_model.parameters():
+                    for params in self.net.encoder.parameters():
                         params.requires_grad = False
 
+                    # passing only those parameters that explicitly requires grad
+                    self.optimizer = optimizer.Adam(filter(lambda p: p.requires_grad, self.net.parameters()),
+                                                    lr=self.lr)
+
                 # print('-----------::::::::::::Before:::::::-----------------:')
-                # print(self.net.pre_trained_model[0].weight[0][0])
-                # print(self.net.decoder[0].weight[0])
+                # print(self.net.encoder[3].weight[0][0])
+                # print(self.net.decoder[3].weight[0])
+                # print(list(self.net.parameters())[0])
 
                 # backpropagation loss
                 self.optimizer.zero_grad()
                 loss.backward()
+                # print('loss', loss)
                 self.optimizer.step()
 
                 # unfreeze encoder if train decoder:
                 if self.use_decoder:
-                    for params in self.net.pre_trained_model.parameters():
+                    for params in self.net.encoder.parameters():
                         params.requires_grad = True
+                    self.optimizer.add_param_group({'params': self.net.encoder.parameters()})
 
                 # print('-----------::::::::::::After:::::::-----------------:')
-                # print(self.net.pre_trained_model[0].weight[0][0])
-                # print(self.net.decoder[0].weight[0])
-
+                # print(self.net.encoder[3].weight[0][0])
+                # print(self.net.decoder[3].weight[0])
 
                 if self.contrastive_loss:
                     torch.nn.utils.clip_grad_value_(self.net.parameters(), 10)
