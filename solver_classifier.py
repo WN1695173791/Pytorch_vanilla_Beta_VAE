@@ -428,7 +428,7 @@ class SolverClassifier(object):
         if self.use_decoder:
             print('We add decoder:')
             pre_trained_model = nn.Sequential(*[self.net.model[i] for i in range(self.z_struct_layer_num+1)])
-            input_test = torch.rand(*self.img_size)
+            input_test = torch.rand(*self.img_size).to(self.device)
             before_GMP_shape = self.net.net[:self.z_struct_layer_num-2](input_test.unsqueeze(0)).data.shape
             print(pre_trained_model)
             net_decoder = Add_decoder(z_struct_size=self.z_struct_size,
@@ -503,7 +503,7 @@ class SolverClassifier(object):
                 print_bar.update(1)
 
                 data = data.to(self.device)  # Variable(data.to(self.device))
-                labels = labels.to(self.device)  # Variable(labels.to(self.device))
+                labels = labels   # Variable(labels.to(self.device))
 
                 if self.ratio_reg or self.loss_distance_mean:
                     if len(labels) < self.batch_size:
