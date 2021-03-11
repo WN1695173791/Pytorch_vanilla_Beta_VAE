@@ -223,6 +223,9 @@ if __name__ == "__main__":
     parser.add_argument('--lambda_distance_mean', default=1, type=float, help="lambda_distance_mean")
     parser.add_argument('--value_target_distance_mean', default=1, type=float, help="lambda_distance_mean")
 
+    # use decoder:
+    parser.add_argument('--use_decoder', default=False, type=str2bool, help='train decoder with encoder freeze')
+
     args = parser.parse_args()
 
     print(args)

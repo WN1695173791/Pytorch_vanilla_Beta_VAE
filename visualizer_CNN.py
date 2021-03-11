@@ -75,10 +75,10 @@ def compute_z_struct(net_trained, exp_name, loader, train_test=None, net_type=No
             if torch.cuda.is_available():
                 input_data = input_data.cuda()
 
-            _, z_struct, _, _, _, _ = net_trained(input_data,
+            _, z_struct, _, _, _, _, _ = net_trained(input_data,
                                                z_struct_out=True,
                                                z_struct_layer_num=z_struct_layer_num)
-            pred, _, _, _, _, _ = net_trained(input_data)
+            pred, _, _, _, _, _, _ = net_trained(input_data)
 
             # train mode:
             net_trained.eval()
@@ -148,7 +148,7 @@ def compute_z_struct_representation_noised(net, exp_name, train_test=None, nb_re
                 z_struct_representation_noised[:, i] = std_z_struct_max[i] * torch.randn(
                     (z_struct_representation.shape[0])) \
                                                        + mean_z_struct[i]
-                pred, _, _, _, _, _ = net(z_struct_representation_noised, z_struct_prediction=True,
+                pred, _, _, _, _, _, _ = net(z_struct_representation_noised, z_struct_prediction=True,
                                        z_struct_layer_num=z_struct_layer_num)
                 prediction.append(pred.detach().numpy())
             prediction_noised.append(np.mean(np.array(prediction), axis=0))
@@ -1711,6 +1711,10 @@ def plot_resume(net, exp_name, is_ratio, is_distance_loss, loss_distance_mean, l
 
     # distance matrix: _________________________________________________________________________________________________
     distance_inter_class = distance_matrix(net, exp_name, train_test=train_test, plot_fig=False)
+    distance_classes_triu = np.triu(distance_inter_class, k=1)
+    distance_classes_triu_wt_diag = distance_classes_triu[np.nonzero(distance_classes_triu)]
+    distances_mean = np.sum(distance_classes_triu_wt_diag**2) / len(distance_classes_triu_wt_diag)
+    std_distances = distances_mean / np.square(np.mean(distance_classes_triu_wt_diag))
 
     axs[0, 1].set(title='Distances matrix between mean classes')
     img = axs[0, 1].matshow(distance_inter_class, cmap=plt.cm.rainbow)
@@ -1724,16 +1728,16 @@ def plot_resume(net, exp_name, is_ratio, is_distance_loss, loss_distance_mean, l
 
     text_titles = ["Ratio: ",
                    "Variance intra class mean: ",
-                   # "Variance intra class mean per class: ",
                    "Variance inter class mean: ",
+                   "Std distances between classes: ",
                    "Accuracy train: ",
                    "Accuracy test: "]
     n_lines = len(text_titles)
 
     text_values = [ratio_variance_mean,
                    variance_intra_class_mean,
-                   # variance_intra_class_mean_per_class,
                    variance_inter_class_mean,
+                   std_distances,
                    score_train,
                    score_test]
 

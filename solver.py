@@ -643,7 +643,7 @@ class Solver(object):
                     self.L_Total += l1_regularization
 
 
-                        # plot parameters:
+                # plot parameters:
                 # print('-----------::::::::::::Before:::::::-----------------:', self.i)
                 # print(self.net.encoder[0].weight[0][0])
                 # print(self.net.decoder[0].weight[0])

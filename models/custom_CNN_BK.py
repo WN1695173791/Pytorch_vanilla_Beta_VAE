@@ -330,7 +330,8 @@ class Custom_CNN_BK(nn.Module, ABC):
                                                                                                       nb_class,
                                                                                                       seuil_min_image=seuil_min_image)
 
-        return prediction, z_struct, ratio, variance_distance_iter_class, variance_intra, mean_distance_intra_class, variance_inter
+        return prediction, z_struct, ratio, variance_distance_iter_class, variance_intra, mean_distance_intra_class, \
+               variance_inter
 
     def compute_ratio_batch(self, batch_z_struct, labels_batch, nb_class, other_ratio=False, seuil_min_image=2):
         """

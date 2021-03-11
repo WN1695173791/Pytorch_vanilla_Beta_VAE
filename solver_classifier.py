@@ -22,6 +22,8 @@ from visualizer_CNN import get_layer_zstruct_num
 import numpy as np
 from dataset.sampler import BalancedBatchSampler
 import random
+from models.add_decoder import Add_decoder
+import torch.nn as nn
 
 EPS = 1e-12
 worker_id = 0
@@ -208,29 +210,8 @@ class SolverClassifier(object):
         self.loss_distance_mean = args.loss_distance_mean
         self.dataset_balanced = args.dataset_balanced
         self.value_target_distance_mean = args.value_target_distance_mean
-
-        # wandb parameters:
-        self.use_wandb = False
-        if self.use_wandb:
-            import wandb
-
-        # Directory for Log
-        if self.use_wandb:
-            LOG_DIR = args.LOG_DIR + '/logs_{}/{}_{}_embedding_{}_alpha{}_mrg{}_{}_lr{}_batch{}{}'.format(self.dataset,
-                                                                                                          self.model,
-                                                                                                          self.loss,
-                                                                                                          self.sz_embedding,
-                                                                                                          self.alpha,
-                                                                                                          self.mrg,
-                                                                                                          self.optimizer,
-                                                                                                          self.lr,
-                                                                                                          self.batch_size,
-                                                                                                          self.remark)
-
-        # Wandb Initialization
-        if self.use_wandb:
-            wandb.init(project=args.dataset + '_ProxyAnchor', notes=LOG_DIR)
-            wandb.config.update(args)
+        # decoder:
+        self.use_decoder = args.use_decoder
 
         # dataset parameters:
         if args.dataset.lower() == 'mnist':
@@ -366,25 +347,6 @@ class SolverClassifier(object):
         # config gpu:
         self.net, self.device = gpu_config(net)
 
-        # TODO: add optimizer choice
-        self.optimizer = optimizer.Adam(self.net.parameters(), lr=self.lr)
-
-        # Decays the learning rate of each parameter group by gamma every step_size epochs.
-        # Notice that such decay can happen simultaneously with other changes to the learning rate
-        # from outside this scheduler. When last_epoch=-1, sets initial lr as lr.
-        """
-        mode:  lr will be reduced when the quantity monitored has stopped decreasing.
-        factor: Factor by which the learning rate will be reduced.
-        patience: Number of epochs with no improvement after which learning rate will be reduced.
-        """
-        if self.use_scheduler:
-            self.scheduler = ReduceLROnPlateau(self.optimizer,
-                                               mode='min',
-                                               factor=0.2,
-                                               patience=10,
-                                               min_lr=1e-6,
-                                               verbose=True)
-
         if self.contrastive_loss:
             # DML Losses
             if self.loss == 'Proxy_Anchor':
@@ -429,6 +391,7 @@ class SolverClassifier(object):
 
         # experience name
         self.checkpoint_dir = os.path.join(args.ckpt_dir, args.exp_name)
+
         if not os.path.exists(self.checkpoint_dir):
             os.makedirs(self.checkpoint_dir, exist_ok=True)
 
@@ -452,13 +415,66 @@ class SolverClassifier(object):
                                       'mean_distance_intra_class_train': [],
                                       'mean_distance_intra_class_test': [],
                                       'total_loss_train': [],
-                                      'total_loss_test': []}
+                                      'total_loss_test': [],
+                                      'MSE_decoder': []}
             with open(self.file_path_checkpoint_scores, mode='wb+') as f:
                 torch.save(self.checkpoint_scores, f)
 
         # load checkpoints:
         self.load_checkpoint_scores('last')
         self.load_checkpoint('last')
+
+        # add decoder to pre trained model:
+        if self.use_decoder:
+            print('We add decoder:')
+            pre_trained_model = nn.Sequential(*[self.net.model[i] for i in range(self.z_struct_layer_num+1)])
+            input_test = torch.rand(*self.img_size)
+            before_GMP_shape = self.net.net[:self.z_struct_layer_num-2](input_test.unsqueeze(0)).data.shape
+            print(pre_trained_model)
+            net_decoder = Add_decoder(z_struct_size=self.z_struct_size,
+                                      big_kernel_size=self.big_kernel_size,
+                                      stride_size=self.stride_size,
+                                      classif_layer_size=self.classif_layer_size,
+                                      add_classification_layer=self.add_classification_layer,
+                                      hidden_filters_1=self.hidden_filters_1,
+                                      hidden_filters_2=self.hidden_filters_2,
+                                      hidden_filters_3=self.hidden_filters_3,
+                                      BK_in_first_layer=self.BK_in_first_layer,
+                                      two_conv_layer=self.two_conv_layer,
+                                      three_conv_layer=self.three_conv_layer,
+                                      BK_in_second_layer=self.BK_in_second_layer,
+                                      BK_in_third_layer=self.BK_in_third_layer,
+                                      Binary_z=self.binary_z,
+                                      add_linear_after_GMP=self.add_linear_after_GMP,
+                                      pre_trained_model=pre_trained_model,
+                                      before_GMP_shape=before_GMP_shape)
+
+            # print model characteristics:
+            print(net_decoder)
+            num_params = sum(p.numel() for p in net_decoder.parameters() if p.requires_grad)
+            print('With decoder: the new number of parameters is', num_params)
+
+            # config gpu:
+            self.net, self.device = gpu_config(net_decoder)
+
+        # TODO: add optimizer choice
+        self.optimizer = optimizer.Adam(self.net.parameters(), lr=self.lr)
+
+        # Decays the learning rate of each parameter group by gamma every step_size epochs.
+        # Notice that such decay can happen simultaneously with other changes to the learning rate
+        # from outside this scheduler. When last_epoch=-1, sets initial lr as lr.
+        """
+        mode:  lr will be reduced when the quantity monitored has stopped decreasing.
+        factor: Factor by which the learning rate will be reduced.
+        patience: Number of epochs with no improvement after which learning rate will be reduced.
+        """
+        if self.use_scheduler:
+            self.scheduler = ReduceLROnPlateau(self.optimizer,
+                                               mode='min',
+                                               factor=0.2,
+                                               patience=7,
+                                               min_lr=1e-6,
+                                               verbose=True)
 
         # other parameters for train:
         self.global_iter = 0
@@ -501,76 +517,88 @@ class SolverClassifier(object):
                 # for i in range(self.nb_class):
                 #     print(len(labels[labels == i]))
 
-                prediction, embedding, ratio, \
-                variance_distance_iter_class, \
-                variance_intra, mean_distance_intra_class, \
-                variance_inter = self.net(data,
-                                          labels=labels,
-                                          nb_class=self.nb_class,
-                                          use_ratio=self.ratio_reg,
-                                          z_struct_out=self.z_struct_out,
-                                          z_struct_layer_num=self.z_struct_layer_num,
-                                          other_ratio=self.other_ratio,
-                                          loss_min_distance_cl=self.loss_min_distance_cl)
+                if self.use_decoder:
+                    x_recons, z_struct = self.net(data)
+                    self.mse_loss = F.mse_loss(x_recons, data)
+                    loss = self.mse_loss
+                else:
+                    self.mse_loss = 0
+                    prediction, embedding, ratio, \
+                    variance_distance_iter_class, \
+                    variance_intra, mean_distance_intra_class, \
+                    variance_inter = self.net(data,
+                                              labels=labels,
+                                              nb_class=self.nb_class,
+                                              use_ratio=self.ratio_reg,
+                                              z_struct_out=self.z_struct_out,
+                                              z_struct_layer_num=self.z_struct_layer_num,
+                                              other_ratio=self.other_ratio,
+                                              loss_min_distance_cl=self.loss_min_distance_cl)
 
-                loss = 0
-                # compute losses:
-                if not self.without_acc:
-                    # averaged over each loss element in the batch
-                    Classification_loss = F.nll_loss(prediction, labels)
-                    Classification_loss = Classification_loss * self.lambda_classification
-                    loss += Classification_loss
+                    loss = 0
+                    # compute losses:
+                    if not self.without_acc:
+                        # averaged over each loss element in the batch
+                        Classification_loss = F.nll_loss(prediction, labels)
+                        Classification_loss = Classification_loss * self.lambda_classification
+                        loss += Classification_loss
 
-                if self.intra_class_variance_loss:
-                    intra_class_loss = variance_intra * self.lambda_intra_class_var
-                    loss += intra_class_loss
+                    if self.intra_class_variance_loss:
+                        intra_class_loss = variance_intra * self.lambda_intra_class_var
+                        loss += intra_class_loss
 
-                if self.contrastive_loss:
-                    # loss take embedding, not prediction
-                    embedding = embedding.squeeze(axis=-1).squeeze(axis=-1)
-                    contrastive_loss = self.criterion(embedding, labels)
-                    contrastive_loss = contrastive_loss * self.lambda_contrastive_loss
-                    loss += contrastive_loss
+                    if self.contrastive_loss:
+                        # loss take embedding, not prediction
+                        embedding = embedding.squeeze(axis=-1).squeeze(axis=-1)
+                        contrastive_loss = self.criterion(embedding, labels)
+                        contrastive_loss = contrastive_loss * self.lambda_contrastive_loss
+                        loss += contrastive_loss
 
-                if self.ratio_reg:
-                    # ratio loss:
-                    # if self.other_ratio:
-                    #     ratio = -(ratio * self.lambda_ratio_reg)
-                    # else:
-                    #     ratio = ratio * self.lambda_ratio_reg
-                    loss_ratio = (self.lambda_var_intra * variance_intra) - (self.lambda_var_inter * variance_inter)
-                    # print(loss_ratio)
-                    loss += loss_ratio
+                    if self.ratio_reg:
+                        # ratio loss:
+                        # if self.other_ratio:
+                        #     ratio = -(ratio * self.lambda_ratio_reg)
+                        # else:
+                        #     ratio = ratio * self.lambda_ratio_reg
+                        loss_ratio = (self.lambda_var_intra * variance_intra) - (self.lambda_var_inter * variance_inter)
+                        # print(loss_ratio)
+                        loss += loss_ratio
 
-                if self.loss_min_distance_cl:
-                    loss_distance_cl = variance_distance_iter_class * self.lambda_var_distance
-                    loss += loss_distance_cl
+                    if self.loss_min_distance_cl:
+                        loss_distance_cl = variance_distance_iter_class * self.lambda_var_distance
+                        loss += loss_distance_cl
 
-                if self.loss_distance_mean:
-                    # to avoid distance mean be too hight we want distance closest to target_mean value
-                    target_mean = torch.tensor(self.value_target_distance_mean)
-                    target_mean = target_mean.to(self.device)
-                    loss_distance_mean = -(
-                        torch.abs(1 / (target_mean - mean_distance_intra_class + EPS))) * self.lambda_distance_mean
-                    loss += loss_distance_mean
+                    if self.loss_distance_mean:
+                        # to avoid distance mean be too hight we want distance closest to target_mean value
+                        target_mean = torch.tensor(self.value_target_distance_mean)
+                        target_mean = target_mean.to(self.device)
+                        loss_distance_mean = -(
+                            torch.abs(1 / (target_mean - mean_distance_intra_class + EPS))) * self.lambda_distance_mean
+                        loss += loss_distance_mean
+
+                # freeze encoder if train decoder:
+                if self.use_decoder:
+                    for params in self.net.pre_trained_model.parameters():
+                        params.requires_grad = False
+
+                # print('-----------::::::::::::Before:::::::-----------------:')
+                # print(self.net.pre_trained_model[0].weight[0][0])
+                # print(self.net.decoder[0].weight[0])
 
                 # backpropagation loss
                 self.optimizer.zero_grad()
                 loss.backward()
-
                 self.optimizer.step()
 
-                # print test debug _______________________________________
-                # print('gradient value', self.net.net[0].weight.grad)
-                # print('value parameters layer', self.net.net[0].weight)
-                # print(prediction[:10], labels[:10])
-                # print(embedding[0])
-                # print(variance_distance_iter_class, ratio)
-                # print(Classification_loss)
-                # print(prediction[0])
-                # print(loss)
-                # print(loss_distance_cl, loss)
-                # print test debug _______________________________________
+                # unfreeze encoder if train decoder:
+                if self.use_decoder:
+                    for params in self.net.pre_trained_model.parameters():
+                        params.requires_grad = True
+
+                # print('-----------::::::::::::After:::::::-----------------:')
+                # print(self.net.pre_trained_model[0].weight[0][0])
+                # print(self.net.decoder[0].weight[0])
+
 
                 if self.contrastive_loss:
                     torch.nn.utils.clip_grad_value_(self.net.parameters(), 10)
@@ -590,19 +618,20 @@ class SolverClassifier(object):
             self.save_checkpoint('last')
             self.net_mode(train=False)
 
-            self.scores, self.losses = compute_scores_and_loss(self.net,
-                                                               self.train_loader,
-                                                               self.test_loader,
-                                                               self.device,
-                                                               self.train_loader_size,
-                                                               self.test_loader_size,
-                                                               self.net_type,
-                                                               self.nb_class,
-                                                               self.ratio_reg,
-                                                               self.other_ratio,
-                                                               self.loss_min_distance_cl,
-                                                               self.z_struct_layer_num,
-                                                               self.loss_distance_mean)
+            if not self.use_decoder:
+                self.scores, self.losses = compute_scores_and_loss(self.net,
+                                                                   self.train_loader,
+                                                                   self.test_loader,
+                                                                   self.device,
+                                                                   self.train_loader_size,
+                                                                   self.test_loader_size,
+                                                                   self.net_type,
+                                                                   self.nb_class,
+                                                                   self.ratio_reg,
+                                                                   self.other_ratio,
+                                                                   self.loss_min_distance_cl,
+                                                                   self.z_struct_layer_num,
+                                                                   self.loss_distance_mean)
 
             self.save_checkpoint_scores_loss()
             self.net_mode(train=True)
@@ -610,34 +639,29 @@ class SolverClassifier(object):
             if self.contrastive_loss:
                 self.losses_list.append(np.mean(losses_per_epoch))
 
-            if self.use_wandb:
-                self.epochs = int(self.epochs)
-                if self.contrastive_loss:
-                    wandb.log({'contrastive loss': self.losses_list[-1]}, step=self.epochs)
-                wandb.log({'ratio': self.losses['ratio_test_loss']}, step=self.epochs)
-                wandb.log({'acc': self.scores['test']}, step=self.epochs)
-                wandb.log({'Total loss': self.total_loss}, step=self.epochs)
-
             # early_stopping needs the validation loss to check if it has decresed,
             # and if it has, it will make a checkpoint of the current model
             if self.use_early_stopping:
-                self.early_stopping(self.losses['total_loss_test'], self.net)
+                self.early_stopping(loss, self.net)
 
-            print_bar.write('[Save Checkpoint] epoch: [{:.1f}], Train score:{:.5f}, Test score:{:.5f}, '
-                            'train loss:{:.5f}, test loss:{:.5f}, ratio_train_loss:{:.5f},'
-                            'ratio_test_loss:{:.5f}, total_loss_train:{:.5f},'
-                            'total_loss_test:{:.5f}, var distance inter class train:{:.5f},'
-                            'var distance inter class test:{:.5f}'.format(self.epochs,
-                                                                          self.scores['train'],
-                                                                          self.scores['test'],
-                                                                          self.losses['train_class'],
-                                                                          self.losses['test_class'],
-                                                                          self.losses['ratio_train_loss'],
-                                                                          self.losses['ratio_test_loss'],
-                                                                          self.losses['total_loss_train'],
-                                                                          self.losses['total_loss_test'],
-                                                                          self.losses['var_distance_classes_train'],
-                                                                          self.losses['var_distance_classes_test']))
+            if self.use_decoder:
+                print_bar.write('[Save Checkpoint] epoch: [{:.1f}], Train MSE:{:.5f},'.format(self.epochs, self.mse_loss))
+            else:
+                print_bar.write('[Save Checkpoint] epoch: [{:.1f}], Train score:{:.5f}, Test score:{:.5f}, '
+                                'train loss:{:.5f}, test loss:{:.5f}, ratio_train_loss:{:.5f},'
+                                'ratio_test_loss:{:.5f}, total_loss_train:{:.5f},'
+                                'total_loss_test:{:.5f}, var distance inter class train:{:.5f},'
+                                'var distance inter class test:{:.5f}'.format(self.epochs,
+                                                                              self.scores['train'],
+                                                                              self.scores['test'],
+                                                                              self.losses['train_class'],
+                                                                              self.losses['test_class'],
+                                                                              self.losses['ratio_train_loss'],
+                                                                              self.losses['ratio_test_loss'],
+                                                                              self.losses['total_loss_train'],
+                                                                              self.losses['total_loss_test'],
+                                                                              self.losses['var_distance_classes_train'],
+                                                                              self.losses['var_distance_classes_test']))
 
             if self.use_early_stopping:
                 if self.early_stopping.early_stop:
@@ -663,22 +687,27 @@ class SolverClassifier(object):
         """
         save all sample_scores and loss values
         """
-        self.checkpoint_scores['iter'].append(self.global_iter)
-        self.checkpoint_scores['epochs'].append(self.epochs)
-        # sample_scores
-        self.checkpoint_scores['train_score'].append(self.scores['train'])
-        self.checkpoint_scores['test_score'].append(self.scores['test'])
-        # losses
-        self.checkpoint_scores['train_loss_class'].append(self.losses['train_class'])
-        self.checkpoint_scores['test_loss_class'].append(self.losses['test_class'])
-        self.checkpoint_scores['ratio_train_loss'].append(self.losses['ratio_train_loss'])
-        self.checkpoint_scores['ratio_test_loss'].append(self.losses['ratio_test_loss'])
-        self.checkpoint_scores['var_distance_classes_train'].append(self.losses['var_distance_classes_train'])
-        self.checkpoint_scores['var_distance_classes_test'].append(self.losses['var_distance_classes_test'])
-        self.checkpoint_scores['total_loss_train'].append(self.losses['total_loss_train'])
-        self.checkpoint_scores['total_loss_test'].append(self.losses['total_loss_test'])
-        self.checkpoint_scores['mean_distance_intra_class_train'].append(self.losses['mean_distance_intra_class_train'])
-        self.checkpoint_scores['mean_distance_intra_class_test'].append(self.losses['mean_distance_intra_class_test'])
+        if not self.use_decoder:
+            self.checkpoint_scores['iter'].append(self.global_iter)
+            self.checkpoint_scores['epochs'].append(self.epochs)
+            # sample_scores
+            self.checkpoint_scores['train_score'].append(self.scores['train'])
+            self.checkpoint_scores['test_score'].append(self.scores['test'])
+            # losses
+            self.checkpoint_scores['train_loss_class'].append(self.losses['train_class'])
+            self.checkpoint_scores['test_loss_class'].append(self.losses['test_class'])
+            self.checkpoint_scores['ratio_train_loss'].append(self.losses['ratio_train_loss'])
+            self.checkpoint_scores['ratio_test_loss'].append(self.losses['ratio_test_loss'])
+            self.checkpoint_scores['var_distance_classes_train'].append(self.losses['var_distance_classes_train'])
+            self.checkpoint_scores['var_distance_classes_test'].append(self.losses['var_distance_classes_test'])
+            self.checkpoint_scores['total_loss_train'].append(self.losses['total_loss_train'])
+            self.checkpoint_scores['total_loss_test'].append(self.losses['total_loss_test'])
+            self.checkpoint_scores['mean_distance_intra_class_train'].append(self.losses['mean_distance_intra_class_train'])
+            self.checkpoint_scores['mean_distance_intra_class_test'].append(self.losses['mean_distance_intra_class_test'])
+        else:
+            self.checkpoint_scores['iter'].append(self.global_iter)
+            self.checkpoint_scores['epochs'].append(self.epochs)
+            self.checkpoint_scores['MSE_decoder'].append(self.mse_loss)
 
         with open(self.file_path_checkpoint_scores, mode='wb+') as f:
             torch.save(self.checkpoint_scores, f)
