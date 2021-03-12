@@ -11,6 +11,11 @@ from visualizer import *
 from visualizer_CNN import *
 from viz.viz_regions import *
 from scores_classifier import compute_scores
+from models.Encoder_decoder import Encoder_decoder
+from visualizer_CNN import get_layer_zstruct_num
+from visualizer import viz_reconstruction
+from viz.visualize import Visualizer
+import torch.nn.functional as F
 
 
 # ___________________________________ begin extrraction parameters models ______________________________________________
@@ -160,6 +165,7 @@ def run_exp_extraction_and_visualization_custom_BK(path_parameter, line_begin, l
         args = arguments_2[key]
         batch_size = args[4]
         Binary_z = False
+        exp_name = args[-1][-1].split('\n')[0]
         if args[-3][0] == 'loss_distance_mean':
             if args[-3][1] == 'True':
                 loss_distance_mean = True
@@ -179,7 +185,6 @@ def run_exp_extraction_and_visualization_custom_BK(path_parameter, line_begin, l
                 IPC = args[35][0]
                 warm = args[36][0]
                 sz_embedding = args[37][0]
-                exp_name = args[38][-1].split('\n')[0]
                 add_linear_after_GMP = True
             elif args[30][0] == 'other_ratio':
                 if args[30][1] == 'True':
@@ -194,32 +199,23 @@ def run_exp_extraction_and_visualization_custom_BK(path_parameter, line_begin, l
                     lambda_var_distance = args[32][1]
                     intra_class_variance_loss = args[33][1]
                     lambda_intra_class_var = args[34][1]
-                    exp_name = args[-1][-1].split('\n')[0]
+
                     if args[-2][0] == 'binary_z':
                         if args[-2][1] == 'True':
                             Binary_z = True
                         elif args[-2][1] == 'False':
                             Binary_z = False
-                else:
-                    if args[30][0] == 'without_acc':
-                        exp_name = args[32][-1].split('\n')[0]
-                    else:
-                        exp_name = args[31][-1].split('\n')[0]
                 add_linear_after_GMP = True
             elif args[30][0] == 'add_linear_after_GMP':
                 if args[30][1] == 'True':
                     add_linear_after_GMP = True
                 elif args[30][1] == 'False':
                     add_linear_after_GMP = False
-                exp_name = args[31][-1].split('\n')[0]
             elif args[30][0] == 'without_acc':
-                exp_name = args[32][-1].split('\n')[0]
                 add_linear_after_GMP = True
             else:
-                exp_name = args[30][-1].split('\n')[0]
                 add_linear_after_GMP = True
         else:
-            exp_name = args[27][-1].split('\n')[0]
             ratio_reg = False
             add_linear_after_GMP = True
 
@@ -279,11 +275,34 @@ def run_exp_extraction_and_visualization_custom_BK(path_parameter, line_begin, l
                             BK_in_third_layer=BK_in_third_layer,
                             Binary_z=Binary_z,
                             add_linear_after_GMP=add_linear_after_GMP)
+        if is_decoder:
+            z_struct_layer_num = get_layer_zstruct_num(net)
+            input_test = torch.rand(*img_size).to(device)
+            before_GMP_shape = net.net[:z_struct_layer_num - 2](input_test.unsqueeze(0)).data.shape
+            net = Encoder_decoder(z_struct_size=z_struct_size,
+                                  big_kernel_size=big_kernel_size,
+                                  stride_size=stride_size,
+                                  classif_layer_size=classif_layer_size,
+                                  add_classification_layer=add_classification_layer,
+                                  hidden_filters_1=hidden_filters_1,
+                                  hidden_filters_2=hidden_filters_2,
+                                  hidden_filters_3=hidden_filters_3,
+                                  BK_in_first_layer=BK_in_first_layer,
+                                  two_conv_layer=two_conv_layer,
+                                  three_conv_layer=three_conv_layer,
+                                  BK_in_second_layer=BK_in_second_layer,
+                                  BK_in_third_layer=BK_in_third_layer,
+                                  Binary_z=Binary_z,
+                                  add_linear_after_GMP=add_linear_after_GMP,
+                                  before_GMP_shape=before_GMP_shape)
 
         if exp_name in list_model:
-            run_viz_expes(exp_name, net, is_ratio, loss_min_distance_cl, loss_distance_mean, net_type='Custom_CNN_BK',
-                          cat=cat, ratio_reg=ratio_reg)
-            visualize_regions_of_interest(exp_name, net, net_type='Custom_CNN_BK')
+            if is_decoder:
+                run_deocder(exp_name, net)
+            else:
+                run_viz_expes(exp_name, net, is_ratio, loss_min_distance_cl, loss_distance_mean, net_type='Custom_CNN_BK',
+                              cat=cat, ratio_reg=ratio_reg)
+                visualize_regions_of_interest(exp_name, net, net_type='Custom_CNN_BK')
 
         # save list models:
         # if z_struct_size == 5:
@@ -312,6 +331,71 @@ def run_score(exp_name, net):
     net_trained, _, nb_epochs = get_checkpoints(net, path, exp_name)
     # scores and losses:
     plot_scores_and_loss_CNN(net_trained, exp_name, path_scores, save=True)
+
+    return
+
+
+def build_compare_reconstruction(size, data, input_data, x_recon):
+    # reconstructions
+    num_images = int(size[0] * size[1] / 2)
+    if data.shape[1] == 3:
+        originals = input_data[:num_images].cpu()
+    else:
+        originals = input_data[:num_images].cpu()
+    reconstructions = x_recon.view(-1, *img_size)[:num_images].cpu()
+    # If there are fewer examples given than spaces available in grid,
+    # augment with blank images
+    num_examples = originals.size()[0]
+    if num_images > num_examples:
+        blank_images = torch.zeros((num_images - num_examples,) + originals.size()[1:])
+        originals = torch.cat([originals, blank_images])
+        reconstructions = torch.cat([reconstructions, blank_images])
+
+    # Concatenate images and reconstructions
+    comparison = torch.cat([originals, reconstructions])
+
+    return comparison
+
+
+def run_deocder(exp_name, net):
+
+    print(exp_name, 'run decoder')
+    path = 'checkpoints_CNN/'
+    path_scores = 'checkpoint_scores_CNN'
+    net_trained, _, nb_epochs = get_checkpoints(net, path, exp_name)
+    # print(net)
+    net_trained.eval()
+
+    train_test = 'test'
+    loader = test_loader
+    loader_size = len(loader.dataset)
+    size = (8, 8)
+
+    net.eval()
+    with torch.no_grad():
+        input_data = batch
+    if torch.cuda.is_available():
+        input_data = input_data.cuda()
+    x_recon, _ = net(input_data)
+
+    net.train()
+
+    recon_loss = F.mse_loss(x_recon, input_data).detach().numpy()
+    recon_loss_around = np.around(recon_loss * 100, 2)
+
+    comparison = build_compare_reconstruction(size, batch, input_data, x_recon)
+    reconstructions = make_grid(comparison.data, nrow=size[0])
+
+    # grid with originals data
+    recon_grid = reconstructions.permute(1, 2, 0)
+    fig, ax = plt.subplots(figsize=(10, 10), facecolor='w', edgecolor='k')
+    ax.set(title=('model: {}: reconstruction: MSE: {}'.format(exp_name, recon_loss_around)))
+
+    ax.imshow(recon_grid.numpy())
+    ax.axhline(y=size[0] // 2, linewidth=4, color='r')
+    plt.show()
+    if save:
+        fig.savefig("fig_results/reconstructions/fig_reconstructions_z_" + exp_name + ".png")
 
     return
 
@@ -1215,7 +1299,7 @@ if __name__ == '__main__':
                                     'mnist_classif_balanced_dataset_intra_inter_7_6',
                                     'mnist_classif_balanced_dataset_intra_inter_7_7']
 
-    lis_decoder = ['mnist_classif_ratio_distance_intra_class_max_mean_1_6_4_balanced_dataset_decoder']
+    lis_decoder = ['mnist_classif_ratio_distance_intra_class_max_mean_1_6_4_balanced_dataset_decoder_1']
 
     parameters_mnist_classifier_BK_ratio = "parameters_combinations/mnist_classifier_ratio.txt"
 

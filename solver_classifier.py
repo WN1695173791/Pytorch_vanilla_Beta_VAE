@@ -212,6 +212,7 @@ class SolverClassifier(object):
         self.value_target_distance_mean = args.value_target_distance_mean
         # decoder:
         self.use_decoder = args.use_decoder
+        self.test_all_learn = args.test_all_learn
 
         # logger
         formatter = logging.Formatter('%(asc_time)s %(level_name)s - %(funcName)s: %(message)s', "%H:%M:%S")
@@ -330,7 +331,7 @@ class SolverClassifier(object):
 
         # get layer num to extract z_struct:
         self.z_struct_out = True
-        self.z_struct_layer_num = get_layer_zstruct_num(net, self.net_type)
+        self.z_struct_layer_num = get_layer_zstruct_num(net)
 
         if self.contrastive_loss:
             # DML Losses
@@ -594,13 +595,13 @@ class SolverClassifier(object):
                         loss += loss_distance_mean
 
                 # freeze encoder if train decoder:
-                if self.use_decoder:
+                if self.use_decoder and not self.test_all_learn:
                     for params in self.net.encoder.parameters():
                         params.requires_grad = False
 
-                    # passing only those parameters that explicitly requires grad
-                    self.optimizer = optimizer.Adam(filter(lambda p: p.requires_grad, self.net.parameters()),
-                                                    lr=self.lr)
+                    # # passing only those parameters that explicitly requires grad
+                    # self.optimizer = optimizer.Adam(filter(lambda p: p.requires_grad, self.net.parameters()),
+                    #                                 lr=self.lr)
 
                 # print('-----------::::::::::::Before:::::::-----------------:')
                 # print(self.net.encoder[3].weight[0][0])
@@ -614,10 +615,10 @@ class SolverClassifier(object):
                 self.optimizer.step()
 
                 # unfreeze encoder if train decoder:
-                if self.use_decoder:
+                if self.use_decoder and not self.test_all_learn:
                     for params in self.net.encoder.parameters():
                         params.requires_grad = True
-                    self.optimizer.add_param_group({'params': self.net.encoder.parameters()})
+                    # self.optimizer.add_param_group({'params': self.net.encoder.parameters()})
 
                 # print('-----------::::::::::::After:::::::-----------------:')
                 # print(self.net.encoder[3].weight[0][0])

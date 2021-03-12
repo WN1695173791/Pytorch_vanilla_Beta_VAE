@@ -142,9 +142,8 @@ def get_checkpoints_scores(net, path_scores, expe_name):
            one_bit_rand_noised_std_pred_train, one_bit_rand_noised_std_pred_test
 
 
-def viz_reconstruction(net, nb_epochs, expe_name, batch, latent_spec, img_size, both_continue=True,
-                       both_discrete=False, is_partial_rand_class=False,
-                       partial_reconstruciton=False, is_E1=False, save=False):
+def viz_reconstruction(net, nb_epochs, expe_name, batch, latent_spec, img_size, both_continue=True, both_discrete=False,
+                       is_partial_rand_class=False, partial_reconstruciton=False, is_E1=False, save=False):
     viz = Viz(net, img_size, latent_spec)
     viz.save_images = False
 

@@ -27,12 +27,9 @@ def compute_scores_pred(prediction, labels):
     return float(scores)
 
 
-def get_layer_zstruct_num(net, net_type):
-    if net_type == 'Custom_CNN':
-        add_layer = 1
-    elif net_type == 'Custom_CNN_BK':
-        add_layer = 1
+def get_layer_zstruct_num(net):
 
+    add_layer = 1
     # get layer num for GMP:
     for name, m in net.named_modules():
         if type(m) == nn.AdaptiveMaxPool2d:
