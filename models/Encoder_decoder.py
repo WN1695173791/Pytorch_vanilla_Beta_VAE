@@ -130,7 +130,7 @@ class Encoder_decoder(nn.Module, ABC):
         self.decoder += [
             nn.ConvTranspose2d(self.hidden_filters_1, self.nc, self.kernel_size_1, stride=self.stride_size),
             # PrintLayer(),
-            nn.Sigmoid()
+            nn.Tanh()
         ]
         # --------------------------------------- end decoder -----------------------------------
 
