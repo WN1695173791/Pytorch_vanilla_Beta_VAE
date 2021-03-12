@@ -440,15 +440,15 @@ class SolverClassifier(object):
 
             self.checkpoint_dir = os.path.join(args.ckpt_dir, args.exp_name)
             file_path = os.path.join(self.checkpoint_dir, 'last')
+            self.checkpoint_dir_encoder = os.path.join(args.ckpt_dir, args.exp_name.split('_decoder')[0])
+            file_path_encoder = os.path.join(self.checkpoint_dir_encoder, 'last')
             if os.path.isfile(file_path):
                 print("encoder decoder already exist load it !")
                 # config gpu:
                 self.net, self.device = gpu_config(net)
                 self.load_checkpoint('last')
-
-                print(type(self.net))
-            else:
-                print("encoder decoder doesn't exist load encoder weighs !")
+            elif os.path.isfile(file_path_encoder):
+                print("decoder doesn't exist load encoder weighs !")
                 # checkpoint save:
                 if not os.path.exists(self.checkpoint_dir):
                     os.makedirs(self.checkpoint_dir, exist_ok=True)
@@ -457,6 +457,9 @@ class SolverClassifier(object):
                 pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict}
                 model_dict.update(pretrained_dict)
                 net.encoder.load_state_dict(model_dict)
+                self.net, self.device = gpu_config(net)
+            else:
+                print("encoder doesn't exist, create encoder and decoder")
                 self.net, self.device = gpu_config(net)
 
         # print model characteristics:
@@ -522,18 +525,6 @@ class SolverClassifier(object):
 
                 data = data.to(self.device)  # Variable(data.to(self.device))
                 labels = labels   # Variable(labels.to(self.device))
-
-                if self.ratio_reg or self.loss_distance_mean:
-                    if len(labels) < self.batch_size:
-                        # si on utilise la loss ratio ou variance distance:
-                        # selon la loss qu'on veut calculer si on a un batch size trop faible
-                        # il y aura trop d'exemple par class et la loss ne pourra pas etre caclulée et donc
-                        # l'execution va s'arréter avec une erreur
-                        continue
-
-                # print(labels)
-                # for i in range(self.nb_class):
-                #     print(len(labels[labels == i]))
 
                 if self.use_decoder:
                     x_recons, z_struct = self.net(data)
@@ -711,9 +702,9 @@ class SolverClassifier(object):
         """
         save all sample_scores and loss values
         """
+        self.checkpoint_scores['iter'].append(self.global_iter)
+        self.checkpoint_scores['epochs'].append(self.epochs)
         if not self.use_decoder:
-            self.checkpoint_scores['iter'].append(self.global_iter)
-            self.checkpoint_scores['epochs'].append(self.epochs)
             # sample_scores
             self.checkpoint_scores['train_score'].append(self.scores['train'])
             self.checkpoint_scores['test_score'].append(self.scores['test'])
@@ -729,8 +720,6 @@ class SolverClassifier(object):
             self.checkpoint_scores['mean_distance_intra_class_train'].append(self.losses['mean_distance_intra_class_train'])
             self.checkpoint_scores['mean_distance_intra_class_test'].append(self.losses['mean_distance_intra_class_test'])
         else:
-            self.checkpoint_scores['iter'].append(self.global_iter)
-            self.checkpoint_scores['epochs'].append(self.epochs)
             self.checkpoint_scores['MSE_decoder'].append(self.mse_loss)
 
         with open(self.file_path_checkpoint_scores, mode='wb+') as f:
