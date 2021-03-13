@@ -418,8 +418,8 @@ class SolverClassifier(object):
         # create encoder + decoder decoder:
         if self.use_decoder:
             pre_trained_model = nn.Sequential(*[self.net.model[i] for i in range(self.z_struct_layer_num + 1)])
-            input_test = torch.rand(*self.img_size).to(self.device)
-            before_GMP_shape = self.net.net[:self.z_struct_layer_num-2](input_test.unsqueeze(0)).data.shape
+            # input_test = torch.rand(*self.img_size).to(self.device)
+            # before_GMP_shape = self.net.net[:self.z_struct_layer_num-2](input_test.unsqueeze(0)).data.shape
 
             net = Encoder_decoder(z_struct_size=self.z_struct_size,
                                   big_kernel_size=self.big_kernel_size,
@@ -435,8 +435,7 @@ class SolverClassifier(object):
                                   BK_in_second_layer=self.BK_in_second_layer,
                                   BK_in_third_layer=self.BK_in_third_layer,
                                   Binary_z=self.binary_z,
-                                  add_linear_after_GMP=self.add_linear_after_GMP,
-                                  before_GMP_shape=before_GMP_shape)
+                                  add_linear_after_GMP=self.add_linear_after_GMP)
 
             self.checkpoint_dir = os.path.join(args.ckpt_dir, args.exp_name)
             file_path = os.path.join(self.checkpoint_dir, 'last')
@@ -458,6 +457,7 @@ class SolverClassifier(object):
                 model_dict.update(pretrained_dict)
                 net.encoder.load_state_dict(model_dict)
                 self.net, self.device = gpu_config(net)
+                print("Weighs loaded for encoder !")
             else:
                 print("encoder doesn't exist, create encoder and decoder")
                 self.net, self.device = gpu_config(net)

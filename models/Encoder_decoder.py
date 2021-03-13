@@ -22,12 +22,13 @@ class Encoder_decoder(nn.Module, ABC):
                  BK_in_third_layer=False,
                  Binary_z=False,
                  add_linear_after_GMP=True,
-                 before_GMP_shape=None):
+                 before_GMP_shape=None,
+                 other_architecture=False):
         """
         Class which defines model and forward pass.
         """
         super(Encoder_decoder, self).__init__()
-
+        self.other_architecture = other_architecture
         self.before_GMP_shape = before_GMP_shape
         self.add_linear_after_GMP = add_linear_after_GMP
         self.Binary_z = Binary_z
@@ -55,7 +56,10 @@ class Encoder_decoder(nn.Module, ABC):
         self.two_conv_layer = two_conv_layer
         self.three_conv_layer = three_conv_layer
 
-        self.reshape = (self.before_GMP_shape[-3], self.before_GMP_shape[-2], self.before_GMP_shape[-1])  # (32, 22, 22)
+        # decoder:
+        self.hidden_dim = 36
+        self.width_first_conv_decoder = int(np.sqrt(self.hidden_dim))
+        self.reshape = (1, self.width_first_conv_decoder, self.width_first_conv_decoder)  # (1, 7, 7)
 
         if self.BK_in_first_layer:
             self.kernel_size_1 = self.big_kernel_size
@@ -103,35 +107,26 @@ class Encoder_decoder(nn.Module, ABC):
 
         # -----------_________________ end Encoder____________________________________________------------
         # ----------- Define decoder: ------------
-        self.z_struct_size = self.hidden_filter_GMP
-        self.decoder = [
-            nn.Linear(self.z_struct_size, np.product(self.reshape)),
-            nn.ReLU(True),
-            View((-1, *self.reshape)),  # batch, 22, 22, z_struct_size
-        ]
-        if self.three_conv_layer:
-            self.hidden_filter_GMP = self.hidden_filters_3
-            numChannels = self.hidden_filters_3
-            self.decoder += [
-                nn.ConvTranspose2d(self.hidden_filters_3, self.hidden_filters_2, self.kernel_size_3,
-                                   stride=self.stride_size),
+        if not self.other_architecture:
+            self.z_struct_size = self.hidden_filter_GMP
+            self.decoder = [
+                nn.Linear(self.z_struct_size, self.hidden_dim),  # B, 36
                 nn.ReLU(True),
                 # PrintLayer(),
-            ]
-        if self.two_conv_layer:
-            self.hidden_filter_GMP = self.hidden_filters_2
-            numChannels = self.hidden_filters_2
-            self.decoder += [
-                nn.ConvTranspose2d(self.hidden_filters_2, self.hidden_filters_1, self.kernel_size_2,
-                                   stride=self.stride_size),
+                View((-1, *self.reshape)),  # B, 1, 6, 6
+                # PrintLayer(),
+                nn.ConvTranspose2d(1, 64, 4, stride=2),  # B, 64, 14, 14
+                nn.BatchNorm2d(64),
                 nn.ReLU(True),
                 # PrintLayer(),
+                nn.ConvTranspose2d(64, 32, 3, stride=2),  # B, 32, 29, 29
+                nn.BatchNorm2d(32),
+                nn.ReLU(True),
+                # PrintLayer(),
+                nn.ConvTranspose2d(32, 1, 4, stride=1),  # B, 1, 32, 32
+                # PrintLayer(),
+                nn.Sigmoid()
             ]
-        self.decoder += [
-            nn.ConvTranspose2d(self.hidden_filters_1, self.nc, self.kernel_size_1, stride=self.stride_size),
-            # PrintLayer(),
-            nn.Sigmoid()
-        ]
         # --------------------------------------- end decoder -----------------------------------
 
         # self.net = nn.Sequential(*self.encoder,
