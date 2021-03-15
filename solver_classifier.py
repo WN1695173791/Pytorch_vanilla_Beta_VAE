@@ -514,7 +514,7 @@ class SolverClassifier(object):
             self.scheduler = ReduceLROnPlateau(self.optimizer,
                                                mode='min',
                                                factor=0.2,
-                                               patience=7,
+                                               patience=5,
                                                min_lr=1e-6,
                                                verbose=True)
 

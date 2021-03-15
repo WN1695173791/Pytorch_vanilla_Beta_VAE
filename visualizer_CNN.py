@@ -1754,3 +1754,46 @@ def plot_resume(net, exp_name, is_ratio, is_distance_loss, loss_distance_mean, l
         fig.savefig(path_save)
 
     return
+
+
+def viz_deocder_multi_label(net, loader, nb_img=8, nb_class=10):
+    """
+    plot multi data for the same label for each line.
+    :param loader:
+    :param net:
+    :return:
+    """
+
+    # net_trained.eval()
+
+    loader_size = len(loader.dataset)
+    size = (8, 8)
+
+    batch = []
+    for data, label in loader:
+        batch_label = data[np.where()]
+
+    with torch.no_grad():
+        input_data = batch
+    if torch.cuda.is_available():
+        input_data = input_data.cuda()
+    x_recon, _ = net_trained(input_data)
+
+    # net_trained.train()
+
+    recon_loss = F.mse_loss(x_recon, input_data).detach().numpy()
+    recon_loss_around = np.around(recon_loss * 100, 2)
+
+    comparison = build_compare_reconstruction(size, batch, input_data, x_recon)
+    reconstructions = make_grid(comparison.data, nrow=size[0])
+
+    # grid with originals data
+    recon_grid = reconstructions.permute(1, 2, 0)
+    fig, ax = plt.subplots(figsize=(10, 10), facecolor='w', edgecolor='k')
+    ax.set(title=('model: {}: reconstruction: MSE: {}'.format(exp_name, recon_loss_around)))
+
+    ax.imshow(recon_grid.numpy())
+    ax.axhline(y=size[0] // 2, linewidth=4, color='r')
+    plt.show()
+    if save:
+        fig.savefig("fig_results/reconstructions/fig_reconstructions_z_" + exp_name + ".png")
