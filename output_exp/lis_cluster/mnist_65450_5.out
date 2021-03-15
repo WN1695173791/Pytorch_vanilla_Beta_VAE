@@ -1,0 +1,478 @@
+5
+--dataset mnist --model CNN --gpu_devices 0 1 --max_iter 50 --batch_size 256 --ckpt_dir checkpoints_CNN --ckpt_dir_scores checkpoint_scores_CNN --use_scheduler True --GMP True --lr 1e-3 --z_struct_size 20 --add_classification_layer True --classif_layer_size 30 --is_default_model False --is_custom_model False --is_custom_model_BK True --big_kernel_size 8 --two_conv_layer True --three_conv_layer False --BK_in_first_layer True --BK_in_second_layer False --BK_in_third_layer False --stride_size 1 --hidden_filters_layer1 32 --hidden_filters_layer2 32 --hidden_filters_layer3 32 --ratio_reg True --lambda_ratio_reg 1 --lambda_class 1 --other_ratio False --loss_min_distance_cl False --lambda_var_distance 1 --intra_class_variance_loss False --lambda_intra_class_var 1 --contrastive_loss False --lambda_contrastive_loss 1 --alpha 32 --loss Proxy_Anchor --optimizer adamw --mrg 0.1 --IPC False --warm 1 --sz_embedding 32 --dataset_balanced True --loss_distance_mean True --lambda_distance_mean 0.01 --value_target_distance_mean 10 --lambda_var_intra 10 --lambda_var_inter 0.0001 --exp_name mnist_classif_balanced_dataset_intra_inter_1_6_3
+Namespace(BK_in_first_layer=True, BK_in_second_layer=False, BK_in_third_layer=False, BN=False, C_max=25, C_stop_iter=100000.0, E1_AE=False, E1_VAE=False, E1_conv=False, E1_dense=False, E1_second_conv=False, E1_second_conv_adapt=False, GMP=True, IPC=False, L1_norm_act=False, L1_norm_weights=False, L3_without_random=False, LOG_DIR='logs', adapt_lr=False, add_classification_layer=True, add_linear_after_GMP=True, add_z_struct_bottleneck=False, alpha=32.0, batch_size=256, beta=1, beta1=0.9, beta2=0.999, big_kernel=False, big_kernel_size=[8], binary_z=False, ckpt_dir='checkpoints_CNN', ckpt_dir_scores='checkpoint_scores_CNN', classif_layer_size=30, contrastive_loss=False, cuda=True, dataset='mnist', dataset_balanced=True, display_step=10000, dset_dir='data', exp_name='mnist_classif_balanced_dataset_intra_inter_1_6_3', freeze_Encoder=True, gamma=1000, gpu_devices=[0, 1], hidden_filters_layer1=32, hidden_filters_layer2=32, hidden_filters_layer3=32, image_size=64, intra_class_variance_loss=False, is_C=True, is_E1=False, is_binary_structural_latent=False, is_custom_model=False, is_custom_model_BK=True, is_default_model=False, is_noise_stats=False, is_partial_rand_class=False, is_perturbed_score=False, is_zvar_sim_loss=False, just_train=False, kernel_size=4, lambda_Kl_struct=1, lambda_Kl_var=1, lambda_L1=0.01, lambda_VAE=1, lambda_class=1.0, lambda_contrastive_loss=1.0, lambda_distance_mean=0.01, lambda_intra_class_var=1.0, lambda_partial_class=1, lambda_ratio_reg=1.0, lambda_recon_wt_rand=1, lambda_recons=1, lambda_var_distance=1.0, lambda_var_inter=0.0001, lambda_var_intra=10.0, lambda_zvar_sim=1, latent_spec_cont=None, latent_spec_cont_class=None, latent_spec_cont_var=None, latent_spec_disc=None, latent_spec_disc_class=None, latent_spec_disc_var=None, log_level='info', loss='Proxy_Anchor', loss_distance_mean=True, loss_min_distance_cl=False, lr=0.001, max_iter=50.0, model='CNN', mrg=0.1, num_workers=2, old_weighted=False, optimizer='adamw', other_ratio=False, random_percentage=0.2, ratio_reg=True, remark='', save_step=10000, second_layer_C=False, seed=1, stride_size=1, sz_embedding=32, three_conv_layer=False, train=True, two_conv_layer=True, two_encoder=False, use_decoder=False, use_early_stopping=True, use_scheduler=True, value_target_distance_mean=10.0, warm=1, without_acc=False, z_struct_size=20, zeros_W_Classif=False, zvar_sim_change_zvar=False, zvar_sim_loss_for_all_model=False, zvar_sim_loss_only_for_encoder=False, zvar_sim_normal=False, zvar_sim_var_rand=False)
+CUDA Visible devices !
+Balanced samples per class
+use 1 gpu who named: Tesla K40c
+=> loaded sample_scores and losses
+=> no checkpoint found at 'checkpoints_CNN/mnist_classif_balanced_dataset_intra_inter_1_6_3/last'
+Custom_CNN_BK(
+  (net): Sequential(
+    (0): Conv2d(1, 32, kernel_size=(8, 8), stride=(1, 1))
+    (1): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (2): ReLU(inplace=True)
+    (3): Conv2d(32, 32, kernel_size=(4, 4), stride=(1, 1))
+    (4): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (5): ReLU(inplace=True)
+    (6): AdaptiveMaxPool2d(output_size=(1, 1))
+    (7): View()
+    (8): Linear(in_features=32, out_features=20, bias=True)
+    (9): BatchNorm1d(20, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (10): ReLU(inplace=True)
+    (11): Dropout(p=0.4, inplace=False)
+    (12): Linear(in_features=20, out_features=30, bias=True)
+    (13): BatchNorm1d(30, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (14): ReLU(inplace=True)
+    (15): Dropout(p=0.4, inplace=False)
+    (16): Linear(in_features=30, out_features=10, bias=True)
+    (17): Softmax(dim=None)
+  )
+)
+The number of parameters of model is 20324
+Ratio: In this batch for class 0, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 1, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 2, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 3, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 4, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 5, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 6, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 9, they are less images than 10. Don't use it to compute ratio!!!!
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_balanced_dataset_intra_inter_1_6_3/last' (iter 264, epoch 1.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_balanced_dataset_intra_inter_1_6_3/last' (iter 264, epoch 1.0)
+[Save Checkpoint] epoch: [1.0], Train score:80.77000, Test score:71.96000, train loss:-0.64501, test loss:-0.64954, ratio_train_loss:3.49428,ratio_test_loss:3.27935, total_loss_train:2.84928,total_loss_test:2.62980, var distance inter class train:0.00000,var distance inter class test:0.00000
+Ratio: In this batch for class 0, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 1, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 2, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 3, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 4, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 5, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 6, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 9, they are less images than 10. Don't use it to compute ratio!!!!
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_balanced_dataset_intra_inter_1_6_3/last' (iter 528, epoch 2.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_balanced_dataset_intra_inter_1_6_3/last' (iter 528, epoch 2.0)
+[Save Checkpoint] epoch: [2.0], Train score:97.39000, Test score:86.89000, train loss:-0.83100, test loss:-0.83478, ratio_train_loss:3.64086,ratio_test_loss:2.88161, total_loss_train:2.80986,total_loss_test:2.04683, var distance inter class train:0.00000,var distance inter class test:0.00000
+Ratio: In this batch for class 0, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 1, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 2, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 3, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 4, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 5, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 6, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 9, they are less images than 10. Don't use it to compute ratio!!!!
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_balanced_dataset_intra_inter_1_6_3/last' (iter 792, epoch 3.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_balanced_dataset_intra_inter_1_6_3/last' (iter 792, epoch 3.0)
+[Save Checkpoint] epoch: [3.0], Train score:103.19500, Test score:91.57000, train loss:-0.90247, test loss:-0.90282, ratio_train_loss:3.41485,ratio_test_loss:3.34082, total_loss_train:2.51238,total_loss_test:2.43801, var distance inter class train:0.00000,var distance inter class test:0.00000
+Ratio: In this batch for class 0, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 1, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 2, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 3, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 4, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 5, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 6, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 9, they are less images than 10. Don't use it to compute ratio!!!!
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_balanced_dataset_intra_inter_1_6_3/last' (iter 1056, epoch 4.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_balanced_dataset_intra_inter_1_6_3/last' (iter 1056, epoch 4.0)
+[Save Checkpoint] epoch: [4.0], Train score:106.32667, Test score:94.59000, train loss:-0.93885, test loss:-0.93865, ratio_train_loss:2.11535,ratio_test_loss:1.96387, total_loss_train:1.17650,total_loss_test:1.02522, var distance inter class train:0.00000,var distance inter class test:0.00000
+Ratio: In this batch for class 0, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 1, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 2, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 3, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 4, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 5, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 6, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 9, they are less images than 10. Don't use it to compute ratio!!!!
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_balanced_dataset_intra_inter_1_6_3/last' (iter 1320, epoch 5.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_balanced_dataset_intra_inter_1_6_3/last' (iter 1320, epoch 5.0)
+EarlyStopping counter: 1 out of 10
+[Save Checkpoint] epoch: [5.0], Train score:106.28167, Test score:94.47000, train loss:-0.93847, test loss:-0.93827, ratio_train_loss:2.45106,ratio_test_loss:2.32451, total_loss_train:1.51259,total_loss_test:1.38624, var distance inter class train:0.00000,var distance inter class test:0.00000
+Ratio: In this batch for class 0, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 1, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 2, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 3, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 4, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 5, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 6, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 9, they are less images than 10. Don't use it to compute ratio!!!!
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_balanced_dataset_intra_inter_1_6_3/last' (iter 1584, epoch 6.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_balanced_dataset_intra_inter_1_6_3/last' (iter 1584, epoch 6.0)
+EarlyStopping counter: 2 out of 10
+[Save Checkpoint] epoch: [6.0], Train score:105.10667, Test score:93.84000, train loss:-0.92873, test loss:-0.93307, ratio_train_loss:2.00972,ratio_test_loss:1.97805, total_loss_train:1.08099,total_loss_test:1.04498, var distance inter class train:0.00000,var distance inter class test:0.00000
+Ratio: In this batch for class 0, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 1, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 2, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 3, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 4, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 5, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 6, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 9, they are less images than 10. Don't use it to compute ratio!!!!
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_balanced_dataset_intra_inter_1_6_3/last' (iter 1848, epoch 7.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_balanced_dataset_intra_inter_1_6_3/last' (iter 1848, epoch 7.0)
+EarlyStopping counter: 3 out of 10
+[Save Checkpoint] epoch: [7.0], Train score:98.98167, Test score:88.30000, train loss:-0.87177, test loss:-0.87663, ratio_train_loss:2.36860,ratio_test_loss:2.58466, total_loss_train:1.49682,total_loss_test:1.70803, var distance inter class train:0.00000,var distance inter class test:0.00000
+Ratio: In this batch for class 0, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 1, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 2, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 3, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 4, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 5, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 6, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 9, they are less images than 10. Don't use it to compute ratio!!!!
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_balanced_dataset_intra_inter_1_6_3/last' (iter 2112, epoch 8.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_balanced_dataset_intra_inter_1_6_3/last' (iter 2112, epoch 8.0)
+EarlyStopping counter: 4 out of 10
+[Save Checkpoint] epoch: [8.0], Train score:107.19000, Test score:95.10000, train loss:-0.95024, test loss:-0.94895, ratio_train_loss:1.97739,ratio_test_loss:1.97855, total_loss_train:1.02715,total_loss_test:1.02960, var distance inter class train:0.00000,var distance inter class test:0.00000
+Ratio: In this batch for class 0, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 1, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 2, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 3, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 4, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 5, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 6, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 9, they are less images than 10. Don't use it to compute ratio!!!!
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_balanced_dataset_intra_inter_1_6_3/last' (iter 2376, epoch 9.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_balanced_dataset_intra_inter_1_6_3/last' (iter 2376, epoch 9.0)
+EarlyStopping counter: 5 out of 10
+[Save Checkpoint] epoch: [9.0], Train score:106.35833, Test score:94.41000, train loss:-0.94270, test loss:-0.94099, ratio_train_loss:2.06095,ratio_test_loss:2.02486, total_loss_train:1.11825,total_loss_test:1.08386, var distance inter class train:0.00000,var distance inter class test:0.00000
+Ratio: In this batch for class 0, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 1, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 2, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 3, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 4, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 5, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 6, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 9, they are less images than 10. Don't use it to compute ratio!!!!
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_balanced_dataset_intra_inter_1_6_3/last' (iter 2640, epoch 10.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_balanced_dataset_intra_inter_1_6_3/last' (iter 2640, epoch 10.0)
+EarlyStopping counter: 6 out of 10
+[Save Checkpoint] epoch: [10.0], Train score:108.03000, Test score:96.02000, train loss:-0.95868, test loss:-0.95884, ratio_train_loss:2.35588,ratio_test_loss:2.34582, total_loss_train:1.39720,total_loss_test:1.38698, var distance inter class train:0.00000,var distance inter class test:0.00000
+Ratio: In this batch for class 0, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 1, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 2, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 3, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 4, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 5, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 6, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 9, they are less images than 10. Don't use it to compute ratio!!!!
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_balanced_dataset_intra_inter_1_6_3/last' (iter 2904, epoch 11.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_balanced_dataset_intra_inter_1_6_3/last' (iter 2904, epoch 11.0)
+[Save Checkpoint] epoch: [11.0], Train score:108.07000, Test score:95.90000, train loss:-0.95918, test loss:-0.95753, ratio_train_loss:1.81865,ratio_test_loss:1.73060, total_loss_train:0.85947,total_loss_test:0.77307, var distance inter class train:0.00000,var distance inter class test:0.00000
+Ratio: In this batch for class 0, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 1, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 2, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 3, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 4, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 5, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 6, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 9, they are less images than 10. Don't use it to compute ratio!!!!
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_balanced_dataset_intra_inter_1_6_3/last' (iter 3168, epoch 12.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_balanced_dataset_intra_inter_1_6_3/last' (iter 3168, epoch 12.0)
+EarlyStopping counter: 1 out of 10
+[Save Checkpoint] epoch: [12.0], Train score:106.01833, Test score:94.26000, train loss:-0.94005, test loss:-0.94094, ratio_train_loss:1.95021,ratio_test_loss:1.95345, total_loss_train:1.01015,total_loss_test:1.01251, var distance inter class train:0.00000,var distance inter class test:0.00000
+Ratio: In this batch for class 0, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 1, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 2, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 3, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 4, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 5, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 6, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 9, they are less images than 10. Don't use it to compute ratio!!!!
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_balanced_dataset_intra_inter_1_6_3/last' (iter 3432, epoch 13.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_balanced_dataset_intra_inter_1_6_3/last' (iter 3432, epoch 13.0)
+EarlyStopping counter: 2 out of 10
+[Save Checkpoint] epoch: [13.0], Train score:107.11333, Test score:95.26000, train loss:-0.95076, test loss:-0.95147, ratio_train_loss:1.85799,ratio_test_loss:1.80503, total_loss_train:0.90723,total_loss_test:0.85356, var distance inter class train:0.00000,var distance inter class test:0.00000
+Ratio: In this batch for class 0, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 1, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 2, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 3, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 4, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 5, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 6, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 9, they are less images than 10. Don't use it to compute ratio!!!!
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_balanced_dataset_intra_inter_1_6_3/last' (iter 3696, epoch 14.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_balanced_dataset_intra_inter_1_6_3/last' (iter 3696, epoch 14.0)
+[Save Checkpoint] epoch: [14.0], Train score:108.22667, Test score:96.08000, train loss:-0.96196, test loss:-0.95974, ratio_train_loss:1.67466,ratio_test_loss:1.61154, total_loss_train:0.71269,total_loss_test:0.65180, var distance inter class train:0.00000,var distance inter class test:0.00000
+Ratio: In this batch for class 0, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 1, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 2, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 3, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 4, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 5, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 6, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 9, they are less images than 10. Don't use it to compute ratio!!!!
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_balanced_dataset_intra_inter_1_6_3/last' (iter 3960, epoch 15.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_balanced_dataset_intra_inter_1_6_3/last' (iter 3960, epoch 15.0)
+EarlyStopping counter: 1 out of 10
+[Save Checkpoint] epoch: [15.0], Train score:107.90833, Test score:95.92000, train loss:-0.95872, test loss:-0.95827, ratio_train_loss:1.46074,ratio_test_loss:1.39273, total_loss_train:0.50202,total_loss_test:0.43445, var distance inter class train:0.00000,var distance inter class test:0.00000
+Ratio: In this batch for class 0, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 1, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 2, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 3, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 4, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 5, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 6, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 9, they are less images than 10. Don't use it to compute ratio!!!!
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_balanced_dataset_intra_inter_1_6_3/last' (iter 4224, epoch 16.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_balanced_dataset_intra_inter_1_6_3/last' (iter 4224, epoch 16.0)
+EarlyStopping counter: 2 out of 10
+[Save Checkpoint] epoch: [16.0], Train score:108.67667, Test score:96.46000, train loss:-0.96520, test loss:-0.96403, ratio_train_loss:1.53008,ratio_test_loss:1.47288, total_loss_train:0.56488,total_loss_test:0.50885, var distance inter class train:0.00000,var distance inter class test:0.00000
+Ratio: In this batch for class 0, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 1, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 2, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 3, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 4, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 5, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 6, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 9, they are less images than 10. Don't use it to compute ratio!!!!
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_balanced_dataset_intra_inter_1_6_3/last' (iter 4488, epoch 17.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_balanced_dataset_intra_inter_1_6_3/last' (iter 4488, epoch 17.0)
+EarlyStopping counter: 3 out of 10
+[Save Checkpoint] epoch: [17.0], Train score:107.90500, Test score:95.66000, train loss:-0.95876, test loss:-0.95583, ratio_train_loss:1.64759,ratio_test_loss:1.66886, total_loss_train:0.68883,total_loss_test:0.71303, var distance inter class train:0.00000,var distance inter class test:0.00000
+Ratio: In this batch for class 0, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 1, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 2, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 3, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 4, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 5, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 6, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 9, they are less images than 10. Don't use it to compute ratio!!!!
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_balanced_dataset_intra_inter_1_6_3/last' (iter 4752, epoch 18.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_balanced_dataset_intra_inter_1_6_3/last' (iter 4752, epoch 18.0)
+EarlyStopping counter: 4 out of 10
+[Save Checkpoint] epoch: [18.0], Train score:108.67500, Test score:96.85000, train loss:-0.96607, test loss:-0.96802, ratio_train_loss:1.70221,ratio_test_loss:1.64886, total_loss_train:0.73614,total_loss_test:0.68084, var distance inter class train:0.00000,var distance inter class test:0.00000
+Ratio: In this batch for class 0, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 1, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 2, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 3, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 4, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 5, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 6, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 9, they are less images than 10. Don't use it to compute ratio!!!!
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_balanced_dataset_intra_inter_1_6_3/last' (iter 5016, epoch 19.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_balanced_dataset_intra_inter_1_6_3/last' (iter 5016, epoch 19.0)
+EarlyStopping counter: 5 out of 10
+[Save Checkpoint] epoch: [19.0], Train score:105.67167, Test score:93.47000, train loss:-0.93785, test loss:-0.93426, ratio_train_loss:1.45557,ratio_test_loss:1.40621, total_loss_train:0.51772,total_loss_test:0.47195, var distance inter class train:0.00000,var distance inter class test:0.00000
+Ratio: In this batch for class 0, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 1, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 2, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 3, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 4, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 5, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 6, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 9, they are less images than 10. Don't use it to compute ratio!!!!
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_balanced_dataset_intra_inter_1_6_3/last' (iter 5280, epoch 20.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_balanced_dataset_intra_inter_1_6_3/last' (iter 5280, epoch 20.0)
+EarlyStopping counter: 6 out of 10
+[Save Checkpoint] epoch: [20.0], Train score:109.06167, Test score:96.80000, train loss:-0.96942, test loss:-0.96748, ratio_train_loss:1.40559,ratio_test_loss:1.35430, total_loss_train:0.43617,total_loss_test:0.38682, var distance inter class train:0.00000,var distance inter class test:0.00000
+Ratio: In this batch for class 0, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 1, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 2, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 3, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 4, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 5, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 6, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 9, they are less images than 10. Don't use it to compute ratio!!!!
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_balanced_dataset_intra_inter_1_6_3/last' (iter 5544, epoch 21.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_balanced_dataset_intra_inter_1_6_3/last' (iter 5544, epoch 21.0)
+EarlyStopping counter: 7 out of 10
+[Save Checkpoint] epoch: [21.0], Train score:107.80833, Test score:95.70000, train loss:-0.95783, test loss:-0.95607, ratio_train_loss:1.32658,ratio_test_loss:1.29141, total_loss_train:0.36875,total_loss_test:0.33534, var distance inter class train:0.00000,var distance inter class test:0.00000
+Ratio: In this batch for class 0, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 1, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 2, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 3, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 4, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 5, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 6, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 9, they are less images than 10. Don't use it to compute ratio!!!!
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_balanced_dataset_intra_inter_1_6_3/last' (iter 5808, epoch 22.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_balanced_dataset_intra_inter_1_6_3/last' (iter 5808, epoch 22.0)
+[Save Checkpoint] epoch: [22.0], Train score:108.65667, Test score:96.45000, train loss:-0.96558, test loss:-0.96436, ratio_train_loss:1.40292,ratio_test_loss:1.34611, total_loss_train:0.43734,total_loss_test:0.38175, var distance inter class train:0.00000,var distance inter class test:0.00000
+Ratio: In this batch for class 0, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 1, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 2, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 3, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 4, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 5, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 6, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 9, they are less images than 10. Don't use it to compute ratio!!!!
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_balanced_dataset_intra_inter_1_6_3/last' (iter 6072, epoch 23.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_balanced_dataset_intra_inter_1_6_3/last' (iter 6072, epoch 23.0)
+EarlyStopping counter: 1 out of 10
+[Save Checkpoint] epoch: [23.0], Train score:107.23333, Test score:95.30000, train loss:-0.95300, test loss:-0.95273, ratio_train_loss:1.40021,ratio_test_loss:1.32555, total_loss_train:0.44722,total_loss_test:0.37282, var distance inter class train:0.00000,var distance inter class test:0.00000
+Ratio: In this batch for class 0, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 1, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 2, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 3, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 4, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 5, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 6, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 9, they are less images than 10. Don't use it to compute ratio!!!!
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_balanced_dataset_intra_inter_1_6_3/last' (iter 6336, epoch 24.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_balanced_dataset_intra_inter_1_6_3/last' (iter 6336, epoch 24.0)
+EarlyStopping counter: 2 out of 10
+[Save Checkpoint] epoch: [24.0], Train score:108.15500, Test score:95.78000, train loss:-0.96153, test loss:-0.95872, ratio_train_loss:1.31411,ratio_test_loss:1.25998, total_loss_train:0.35258,total_loss_test:0.30126, var distance inter class train:0.00000,var distance inter class test:0.00000
+Ratio: In this batch for class 0, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 1, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 2, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 3, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 4, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 5, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 6, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 9, they are less images than 10. Don't use it to compute ratio!!!!
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_balanced_dataset_intra_inter_1_6_3/last' (iter 6600, epoch 25.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_balanced_dataset_intra_inter_1_6_3/last' (iter 6600, epoch 25.0)
+EarlyStopping counter: 3 out of 10
+[Save Checkpoint] epoch: [25.0], Train score:109.18500, Test score:96.92000, train loss:-0.97105, test loss:-0.96911, ratio_train_loss:1.36542,ratio_test_loss:1.31587, total_loss_train:0.39437,total_loss_test:0.34676, var distance inter class train:0.00000,var distance inter class test:0.00000
+Ratio: In this batch for class 0, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 1, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 2, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 3, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 4, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 5, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 6, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 9, they are less images than 10. Don't use it to compute ratio!!!!
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_balanced_dataset_intra_inter_1_6_3/last' (iter 6864, epoch 26.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_balanced_dataset_intra_inter_1_6_3/last' (iter 6864, epoch 26.0)
+EarlyStopping counter: 4 out of 10
+[Save Checkpoint] epoch: [26.0], Train score:109.05333, Test score:96.93000, train loss:-0.96944, test loss:-0.96936, ratio_train_loss:1.29750,ratio_test_loss:1.24645, total_loss_train:0.32806,total_loss_test:0.27710, var distance inter class train:0.00000,var distance inter class test:0.00000
+Ratio: In this batch for class 0, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 1, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 2, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 3, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 4, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 5, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 6, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 9, they are less images than 10. Don't use it to compute ratio!!!!
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_balanced_dataset_intra_inter_1_6_3/last' (iter 7128, epoch 27.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_balanced_dataset_intra_inter_1_6_3/last' (iter 7128, epoch 27.0)
+[Save Checkpoint] epoch: [27.0], Train score:108.63000, Test score:96.61000, train loss:-0.96526, test loss:-0.96519, ratio_train_loss:1.30497,ratio_test_loss:1.26318, total_loss_train:0.33970,total_loss_test:0.29799, var distance inter class train:0.00000,var distance inter class test:0.00000
+Ratio: In this batch for class 0, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 1, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 2, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 3, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 4, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 5, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 6, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 9, they are less images than 10. Don't use it to compute ratio!!!!
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_balanced_dataset_intra_inter_1_6_3/last' (iter 7392, epoch 28.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_balanced_dataset_intra_inter_1_6_3/last' (iter 7392, epoch 28.0)
+EarlyStopping counter: 1 out of 10
+[Save Checkpoint] epoch: [28.0], Train score:106.15667, Test score:94.14000, train loss:-0.94346, test loss:-0.94143, ratio_train_loss:1.29251,ratio_test_loss:1.26331, total_loss_train:0.34905,total_loss_test:0.32188, var distance inter class train:0.00000,var distance inter class test:0.00000
+Ratio: In this batch for class 0, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 1, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 2, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 3, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 4, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 5, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 6, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 9, they are less images than 10. Don't use it to compute ratio!!!!
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_balanced_dataset_intra_inter_1_6_3/last' (iter 7656, epoch 29.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_balanced_dataset_intra_inter_1_6_3/last' (iter 7656, epoch 29.0)
+EarlyStopping counter: 2 out of 10
+[Save Checkpoint] epoch: [29.0], Train score:109.28000, Test score:96.97000, train loss:-0.97161, test loss:-0.96957, ratio_train_loss:1.31307,ratio_test_loss:1.28507, total_loss_train:0.34146,total_loss_test:0.31549, var distance inter class train:0.00000,var distance inter class test:0.00000
+Ratio: In this batch for class 0, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 1, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 2, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 3, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 4, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 5, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 6, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 9, they are less images than 10. Don't use it to compute ratio!!!!
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_balanced_dataset_intra_inter_1_6_3/last' (iter 7920, epoch 30.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_balanced_dataset_intra_inter_1_6_3/last' (iter 7920, epoch 30.0)
+[Save Checkpoint] epoch: [30.0], Train score:109.50167, Test score:97.07000, train loss:-0.97363, test loss:-0.97039, ratio_train_loss:1.29373,ratio_test_loss:1.26528, total_loss_train:0.32010,total_loss_test:0.29488, var distance inter class train:0.00000,var distance inter class test:0.00000
+Ratio: In this batch for class 0, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 1, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 2, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 3, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 4, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 5, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 6, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 9, they are less images than 10. Don't use it to compute ratio!!!!
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_balanced_dataset_intra_inter_1_6_3/last' (iter 8184, epoch 31.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_balanced_dataset_intra_inter_1_6_3/last' (iter 8184, epoch 31.0)
+EarlyStopping counter: 1 out of 10
+[Save Checkpoint] epoch: [31.0], Train score:108.99833, Test score:96.76000, train loss:-0.96931, test loss:-0.96756, ratio_train_loss:1.26311,ratio_test_loss:1.22301, total_loss_train:0.29380,total_loss_test:0.25545, var distance inter class train:0.00000,var distance inter class test:0.00000
+Ratio: In this batch for class 0, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 1, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 2, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 3, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 4, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 5, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 6, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 9, they are less images than 10. Don't use it to compute ratio!!!!
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_balanced_dataset_intra_inter_1_6_3/last' (iter 8448, epoch 32.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_balanced_dataset_intra_inter_1_6_3/last' (iter 8448, epoch 32.0)
+EarlyStopping counter: 2 out of 10
+[Save Checkpoint] epoch: [32.0], Train score:108.38500, Test score:96.43000, train loss:-0.96318, test loss:-0.96445, ratio_train_loss:1.34442,ratio_test_loss:1.30908, total_loss_train:0.38124,total_loss_test:0.34463, var distance inter class train:0.00000,var distance inter class test:0.00000
+Ratio: In this batch for class 0, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 1, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 2, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 3, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 4, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 5, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 6, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 9, they are less images than 10. Don't use it to compute ratio!!!!
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_balanced_dataset_intra_inter_1_6_3/last' (iter 8712, epoch 33.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_balanced_dataset_intra_inter_1_6_3/last' (iter 8712, epoch 33.0)
+EarlyStopping counter: 3 out of 10
+[Save Checkpoint] epoch: [33.0], Train score:107.71833, Test score:95.66000, train loss:-0.95720, test loss:-0.95684, ratio_train_loss:1.19392,ratio_test_loss:1.15836, total_loss_train:0.23672,total_loss_test:0.20152, var distance inter class train:0.00000,var distance inter class test:0.00000
+Ratio: In this batch for class 0, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 1, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 2, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 3, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 4, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 5, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 6, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 9, they are less images than 10. Don't use it to compute ratio!!!!
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_balanced_dataset_intra_inter_1_6_3/last' (iter 8976, epoch 34.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_balanced_dataset_intra_inter_1_6_3/last' (iter 8976, epoch 34.0)
+EarlyStopping counter: 4 out of 10
+[Save Checkpoint] epoch: [34.0], Train score:109.36833, Test score:97.14000, train loss:-0.97284, test loss:-0.97070, ratio_train_loss:1.19437,ratio_test_loss:1.16012, total_loss_train:0.22153,total_loss_test:0.18943, var distance inter class train:0.00000,var distance inter class test:0.00000
+Ratio: In this batch for class 0, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 1, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 2, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 3, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 4, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 5, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 6, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 9, they are less images than 10. Don't use it to compute ratio!!!!
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_balanced_dataset_intra_inter_1_6_3/last' (iter 9240, epoch 35.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_balanced_dataset_intra_inter_1_6_3/last' (iter 9240, epoch 35.0)
+EarlyStopping counter: 5 out of 10
+[Save Checkpoint] epoch: [35.0], Train score:104.69667, Test score:93.11000, train loss:-0.93040, test loss:-0.93032, ratio_train_loss:1.27070,ratio_test_loss:1.23522, total_loss_train:0.34030,total_loss_test:0.30490, var distance inter class train:0.00000,var distance inter class test:0.00000
+Ratio: In this batch for class 0, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 1, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 2, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 3, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 4, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 5, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 6, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 9, they are less images than 10. Don't use it to compute ratio!!!!
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_balanced_dataset_intra_inter_1_6_3/last' (iter 9504, epoch 36.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_balanced_dataset_intra_inter_1_6_3/last' (iter 9504, epoch 36.0)
+EarlyStopping counter: 6 out of 10
+[Save Checkpoint] epoch: [36.0], Train score:108.48333, Test score:96.35000, train loss:-0.96483, test loss:-0.96401, ratio_train_loss:1.32477,ratio_test_loss:1.28444, total_loss_train:0.35994,total_loss_test:0.32043, var distance inter class train:0.00000,var distance inter class test:0.00000
+Ratio: In this batch for class 0, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 1, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 2, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 3, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 4, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 5, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 6, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 9, they are less images than 10. Don't use it to compute ratio!!!!
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_balanced_dataset_intra_inter_1_6_3/last' (iter 9768, epoch 37.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_balanced_dataset_intra_inter_1_6_3/last' (iter 9768, epoch 37.0)
+EarlyStopping counter: 7 out of 10
+[Save Checkpoint] epoch: [37.0], Train score:109.65333, Test score:97.09000, train loss:-0.97546, test loss:-0.97094, ratio_train_loss:1.26867,ratio_test_loss:1.22986, total_loss_train:0.29321,total_loss_test:0.25892, var distance inter class train:0.00000,var distance inter class test:0.00000
+Ratio: In this batch for class 0, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 1, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 2, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 3, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 4, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 5, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 6, they are less images than 10. Don't use it to compute ratio!!!!
+Ratio: In this batch for class 9, they are less images than 10. Don't use it to compute ratio!!!!
+=> saved checkpoint 'checkpoints_CNN/mnist_classif_balanced_dataset_intra_inter_1_6_3/last' (iter 10032, epoch 38.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_classif_balanced_dataset_intra_inter_1_6_3/last' (iter 10032, epoch 38.0)
+EarlyStopping counter: 8 out of 10
+[Save Checkpoint] epoch: [38.0], Train score:107.11000, Test score:94.68000, train loss:-0.95202, test loss:-0.94694, ratio_train_loss:1.25295,ratio_test_loss:1.21947, total_loss_train:0.30092,total_loss_test:0.27253, var distance inter class train:0.00000,var distance inter class test:0.00000
