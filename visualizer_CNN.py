@@ -58,7 +58,7 @@ def compute_z_struct(net_trained, exp_name, loader, train_test=None, net_type=No
         return
     else:
         # get layer num for GMP:
-        z_struct_layer_num = get_layer_zstruct_num(net_trained, net_type)
+        z_struct_layer_num = get_layer_zstruct_num(net_trained)
 
         labels_list = []
         z_struct_representation = []
@@ -126,7 +126,7 @@ def compute_z_struct_representation_noised(net, exp_name, train_test=None, nb_re
         return
     else:
         # get layer num for GMP:
-        z_struct_layer_num = get_layer_zstruct_num(net, net_type)
+        z_struct_layer_num = get_layer_zstruct_num(net)
         z_struct_representation, label_list, _ = load_z_struct_representation(exp_name, train_test=train_test)
 
         z_struct_size = z_struct_representation.shape[-1]

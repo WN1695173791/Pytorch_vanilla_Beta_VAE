@@ -23,6 +23,7 @@ def psnr_metric(mse):
 
 def get_checkpoints(net, path, expe_name):
     file_path = os.path.join(path, expe_name, 'last')
+    # print(file_path)
     checkpoint = torch.load(file_path, map_location=torch.device(device))
     net.load_state_dict(checkpoint['net'])
     nb_iter = checkpoint['iter']

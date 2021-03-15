@@ -107,26 +107,25 @@ class Encoder_decoder(nn.Module, ABC):
 
         # -----------_________________ end Encoder____________________________________________------------
         # ----------- Define decoder: ------------
-        if not self.other_architecture:
-            self.z_struct_size = self.hidden_filter_GMP
-            self.decoder = [
-                nn.Linear(self.z_struct_size, self.hidden_dim),  # B, 36
-                nn.ReLU(True),
-                # PrintLayer(),
-                View((-1, *self.reshape)),  # B, 1, 6, 6
-                # PrintLayer(),
-                nn.ConvTranspose2d(1, 64, 4, stride=2),  # B, 64, 14, 14
-                nn.BatchNorm2d(64),
-                nn.ReLU(True),
-                # PrintLayer(),
-                nn.ConvTranspose2d(64, 32, 3, stride=2),  # B, 32, 29, 29
-                nn.BatchNorm2d(32),
-                nn.ReLU(True),
-                # PrintLayer(),
-                nn.ConvTranspose2d(32, 1, 4, stride=1),  # B, 1, 32, 32
-                # PrintLayer(),
-                nn.Sigmoid()
-            ]
+        self.z_struct_size = self.hidden_filter_GMP
+        self.decoder = [
+            nn.Linear(self.z_struct_size, self.hidden_dim),  # B, 36
+            nn.ReLU(True),
+            # PrintLayer(),
+            View((-1, *self.reshape)),  # B, 1, 6, 6
+            # PrintLayer(),
+            nn.ConvTranspose2d(1, 64, 4, stride=2),  # B, 64, 14, 14
+            nn.BatchNorm2d(64),
+            nn.ReLU(True),
+            # PrintLayer(),
+            nn.ConvTranspose2d(64, 32, 3, stride=2),  # B, 32, 29, 29
+            nn.BatchNorm2d(32),
+            nn.ReLU(True),
+            # PrintLayer(),
+            nn.ConvTranspose2d(32, 1, 4, stride=1),  # B, 1, 32, 32
+            # PrintLayer(),
+            nn.Sigmoid()
+        ]
         # --------------------------------------- end decoder -----------------------------------
 
         # self.net = nn.Sequential(*self.encoder,

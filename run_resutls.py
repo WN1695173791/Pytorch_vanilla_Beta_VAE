@@ -298,7 +298,7 @@ def run_exp_extraction_and_visualization_custom_BK(path_parameter, line_begin, l
 
         if exp_name in list_model:
             if is_decoder:
-                run_deocder(exp_name, net)
+                run_decoder(exp_name, net)
             else:
                 run_viz_expes(exp_name, net, is_ratio, loss_min_distance_cl, loss_distance_mean, net_type='Custom_CNN_BK',
                               cat=cat, ratio_reg=ratio_reg)
@@ -357,28 +357,28 @@ def build_compare_reconstruction(size, data, input_data, x_recon):
     return comparison
 
 
-def run_deocder(exp_name, net):
+def run_decoder(exp_name, net):
 
     print(exp_name, 'run decoder')
     path = 'checkpoints_CNN/'
     path_scores = 'checkpoint_scores_CNN'
-    net_trained, _, nb_epochs = get_checkpoints(net, path, exp_name)
+    net_trained, _, _ = get_checkpoints(net, path, exp_name)
     # print(net)
-    net_trained.eval()
+
+    # net_trained.eval()
 
     train_test = 'test'
     loader = test_loader
     loader_size = len(loader.dataset)
     size = (8, 8)
 
-    net.eval()
     with torch.no_grad():
         input_data = batch
     if torch.cuda.is_available():
         input_data = input_data.cuda()
-    x_recon, _ = net(input_data)
+    x_recon, _ = net_trained(input_data)
 
-    net.train()
+    # net_trained.train()
 
     recon_loss = F.mse_loss(x_recon, input_data).detach().numpy()
     recon_loss_around = np.around(recon_loss * 100, 2)
@@ -1249,73 +1249,31 @@ if __name__ == '__main__':
 
     list_selected_exp_search_target_vlaue = ['mnist_classif_new_baseline_1']
 
-    list_simple_loss_grid_search = ['mnist_classif_balanced_dataset_intra_inter_1_1',
-                                    'mnist_classif_balanced_dataset_intra_inter_1_2',
-                                    'mnist_classif_balanced_dataset_intra_inter_1_3',
-                                    'mnist_classif_balanced_dataset_intra_inter_1_4',
-                                    'mnist_classif_balanced_dataset_intra_inter_1_5',
-                                    'mnist_classif_balanced_dataset_intra_inter_1_6',
-                                    'mnist_classif_balanced_dataset_intra_inter_1_7',
-                                    'mnist_classif_balanced_dataset_intra_inter_2_1',
-                                    'mnist_classif_balanced_dataset_intra_inter_2_2',
-                                    'mnist_classif_balanced_dataset_intra_inter_2_3',
-                                    'mnist_classif_balanced_dataset_intra_inter_2_4',
-                                    'mnist_classif_balanced_dataset_intra_inter_2_5',
-                                    'mnist_classif_balanced_dataset_intra_inter_2_6',
-                                    'mnist_classif_balanced_dataset_intra_inter_2_7',
-                                    'mnist_classif_balanced_dataset_intra_inter_3_1',
-                                    'mnist_classif_balanced_dataset_intra_inter_3_2',
-                                    'mnist_classif_balanced_dataset_intra_inter_3_3',
-                                    'mnist_classif_balanced_dataset_intra_inter_3_4',
-                                    'mnist_classif_balanced_dataset_intra_inter_3_5',
-                                    'mnist_classif_balanced_dataset_intra_inter_3_6',
-                                    'mnist_classif_balanced_dataset_intra_inter_3_7',
-                                    'mnist_classif_balanced_dataset_intra_inter_4_1',
-                                    'mnist_classif_balanced_dataset_intra_inter_4_2',
-                                    'mnist_classif_balanced_dataset_intra_inter_4_3',
-                                    'mnist_classif_balanced_dataset_intra_inter_4_4',
-                                    'mnist_classif_balanced_dataset_intra_inter_4_5',
-                                    'mnist_classif_balanced_dataset_intra_inter_4_6',
-                                    'mnist_classif_balanced_dataset_intra_inter_4_7',
-                                    'mnist_classif_balanced_dataset_intra_inter_5_1',
-                                    'mnist_classif_balanced_dataset_intra_inter_5_2',
-                                    'mnist_classif_balanced_dataset_intra_inter_5_3',
-                                    'mnist_classif_balanced_dataset_intra_inter_5_4',
-                                    'mnist_classif_balanced_dataset_intra_inter_5_5',
-                                    'mnist_classif_balanced_dataset_intra_inter_5_6',
-                                    'mnist_classif_balanced_dataset_intra_inter_5_7',
-                                    'mnist_classif_balanced_dataset_intra_inter_6_1',
-                                    'mnist_classif_balanced_dataset_intra_inter_6_2',
-                                    'mnist_classif_balanced_dataset_intra_inter_6_3',
-                                    'mnist_classif_balanced_dataset_intra_inter_6_4',
-                                    'mnist_classif_balanced_dataset_intra_inter_6_5',
-                                    'mnist_classif_balanced_dataset_intra_inter_6_6',
-                                    'mnist_classif_balanced_dataset_intra_inter_6_7',
-                                    'mnist_classif_balanced_dataset_intra_inter_7_1',
-                                    'mnist_classif_balanced_dataset_intra_inter_7_2',
-                                    'mnist_classif_balanced_dataset_intra_inter_7_3',
-                                    'mnist_classif_balanced_dataset_intra_inter_7_4',
-                                    'mnist_classif_balanced_dataset_intra_inter_7_5',
-                                    'mnist_classif_balanced_dataset_intra_inter_7_6',
-                                    'mnist_classif_balanced_dataset_intra_inter_7_7']
+    list_simple_loss_grid_search = ['mnist_classif_balanced_dataset_intra_inter_0_1',
+                                    'mnist_classif_balanced_dataset_intra_inter_0_2',
+                                    'mnist_classif_balanced_dataset_intra_inter_0_3',
+                                    'mnist_classif_balanced_dataset_intra_inter_0_4',
+                                    'mnist_classif_balanced_dataset_intra_inter_0_5',
+                                    'mnist_classif_balanced_dataset_intra_inter_0_6',
+                                    'mnist_classif_balanced_dataset_intra_inter_0_7']
 
-    lis_decoder = ['mnist_classif_ratio_distance_intra_class_max_mean_1_6_4_balanced_dataset_decoder_1',
-                   'mnist_classif_ratio_distance_intra_class_max_mean_1_6_4_balanced_dataset_decoder_2*',
-                   'mnist_classif_ratio_distance_intra_class_max_mean_1_6_4_balanced_dataset_decoder_3',
-                   'mnist_classif_ratio_distance_intra_class_max_mean_1_6_4_balanced_dataset_decoder_4']
+    lis_decoder = [# 'mnist_classif_ratio_distance_intra_class_max_mean_1_6_4_balanced_dataset_decoder_1']
+                   'mnist_classif_ratio_distance_intra_class_max_mean_1_6_4_balanced_dataset_decoder_2*']
+                   # 'mnist_classif_ratio_distance_intra_class_max_mean_1_6_4_balanced_dataset_decoder_3',
+                   # 'mnist_classif_ratio_distance_intra_class_max_mean_1_6_4_balanced_dataset_decoder_4']
 
     parameters_mnist_classifier_BK_ratio = "parameters_combinations/mnist_classifier_ratio.txt"
 
     run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
-                                                   2,
-                                                   6,
+                                                   10,
+                                                   14,
                                                    lis_decoder,
                                                    is_ratio=False,
                                                    is_decoder=True)
 
     # run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
-    #                                                5,
-    #                                                53,
+    #                                                2,
+    #                                                8,
     #                                                list_simple_loss_grid_search,
     #                                                is_ratio=True)
 

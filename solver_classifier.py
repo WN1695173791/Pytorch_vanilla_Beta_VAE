@@ -25,8 +25,34 @@ import random
 from models.Encoder_decoder import Encoder_decoder
 import torch.nn as nn
 
+import matplotlib.pyplot as plt
+from visualizer import *
+
+
 EPS = 1e-12
 worker_id = 0
+
+
+def build_compare_reconstruction(size, data, input_data, x_recon):
+    # reconstructions
+    num_images = int(size[0] * size[1] / 2)
+    if data.shape[1] == 3:
+        originals = input_data[:num_images].cpu()
+    else:
+        originals = input_data[:num_images].cpu()
+    reconstructions = x_recon.view(-1, *(1, 32, 32))[:num_images].cpu()
+    # If there are fewer examples given than spaces available in grid,
+    # augment with blank images
+    num_examples = originals.size()[0]
+    if num_images > num_examples:
+        blank_images = torch.zeros((num_images - num_examples,) + originals.size()[1:])
+        originals = torch.cat([originals, blank_images])
+        reconstructions = torch.cat([reconstructions, blank_images])
+
+    # Concatenate images and reconstructions
+    comparison = torch.cat([originals, reconstructions])
+
+    return comparison
 
 
 def seed_all(seed):
