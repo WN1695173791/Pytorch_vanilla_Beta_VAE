@@ -524,7 +524,7 @@ class SolverClassifier(object):
                 print_bar.update(1)
 
                 data = data.to(self.device)  # Variable(data.to(self.device))
-                labels = labels   # Variable(labels.to(self.device))
+                labels = labels.to(self.device)    # Variable(labels.to(self.device))
 
                 if self.use_decoder:
                     x_recons, z_struct = self.net(data)
