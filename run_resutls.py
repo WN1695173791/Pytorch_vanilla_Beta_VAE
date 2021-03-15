@@ -1257,8 +1257,8 @@ if __name__ == '__main__':
                                     'mnist_classif_balanced_dataset_intra_inter_0_6',
                                     'mnist_classif_balanced_dataset_intra_inter_0_7']
 
-    lis_decoder = [# 'mnist_classif_ratio_distance_intra_class_max_mean_1_6_4_balanced_dataset_decoder_1']
-                   'mnist_classif_ratio_distance_intra_class_max_mean_1_6_4_balanced_dataset_decoder_2*']
+    lis_decoder = ['mnist_classif_ratio_distance_intra_class_max_mean_1_6_4_balanced_dataset_decoder_1']
+                   # 'mnist_classif_ratio_distance_intra_class_max_mean_1_6_4_balanced_dataset_decoder_2*']
                    # 'mnist_classif_ratio_distance_intra_class_max_mean_1_6_4_balanced_dataset_decoder_3',
                    # 'mnist_classif_ratio_distance_intra_class_max_mean_1_6_4_balanced_dataset_decoder_4']
 

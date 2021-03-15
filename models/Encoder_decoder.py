@@ -115,11 +115,11 @@ class Encoder_decoder(nn.Module, ABC):
             View((-1, *self.reshape)),  # B, 1, 6, 6
             # PrintLayer(),
             nn.ConvTranspose2d(1, 64, 4, stride=2),  # B, 64, 14, 14
-            nn.BatchNorm2d(64),
+            # nn.BatchNorm2d(64),
             nn.ReLU(True),
             # PrintLayer(),
             nn.ConvTranspose2d(64, 32, 3, stride=2),  # B, 32, 29, 29
-            nn.BatchNorm2d(32),
+            # nn.BatchNorm2d(32),
             nn.ReLU(True),
             # PrintLayer(),
             nn.ConvTranspose2d(32, 1, 4, stride=1),  # B, 1, 32, 32
