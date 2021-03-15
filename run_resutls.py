@@ -368,7 +368,7 @@ def run_decoder(exp_name, net, multi_label=True):
     loader = test_loader
 
     if multi_label:
-        viz_deocder_multi_label(net, loader, exp_name, nb_img=10, nb_class=nb_class, save=False)
+        viz_deocder_multi_label(net, loader, exp_name, nb_img=10, nb_class=nb_class, save=True)
     else:
         # net_trained.eval()
 
@@ -1254,13 +1254,11 @@ if __name__ == '__main__':
 
     list_selected_exp_search_target_vlaue = ['mnist_classif_new_baseline_1']
 
-    list_simple_loss_grid_search = ['mnist_classif_balanced_dataset_intra_inter_0_1',
-                                    'mnist_classif_balanced_dataset_intra_inter_0_2',
-                                    'mnist_classif_balanced_dataset_intra_inter_0_3',
-                                    # 'mnist_classif_balanced_dataset_intra_inter_0_4',
-                                    'mnist_classif_balanced_dataset_intra_inter_0_5',
-                                    'mnist_classif_balanced_dataset_intra_inter_0_6',
-                                    'mnist_classif_balanced_dataset_intra_inter_0_7']
+    list_simple_loss_grid_search = ['mnist_classif_balanced_dataset_intra_inter_1_6_0',
+                                    'mnist_classif_balanced_dataset_intra_inter_1_6_1',
+                                    'mnist_classif_balanced_dataset_intra_inter_1_6_2',
+                                    'mnist_classif_balanced_dataset_intra_inter_1_6_3',
+                                    'mnist_classif_balanced_dataset_intra_inter_1_6_4']
 
     lis_decoder = ['mnist_classif_ratio_distance_intra_class_max_mean_1_6_4_balanced_dataset_decoder_1']
 
@@ -1275,7 +1273,7 @@ if __name__ == '__main__':
 
     # run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
     #                                                2,
-    #                                                8,
+    #                                                6,
     #                                                list_simple_loss_grid_search,
     #                                                is_ratio=True)
 

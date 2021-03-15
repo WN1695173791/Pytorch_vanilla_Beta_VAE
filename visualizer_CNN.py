@@ -1743,7 +1743,7 @@ def plot_resume(net, exp_name, is_ratio, is_distance_loss, loss_distance_mean, l
     return
 
 
-def viz_deocder_multi_label(net, loader, exp_name, nb_img=8, nb_class=10, save=False):
+def viz_deocder_multi_label(net, loader, exp_name, nb_img=8, nb_class=10, save=True):
     """
     plot multi data for the same label for each line.
     nb_class row and for each label they are one row with original data and one with reconstructed data.

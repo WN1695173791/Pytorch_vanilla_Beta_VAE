@@ -552,6 +552,10 @@ class SolverClassifier(object):
                 data = data.to(self.device)  # Variable(data.to(self.device))
                 labels = labels.to(self.device)    # Variable(labels.to(self.device))
 
+                # print(labels)
+                # for i in range(self.nb_class):
+                #     print(len(torch.where(labels==i)[0]))
+
                 if self.use_decoder:
                     x_recons, z_struct = self.net(data)
                     self.mse_loss = F.mse_loss(x_recons, data)
