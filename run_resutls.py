@@ -12,7 +12,6 @@ from visualizer_CNN import *
 from viz.viz_regions import *
 from scores_classifier import compute_scores
 from models.Encoder_decoder import Encoder_decoder
-from visualizer_CNN import get_layer_zstruct_num
 from visualizer import viz_reconstruction
 from viz.visualize import Visualizer
 import torch.nn.functional as F
@@ -342,6 +341,7 @@ def build_compare_reconstruction(size, data, input_data, x_recon):
         originals = input_data[:num_images].cpu()
     else:
         originals = input_data[:num_images].cpu()
+
     reconstructions = x_recon.view(-1, *img_size)[:num_images].cpu()
     # If there are fewer examples given than spaces available in grid,
     # augment with blank images
@@ -357,7 +357,7 @@ def build_compare_reconstruction(size, data, input_data, x_recon):
     return comparison
 
 
-def run_decoder(exp_name, net):
+def run_decoder(exp_name, net, multi_label=True):
 
     print(exp_name, 'run decoder')
     path = 'checkpoints_CNN/'
@@ -365,37 +365,42 @@ def run_decoder(exp_name, net):
     net_trained, _, _ = get_checkpoints(net, path, exp_name)
     # print(net)
 
-    # net_trained.eval()
-
-    train_test = 'test'
     loader = test_loader
-    loader_size = len(loader.dataset)
-    size = (8, 8)
 
-    with torch.no_grad():
-        input_data = batch
-    if torch.cuda.is_available():
-        input_data = input_data.cuda()
-    x_recon, _ = net_trained(input_data)
+    if multi_label:
+        viz_deocder_multi_label(net, loader, exp_name, nb_img=10, nb_class=nb_class, save=False)
+    else:
+        # net_trained.eval()
 
-    # net_trained.train()
+        train_test = 'test'
+        loader = test_loader
+        loader_size = len(loader.dataset)
+        size = (8, 8)
 
-    recon_loss = F.mse_loss(x_recon, input_data).detach().numpy()
-    recon_loss_around = np.around(recon_loss * 100, 2)
+        with torch.no_grad():
+            input_data = batch
+        if torch.cuda.is_available():
+            input_data = input_data.cuda()
+        x_recon, _ = net_trained(input_data)
 
-    comparison = build_compare_reconstruction(size, batch, input_data, x_recon)
-    reconstructions = make_grid(comparison.data, nrow=size[0])
+        # net_trained.train()
 
-    # grid with originals data
-    recon_grid = reconstructions.permute(1, 2, 0)
-    fig, ax = plt.subplots(figsize=(10, 10), facecolor='w', edgecolor='k')
-    ax.set(title=('model: {}: reconstruction: MSE: {}'.format(exp_name, recon_loss_around)))
+        recon_loss = F.mse_loss(x_recon, input_data).detach().numpy()
+        recon_loss_around = np.around(recon_loss * 100, 2)
 
-    ax.imshow(recon_grid.numpy())
-    ax.axhline(y=size[0] // 2, linewidth=4, color='r')
-    plt.show()
-    if save:
-        fig.savefig("fig_results/reconstructions/fig_reconstructions_z_" + exp_name + ".png")
+        comparison = build_compare_reconstruction(size, batch, input_data, x_recon)
+        reconstructions = make_grid(comparison.data, nrow=size[0])
+
+        # grid with originals data
+        recon_grid = reconstructions.permute(1, 2, 0)
+        fig, ax = plt.subplots(figsize=(10, 10), facecolor='w', edgecolor='k')
+        ax.set(title=('model: {}: reconstruction: MSE: {}'.format(exp_name, recon_loss_around)))
+
+        ax.imshow(recon_grid.numpy())
+        ax.axhline(y=size[0] // 2, linewidth=4, color='r')
+        plt.show()
+        if save:
+            fig.savefig("fig_results/reconstructions/fig_reconstructions_z_" + exp_name + ".png")
 
     return
 
@@ -623,7 +628,7 @@ def selection(net, exp_name):
 # parameters:
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 batch = torch.load('data/batch_mnist.pt')
-batch_size = 32  # 10000 to run regions visualization (we must have only one so all data set test in one batch)
+batch_size = 10000  # 10000 to run regions visualization (we must have only one so all data set test in one batch)
 train_loader, test_loader = get_mnist_dataset(batch_size=batch_size)
 
 if batch_size == 10000:
@@ -1258,15 +1263,12 @@ if __name__ == '__main__':
                                     'mnist_classif_balanced_dataset_intra_inter_0_7']
 
     lis_decoder = ['mnist_classif_ratio_distance_intra_class_max_mean_1_6_4_balanced_dataset_decoder_1']
-                   # 'mnist_classif_ratio_distance_intra_class_max_mean_1_6_4_balanced_dataset_decoder_2*']
-                   # 'mnist_classif_ratio_distance_intra_class_max_mean_1_6_4_balanced_dataset_decoder_3',
-                   # 'mnist_classif_ratio_distance_intra_class_max_mean_1_6_4_balanced_dataset_decoder_4']
 
     parameters_mnist_classifier_BK_ratio = "parameters_combinations/mnist_classifier_ratio.txt"
 
     run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
                                                    10,
-                                                   14,
+                                                   13,
                                                    lis_decoder,
                                                    is_ratio=False,
                                                    is_decoder=True)

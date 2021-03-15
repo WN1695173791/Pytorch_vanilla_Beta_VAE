@@ -6,7 +6,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 from dataset.dataset_2 import get_dataloaders
 from viz.get_regions import get_all_regions_max
-from visualizer_CNN import get_receptive_field
 import os
 import cv2
 from viz.get_regions_interest import *

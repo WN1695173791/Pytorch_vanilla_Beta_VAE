@@ -10,6 +10,9 @@ from sklearn.preprocessing import StandardScaler
 from torchvision.utils import make_grid
 from visualizer import get_checkpoints_scores_CNN
 from scores_classifier import compute_scores
+import torch.nn.functional as F
+from visualizer import *
+from run_resutls import build_compare_reconstruction
 
 EPS = 1e-12
 
@@ -28,7 +31,6 @@ def compute_scores_pred(prediction, labels):
 
 
 def get_layer_zstruct_num(net):
-
     add_layer = 1
     # get layer num for GMP:
     for name, m in net.named_modules():
@@ -73,8 +75,8 @@ def compute_z_struct(net_trained, exp_name, loader, train_test=None, net_type=No
                 input_data = input_data.cuda()
 
             _, z_struct, _, _, _, _, _ = net_trained(input_data,
-                                               z_struct_out=True,
-                                               z_struct_layer_num=z_struct_layer_num)
+                                                     z_struct_out=True,
+                                                     z_struct_layer_num=z_struct_layer_num)
             pred, _, _, _, _, _, _ = net_trained(input_data)
 
             # train mode:
@@ -146,7 +148,7 @@ def compute_z_struct_representation_noised(net, exp_name, train_test=None, nb_re
                     (z_struct_representation.shape[0])) \
                                                        + mean_z_struct[i]
                 pred, _, _, _, _, _, _ = net(z_struct_representation_noised, z_struct_prediction=True,
-                                       z_struct_layer_num=z_struct_layer_num)
+                                             z_struct_layer_num=z_struct_layer_num)
                 prediction.append(pred.detach().numpy())
             prediction_noised.append(np.mean(np.array(prediction), axis=0))
 
@@ -857,19 +859,6 @@ def dispersion_classes(exp_name, train_test=None, plot_fig=False, cat=None):
     print('dispersion classes for model {}: {}'.format(exp_name, coef_mean_all_real))
 
     return coef_mean_all_real
-
-
-def get_receptive_field(net, img_size):
-    """
-    return size of receptive field for a specific neuron in the model.
-    :param net:
-    :param img_size:
-    :return:
-    """
-    receptive_field_dict = 0
-    # receptive_field_dict = receptive_field(net, img_size, return_zstruct_RF=True)
-
-    return receptive_field_dict
 
 
 def ratio(exp_name, train_test=None, cat=None, other_ratio=False, normalized=False):
@@ -1652,13 +1641,13 @@ def plot_resume(net, exp_name, is_ratio, is_distance_loss, loss_distance_mean, l
     exp_name_chkpts = exp_name.split('_normalized_l1_')[0]
     _, epochs, train_score, test_score, total_loss_train, total_loss_test, ratio_train_loss, \
     ratio_test_loss, class_loss_train, class_loss_test, \
-    var_distance_classes_train, var_distance_classes_test,\
-        mean_distance_intra_class_train, mean_distance_intra_class_test = get_checkpoints_scores_CNN(net,
-                                                                                       path_scores,
-                                                                                       exp_name_chkpts,
-                                                                                       is_ratio=is_ratio,
-                                                                                       is_distance_loss=is_distance_loss,
-                                                                                       loss_distance_mean=loss_distance_mean)
+    var_distance_classes_train, var_distance_classes_test, \
+    mean_distance_intra_class_train, mean_distance_intra_class_test = get_checkpoints_scores_CNN(net,
+                                                                                                 path_scores,
+                                                                                                 exp_name_chkpts,
+                                                                                                 is_ratio=is_ratio,
+                                                                                                 is_distance_loss=is_distance_loss,
+                                                                                                 loss_distance_mean=loss_distance_mean)
     # get accuracy train and test:
     # acc_train_last_epoch = train_score[-1]
     # acc_test_last_epoch = test_score[-1]
@@ -1710,7 +1699,7 @@ def plot_resume(net, exp_name, is_ratio, is_distance_loss, loss_distance_mean, l
     distance_inter_class = distance_matrix(net, exp_name, train_test=train_test, plot_fig=False)
     distance_classes_triu = np.triu(distance_inter_class, k=1)
     distance_classes_triu_wt_diag = distance_classes_triu[np.nonzero(distance_classes_triu)]
-    distances_mean = np.sum(distance_classes_triu_wt_diag**2) / len(distance_classes_triu_wt_diag)
+    distances_mean = np.sum(distance_classes_triu_wt_diag ** 2) / len(distance_classes_triu_wt_diag)
     std_distances = distances_mean / np.square(np.mean(distance_classes_triu_wt_diag))
 
     axs[0, 1].set(title='Distances matrix between mean classes')
@@ -1756,44 +1745,65 @@ def plot_resume(net, exp_name, is_ratio, is_distance_loss, loss_distance_mean, l
     return
 
 
-def viz_deocder_multi_label(net, loader, nb_img=8, nb_class=10):
+def viz_deocder_multi_label(net, loader, exp_name, nb_img=8, nb_class=10, save=False):
     """
     plot multi data for the same label for each line.
+    nb_class row and for each label they are one row with original data and one with reconstructed data.
     :param loader:
     :param net:
     :return:
     """
 
     # net_trained.eval()
+    size = (nb_img, nb_class*2)
 
-    loader_size = len(loader.dataset)
-    size = (8, 8)
-
-    batch = []
+    # get n data per classes:
+    first = True
     for data, label in loader:
-        batch_label = data[np.where()]
+        print('loader ', len(label))
+        for lab in range(nb_class):
+            batch_lab = data[torch.where(label == lab)[0][:nb_img]]
+            if first:
+                batch = batch_lab
+                first = False
+            else:
+                batch = torch.cat((batch, batch_lab), dim=0)
 
+    # get reconstruction
     with torch.no_grad():
         input_data = batch
     if torch.cuda.is_available():
         input_data = input_data.cuda()
-    x_recon, _ = net_trained(input_data)
+
+    x_recon, _ = net(input_data)
 
     # net_trained.train()
 
-    recon_loss = F.mse_loss(x_recon, input_data).detach().numpy()
-    recon_loss_around = np.around(recon_loss * 100, 2)
+    first = True
+    for class_id in range(nb_class):
+        start_cl_id = class_id * nb_img
+        end_cl_id = start_cl_id + nb_img
+        original_batch = input_data[start_cl_id:end_cl_id].cpu()
+        reconstruction_batch = x_recon[start_cl_id:end_cl_id].cpu()
+        comparaison_batch = torch.cat([original_batch, reconstruction_batch])
+        if first:
+            comparison = comparaison_batch
+            first = False
+        else:
+            comparison = torch.cat((comparison, comparaison_batch), dim=0)
 
-    comparison = build_compare_reconstruction(size, batch, input_data, x_recon)
     reconstructions = make_grid(comparison.data, nrow=size[0])
 
     # grid with originals data
     recon_grid = reconstructions.permute(1, 2, 0)
-    fig, ax = plt.subplots(figsize=(10, 10), facecolor='w', edgecolor='k')
-    ax.set(title=('model: {}: reconstruction: MSE: {}'.format(exp_name, recon_loss_around)))
+    fig, ax = plt.subplots(figsize=(10, 20), facecolor='w', edgecolor='k')
+    ax.set(title=('model: {}:'.format(exp_name)))
 
     ax.imshow(recon_grid.numpy())
-    ax.axhline(y=size[0] // 2, linewidth=4, color='r')
+    # ax.axhline(y=size[0] // 2, linewidth=4, color='r')
     plt.show()
+
     if save:
-        fig.savefig("fig_results/reconstructions/fig_reconstructions_z_" + exp_name + ".png")
+        fig.savefig("fig_results/reconstructions/fig_reconstructions_multi_label_" + exp_name + ".png")
+
+    return
