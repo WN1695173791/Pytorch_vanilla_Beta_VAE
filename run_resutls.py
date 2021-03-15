@@ -1257,7 +1257,7 @@ if __name__ == '__main__':
     list_simple_loss_grid_search = ['mnist_classif_balanced_dataset_intra_inter_0_1',
                                     'mnist_classif_balanced_dataset_intra_inter_0_2',
                                     'mnist_classif_balanced_dataset_intra_inter_0_3',
-                                    'mnist_classif_balanced_dataset_intra_inter_0_4',
+                                    # 'mnist_classif_balanced_dataset_intra_inter_0_4',
                                     'mnist_classif_balanced_dataset_intra_inter_0_5',
                                     'mnist_classif_balanced_dataset_intra_inter_0_6',
                                     'mnist_classif_balanced_dataset_intra_inter_0_7']
@@ -1266,18 +1266,18 @@ if __name__ == '__main__':
 
     parameters_mnist_classifier_BK_ratio = "parameters_combinations/mnist_classifier_ratio.txt"
 
-    run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
-                                                   10,
-                                                   13,
-                                                   lis_decoder,
-                                                   is_ratio=False,
-                                                   is_decoder=True)
-
     # run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
-    #                                                2,
-    #                                                8,
-    #                                                list_simple_loss_grid_search,
-    #                                                is_ratio=True)
+    #                                                10,
+    #                                                13,
+    #                                                lis_decoder,
+    #                                                is_ratio=False,
+    #                                                is_decoder=True)
+
+    run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
+                                                   2,
+                                                   8,
+                                                   list_simple_loss_grid_search,
+                                                   is_ratio=True)
 
     # run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
     #                                                2,
