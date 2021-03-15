@@ -212,7 +212,7 @@ class SolverClassifier(object):
         self.value_target_distance_mean = args.value_target_distance_mean
         # decoder:
         self.use_decoder = args.use_decoder
-        freeze_Encoder = args.freeze_Encoder
+        self.freeze_Encoder = args.freeze_Encoder
 
         # logger
         formatter = logging.Formatter('%(asc_time)s %(level_name)s - %(funcName)s: %(message)s', "%H:%M:%S")
