@@ -1266,18 +1266,18 @@ if __name__ == '__main__':
 
     parameters_mnist_classifier_BK_ratio = "parameters_combinations/mnist_classifier_ratio.txt"
 
-    # run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
-    #                                                10,
-    #                                                13,
-    #                                                lis_decoder,
-    #                                                is_ratio=False,
-    #                                                is_decoder=True)
-
     run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
-                                                   2,
-                                                   8,
-                                                   list_simple_loss_grid_search,
-                                                   is_ratio=True)
+                                                   16,
+                                                   16,
+                                                   lis_decoder,
+                                                   is_ratio=False,
+                                                   is_decoder=True)
+
+    # run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
+    #                                                2,
+    #                                                8,
+    #                                                list_simple_loss_grid_search,
+    #                                                is_ratio=True)
 
     # run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
     #                                                2,

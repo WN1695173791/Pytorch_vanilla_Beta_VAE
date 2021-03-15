@@ -8,11 +8,9 @@ from matplotlib import cm
 from sklearn.preprocessing import StandardScaler
 # from torch_receptive_field import receptive_field
 from torchvision.utils import make_grid
-from visualizer import get_checkpoints_scores_CNN
 from scores_classifier import compute_scores
 import torch.nn.functional as F
 from visualizer import *
-from run_resutls import build_compare_reconstruction
 
 EPS = 1e-12
 
