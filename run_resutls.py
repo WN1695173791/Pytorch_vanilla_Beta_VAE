@@ -1299,24 +1299,16 @@ if __name__ == '__main__':
                                     'mnist_classif_balanced_dataset_intra_inter_7_6',
                                     'mnist_classif_balanced_dataset_intra_inter_7_7']
 
-    lis_decoder = [# 'mnist_classif_ratio_distance_intra_class_max_mean_1_6_4_balanced_dataset_decoder_1',
-                   # 'mnist_classif_ratio_distance_intra_class_max_mean_1_6_4_balanced_dataset_decoder_2',
-                   # 'mnist_classif_ratio_distance_intra_class_max_mean_1_6_4_balanced_dataset_decoder_3',
-                   # 'mnist_classif_ratio_distance_intra_class_max_mean_1_6_4_balanced_dataset_decoder_4',
-                   # 'mnist_classif_ratio_distance_intra_class_max_mean_1_6_4_balanced_dataset_decoder_5',
-                   # 'mnist_classif_ratio_distance_intra_class_max_mean_1_6_4_balanced_dataset_decoder_6',
-                   # 'mnist_classif_ratio_distance_intra_class_max_mean_1_6_4_balanced_dataset_decoder_7',
-                   # 'mnist_classif_ratio_distance_intra_class_max_mean_1_6_4_balanced_dataset_decoder_8',
-                   # 'mnist_classif_ratio_distance_intra_class_max_mean_1_6_4_balanced_dataset_decoder_9',
-                   'mnist_auto_encoder_1',
-                   'mnist_auto_encoder_2',
-                   'mnist_baseline_128_decoder_1']
+    lis_decoder = ['mnist_classif_ratio_distance_intra_class_max_mean_1_6_4_balanced_dataset_decoder_1',
+                   'mnist_classif_ratio_distance_intra_class_max_mean_1_6_4_balanced_dataset_decoder_2*',
+                   'mnist_classif_ratio_distance_intra_class_max_mean_1_6_4_balanced_dataset_decoder_3',
+                   'mnist_classif_ratio_distance_intra_class_max_mean_1_6_4_balanced_dataset_decoder_4']
 
     parameters_mnist_classifier_BK_ratio = "parameters_combinations/mnist_classifier_ratio.txt"
 
     run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
                                                    2,
-                                                   13,
+                                                   6,
                                                    lis_decoder,
                                                    is_ratio=False,
                                                    is_decoder=True)

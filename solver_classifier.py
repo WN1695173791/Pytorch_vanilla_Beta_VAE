@@ -212,7 +212,7 @@ class SolverClassifier(object):
         self.value_target_distance_mean = args.value_target_distance_mean
         # decoder:
         self.use_decoder = args.use_decoder
-        self.test_all_learn = args.test_all_learn
+        freeze_Encoder = args.freeze_Encoder
 
         # logger
         formatter = logging.Formatter('%(asc_time)s %(level_name)s - %(funcName)s: %(message)s', "%H:%M:%S")
@@ -586,7 +586,7 @@ class SolverClassifier(object):
                         loss += loss_distance_mean
 
                 # freeze encoder if train decoder:
-                if self.use_decoder and not self.test_all_learn:
+                if self.use_decoder and self.freeze_Encoder:
                     for params in self.net.encoder.parameters():
                         params.requires_grad = False
 
@@ -606,7 +606,7 @@ class SolverClassifier(object):
                 self.optimizer.step()
 
                 # unfreeze encoder if train decoder:
-                if self.use_decoder and not self.test_all_learn:
+                if self.use_decoder and self.freeze_Encoder:
                     for params in self.net.encoder.parameters():
                         params.requires_grad = True
                     # self.optimizer.add_param_group({'params': self.net.encoder.parameters()})

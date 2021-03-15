@@ -225,7 +225,7 @@ if __name__ == "__main__":
 
     # use decoder:
     parser.add_argument('--use_decoder', default=False, type=str2bool, help='train decoder with encoder freeze')
-    parser.add_argument('--test_all_learn', default=False, type=str2bool, help='train all weigths')
+    parser.add_argument('--freeze_Encoder', default=True, type=str2bool, help='if freeze encoder weighs')
 
     args = parser.parse_args()
 
