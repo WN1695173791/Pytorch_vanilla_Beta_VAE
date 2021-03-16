@@ -202,6 +202,7 @@ class SolverClassifier(object):
         self.without_acc = args.without_acc
         # binary parameters:
         self.binary_z = args.binary_z
+        self.binary_chain = args.binary_chain
         # ratio regularization:
         self.ratio_reg = args.ratio_reg
         self.lambda_ratio_reg = args.lambda_ratio_reg
@@ -342,6 +343,7 @@ class SolverClassifier(object):
                                 BK_in_second_layer=self.BK_in_second_layer,
                                 BK_in_third_layer=self.BK_in_third_layer,
                                 Binary_z=self.binary_z,
+                                binary_chain=self.binary_chain,
                                 add_linear_after_GMP=self.add_linear_after_GMP)
         elif self.is_custom_model:
             self.net_type = 'Custom_CNN'
@@ -573,6 +575,9 @@ class SolverClassifier(object):
                                               z_struct_layer_num=self.z_struct_layer_num,
                                               other_ratio=self.other_ratio,
                                               loss_min_distance_cl=self.loss_min_distance_cl)
+
+                    # print(labels)
+                    # print(embedding[0])
 
                     loss = 0
                     # compute losses:

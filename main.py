@@ -188,6 +188,7 @@ if __name__ == "__main__":
 
     # Binary parameters:
     parser.add_argument('--binary_z', default=False, type=str2bool, help='To binary the last conv2d output')
+    parser.add_argument('--binary_chain', default=False, type=str2bool, help='To binary_chain the last conv2d output')
 
     # ratio loss parameters:
     parser.add_argument('--ratio_reg', default=False, type=str2bool, help='if add ratio to regularization')

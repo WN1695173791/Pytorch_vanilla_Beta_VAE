@@ -108,6 +108,7 @@ class Custom_CNN_BK(nn.Module, ABC):
                  BK_in_second_layer=False,
                  BK_in_third_layer=False,
                  Binary_z=False,
+                 binary_chain=False,
                  add_linear_after_GMP=True):
         """
         Class which defines model and forward pass.
@@ -116,6 +117,7 @@ class Custom_CNN_BK(nn.Module, ABC):
 
         self.add_linear_after_GMP = add_linear_after_GMP
         self.Binary_z = Binary_z
+        self.binary_chain = binary_chain
         # parameters
         self.nc = 1  # number of channels
         self.hidden_filters_1 = hidden_filters_1
@@ -157,7 +159,9 @@ class Custom_CNN_BK(nn.Module, ABC):
         if self.Binary_z and not self.two_conv_layer:
             self.model += [
                 # DeterministicBinaryActivation(estimator='ST')
-                nn.ReLU(True),
+                # nn.ReLU(True),
+                # nn.Hardtanh(inplace=True),
+                nn.Sigmoid(),
             ]
         else:
             self.model += [
@@ -174,7 +178,11 @@ class Custom_CNN_BK(nn.Module, ABC):
         if self.Binary_z and self.two_conv_layer and not self.three_conv_layer:
             self.model += [
                 # DeterministicBinaryActivation(estimator='ST')
-                nn.ReLU(True),
+                # nn.ReLU(True),
+                # nn.Hardtanh(min_val=0., max_val=1.0, inplace=True),
+                # nn.Hardsigmoid(True),
+                # nn.Hardtanh(inplace=True),
+                nn.Sigmoid(),
             ]
         elif self.two_conv_layer:
             self.model += [
@@ -191,7 +199,11 @@ class Custom_CNN_BK(nn.Module, ABC):
         if self.Binary_z and self.three_conv_layer:
             self.model += [
                 # DeterministicBinaryActivation(estimator='ST')
-                nn.ReLU(True),
+                # nn.ReLU(True),
+                # nn.Hardtanh(min_val=0., max_val=1.0, inplace=True),
+                # nn.Hardsigmoid(True),
+                # nn.Hardtanh(inplace=True),
+                nn.Sigmoid(),
             ]
         elif self.three_conv_layer:
             self.model += [
@@ -202,13 +214,16 @@ class Custom_CNN_BK(nn.Module, ABC):
             numWeights = 16
             depth = 1
             sparsity = 0.5
-            self.chain = [BlockLBP(numChannels, numWeights, sparsity) for i in range(depth)]
-            # self.chain = [
-            #     DeterministicBinaryActivation(estimator='ST')
-            # ]
+            self.model_2 = []
+            if self.binary_chain:
+                self.model_2 += [BlockLBP(numChannels, numWeights, sparsity) for i in range(depth)]
+            # else:
+            #     self.chain = [
+            #         DeterministicBinaryActivation(estimator='ST')
+            #     ]
 
             # ----------- add GMP bloc:
-            self.model_2 = [
+            self.model_2 += [
                 nn.AdaptiveMaxPool2d((1, 1)),  # B, hidden_filters_1, 1, 1
                 # PrintLayer(),  # B, hidden_filters_1, 1, 1
                 View((-1, self.hidden_filter_GMP)),  # B, hidden_filters_1
@@ -237,11 +252,9 @@ class Custom_CNN_BK(nn.Module, ABC):
                 ]
             # ---------- final layer for classification:
             self.model_2 += [
-                nn.Linear(self.last_linear_layer_size, self.n_classes),  # B, nb_class
-                nn.Softmax()
+                nn.Linear(self.last_linear_layer_size, self.n_classes)  # B, nb_class
             ]
             self.net = nn.Sequential(*self.model,
-                                     *self.chain,
                                      *self.model_2)
         else:
             # ----------- add GMP bloc:
@@ -307,22 +320,30 @@ class Custom_CNN_BK(nn.Module, ABC):
         variance_inter = 0
 
         # parameters:
-        seuil_min_image = 10   # nombre minimal d'images pour calculer le ratio (ou variance)
+        seuil_min_image = 10  # nombre minimal d'images pour calculer le ratio (ou variance)
 
         if z_struct_out:
             z_struct = self.net[:z_struct_layer_num](x)
 
         if z_struct_prediction:
-            prediction = self.net[z_struct_layer_num:](x)
+            if self.Binary_z:
+                out = self.net[z_struct_layer_num:](x)
+                prediction = F.log_softmax(out, dim=1)
+            else:
+                prediction = self.net[z_struct_layer_num:](x)
         else:
-            prediction = self.net(x)
+            if self.Binary_z:
+                out = self.net(x)
+                prediction = F.log_softmax(out, dim=1)
+            else:
+                prediction = self.net(x)
 
         if use_ratio:
-            ratio,  variance_intra, variance_inter = self.compute_ratio_batch(z_struct,
-                                                                                    labels,
-                                                                                    nb_class,
-                                                                                    other_ratio=other_ratio,
-                                                                                    seuil_min_image=seuil_min_image)
+            ratio, variance_intra, variance_inter = self.compute_ratio_batch(z_struct,
+                                                                             labels,
+                                                                             nb_class,
+                                                                             other_ratio=other_ratio,
+                                                                             seuil_min_image=seuil_min_image)
 
         if loss_min_distance_cl:
             variance_distance_iter_class, mean_distance_intra_class = self.compute_var_distance_class(z_struct,
@@ -447,4 +468,3 @@ class ConvLBP(nn.Conv2d):
         binary_weights.masked_fill_(mask_inactive, 0)
         weights.data = binary_weights
         weights.requires_grad_(False)
-

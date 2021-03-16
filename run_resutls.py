@@ -1260,16 +1260,26 @@ if __name__ == '__main__':
                                     'mnist_classif_balanced_dataset_intra_inter_1_6_3',
                                     'mnist_classif_balanced_dataset_intra_inter_1_6_4']
 
-    lis_decoder = ['mnist_classif_ratio_distance_intra_class_max_mean_1_6_4_balanced_dataset_decoder_1']
+    list_test_binary = ['mnist_classif_balanced_dataset_intra_inter_1_6_binary',
+                        'mnist_classif_balanced_dataset_intra_inter_1_6_binary_chain']
+
+    lis_decoder = ['mnist_classif_ratio_distance_intra_class_max_mean_1_6_4_balanced_dataset_decoder_1',
+                   'mnist_classif_balanced_dataset_intra_inter_1_6_decoder']
 
     parameters_mnist_classifier_BK_ratio = "parameters_combinations/mnist_classifier_ratio.txt"
 
+    # run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
+    #                                                16,
+    #                                                17,
+    #                                                lis_decoder,
+    #                                                is_ratio=False,
+    #                                                is_decoder=True)
+
     run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
-                                                   16,
-                                                   16,
-                                                   lis_decoder,
-                                                   is_ratio=False,
-                                                   is_decoder=True)
+                                                   2,
+                                                   3,
+                                                   list_test_binary,
+                                                   is_ratio=True)
 
     # run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
     #                                                2,
