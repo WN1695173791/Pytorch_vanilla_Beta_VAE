@@ -177,10 +177,10 @@ class Custom_CNN_BK(nn.Module, ABC):
             ]
         if self.Binary_z and self.two_conv_layer and not self.three_conv_layer:
             self.model += [
-                DeterministicBinaryActivation(estimator='ST')
+                # DeterministicBinaryActivation(estimator='ST')
                 # nn.ReLU(True),
                 # nn.Hardtanh(min_val=0., max_val=1.0, inplace=True),
-                # nn.Hardsigmoid(True),
+                nn.Hardsigmoid(True),
                 # nn.Hardtanh(inplace=True),
                 # nn.Sigmoid(),
             ]
