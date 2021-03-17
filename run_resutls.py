@@ -163,8 +163,27 @@ def run_exp_extraction_and_visualization_custom_BK(path_parameter, line_begin, l
 
         args = arguments_2[key]
         batch_size = args[4]
+
         Binary_z = False
+        binary_chain = False
         exp_name = args[-1][-1].split('\n')[0]
+        if args[-2][0] == 'binary_chain':
+            if args[-2][1] == 'True':
+                binary_chain = True
+            elif args[-2][1] == 'False':
+                binary_chain = False
+        if args[-2][0] == 'binary_z':
+            if args[-2][1] == 'True':
+                Binary_z = True
+            elif args[-2][1] == 'False':
+                Binary_z = False
+        else:
+            if args[-3][0] == 'binary_z':
+                if args[-3][1] == 'True':
+                    Binary_z = True
+                elif args[-3][1] == 'False':
+                    Binary_z = False
+
         if args[-3][0] == 'loss_distance_mean':
             if args[-3][1] == 'True':
                 loss_distance_mean = True
@@ -259,6 +278,8 @@ def run_exp_extraction_and_visualization_custom_BK(path_parameter, line_begin, l
             zstruct_size = str(hidden_filters_1)
         cat = 'zstruct_' + zstruct_size
 
+        print(binary_chain, Binary_z)
+
         net = Custom_CNN_BK(z_struct_size=z_struct_size,
                             big_kernel_size=big_kernel_size,
                             stride_size=stride_size,
@@ -273,6 +294,7 @@ def run_exp_extraction_and_visualization_custom_BK(path_parameter, line_begin, l
                             BK_in_second_layer=BK_in_second_layer,
                             BK_in_third_layer=BK_in_third_layer,
                             Binary_z=Binary_z,
+                            binary_chain=binary_chain,
                             add_linear_after_GMP=add_linear_after_GMP)
         if is_decoder:
             z_struct_layer_num = get_layer_zstruct_num(net)
@@ -1260,17 +1282,17 @@ if __name__ == '__main__':
                                     'mnist_classif_balanced_dataset_intra_inter_1_6_3',
                                     'mnist_classif_balanced_dataset_intra_inter_1_6_4']
 
-    list_test_binary = ['mnist_classif_balanced_dataset_intra_inter_1_6_binary',
+    list_test_binary = [# 'mnist_classif_balanced_dataset_intra_inter_1_6_binary',
                         'mnist_classif_balanced_dataset_intra_inter_1_6_binary_chain']
 
-    lis_decoder = ['mnist_classif_ratio_distance_intra_class_max_mean_1_6_4_balanced_dataset_decoder_1',
+    lis_decoder = [# 'mnist_classif_ratio_distance_intra_class_max_mean_1_6_4_balanced_dataset_decoder_1',
                    'mnist_classif_balanced_dataset_intra_inter_1_6_decoder']
 
     parameters_mnist_classifier_BK_ratio = "parameters_combinations/mnist_classifier_ratio.txt"
 
     run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
-                                                   21,
-                                                   22,
+                                                   24,
+                                                   25,
                                                    lis_decoder,
                                                    is_ratio=False,
                                                    is_decoder=True)
