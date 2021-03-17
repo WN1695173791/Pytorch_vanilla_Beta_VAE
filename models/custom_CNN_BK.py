@@ -179,8 +179,8 @@ class Custom_CNN_BK(nn.Module, ABC):
             self.model += [
                 # DeterministicBinaryActivation(estimator='ST')
                 # nn.ReLU(True),
-                # nn.Hardtanh(min_val=0., max_val=1.0, inplace=True),
-                nn.Hardsigmoid(True),
+                nn.Hardtanh(min_val=-1.0, max_val=1.0, inplace=True),
+                # nn.Hardsigmoid(True),
                 # nn.Hardtanh(inplace=True),
                 # nn.Sigmoid(),
             ]

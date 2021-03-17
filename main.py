@@ -223,10 +223,14 @@ if __name__ == "__main__":
                         help='mean distance inter classes mean')
     parser.add_argument('--lambda_distance_mean', default=1, type=float, help="lambda_distance_mean")
     parser.add_argument('--value_target_distance_mean', default=1, type=float, help="lambda_distance_mean")
-
+    parser.add_argument('--diff_var', default=False, type=str2bool, help='diff_var')
     # use decoder:
     parser.add_argument('--use_decoder', default=False, type=str2bool, help='train decoder with encoder freeze')
     parser.add_argument('--freeze_Encoder', default=True, type=str2bool, help='if freeze encoder weighs')
+
+    # for reproductibility:
+    parser.add_argument('--randomness', default=True, type=str2bool, help='If we use seed for reproducibility')
+    parser.add_argument("--random_seed", type=int, nargs='+', default=10, help="default seed")
 
     args = parser.parse_args()
 

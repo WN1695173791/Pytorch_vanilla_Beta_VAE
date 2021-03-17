@@ -429,9 +429,10 @@ def get_mnist_dataset(batch_size=64, return_Dataloader=True):
                                                    batch_size=batch_size,
                                                    shuffle=True)
         test_loader = torch.utils.data.DataLoader(dataset=mnist_testset,
-                                                  batch_size=batch_size,
+                                                  batch_size=1000,
                                                   shuffle=False)
     else:
         train_loader = mnist_trainset
         test_loader = mnist_testset
+
     return train_loader, test_loader

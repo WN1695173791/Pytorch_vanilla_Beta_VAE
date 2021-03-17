@@ -11,6 +11,7 @@ from torchvision.utils import make_grid
 from scores_classifier import compute_scores
 import torch.nn.functional as F
 from visualizer import *
+from torch.autograd import Variable
 
 EPS = 1e-12
 
@@ -1743,7 +1744,7 @@ def plot_resume(net, exp_name, is_ratio, is_distance_loss, loss_distance_mean, l
     return
 
 
-def viz_deocder_multi_label(net, loader, exp_name, nb_img=8, nb_class=10, save=True):
+def viz_decoder_multi_label(net, loader, exp_name, nb_img=8, nb_class=10, save=True):
     """
     plot multi data for the same label for each line.
     nb_class row and for each label they are one row with original data and one with reconstructed data.
@@ -1752,7 +1753,7 @@ def viz_deocder_multi_label(net, loader, exp_name, nb_img=8, nb_class=10, save=T
     :return:
     """
 
-    # net_trained.eval()
+    net.eval()
     size = (nb_img, nb_class*2)
 
     # get n data per classes:
@@ -1775,7 +1776,7 @@ def viz_deocder_multi_label(net, loader, exp_name, nb_img=8, nb_class=10, save=T
 
     x_recon, _ = net(input_data)
 
-    # net_trained.train()
+    net.train()
 
     first = True
     for class_id in range(nb_class):
@@ -1803,5 +1804,86 @@ def viz_deocder_multi_label(net, loader, exp_name, nb_img=8, nb_class=10, save=T
 
     if save:
         fig.savefig("fig_results/reconstructions/fig_reconstructions_multi_label_" + exp_name + ".png")
+
+    return
+
+
+def traversal_values(size):
+    cdf_traversal = np.linspace(0.05, 0.95, size)
+    return stats.norm.ppf(cdf_traversal)
+
+
+def traversal_values_min_max(min, max, size):
+    return np.linspace(min, max, size)
+
+
+def viz_latent_prediction_reconstruction(net, exp_name, img_size, size=8, random=False, batch=None):
+    """
+    Visualize reconstruction with predict label.
+    :param net:
+    :param exp_name:
+    :return:
+    """
+    nb_samples = 32
+    embedding_size = 32
+    indx = 0
+    samples = []
+    latent_samples = []
+    indx_image = indx
+
+    if random:
+        sample = np.random.normal(size=(nb_samples, embedding_size))
+        sample = np.repeat(sample, size, axis=0).reshape((nb_samples, size, embedding_size))
+    else:
+        net.eval()
+        # Pass data through VAE to obtain reconstruction
+        with torch.no_grad():
+            input_data = batch
+        if torch.cuda.is_available():
+            input_data = input_data.cuda()
+
+        x_recon, embedding = net(input_data)
+
+        net.train()
+
+        if indx_image is not None:
+            indx = indx_image
+        else:
+            indx = np.random.randint(0, len(embedding))
+
+        img_latent = embedding[indx]
+        x_recons = x_recon[indx]
+        nb_composante = len(embedding)
+        img_latent = img_latent.unsqueeze(dim=0)
+
+        sample = np.expand_dims(np.repeat(img_latent.detach().numpy(), size, axis=0), axis=0)  # shape: (1, size, z_dim)
+        sample = np.repeat(sample, nb_composante, axis=0)  # shape: (nb_composante, size, z_dim)
+
+    # cont_traversal = traversal_values(size)
+    cont_traversal = traversal_values_min_max(np.min(sample) - np.abs(np.min(sample)),
+                                              np.max(sample) + np.abs(np.max(sample)),
+                                              size)  # shape: size
+
+    for i in range(nb_samples):
+        for j in range(size):
+            sample[i][j, indx] = cont_traversal[j]
+
+    samples.append(torch.Tensor(sample.reshape((nb_samples * (size), embedding_size))))
+
+    latent_samples.append(torch.cat(samples, dim=1))
+
+    latent_samples = Variable(torch.cat(latent_samples, dim=0))
+    if torch.cuda.is_available():
+        latent_samples = latent_samples.cuda()
+    generated = net.decoder(latent_samples).cpu()
+
+    traversals = make_grid(generated.data, nrow=size)
+
+    plt.figure(figsize=(10, 10))
+    traversals = traversals.permute(1, 2, 0)
+    plt.title(
+        'latent random traversal: {} , with index = {}'.format(exp_name, str(indx)))
+    plt.imshow(traversals.numpy())
+    plt.show()
 
     return

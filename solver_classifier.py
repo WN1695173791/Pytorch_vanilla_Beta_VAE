@@ -28,38 +28,15 @@ import torch.nn as nn
 import matplotlib.pyplot as plt
 from visualizer import *
 
-
 EPS = 1e-12
 worker_id = 0
-
-
-def build_compare_reconstruction(size, data, input_data, x_recon):
-    # reconstructions
-    num_images = int(size[0] * size[1] / 2)
-    if data.shape[1] == 3:
-        originals = input_data[:num_images].cpu()
-    else:
-        originals = input_data[:num_images].cpu()
-    reconstructions = x_recon.view(-1, *(1, 32, 32))[:num_images].cpu()
-    # If there are fewer examples given than spaces available in grid,
-    # augment with blank images
-    num_examples = originals.size()[0]
-    if num_images > num_examples:
-        blank_images = torch.zeros((num_images - num_examples,) + originals.size()[1:])
-        originals = torch.cat([originals, blank_images])
-        reconstructions = torch.cat([reconstructions, blank_images])
-
-    # Concatenate images and reconstructions
-    comparison = torch.cat([originals, reconstructions])
-
-    return comparison
 
 
 def seed_all(seed):
     if not seed:
         seed = 10
 
-    print("[ Using Seed : ", seed, " ]")
+    print("[Using Seed: {}]".format(seed))
 
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
@@ -76,7 +53,7 @@ def seed_worker(worker_id):
     :param worker_id:
     :return:
     """
-    worker_seed = torch.initial_seed() % 2**32
+    worker_seed = torch.initial_seed() % 2 ** 32
     np.random.seed(worker_seed)
     random.seed(worker_seed)
 
@@ -92,8 +69,8 @@ def get_z_struct_representation(loader, net, z_struct_layer_num):
             input_data = input_data.cuda()
 
         _, z_struct, _, _, _, _, _ = net(input_data,
-                                      z_struct_out=True,
-                                      z_struct_layer_num=z_struct_layer_num)
+                                         z_struct_out=True,
+                                         z_struct_layer_num=z_struct_layer_num)
 
         z_struct_batch = z_struct.squeeze().cpu().detach().numpy()
         z_struct_representation.extend(z_struct_batch)
@@ -102,68 +79,76 @@ def get_z_struct_representation(loader, net, z_struct_layer_num):
     return np.array(z_struct_representation), np.array(labels_list)
 
 
-def compute_scores_and_loss(net, train_loader, test_loader, device, train_loader_size, test_loader_size,
-                            net_type, nb_class, ratio_reg, other_ratio, loss_min_distance_cl, z_struct_layer_num,
-                            loss_distance_mean):
-    score_train, loss_train = compute_scores(net, train_loader, device, train_loader_size)
-    score_test, loss_test = compute_scores(net, test_loader, device, test_loader_size)
+def compute_scores_and_loss(net, train_loader, test_loader, device, train_loader_size, test_loader_size, nb_class,
+                            ratio_reg, other_ratio, loss_min_distance_cl, z_struct_layer_num, contrastive_criterion,
+                            without_acc, lambda_classification,
+                            lambda_contrastive, lambda_ratio_reg, diff_var, lambda_var_intra, lambda_var_inter,
+                            lambda_var_distance, lambda_distance_mean, z_struct_out):
 
-    if ratio_reg or loss_min_distance_cl or loss_distance_mean:
-        # compute ratio on all test set:
-        z_struct_representation_test, labels_batch_test = get_z_struct_representation(test_loader,
-                                                                                      net,
-                                                                                      z_struct_layer_num)
-        # compute ratio on all train set:
-        z_struct_representation_train, labels_batch_train = get_z_struct_representation(train_loader,
-                                                                                        net,
-                                                                                        z_struct_layer_num)
-
-    if ratio_reg:
-        ratio_test = compute_ratio_batch_test(z_struct_representation_test,
-                                              labels_batch_test,
-                                              nb_class,
-                                              other_ratio=other_ratio)
-        ratio_train = compute_ratio_batch_test(z_struct_representation_train,
-                                               labels_batch_train,
-                                               nb_class,
-                                               other_ratio=other_ratio)
-    else:
-        ratio_test = 0
-        ratio_train = 0
-
-    if loss_min_distance_cl:
-        var_distance_classes_train, _ = compute_var_distance_class_test(z_struct_representation_train,
-                                                                        labels_batch_train,
-                                                                        nb_class)
-        var_distance_classes_test, _ = compute_var_distance_class_test(z_struct_representation_test,
-                                                                       labels_batch_test,
-                                                                       nb_class)
-    else:
-        var_distance_classes_train = 0
-        var_distance_classes_test = 0
-
-    if loss_distance_mean:
-        _, mean_distance_intra_class_train = compute_var_distance_class_test(z_struct_representation_train,
-                                                                             labels_batch_train,
-                                                                             nb_class)
-        _, mean_distance_intra_class_test = compute_var_distance_class_test(z_struct_representation_test,
-                                                                            labels_batch_test,
-                                                                            nb_class)
-    else:
-        mean_distance_intra_class_train = 0
-        mean_distance_intra_class_test = 0
+    score_train, classification_loss_train, total_loss_iter_train, ratio_loss_train, contrastive_loss_train, \
+    diff_var_loss_train, variance_intra_train, \
+    variance_inter_train, loss_distance_cl_train, loss_distance_mean_train, total_loss_train = compute_scores(net,
+                                                                                                              train_loader,
+                                                                                                              device,
+                                                                                                              train_loader_size,
+                                                                                                              nb_class,
+                                                                                                              ratio_reg,
+                                                                                                              z_struct_layer_num,
+                                                                                                              other_ratio,
+                                                                                                              loss_min_distance_cl,
+                                                                                                              contrastive_criterion,
+                                                                                                              without_acc,
+                                                                                                              lambda_classification,
+                                                                                                              lambda_contrastive,
+                                                                                                              lambda_ratio_reg,
+                                                                                                              diff_var,
+                                                                                                              lambda_var_intra,
+                                                                                                              lambda_var_inter,
+                                                                                                              lambda_var_distance,
+                                                                                                              lambda_distance_mean,
+                                                                                                              z_struct_out)
+    score_test, classification_loss_test, total_loss_iter_test, ratio_loss_test, contrastive_loss_test, \
+    diff_var_loss_test, variance_intra_test, \
+    variance_inter_test, loss_distance_cl_test, loss_distance_mean_test, total_loss_test = compute_scores(net,
+                                                                                                          test_loader,
+                                                                                                          device,
+                                                                                                          test_loader_size,
+                                                                                                          nb_class,
+                                                                                                          ratio_reg,
+                                                                                                          z_struct_layer_num,
+                                                                                                          other_ratio,
+                                                                                                          loss_min_distance_cl,
+                                                                                                          contrastive_criterion,
+                                                                                                          without_acc,
+                                                                                                          lambda_classification,
+                                                                                                          lambda_contrastive,
+                                                                                                          lambda_ratio_reg,
+                                                                                                          diff_var,
+                                                                                                          lambda_var_intra,
+                                                                                                          lambda_var_inter,
+                                                                                                          lambda_var_distance,
+                                                                                                          lambda_distance_mean,
+                                                                                                          z_struct_out)
 
     scores = {'train': score_train, 'test': score_test}
-    losses = {'train_class': loss_train,
-              'test_class': loss_test,
-              'ratio_test_loss': ratio_test,
-              'ratio_train_loss': ratio_train,
-              'var_distance_classes_train': var_distance_classes_train,
-              'var_distance_classes_test': var_distance_classes_test,
-              'mean_distance_intra_class_train': mean_distance_intra_class_train,
-              'mean_distance_intra_class_test': mean_distance_intra_class_test,
-              'total_loss_train': loss_train + ratio_train,
-              'total_loss_test': loss_test + ratio_test}
+    losses = {'total_train': total_loss_train,
+              'total_test': total_loss_test,
+              'ratio_test_loss': ratio_loss_test,
+              'ratio_train_loss': ratio_loss_train,
+              'var_distance_classes_train': loss_distance_cl_train,
+              'var_distance_classes_test': loss_distance_cl_test,
+              'mean_distance_intra_class_train': loss_distance_mean_train,
+              'mean_distance_intra_class_test': loss_distance_mean_test,
+              'classification_test': classification_loss_test,
+              'classification_train': classification_loss_train,
+              'contrastive_train': contrastive_loss_train,
+              'contrastive_test': contrastive_loss_test,
+              'diff_var_train': diff_var_loss_train,
+              'diff_var_test': diff_var_loss_test,
+              'intra_var_train': variance_intra_test,
+              'intra_var_test': variance_intra_train,
+              'inter_var_train': variance_inter_train,
+              'inter_var_test': variance_inter_test}
 
     return scores, losses
 
@@ -230,7 +215,6 @@ class SolverClassifier(object):
         self.loss_min_distance_cl = args.loss_min_distance_cl
         self.lambda_var_distance = args.lambda_var_distance
         # intra class variance loss:
-        self.intra_class_variance_loss = args.intra_class_variance_loss
         self.lambda_intra_class_var = args.lambda_intra_class_var
         # intra class max distance loss:
         self.lambda_distance_mean = args.lambda_distance_mean
@@ -240,6 +224,13 @@ class SolverClassifier(object):
         # decoder:
         self.use_decoder = args.use_decoder
         self.freeze_Encoder = args.freeze_Encoder
+        self.diff_var = args.diff_var
+        # for reproductibility:
+        self.randomness = args.randomness
+        self.random_seed = args.random_seed
+
+        if self.randomness:
+            seed_all(self.random_seed)
 
         # logger
         formatter = logging.Formatter('%(asc_time)s %(level_name)s - %(funcName)s: %(message)s', "%H:%M:%S")
@@ -250,7 +241,7 @@ class SolverClassifier(object):
         stream.setFormatter(formatter)
         logger.addHandler(stream)
 
-        # load dataset:
+        # ___________________________________________ load dataset:___________________________________________________
         # dataset parameters:
         if args.dataset.lower() == 'mnist':
             self.img_size = (1, 32, 32)
@@ -261,32 +252,27 @@ class SolverClassifier(object):
         self.nb_pixels = self.img_size[1] * self.img_size[2]
 
         if args.dataset == 'mnist' and not self.dataset_balanced:
-            self.valid_loader = 0
+            # load mnist dataset without balanced data
             self.train_loader, self.test_loader = get_mnist_dataset(batch_size=self.batch_size)
         else:
+            # load other dataset
             self.train_loader, self.valid_loader, self.test_loader = get_dataloaders(args.dataset,
                                                                                      batch_size=self.batch_size,
                                                                                      logger=logger)
 
         if self.dataset_balanced and args.dataset == 'mnist':
-            self.train_loader_bf, self.test_loader_bf = get_mnist_dataset(batch_size=self.batch_size,
-                                                                          return_Dataloader=False)
+            # Load balanced mnist dataset:
+            self.train_loader_bf, _ = get_mnist_dataset(batch_size=self.batch_size, return_Dataloader=False)
 
             self.train_loader = torch.utils.data.DataLoader(self.train_loader_bf,
                                                             sampler=BalancedBatchSampler(self.train_loader_bf),
                                                             batch_size=self.batch_size)
 
             _, self.test_loader = get_mnist_dataset(batch_size=self.batch_size)
-            print('Balanced samples per class')
-
-        self.train_loader_size = len(self.train_loader.dataset)
-        if self.valid_loader == 0:
-            self.valid_loader_size = 0
-        else:
-            self.valid_loader_size = len(self.valid_loader.dataset)
-        self.test_loader_size = len(self.test_loader.dataset)
+            print('Balanced dataset loaded')
 
         if self.contrastive_loss:
+            # use other sampler for specific contrastive loss:
             self.train_loader_bf, _ = get_mnist_dataset(batch_size=self.batch_size,
                                                         return_Dataloader=False)
             if self.IPC:
@@ -302,7 +288,7 @@ class SolverClassifier(object):
                     pin_memory=True,
                     batch_sampler=batch_sampler
                 )
-                print('Balanced Sampling')
+                print('Balance dataset loaded for contrastive loss')
             else:
                 self.train_loader = torch.utils.data.DataLoader(
                     self.train_loader_bf,
@@ -314,13 +300,19 @@ class SolverClassifier(object):
                 )
                 print('Random Sampling')
 
-        logger.info("Train {} with {} train samples, {} valid samples and {}"
-                    " test samples".format(args.dataset,
-                                           self.train_loader_size,
-                                           self.valid_loader_size,
-                                           self.test_loader_size))
+        if self.dataset_balanced or self.contrastive_loss:
+            _, self.test_loader = get_mnist_dataset(batch_size=self.batch_size)
 
-        # create model:
+        self.train_loader_size = len(self.train_loader.dataset)
+        self.test_loader_size = len(self.test_loader.dataset)
+
+        # ___________________________________________ end dataset:___________________________________________________
+
+        logger.info("Dataset {}: train with {} samples and {} test samples".format(args.dataset,
+                                                                                   self.train_loader_size,
+                                                                                   self.test_loader_size))
+
+        # ___________________________________________create model:_________________________________________________
         if self.is_default_model:
             self.net_type = 'default'
             net = DefaultCNN(add_z_struct_bottleneck=self.add_z_struct_bottleneck,
@@ -397,8 +389,11 @@ class SolverClassifier(object):
                     self.criterion = losses.NPairLoss().cuda()
                 else:
                     self.criterion = losses.NPairLoss()
+            self.contrastive_criterion = self.criterion
+        else:
+            self.contrastive_criterion = False
 
-        # experience name:
+            # experience name:
         if self.use_decoder:
             self.checkpoint_dir = os.path.join(args.ckpt_dir, args.exp_name.split('_decoder')[0])
         else:
@@ -422,17 +417,25 @@ class SolverClassifier(object):
                 self.checkpoint_scores = {'iter': [],
                                           'epochs': [],
                                           'train_score': [],
-                                          'train_loss_class': [],
                                           'test_score': [],
-                                          'test_loss_class': [],
+                                          'total_train': [],
+                                          'total_test': [],
                                           'ratio_train_loss': [],
                                           'ratio_test_loss': [],
                                           'var_distance_classes_train': [],
                                           'var_distance_classes_test': [],
                                           'mean_distance_intra_class_train': [],
                                           'mean_distance_intra_class_test': [],
-                                          'total_loss_train': [],
-                                          'total_loss_test': []}
+                                          'intra_var_train': [],
+                                          'intra_var_test': [],
+                                          'inter_var_train': [],
+                                          'inter_var_test': [],
+                                          'diff_var_train': [],
+                                          'diff_var_test': [],
+                                          'contrastive_train': [],
+                                          'contrastive_test': [],
+                                          'classification_test': [],
+                                          'classification_train': []}
             with open(self.file_path_checkpoint_scores, mode='wb+') as f:
                 torch.save(self.checkpoint_scores, f)
 
@@ -542,6 +545,7 @@ class SolverClassifier(object):
 
         print_bar = tqdm(total=self.max_iter)
         print_bar.update(self.epochs)
+
         while not out:
             for batch_idx, (data, labels) in enumerate(self.train_loader):
 
@@ -552,7 +556,7 @@ class SolverClassifier(object):
                 print_bar.update(1)
 
                 data = data.to(self.device)  # Variable(data.to(self.device))
-                labels = labels.to(self.device)    # Variable(labels.to(self.device))
+                labels = labels.to(self.device)  # Variable(labels.to(self.device))
 
                 # print(labels)
                 # for i in range(self.nb_class):
@@ -564,6 +568,7 @@ class SolverClassifier(object):
                     loss = self.mse_loss
                 else:
                     self.mse_loss = 0
+
                     prediction, embedding, ratio, \
                     variance_distance_iter_class, \
                     variance_intra, mean_distance_intra_class, \
@@ -576,9 +581,6 @@ class SolverClassifier(object):
                                               other_ratio=self.other_ratio,
                                               loss_min_distance_cl=self.loss_min_distance_cl)
 
-                    # print(labels)
-                    # print(embedding[0])
-
                     loss = 0
                     # compute losses:
                     if not self.without_acc:
@@ -586,10 +588,6 @@ class SolverClassifier(object):
                         Classification_loss = F.nll_loss(prediction, labels)
                         Classification_loss = Classification_loss * self.lambda_classification
                         loss += Classification_loss
-
-                    if self.intra_class_variance_loss:
-                        intra_class_loss = variance_intra * self.lambda_intra_class_var
-                        loss += intra_class_loss
 
                     if self.contrastive_loss:
                         # loss take embedding, not prediction
@@ -600,20 +598,24 @@ class SolverClassifier(object):
 
                     if self.ratio_reg:
                         # ratio loss:
-                        # if self.other_ratio:
-                        #     ratio = -(ratio * self.lambda_ratio_reg)
-                        # else:
-                        #     ratio = ratio * self.lambda_ratio_reg
-                        loss_ratio = (self.lambda_var_intra * variance_intra) - (self.lambda_var_inter * variance_inter)
-                        # print(loss_ratio)
-                        loss += loss_ratio
+                        if self.other_ratio:
+                            ratio = -(ratio * self.lambda_ratio_reg)
+                        else:
+                            ratio = ratio * self.lambda_ratio_reg
+                        loss += ratio
+
+                    if self.diff_var:
+                        loss_diff_var = (self.lambda_var_intra * variance_intra) - \
+                                        (self.lambda_var_inter * variance_inter)
+                        loss += loss_diff_var
 
                     if self.loss_min_distance_cl:
+                        # variance of distances between each class with other
                         loss_distance_cl = variance_distance_iter_class * self.lambda_var_distance
                         loss += loss_distance_cl
 
                     if self.loss_distance_mean:
-                        # to avoid distance mean be too hight we want distance closest to target_mean value
+                        # to avoid distance mean be too high we want distance closest to target_mean value
                         target_mean = torch.tensor(self.value_target_distance_mean)
                         target_mean = target_mean.to(self.device)
                         loss_distance_mean = -(
@@ -625,10 +627,6 @@ class SolverClassifier(object):
                     for params in self.net.encoder.parameters():
                         params.requires_grad = False
 
-                    # # passing only those parameters that explicitly requires grad
-                    # self.optimizer = optimizer.Adam(filter(lambda p: p.requires_grad, self.net.parameters()),
-                    #                                 lr=self.lr)
-
                 # print('-----------::::::::::::Before:::::::-----------------:')
                 # print(self.net.encoder[3].weight[0][0])
                 # print(self.net.decoder[3].weight[0])
@@ -637,14 +635,12 @@ class SolverClassifier(object):
                 # backpropagation loss
                 self.optimizer.zero_grad()
                 loss.backward()
-                # print('loss', loss)
                 self.optimizer.step()
 
                 # unfreeze encoder if train decoder:
                 if self.use_decoder and self.freeze_Encoder:
                     for params in self.net.encoder.parameters():
                         params.requires_grad = True
-                    # self.optimizer.add_param_group({'params': self.net.encoder.parameters()})
 
                 # print('-----------::::::::::::After:::::::-----------------:')
                 # print(self.net.encoder[3].weight[0][0])
@@ -675,13 +671,22 @@ class SolverClassifier(object):
                                                                    self.device,
                                                                    self.train_loader_size,
                                                                    self.test_loader_size,
-                                                                   self.net_type,
                                                                    self.nb_class,
                                                                    self.ratio_reg,
                                                                    self.other_ratio,
                                                                    self.loss_min_distance_cl,
                                                                    self.z_struct_layer_num,
-                                                                   self.loss_distance_mean)
+                                                                   self.contrastive_criterion,
+                                                                   self.without_acc,
+                                                                   self.lambda_classification,
+                                                                   self.lambda_contrastive_loss,
+                                                                   self.lambda_ratio_reg,
+                                                                   self.diff_var,
+                                                                   self.lambda_var_intra,
+                                                                   self.lambda_var_inter,
+                                                                   self.lambda_var_distance,
+                                                                   self.lambda_distance_mean,
+                                                                   self.z_struct_out)
 
             self.save_checkpoint_scores_loss()
             self.net_mode(train=True)
@@ -695,21 +700,19 @@ class SolverClassifier(object):
                 self.early_stopping(loss, self.net)
 
             if self.use_decoder:
-                print_bar.write('[Save Checkpoint] epoch: [{:.1f}], Train MSE:{:.5f},'.format(self.epochs, self.mse_loss))
+                print_bar.write(
+                    '[Save Checkpoint] epoch: [{:.1f}], Train MSE:{:.5f},'.format(self.epochs, self.mse_loss))
             else:
                 print_bar.write('[Save Checkpoint] epoch: [{:.1f}], Train score:{:.5f}, Test score:{:.5f}, '
                                 'train loss:{:.5f}, test loss:{:.5f}, ratio_train_loss:{:.5f},'
-                                'ratio_test_loss:{:.5f}, total_loss_train:{:.5f},'
-                                'total_loss_test:{:.5f}, var distance inter class train:{:.5f},'
+                                'ratio_test_loss:{:.5f}, var distance inter class train:{:.5f},'
                                 'var distance inter class test:{:.5f}'.format(self.epochs,
                                                                               self.scores['train'],
                                                                               self.scores['test'],
-                                                                              self.losses['train_class'],
-                                                                              self.losses['test_class'],
+                                                                              self.losses['total_train'],
+                                                                              self.losses['total_test'],
                                                                               self.losses['ratio_train_loss'],
                                                                               self.losses['ratio_test_loss'],
-                                                                              self.losses['total_loss_train'],
-                                                                              self.losses['total_loss_test'],
                                                                               self.losses['var_distance_classes_train'],
                                                                               self.losses['var_distance_classes_test']))
 
@@ -744,16 +747,26 @@ class SolverClassifier(object):
             self.checkpoint_scores['train_score'].append(self.scores['train'])
             self.checkpoint_scores['test_score'].append(self.scores['test'])
             # losses
-            self.checkpoint_scores['train_loss_class'].append(self.losses['train_class'])
-            self.checkpoint_scores['test_loss_class'].append(self.losses['test_class'])
+            self.checkpoint_scores['total_train'].append(self.losses['total_train'])
+            self.checkpoint_scores['total_test'].append(self.losses['total_test'])
             self.checkpoint_scores['ratio_train_loss'].append(self.losses['ratio_train_loss'])
             self.checkpoint_scores['ratio_test_loss'].append(self.losses['ratio_test_loss'])
             self.checkpoint_scores['var_distance_classes_train'].append(self.losses['var_distance_classes_train'])
             self.checkpoint_scores['var_distance_classes_test'].append(self.losses['var_distance_classes_test'])
-            self.checkpoint_scores['total_loss_train'].append(self.losses['total_loss_train'])
-            self.checkpoint_scores['total_loss_test'].append(self.losses['total_loss_test'])
-            self.checkpoint_scores['mean_distance_intra_class_train'].append(self.losses['mean_distance_intra_class_train'])
-            self.checkpoint_scores['mean_distance_intra_class_test'].append(self.losses['mean_distance_intra_class_test'])
+            self.checkpoint_scores['mean_distance_intra_class_train'].append(
+                self.losses['mean_distance_intra_class_train'])
+            self.checkpoint_scores['mean_distance_intra_class_test'].append(
+                self.losses['mean_distance_intra_class_test'])
+            self.checkpoint_scores['intra_var_train'].append(self.losses['intra_var_train'])
+            self.checkpoint_scores['intra_var_test'].append(self.losses['intra_var_test'])
+            self.checkpoint_scores['inter_var_train'].append(self.losses['inter_var_train'])
+            self.checkpoint_scores['inter_var_test'].append(self.losses['inter_var_test'])
+            self.checkpoint_scores['diff_var_train'].append(self.losses['diff_var_train'])
+            self.checkpoint_scores['diff_var_test'].append(self.losses['diff_var_test'])
+            self.checkpoint_scores['contrastive_train'].append(self.losses['contrastive_train'])
+            self.checkpoint_scores['contrastive_test'].append(self.losses['contrastive_test'])
+            self.checkpoint_scores['classification_test'].append(self.losses['classification_test'])
+            self.checkpoint_scores['classification_train'].append(self.losses['classification_train'])
         else:
             self.checkpoint_scores['MSE_decoder'].append(self.mse_loss)
 
