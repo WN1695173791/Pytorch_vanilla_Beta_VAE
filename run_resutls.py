@@ -1098,8 +1098,18 @@ if __name__ == '__main__':
                          'mnist_balanced_dataset_encoder_ratio_min_1_1_z_struct_16',
                          'mnist_balanced_dataset_encoder_ratio_min_1_1_z_struct_64']
 
-    lis_decoder = ['mnist_classif_ratio_distance_intra_class_max_mean_1_6_4_balanced_dataset_decoder_1',
-                   'mnist_classif_balanced_dataset_intra_inter_decoder']
+    lis_decoder = ['mnist_balanced_dataset_baseline_decoder_1',
+                   'mnist_balanced_dataset_baseline_decoder_2',
+                   'mnist_balanced_dataset_baseline_decoder_3',
+                   'mnist_balanced_dataset_baseline_decoder_4',
+                   'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_decoder_1',
+                   'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_decoder_2',
+                   'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_decoder_3',
+                   'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_decoder_4',
+                   'mnist_balanced_dataset_encoder_ratio_min_1_1_decoder_1',
+                   'mnist_balanced_dataset_encoder_ratio_min_1_1_decoder_2',
+                   'mnist_balanced_dataset_encoder_ratio_min_1_1_decoder_3',
+                   'mnist_balanced_dataset_encoder_ratio_min_1_1_decoder_4']
 
     lis_encoder = ['mnist_classif_balanced_dataset_intra_inter_1_6',
                    'mnist_baseline_balanced_128',
@@ -1107,12 +1117,12 @@ if __name__ == '__main__':
 
     parameters_mnist_classifier_BK_ratio = "parameters_combinations/mnist_classifier_ratio.txt"
 
-    # run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
-    #                                                28,
-    #                                                29,
-    #                                                lis_decoder,
-    #                                                is_ratio=False,
-    #                                                is_decoder=True)
+    run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
+                                                   2,
+                                                   13,
+                                                   lis_decoder,
+                                                   is_ratio=False,
+                                                   is_decoder=True)
 
     # run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
     #                                                4,
@@ -1162,8 +1172,8 @@ if __name__ == '__main__':
     #                                                list_classif_diff_var_min_mean,
     #                                                is_ratio=True)
 
-    run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
-                                                   16,
-                                                   24,
-                                                   list_exp_selected,
-                                                   is_ratio=True)
+    # run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
+    #                                                16,
+    #                                                24,
+    #                                                list_exp_selected,
+    #                                                is_ratio=True)

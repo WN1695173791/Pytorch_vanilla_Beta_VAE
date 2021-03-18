@@ -132,7 +132,7 @@ class Encoder_decoder(nn.Module, ABC):
         self.decoder = [
             nn.Linear(self.z_struct_size, self.decoder_first_dense),  # B, 36
             nn.ReLU(True),
-            PrintLayer(),
+            # PrintLayer(),
             View((-1, *self.reshape)),  # B, 1, 6, 6
             # PrintLayer(),
             nn.ConvTranspose2d(1,
