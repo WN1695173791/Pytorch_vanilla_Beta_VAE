@@ -227,6 +227,15 @@ if __name__ == "__main__":
     # use decoder:
     parser.add_argument('--use_decoder', default=False, type=str2bool, help='train decoder with encoder freeze')
     parser.add_argument('--freeze_Encoder', default=True, type=str2bool, help='if freeze encoder weighs')
+    parser.add_argument("--decoder_first_dense", type=int, default=36, metavar='integer value', help="decoder_first_dense")
+    parser.add_argument("--decoder_n_filter_1", type=int, default=64, metavar='integer value', help="decoder_n_filter_1")
+    parser.add_argument("--decoder_n_filter_2",  type=int, default=32, metavar='integer value', help="decoder_n_filter_2")
+    parser.add_argument("--decoder_kernel_size_1", type=int, default=4, metavar='integer value', help="decoder_kernel_size_1")
+    parser.add_argument("--decoder_kernel_size_2", type=int, default=3, metavar='integer value', help="decoder_kernel_size_2")
+    parser.add_argument("--decoder_kernel_size_3", type=int, default=4, metavar='integer value', help="decoder_kernel_size_3")
+    parser.add_argument("--decoder_stride_1", type=int, default=2, metavar='integer value', help="decoder_stride_1")
+    parser.add_argument("--decoder_stride_2", type=int, default=2, metavar='integer value', help="decoder_stride_2")
+    parser.add_argument("--decoder_stride_3", type=int, default=1, metavar='integer value', help="decoder_stride_3")
 
     # for reproductibility:
     parser.add_argument('--randomness', default=True, type=str2bool, help='If we use seed for reproducibility')

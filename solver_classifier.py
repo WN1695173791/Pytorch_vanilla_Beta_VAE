@@ -225,6 +225,16 @@ class SolverClassifier(object):
         self.use_decoder = args.use_decoder
         self.freeze_Encoder = args.freeze_Encoder
         self.diff_var = args.diff_var
+        self.add_linear_after_GMP = args.add_linear_after_GMP
+        self.decoder_first_dense = args.decoder_first_dense
+        self.decoder_n_filter_1 = args.decoder_n_filter_1
+        self.decoder_n_filter_2 = args.decoder_n_filter_2
+        self.decoder_kernel_size_1 = args.decoder_kernel_size_1
+        self.decoder_kernel_size_2 = args.decoder_kernel_size_2
+        self.decoder_kernel_size_3 = args.decoder_kernel_size_3
+        self.decoder_stride_1 = args.decoder_stride_1
+        self.decoder_stride_2 = args.decoder_stride_2
+        self.decoder_stride_3 = args.decoder_stride_3
         # for reproductibility:
         self.randomness = args.randomness
         self.random_seed = args.random_seed
@@ -466,7 +476,16 @@ class SolverClassifier(object):
                                   BK_in_second_layer=self.BK_in_second_layer,
                                   BK_in_third_layer=self.BK_in_third_layer,
                                   Binary_z=self.binary_z,
-                                  add_linear_after_GMP=self.add_linear_after_GMP)
+                                  add_linear_after_GMP=self.add_linear_after_GMP,
+                                  decoder_first_dense=self.decoder_first_dense,
+                                  decoder_n_filter_1=self.decoder_n_filter_1,
+                                  decoder_n_filter_2=self.decoder_n_filter_2,
+                                  decoder_kernel_size_1=self.decoder_kernel_size_1,
+                                  decoder_kernel_size_2=self.decoder_kernel_size_2,
+                                  decoder_kernel_size_3=self.decoder_kernel_size_3,
+                                  decoder_stride_1=self.decoder_stride_1,
+                                  decoder_stride_2=self.decoder_stride_2,
+                                  decoder_stride_3=self.decoder_stride_3)
 
             self.checkpoint_dir = os.path.join(args.ckpt_dir, args.exp_name)
             file_path = os.path.join(self.checkpoint_dir, 'last')

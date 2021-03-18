@@ -23,7 +23,16 @@ class Encoder_decoder(nn.Module, ABC):
                  Binary_z=False,
                  add_linear_after_GMP=True,
                  before_GMP_shape=None,
-                 other_architecture=False):
+                 other_architecture=False,
+                 decoder_first_dense=36,
+                 decoder_n_filter_1=64,
+                 decoder_n_filter_2=32,
+                 decoder_kernel_size_1=4,
+                 decoder_kernel_size_2=3,
+                 decoder_kernel_size_3=4,
+                 decoder_stride_1=2,
+                 decoder_stride_2=2,
+                 decoder_stride_3=1):
         """
         Class which defines model and forward pass.
         """
@@ -57,9 +66,20 @@ class Encoder_decoder(nn.Module, ABC):
         self.three_conv_layer = three_conv_layer
 
         # decoder:
-        self.hidden_dim = 36
-        self.width_first_conv_decoder = int(np.sqrt(self.hidden_dim))
+        self.decoder_first_dense = decoder_first_dense  # 36
+        self.decoder_n_filter_1 = decoder_n_filter_1  # 64
+        self.decoder_n_filter_2 = decoder_n_filter_2  # 32
+        self.decoder_kernel_size_1 = decoder_kernel_size_1  # 4
+        self.decoder_kernel_size_2 = decoder_kernel_size_2  # 3
+        self.decoder_kernel_size_3 = decoder_kernel_size_3  # 4
+        self.decoder_stride_1 = decoder_stride_1  # 2
+        self.decoder_stride_2 = decoder_stride_2  # 2
+        self.decoder_stride_3 = decoder_stride_3  # 1
+
+        self.width_first_conv_decoder = int(np.sqrt(self.decoder_first_dense))
         self.reshape = (1, self.width_first_conv_decoder, self.width_first_conv_decoder)  # (1, 7, 7)
+
+
 
         if self.BK_in_first_layer:
             self.kernel_size_1 = self.big_kernel_size
@@ -106,30 +126,37 @@ class Encoder_decoder(nn.Module, ABC):
         ]
 
         # -----------_________________ end Encoder____________________________________________------------
+
         # ----------- Define decoder: ------------
         self.z_struct_size = self.hidden_filter_GMP
         self.decoder = [
-            nn.Linear(self.z_struct_size, self.hidden_dim),  # B, 36
+            nn.Linear(self.z_struct_size, self.decoder_first_dense),  # B, 36
             nn.ReLU(True),
-            # PrintLayer(),
+            PrintLayer(),
             View((-1, *self.reshape)),  # B, 1, 6, 6
-            # PrintLayer(),
-            nn.ConvTranspose2d(1, 64, 4, stride=2),  # B, 64, 14, 14
+            PrintLayer(),
+            nn.ConvTranspose2d(1,
+                               self.decoder_n_filter_1,
+                               self.decoder_kernel_size_1,
+                               stride=self.decoder_stride_1),  # B, 64, 14, 14
             # nn.BatchNorm2d(64),
             nn.ReLU(True),
-            # PrintLayer(),
-            nn.ConvTranspose2d(64, 32, 3, stride=2),  # B, 32, 29, 29
+            PrintLayer(),
+            nn.ConvTranspose2d(self.decoder_n_filter_1,
+                               self.decoder_n_filter_2,
+                               self.decoder_kernel_size_2,
+                               stride=self.decoder_stride_2),  # B, 32, 29, 29
             # nn.BatchNorm2d(32),
             nn.ReLU(True),
-            # PrintLayer(),
-            nn.ConvTranspose2d(32, 1, 4, stride=1),  # B, 1, 32, 32
-            # PrintLayer(),
+            PrintLayer(),
+            nn.ConvTranspose2d(self.decoder_n_filter_2,
+                               self.nc,
+                               self.decoder_kernel_size_3,
+                               stride=self.decoder_stride_3),  # B, 1, 32, 32
+            PrintLayer(),
             nn.Sigmoid()
         ]
         # --------------------------------------- end decoder -----------------------------------
-
-        # self.net = nn.Sequential(*self.encoder,
-        #                          *self.decoder)
 
         self.encoder = nn.Sequential(*self.encoder)
         self.decoder = nn.Sequential(*self.decoder)

@@ -454,15 +454,15 @@ def run_viz_expes(exp_name, net, is_ratio, is_distance_loss, loss_distance_mean,
     # print('score Test acc: {:.3f}% and Train set acc: {:.3f}%'.format(score_test, score_train))
 
     # compute features:
-    compute_z_struct(net_trained, exp_name, loader, train_test=train_test, net_type=net_type)
-    compute_z_struct_representation_noised(net, exp_name, train_test=train_test, nb_repeat=10, nb_class=nb_class,
-                                           net_type=net_type)
-    get_z_struct_per_class(exp_name, train_test=train_test, nb_class=nb_class)
-    get_average_z_struct_per_classes(exp_name=exp_name, train_test=train_test)
-    get_prediction_per_classes(exp_name, train_test=train_test)
-    get_prediction_noised_per_class(exp_name, train_test=train_test)
-    compute_all_score_acc(exp_name, train_test=train_test)
-    compute_mean_std_prediction(exp_name, train_test=train_test)
+    # compute_z_struct(net_trained, exp_name, loader, train_test=train_test, net_type=net_type)
+    # compute_z_struct_representation_noised(net, exp_name, train_test=train_test, nb_repeat=10, nb_class=nb_class,
+    #                                        net_type=net_type)
+    # get_z_struct_per_class(exp_name, train_test=train_test, nb_class=nb_class)
+    # get_average_z_struct_per_classes(exp_name=exp_name, train_test=train_test)
+    # get_prediction_per_classes(exp_name, train_test=train_test)
+    # get_prediction_noised_per_class(exp_name, train_test=train_test)
+    # compute_all_score_acc(exp_name, train_test=train_test)
+    # compute_mean_std_prediction(exp_name, train_test=train_test)
 
     # receptive_field = get_receptive_field(net_trained, img_size, net_type=net_type)
 
@@ -493,9 +493,9 @@ def run_viz_expes(exp_name, net, is_ratio, is_distance_loss, loss_distance_mean,
 
     # _ = distance_matrix(net_trained, exp_name, train_test=train_test, plot_fig=True)
 
-    plot_resume(net_trained, exp_name, is_ratio, is_distance_loss, loss_distance_mean, loader, train_loader,
-                device, cat=cat, train_test=train_test, path_scores=path_scores, diff_var=diff_var_loss,
-                contrastive_loss=contrastive_loss)
+    # plot_resume(net_trained, exp_name, is_ratio, is_distance_loss, loss_distance_mean, loader, train_loader,
+    #             device, cat=cat, train_test=train_test, path_scores=path_scores, diff_var=diff_var_loss,
+    #             contrastive_loss=contrastive_loss)
 
     return
 
@@ -509,8 +509,8 @@ def visualize_regions_of_interest(exp_name, net, net_type=None):
 
     net_trained.eval()
 
-    # visualize_regions(exp_name, net_trained, len_img_h, len_img_w, loader, plot_activation_value=True,
-    #                   plot_correlation_regions=True, percentage=1)
+    visualize_regions(exp_name, net_trained, len_img_h, len_img_w, loader, plot_activation_value=True,
+                      plot_correlation_regions=True, percentage=1)
 
     random_index = False  # select one random index just for see a random regions for a random image
     choice_label = True  # Choose a specific label to see images of this label
@@ -1163,7 +1163,7 @@ if __name__ == '__main__':
     #                                                is_ratio=True)
 
     run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
-                                                   2,
-                                                   10,
+                                                   16,
+                                                   24,
                                                    list_exp_selected,
                                                    is_ratio=True)
