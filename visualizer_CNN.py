@@ -1604,8 +1604,8 @@ def distance_matrix(net, exp_name, train_test=None, plot_fig=False):
     return distance_inter_class
 
 
-def plot_resume(net, exp_name, is_ratio, is_distance_loss, loss_distance_mean, loader,
-                loader_train, device, cat=None, train_test=None, path_scores=None, save=True):
+def plot_resume(net, exp_name, is_ratio, is_distance_loss, loss_distance_mean, loader, loader_train, device, cat=None,
+                train_test=None, path_scores=None, save=True, diff_var=False, contrastive_loss=False):
     """
     plot interesting values to resume experiementation behavior: distance matrix, loss, acc, ratio, var intra, var inter
     :param net:
@@ -1638,37 +1638,53 @@ def plot_resume(net, exp_name, is_ratio, is_distance_loss, loss_distance_mean, l
 
     # loss and acc:____________________________________________________________________________________________________
     exp_name_chkpts = exp_name.split('_normalized_l1_')[0]
-    _, epochs, train_score, test_score, total_loss_train, total_loss_test, ratio_train_loss, \
-    ratio_test_loss, class_loss_train, class_loss_test, \
-    var_distance_classes_train, var_distance_classes_test, \
-    mean_distance_intra_class_train, mean_distance_intra_class_test = get_checkpoints_scores_CNN(net,
-                                                                                                 path_scores,
-                                                                                                 exp_name_chkpts,
-                                                                                                 is_ratio=is_ratio,
-                                                                                                 is_distance_loss=is_distance_loss,
-                                                                                                 loss_distance_mean=loss_distance_mean)
+
+    global_iter, epochs, train_score, test_score, total_train, total_test, ratio_train_loss, ratio_test_loss, \
+    var_distance_classes_train, var_distance_classes_test, mean_distance_intra_class_train, \
+    mean_distance_intra_class_test, intra_var_train, intra_var_test, inter_var_train, inter_var_test, \
+    diff_var_train, diff_var_test, contrastive_train, contrastive_test, classification_test, \
+    classification_train = get_checkpoints_scores_CNN(path_scores,
+                                                      exp_name,
+                                                      is_ratio=is_ratio,
+                                                      is_distance_loss=is_distance_loss,
+                                                      loss_distance_mean=loss_distance_mean)
     # get accuracy train and test:
     # acc_train_last_epoch = train_score[-1]
     # acc_test_last_epoch = test_score[-1]
     print('Computing scores...')
-    score_test, _ = compute_scores(net, loader, device, len(loader.dataset))
-    score_train, _ = compute_scores(net, loader_train, device, len(loader_train.dataset))
+    score_test, _, _, _, _, _, _, _, _, _, _ = compute_scores(net, loader, device, len(loader.dataset), False, False,
+                                                              False, False, False, False, False, False, False, False,
+                                                              False, False, False, False, False, False)
+
+    score_train, _, _, _, _, _, _, _, _, _, _ = compute_scores(net, loader_train, device, len(loader_train.dataset),
+                                                               False, False, False, False, False, False, False, False,
+                                                               False, False, False, False, False, False, False, False)
 
     # losses:
     axs[0, 0].set(xlabel='nb_iter', ylabel='loss', title=('Losses: ' + exp_name))
-    axs[0, 0].plot(epochs, total_loss_train, label='train')
-    axs[0, 0].plot(epochs, total_loss_test, label='test')
+    axs[0, 0].plot(epochs, total_train, label='Total loss train')
+    axs[0, 0].plot(epochs, total_test, label='Total loss test')
+
     if is_ratio:
         axs[0, 0].plot(epochs, ratio_train_loss, label='ratio loss train')
         axs[0, 0].plot(epochs, ratio_test_loss, label='ratio loss test')
-        axs[0, 0].plot(epochs, class_loss_train, label='classification loss train')
-        axs[0, 0].plot(epochs, class_loss_test, label='classification loss test')
     if is_distance_loss:
         axs[0, 0].plot(epochs, var_distance_classes_train, label='std distance between class train')
         axs[0, 0].plot(epochs, var_distance_classes_test, label='std distance between class train')
     if loss_distance_mean:
         axs[0, 0].plot(epochs, mean_distance_intra_class_train, label='mean distance between class train')
         axs[0, 0].plot(epochs, mean_distance_intra_class_test, label='mean distance between class train')
+    if diff_var:
+        axs[0, 0].plot(epochs, diff_var_train, label='diff_var_train')
+        axs[0, 0].plot(epochs, diff_var_test, label='diff_var_test')
+        axs[0, 0].plot(epochs, intra_var_train, label='variance intra classes train')
+        axs[0, 0].plot(epochs, intra_var_test, label='variance intra classes test')
+        axs[0, 0].plot(epochs, inter_var_train, label='variance inter classes train')
+        axs[0, 0].plot(epochs, inter_var_test, label='variance inter classes test')
+    if contrastive_loss:
+        axs[0, 0].plot(epochs, contrastive_train, label='contrastive loss train')
+        axs[0, 0].plot(epochs, contrastive_test, label='contrastive loss test')
+
     axs[0, 0].legend(loc=1)
 
     # 2d projection:____________________________________________________________________________________________________
