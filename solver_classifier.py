@@ -612,10 +612,7 @@ class SolverClassifier(object):
                     if self.loss_min_distance_cl:
                         # variance of distances between each class with other
                         loss_distance_cl = variance_distance_iter_class * self.lambda_var_distance
-                        # print(loss_distance_cl)
-                        # print(loss)
                         loss += loss_distance_cl
-                        # print(loss)
 
                     if self.loss_distance_mean:
                         # to avoid distance mean be too high we want distance closest to target_mean value
@@ -637,7 +634,6 @@ class SolverClassifier(object):
 
                 # backpropagation loss
                 self.optimizer.zero_grad()
-                # print(loss)
                 loss.backward()
                 self.optimizer.step()
 

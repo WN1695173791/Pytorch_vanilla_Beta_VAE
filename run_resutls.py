@@ -947,36 +947,36 @@ if __name__ == '__main__':
                            'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_3_3_2',
                            'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_3_3_3']
 
-    exp_classif_diff_var = [# 'mnist_balanced_dataset_encoder_diff_var_1_1',
-                            # 'mnist_balanced_dataset_encoder_diff_var_1_2',
-                            # 'mnist_balanced_dataset_encoder_diff_var_1_3',
-                            # 'mnist_balanced_dataset_encoder_diff_var_1_4',
-                            # 'mnist_balanced_dataset_encoder_diff_var_1_5',
-                            # 'mnist_balanced_dataset_encoder_diff_var_1_6',
-                            # 'mnist_balanced_dataset_encoder_diff_var_2_1',
-                            # 'mnist_balanced_dataset_encoder_diff_var_2_2',
-                            # 'mnist_balanced_dataset_encoder_diff_var_2_3',
-                            # 'mnist_balanced_dataset_encoder_diff_var_2_4',
-                            # 'mnist_balanced_dataset_encoder_diff_var_2_5',
-                            # 'mnist_balanced_dataset_encoder_diff_var_2_6',
-                            # 'mnist_balanced_dataset_encoder_diff_var_3_1',
-                            # 'mnist_balanced_dataset_encoder_diff_var_3_2',
-                            # 'mnist_balanced_dataset_encoder_diff_var_3_3',
-                            # 'mnist_balanced_dataset_encoder_diff_var_3_4',
-                            'mnist_balanced_dataset_encoder_diff_var_3_5']
-                            # 'mnist_balanced_dataset_encoder_diff_var_3_6',
-                            # 'mnist_balanced_dataset_encoder_diff_var_4_1',
-                            # 'mnist_balanced_dataset_encoder_diff_var_4_2',
-                            # 'mnist_balanced_dataset_encoder_diff_var_4_3',
-                            # 'mnist_balanced_dataset_encoder_diff_var_4_4',
-                            # 'mnist_balanced_dataset_encoder_diff_var_4_5',
-                            # 'mnist_balanced_dataset_encoder_diff_var_4_6',
-                            # 'mnist_balanced_dataset_encoder_diff_var_5_1',
-                            # 'mnist_balanced_dataset_encoder_diff_var_5_2',
-                            # 'mnist_balanced_dataset_encoder_diff_var_5_3',
-                            # 'mnist_balanced_dataset_encoder_diff_var_5_4',
-                            # 'mnist_balanced_dataset_encoder_diff_var_5_5',
-                            # 'mnist_balanced_dataset_encoder_diff_var_5_6']
+    exp_classif_diff_var = ['mnist_balanced_dataset_encoder_diff_var_1_1',
+                            'mnist_balanced_dataset_encoder_diff_var_1_2',
+                            'mnist_balanced_dataset_encoder_diff_var_1_3',
+                            'mnist_balanced_dataset_encoder_diff_var_1_4',
+                            'mnist_balanced_dataset_encoder_diff_var_1_5',
+                            'mnist_balanced_dataset_encoder_diff_var_1_6',
+                            'mnist_balanced_dataset_encoder_diff_var_2_1',
+                            'mnist_balanced_dataset_encoder_diff_var_2_2',
+                            'mnist_balanced_dataset_encoder_diff_var_2_3',
+                            'mnist_balanced_dataset_encoder_diff_var_2_4',
+                            'mnist_balanced_dataset_encoder_diff_var_2_5',
+                            'mnist_balanced_dataset_encoder_diff_var_2_6',
+                            'mnist_balanced_dataset_encoder_diff_var_3_1',
+                            'mnist_balanced_dataset_encoder_diff_var_3_2',
+                            'mnist_balanced_dataset_encoder_diff_var_3_3',
+                            'mnist_balanced_dataset_encoder_diff_var_3_4',
+                            'mnist_balanced_dataset_encoder_diff_var_3_5',
+                            'mnist_balanced_dataset_encoder_diff_var_3_6',
+                            'mnist_balanced_dataset_encoder_diff_var_4_1',
+                            'mnist_balanced_dataset_encoder_diff_var_4_2',
+                            'mnist_balanced_dataset_encoder_diff_var_4_3',
+                            'mnist_balanced_dataset_encoder_diff_var_4_4',
+                            'mnist_balanced_dataset_encoder_diff_var_4_5',
+                            'mnist_balanced_dataset_encoder_diff_var_4_6',
+                            'mnist_balanced_dataset_encoder_diff_var_5_1',
+                            'mnist_balanced_dataset_encoder_diff_var_5_2',
+                            'mnist_balanced_dataset_encoder_diff_var_5_3',
+                            'mnist_balanced_dataset_encoder_diff_var_5_4',
+                            'mnist_balanced_dataset_encoder_diff_var_5_5',
+                            'mnist_balanced_dataset_encoder_diff_var_5_6']
 
     list_classif_diff_var_min = ['mnist_balanced_dataset_encoder_diff_var_min_1_1_1',
                                  'mnist_balanced_dataset_encoder_diff_var_min_1_1_2',
@@ -1097,42 +1097,42 @@ if __name__ == '__main__':
 
     parameters_mnist_classifier_BK_ratio = "parameters_combinations/mnist_classifier_ratio.txt"
 
-    # run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
-    #                                                28,
-    #                                                29,
-    #                                                lis_decoder,
-    #                                                is_ratio=False,
-    #                                                is_decoder=True)
+    run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
+                                                   28,
+                                                   29,
+                                                   lis_decoder,
+                                                   is_ratio=False,
+                                                   is_decoder=True)
 
-    # run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
-    #                                                4,
-    #                                                6,
-    #                                                lis_encoder,
-    #                                                is_ratio=True)
+    run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
+                                                   4,
+                                                   6,
+                                                   lis_encoder,
+                                                   is_ratio=True)
 
-    # run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
-    #                                                2,
-    #                                                2,
-    #                                                exp_baseline,
-    #                                                is_ratio=True)
+    run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
+                                                   2,
+                                                   2,
+                                                   exp_baseline,
+                                                   is_ratio=True)
 
-    # run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
-    #                                                3,
-    #                                                7,
-    #                                                exp_classif_ratio,
-    #                                                is_ratio=True)
+    run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
+                                                   3,
+                                                   7,
+                                                   exp_classif_ratio,
+                                                   is_ratio=True)
 
-    # run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
-    #                                                8,
-    #                                                22,
-    #                                                exp_classif_ratio_min,
-    #                                                is_ratio=True)
+    run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
+                                                   8,
+                                                   22,
+                                                   exp_classif_ratio_min,
+                                                   is_ratio=True)
 
-    # run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
-    #                                                23,
-    #                                                49,
-    #                                                exp_classif_min_max,
-    #                                                is_ratio=True)
+    run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
+                                                   23,
+                                                   49,
+                                                   exp_classif_min_max,
+                                                   is_ratio=True)
 
     run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
                                                    50,
@@ -1140,14 +1140,14 @@ if __name__ == '__main__':
                                                    exp_classif_diff_var,
                                                    is_ratio=True)
 
-    # run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
-    #                                                80,
-    #                                                106,
-    #                                                list_classif_diff_var_min,
-    #                                                is_ratio=True)
+    run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
+                                                   80,
+                                                   106,
+                                                   list_classif_diff_var_min,
+                                                   is_ratio=True)
 
-    # run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
-    #                                                107,
-    #                                                187,
-    #                                                list_classif_diff_var_min_mean,
-    #                                                is_ratio=True)
+    run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
+                                                   107,
+                                                   187,
+                                                   list_classif_diff_var_min_mean,
+                                                   is_ratio=True)

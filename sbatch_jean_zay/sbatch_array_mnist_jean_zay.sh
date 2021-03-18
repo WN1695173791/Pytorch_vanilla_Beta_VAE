@@ -4,7 +4,7 @@
 #SBATCH --qos=qos_gpu-t4             # for jean-zay
 #SBATCH --gres=gpu:1                # nombre de GPU a reserver
 #SBATCH --cpus-per-task=3          # nombre de coeurs CPU par tache
-#SBATCH --time=00:02:00                  # time (DD-HH:MM)
+#SBATCH --time=00:30:00                  # time (DD-HH:MM)
 #SBATCH --output=output_exp/jean_zay/mnist_%A_%a.out       # STDOUT
 #SBATCH --error=output_exp/jean_zay/mnist_%A_%a.err       # STDERR
 
@@ -14,7 +14,7 @@
 #BATCH --mail-type=ALL           
 #SBATCH --mail-user=julien.dejasmin@lis-lab.fr
 
-#SBATCH --array=29-29   # 2-187
+#SBATCH --array=2-187
 echo "$SLURM_ARRAY_TASK_ID"
 
 # nettoyage des modules charges en interactif et herites par defaut
@@ -29,12 +29,7 @@ set -x
 LINE=$(sed -n "$SLURM_ARRAY_TASK_ID"p parameters_combinations/mnist_classifier_ratio.txt)
 echo $LINE
 
-# python3 -u main.py $LINE
+python3 -u main.py $LINE
 
-# echo "model learn end"
 wait      # Wait for the end of the "child" processes (Steps) before finishing the parent process (Job).
-
-# echo "run results resume"
-# python3 -u run_resutls.py
-
 echo "All done !"
