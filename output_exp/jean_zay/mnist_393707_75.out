@@ -1,0 +1,117 @@
+75
+--dataset mnist --model CNN --gpu_devices 0 1 --max_iter 50 --batch_size 250 --ckpt_dir checkpoints_CNN --ckpt_dir_scores checkpoint_scores_CNN --use_scheduler True --GMP True --lr 1e-3 --z_struct_size 32 --add_classification_layer True --classif_layer_size 30 --is_default_model False --is_custom_model False --is_custom_model_BK True --big_kernel_size 8 --two_conv_layer True --three_conv_layer False --BK_in_first_layer True --BK_in_second_layer False --BK_in_third_layer False --stride_size 1 --hidden_filters_layer1 32 --hidden_filters_layer2 32 --hidden_filters_layer3 32 --ratio_reg False --lambda_ratio_reg 1 --lambda_class 1 --other_ratio False --loss_min_distance_cl False --lambda_var_distance 1 --intra_class_variance_loss False --lambda_intra_class_var 1 --contrastive_loss False --lambda_contrastive_loss 1 --alpha 32 --loss Proxy_Anchor --optimizer adamw --mrg 0.1 --IPC False --warm 1 --sz_embedding 32 --dataset_balanced True --loss_distance_mean False --lambda_distance_mean 1 --value_target_distance_mean 10 --diff_var True --lambda_var_intra 0.001 --lambda_var_inter 1 --exp_name mnist_balanced_dataset_encoder_diff_var_5_2
+Namespace(BK_in_first_layer=True, BK_in_second_layer=False, BK_in_third_layer=False, BN=False, C_max=25, C_stop_iter=100000.0, E1_AE=False, E1_VAE=False, E1_conv=False, E1_dense=False, E1_second_conv=False, E1_second_conv_adapt=False, GMP=True, IPC=False, L1_norm_act=False, L1_norm_weights=False, L3_without_random=False, LOG_DIR='logs', adapt_lr=False, add_classification_layer=True, add_linear_after_GMP=True, add_z_struct_bottleneck=False, alpha=32.0, batch_size=250, beta=1, beta1=0.9, beta2=0.999, big_kernel=False, big_kernel_size=[8], binary_chain=False, binary_z=False, ckpt_dir='checkpoints_CNN', ckpt_dir_scores='checkpoint_scores_CNN', classif_layer_size=30, contrastive_loss=False, cuda=True, dataset='mnist', dataset_balanced=True, diff_var=True, display_step=10000, dset_dir='data', exp_name='mnist_balanced_dataset_encoder_diff_var_5_2', freeze_Encoder=True, gamma=1000, gpu_devices=[0, 1], hidden_filters_layer1=32, hidden_filters_layer2=32, hidden_filters_layer3=32, image_size=64, intra_class_variance_loss=False, is_C=True, is_E1=False, is_binary_structural_latent=False, is_custom_model=False, is_custom_model_BK=True, is_default_model=False, is_noise_stats=False, is_partial_rand_class=False, is_perturbed_score=False, is_zvar_sim_loss=False, just_train=False, kernel_size=4, lambda_Kl_struct=1, lambda_Kl_var=1, lambda_L1=0.01, lambda_VAE=1, lambda_class=1.0, lambda_contrastive_loss=1.0, lambda_distance_mean=1.0, lambda_intra_class_var=1.0, lambda_partial_class=1, lambda_ratio_reg=1.0, lambda_recon_wt_rand=1, lambda_recons=1, lambda_var_distance=1.0, lambda_var_inter=1.0, lambda_var_intra=0.001, lambda_zvar_sim=1, latent_spec_cont=None, latent_spec_cont_class=None, latent_spec_cont_var=None, latent_spec_disc=None, latent_spec_disc_class=None, latent_spec_disc_var=None, log_level='info', loss='Proxy_Anchor', loss_distance_mean=False, loss_min_distance_cl=False, lr=0.001, max_iter=50.0, model='CNN', mrg=0.1, num_workers=2, old_weighted=False, optimizer='adamw', other_ratio=False, random_percentage=0.2, random_seed=10, randomness=True, ratio_reg=False, remark='', save_step=10000, second_layer_C=False, seed=1, stride_size=1, sz_embedding=32, three_conv_layer=False, train=True, two_conv_layer=True, two_encoder=False, use_decoder=False, use_early_stopping=True, use_scheduler=True, value_target_distance_mean=10.0, warm=1, without_acc=False, z_struct_size=32, zeros_W_Classif=False, zvar_sim_change_zvar=False, zvar_sim_loss_for_all_model=False, zvar_sim_loss_only_for_encoder=False, zvar_sim_normal=False, zvar_sim_var_rand=False)
+CUDA Visible devices !
+[Using Seed: 10]
+Balanced dataset loaded
+use 1 gpu who named: Tesla V100-SXM2-32GB
+=> loaded sample_scores and losses
+=> no checkpoint found at 'checkpoints_CNN/mnist_balanced_dataset_encoder_diff_var_5_2/last'
+Custom_CNN_BK(
+  (net): Sequential(
+    (0): Conv2d(1, 32, kernel_size=(8, 8), stride=(1, 1))
+    (1): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (2): ReLU(inplace=True)
+    (3): Conv2d(32, 32, kernel_size=(4, 4), stride=(1, 1))
+    (4): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (5): ReLU(inplace=True)
+    (6): AdaptiveMaxPool2d(output_size=(1, 1))
+    (7): View()
+    (8): Linear(in_features=32, out_features=32, bias=True)
+    (9): BatchNorm1d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (10): ReLU(inplace=True)
+    (11): Dropout(p=0.4, inplace=False)
+    (12): Linear(in_features=32, out_features=30, bias=True)
+    (13): BatchNorm1d(30, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (14): ReLU(inplace=True)
+    (15): Dropout(p=0.4, inplace=False)
+    (16): Linear(in_features=30, out_features=10, bias=True)
+    (17): Softmax(dim=None)
+  )
+)
+The number of parameters of model is 21104
+=> saved checkpoint 'checkpoints_CNN/mnist_balanced_dataset_encoder_diff_var_5_2/last' (iter 270, epoch 1.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_balanced_dataset_encoder_diff_var_5_2/last' (iter 270, epoch 1.0)
+[Save Checkpoint] epoch: [1.0], Train score:86.01333, Test score:77.14000, train loss:-0.84248, test loss:-0.84909, ratio_train_loss:0.00000,ratio_test_loss:0.00000, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_balanced_dataset_encoder_diff_var_5_2/last' (iter 540, epoch 2.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_balanced_dataset_encoder_diff_var_5_2/last' (iter 540, epoch 2.0)
+[Save Checkpoint] epoch: [2.0], Train score:97.65833, Test score:87.12000, train loss:-0.95357, test loss:-0.95713, ratio_train_loss:0.00000,ratio_test_loss:0.00000, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_balanced_dataset_encoder_diff_var_5_2/last' (iter 810, epoch 3.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_balanced_dataset_encoder_diff_var_5_2/last' (iter 810, epoch 3.0)
+[Save Checkpoint] epoch: [3.0], Train score:108.69500, Test score:97.46000, train loss:-1.05862, test loss:-1.06422, ratio_train_loss:0.00000,ratio_test_loss:0.00000, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_balanced_dataset_encoder_diff_var_5_2/last' (iter 1080, epoch 4.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_balanced_dataset_encoder_diff_var_5_2/last' (iter 1080, epoch 4.0)
+[Save Checkpoint] epoch: [4.0], Train score:109.55333, Test score:97.92000, train loss:-1.07115, test loss:-1.07448, ratio_train_loss:0.00000,ratio_test_loss:0.00000, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_balanced_dataset_encoder_diff_var_5_2/last' (iter 1350, epoch 5.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_balanced_dataset_encoder_diff_var_5_2/last' (iter 1350, epoch 5.0)
+[Save Checkpoint] epoch: [5.0], Train score:109.83000, Test score:97.81000, train loss:-1.07475, test loss:-1.07596, ratio_train_loss:0.00000,ratio_test_loss:0.00000, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_balanced_dataset_encoder_diff_var_5_2/last' (iter 1620, epoch 6.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_balanced_dataset_encoder_diff_var_5_2/last' (iter 1620, epoch 6.0)
+[Save Checkpoint] epoch: [6.0], Train score:109.98000, Test score:98.19000, train loss:-1.07725, test loss:-1.08012, ratio_train_loss:0.00000,ratio_test_loss:0.00000, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_balanced_dataset_encoder_diff_var_5_2/last' (iter 1890, epoch 7.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_balanced_dataset_encoder_diff_var_5_2/last' (iter 1890, epoch 7.0)
+EarlyStopping counter: 1 out of 10
+[Save Checkpoint] epoch: [7.0], Train score:110.17667, Test score:98.12000, train loss:-1.07923, test loss:-1.08032, ratio_train_loss:0.00000,ratio_test_loss:0.00000, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_balanced_dataset_encoder_diff_var_5_2/last' (iter 2160, epoch 8.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_balanced_dataset_encoder_diff_var_5_2/last' (iter 2160, epoch 8.0)
+[Save Checkpoint] epoch: [8.0], Train score:110.30000, Test score:98.16000, train loss:-1.08023, test loss:-1.08010, ratio_train_loss:0.00000,ratio_test_loss:0.00000, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_balanced_dataset_encoder_diff_var_5_2/last' (iter 2430, epoch 9.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_balanced_dataset_encoder_diff_var_5_2/last' (iter 2430, epoch 9.0)
+EarlyStopping counter: 1 out of 10
+[Save Checkpoint] epoch: [9.0], Train score:110.48167, Test score:98.37000, train loss:-1.08209, test loss:-1.08240, ratio_train_loss:0.00000,ratio_test_loss:0.00000, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_balanced_dataset_encoder_diff_var_5_2/last' (iter 2700, epoch 10.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_balanced_dataset_encoder_diff_var_5_2/last' (iter 2700, epoch 10.0)
+[Save Checkpoint] epoch: [10.0], Train score:110.61500, Test score:98.37000, train loss:-1.08360, test loss:-1.08340, ratio_train_loss:0.00000,ratio_test_loss:0.00000, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_balanced_dataset_encoder_diff_var_5_2/last' (iter 2970, epoch 11.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_balanced_dataset_encoder_diff_var_5_2/last' (iter 2970, epoch 11.0)
+[Save Checkpoint] epoch: [11.0], Train score:110.57500, Test score:98.25000, train loss:-1.08311, test loss:-1.08195, ratio_train_loss:0.00000,ratio_test_loss:0.00000, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_balanced_dataset_encoder_diff_var_5_2/last' (iter 3240, epoch 12.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_balanced_dataset_encoder_diff_var_5_2/last' (iter 3240, epoch 12.0)
+EarlyStopping counter: 1 out of 10
+[Save Checkpoint] epoch: [12.0], Train score:110.73500, Test score:98.40000, train loss:-1.08459, test loss:-1.08356, ratio_train_loss:0.00000,ratio_test_loss:0.00000, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_balanced_dataset_encoder_diff_var_5_2/last' (iter 3510, epoch 13.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_balanced_dataset_encoder_diff_var_5_2/last' (iter 3510, epoch 13.0)
+[Save Checkpoint] epoch: [13.0], Train score:110.80167, Test score:98.50000, train loss:-1.08541, test loss:-1.08422, ratio_train_loss:0.00000,ratio_test_loss:0.00000, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_balanced_dataset_encoder_diff_var_5_2/last' (iter 3780, epoch 14.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_balanced_dataset_encoder_diff_var_5_2/last' (iter 3780, epoch 14.0)
+EarlyStopping counter: 1 out of 10
+[Save Checkpoint] epoch: [14.0], Train score:110.87333, Test score:98.40000, train loss:-1.08609, test loss:-1.08357, ratio_train_loss:0.00000,ratio_test_loss:0.00000, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_balanced_dataset_encoder_diff_var_5_2/last' (iter 4050, epoch 15.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_balanced_dataset_encoder_diff_var_5_2/last' (iter 4050, epoch 15.0)
+EarlyStopping counter: 2 out of 10
+[Save Checkpoint] epoch: [15.0], Train score:110.83167, Test score:98.43000, train loss:-1.08576, test loss:-1.08380, ratio_train_loss:0.00000,ratio_test_loss:0.00000, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_balanced_dataset_encoder_diff_var_5_2/last' (iter 4320, epoch 16.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_balanced_dataset_encoder_diff_var_5_2/last' (iter 4320, epoch 16.0)
+EarlyStopping counter: 3 out of 10
+[Save Checkpoint] epoch: [16.0], Train score:110.98667, Test score:98.48000, train loss:-1.08712, test loss:-1.08433, ratio_train_loss:0.00000,ratio_test_loss:0.00000, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_balanced_dataset_encoder_diff_var_5_2/last' (iter 4590, epoch 17.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_balanced_dataset_encoder_diff_var_5_2/last' (iter 4590, epoch 17.0)
+EarlyStopping counter: 4 out of 10
+[Save Checkpoint] epoch: [17.0], Train score:111.04833, Test score:98.57000, train loss:-1.08755, test loss:-1.08567, ratio_train_loss:0.00000,ratio_test_loss:0.00000, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_balanced_dataset_encoder_diff_var_5_2/last' (iter 4860, epoch 18.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_balanced_dataset_encoder_diff_var_5_2/last' (iter 4860, epoch 18.0)
+EarlyStopping counter: 5 out of 10
+[Save Checkpoint] epoch: [18.0], Train score:110.98333, Test score:98.50000, train loss:-1.08711, test loss:-1.08457, ratio_train_loss:0.00000,ratio_test_loss:0.00000, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_balanced_dataset_encoder_diff_var_5_2/last' (iter 5130, epoch 19.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_balanced_dataset_encoder_diff_var_5_2/last' (iter 5130, epoch 19.0)
+EarlyStopping counter: 6 out of 10
+[Save Checkpoint] epoch: [19.0], Train score:111.00667, Test score:98.59000, train loss:-1.08761, test loss:-1.08496, ratio_train_loss:0.00000,ratio_test_loss:0.00000, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_balanced_dataset_encoder_diff_var_5_2/last' (iter 5400, epoch 20.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_balanced_dataset_encoder_diff_var_5_2/last' (iter 5400, epoch 20.0)
+EarlyStopping counter: 7 out of 10
+[Save Checkpoint] epoch: [20.0], Train score:111.11333, Test score:98.66000, train loss:-1.08856, test loss:-1.08617, ratio_train_loss:0.00000,ratio_test_loss:0.00000, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_balanced_dataset_encoder_diff_var_5_2/last' (iter 5670, epoch 21.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_balanced_dataset_encoder_diff_var_5_2/last' (iter 5670, epoch 21.0)
+EarlyStopping counter: 8 out of 10
+[Save Checkpoint] epoch: [21.0], Train score:111.12333, Test score:98.45000, train loss:-1.08850, test loss:-1.08393, ratio_train_loss:0.00000,ratio_test_loss:0.00000, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_balanced_dataset_encoder_diff_var_5_2/last' (iter 5940, epoch 22.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_balanced_dataset_encoder_diff_var_5_2/last' (iter 5940, epoch 22.0)
+EarlyStopping counter: 9 out of 10
+[Save Checkpoint] epoch: [22.0], Train score:111.13167, Test score:98.74000, train loss:-1.08876, test loss:-1.08664, ratio_train_loss:0.00000,ratio_test_loss:0.00000, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_balanced_dataset_encoder_diff_var_5_2/last' (iter 6210, epoch 23.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_balanced_dataset_encoder_diff_var_5_2/last' (iter 6210, epoch 23.0)
+EarlyStopping counter: 10 out of 10
+[Save Checkpoint] epoch: [23.0], Train score:111.21000, Test score:98.67000, train loss:-1.08928, test loss:-1.08653, ratio_train_loss:0.00000,ratio_test_loss:0.00000, var distance inter class train:0.00000,var distance inter class test:0.00000
+Early stopping
+[Training Finished]
+All done !
