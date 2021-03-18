@@ -134,26 +134,26 @@ class Encoder_decoder(nn.Module, ABC):
             nn.ReLU(True),
             PrintLayer(),
             View((-1, *self.reshape)),  # B, 1, 6, 6
-            PrintLayer(),
+            # PrintLayer(),
             nn.ConvTranspose2d(1,
                                self.decoder_n_filter_1,
                                self.decoder_kernel_size_1,
                                stride=self.decoder_stride_1),  # B, 64, 14, 14
             # nn.BatchNorm2d(64),
             nn.ReLU(True),
-            PrintLayer(),
+            # PrintLayer(),
             nn.ConvTranspose2d(self.decoder_n_filter_1,
                                self.decoder_n_filter_2,
                                self.decoder_kernel_size_2,
                                stride=self.decoder_stride_2),  # B, 32, 29, 29
             # nn.BatchNorm2d(32),
             nn.ReLU(True),
-            PrintLayer(),
+            # PrintLayer(),
             nn.ConvTranspose2d(self.decoder_n_filter_2,
                                self.nc,
                                self.decoder_kernel_size_3,
                                stride=self.decoder_stride_3),  # B, 1, 32, 32
-            PrintLayer(),
+            # PrintLayer(),
             nn.Sigmoid()
         ]
         # --------------------------------------- end decoder -----------------------------------
