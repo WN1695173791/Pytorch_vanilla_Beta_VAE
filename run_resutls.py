@@ -660,21 +660,21 @@ batch = torch.load('data/batch_mnist.pt')
 batch_size = 10000  # 10000 to run regions visualization (we must have only one so all data set test in one batch)
 train_loader, test_loader = get_mnist_dataset(batch_size=batch_size)
 
-if batch_size == 10000:
-    path_image_save = 'regions_of_interest/images/images.npy'
-    if not os.path.exists(path_image_save):
-        _, test_loader = get_mnist_dataset(batch_size=batch_size)
-        dataiter_test = iter(test_loader)
-        images_test, label_test = dataiter_test.next()
-
-        print('load mnist dataset test with images shape: {}', images_test.shape)
-
-        np.save('regions_of_interest/labels/labels.npy', label_test)
-        np.save(path_image_save, images_test)
-    else:
-        # load labels:
-        label_test = np.load('regions_of_interest/labels/labels.npy', allow_pickle=True)
-        images_test = torch.tensor(np.load('regions_of_interest/images/images.npy', allow_pickle=True))
+# if batch_size == 10000:
+#     path_image_save = 'regions_of_interest/images/images.npy'
+#     if not os.path.exists(path_image_save):
+#         _, test_loader = get_mnist_dataset(batch_size=batch_size)
+#         dataiter_test = iter(test_loader)
+#         images_test, label_test = dataiter_test.next()
+# 
+#         print('load mnist dataset test with images shape: {}', images_test.shape)
+# 
+#         np.save('regions_of_interest/labels/labels.npy', label_test)
+#         np.save(path_image_save, images_test)
+#     else:
+#         # load labels:
+#         label_test = np.load('regions_of_interest/labels/labels.npy', allow_pickle=True)
+#         images_test = torch.tensor(np.load('regions_of_interest/images/images.npy', allow_pickle=True))
 
 # parameters:
 img_size = (1, 32, 32)

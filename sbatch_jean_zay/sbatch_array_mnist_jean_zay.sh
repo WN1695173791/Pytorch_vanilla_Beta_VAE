@@ -29,9 +29,12 @@ set -x
 LINE=$(sed -n "$SLURM_ARRAY_TASK_ID"p parameters_combinations/mnist_classifier_ratio.txt)
 echo $LINE
 
-python3 -u main.py $LINE
+# python3 -u main.py $LINE
 
-echo "All Done!"
+# echo "model learn end"
 wait      # Wait for the end of the "child" processes (Steps) before finishing the parent process (Job).
 
-python3 -u run_resutls.py
+# echo "run results resume"
+# python3 -u run_resutls.py
+
+echo "All done !"

@@ -637,7 +637,7 @@ class SolverClassifier(object):
 
                 # backpropagation loss
                 self.optimizer.zero_grad()
-                print(loss)
+                # print(loss)
                 loss.backward()
                 self.optimizer.step()
 
