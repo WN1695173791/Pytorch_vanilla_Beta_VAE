@@ -179,6 +179,13 @@ def run_exp_extraction_and_visualization_custom_BK(path_parameter, line_begin, l
                 elif args[-3][1] == 'False':
                     Binary_z = False
 
+        # diff var loss:
+        if args[-4][0] == 'diff_var':
+            if args[-4][1] == 'True':
+                diff_var = True
+            elif args[-4][1] == 'False':
+                diff_var = False
+
         if args[-3][0] == 'loss_distance_mean':
             if args[-3][1] == 'True':
                 loss_distance_mean = True
@@ -318,7 +325,7 @@ def run_exp_extraction_and_visualization_custom_BK(path_parameter, line_begin, l
             else:
                 run_viz_expes(exp_name, net, is_ratio, loss_min_distance_cl, loss_distance_mean,
                               net_type='Custom_CNN_BK',
-                              cat=cat, ratio_reg=ratio_reg)
+                              cat=cat, ratio_reg=ratio_reg, diff_var_loss=diff_var)
                 visualize_regions_of_interest(exp_name, net, net_type='Custom_CNN_BK')
 
         # save list models:
@@ -426,7 +433,7 @@ def run_decoder(exp_name, net, multi_label=True):
 
 
 def run_viz_expes(exp_name, net, is_ratio, is_distance_loss, loss_distance_mean, net_type=None, cat=None,
-                  ratio_reg=False):
+                  ratio_reg=False, diff_var_loss=False, contrastive_loss=False):
     print(exp_name, 'run viz expes')
     path = 'checkpoints_CNN/'
     path_scores = 'checkpoint_scores_CNN'
@@ -439,22 +446,23 @@ def run_viz_expes(exp_name, net, is_ratio, is_distance_loss, loss_distance_mean,
     loader_size = len(loader.dataset)
 
     # scores and losses:
-    # plot_scores_and_loss_CNN(net_trained, exp_name, path_scores, is_ratio=ratio_reg, save=True,
-    #                          is_distance_loss=is_distance_loss, loss_distance_mean=loss_distance_mean)
+    plot_scores_and_loss_CNN(net_trained, exp_name, path_scores, is_ratio=ratio_reg, save=True,
+                             is_distance_loss=is_distance_loss, loss_distance_mean=loss_distance_mean,
+                             diff_var=diff_var_loss, contrastive_loss=contrastive_loss)
     # score_test, _ = compute_scores(net_trained, loader, device, loader_size)
     # score_train, _ = compute_scores(net_trained, train_loader, device, len(train_loader.dataset))
     # print('score Test acc: {:.3f}% and Train set acc: {:.3f}%'.format(score_test, score_train))
 
     # compute features:
-    compute_z_struct(net_trained, exp_name, loader, train_test=train_test, net_type=net_type)
-    compute_z_struct_representation_noised(net, exp_name, train_test=train_test, nb_repeat=10, nb_class=nb_class,
-                                           net_type=net_type)
-    get_z_struct_per_class(exp_name, train_test=train_test, nb_class=nb_class)
-    get_average_z_struct_per_classes(exp_name=exp_name, train_test=train_test)
-    get_prediction_per_classes(exp_name, train_test=train_test)
-    get_prediction_noised_per_class(exp_name, train_test=train_test)
-    compute_all_score_acc(exp_name, train_test=train_test)
-    compute_mean_std_prediction(exp_name, train_test=train_test)
+    # compute_z_struct(net_trained, exp_name, loader, train_test=train_test, net_type=net_type)
+    # compute_z_struct_representation_noised(net, exp_name, train_test=train_test, nb_repeat=10, nb_class=nb_class,
+    #                                        net_type=net_type)
+    # get_z_struct_per_class(exp_name, train_test=train_test, nb_class=nb_class)
+    # get_average_z_struct_per_classes(exp_name=exp_name, train_test=train_test)
+    # get_prediction_per_classes(exp_name, train_test=train_test)
+    # get_prediction_noised_per_class(exp_name, train_test=train_test)
+    # compute_all_score_acc(exp_name, train_test=train_test)
+    # compute_mean_std_prediction(exp_name, train_test=train_test)
 
     # receptive_field = get_receptive_field(net_trained, img_size, net_type=net_type)
 
@@ -485,8 +493,8 @@ def run_viz_expes(exp_name, net, is_ratio, is_distance_loss, loss_distance_mean,
 
     # _ = distance_matrix(net_trained, exp_name, train_test=train_test, plot_fig=True)
 
-    plot_resume(net_trained, exp_name, is_ratio, is_distance_loss, loss_distance_mean, loader, train_loader,
-                device, cat=cat, train_test=train_test, path_scores=path_scores)
+    # plot_resume(net_trained, exp_name, is_ratio, is_distance_loss, loss_distance_mean, loader, train_loader,
+    #             device, cat=cat, train_test=train_test, path_scores=path_scores)
 
     return
 
@@ -886,404 +894,180 @@ def network(z_struct_size, big_kernel_size, stride_size, classif_layer_size, add
 
 
 if __name__ == '__main__':
-    exp_baseline = ['mnist_baseline_128',
-                    'mnist_baseline_256',
-                    'mnist_baseline_512']
+    exp_baseline = ['mnist_balanced_dataset_baseline']
 
-    exp_baseline_balanced = [  # 'mnist_baseline_balanced_128',
-        'mnist_baseline_balanced_256']
-    # 'mnist_baseline_balanced_512']
+    exp_classif_ratio = ['mnist_balanced_dataset_encoder_ratio_1',
+                         'mnist_balanced_dataset_encoder_ratio_2',
+                         'mnist_balanced_dataset_encoder_ratio_3',
+                         'mnist_balanced_dataset_encoder_ratio_4',
+                         'mnist_balanced_dataset_encoder_ratio_5']
 
-    exp_classif_ratio = ['mnist_classif_ratio_1',
-                         'mnist_classif_ratio_2',
-                         'mnist_classif_ratio_3',
-                         'mnist_classif_ratio_4',
-                         'mnist_classif_ratio_5',
-                         'mnist_classif_ratio_6',
-                         'mnist_classif_ratio_7']
+    exp_classif_ratio_min = ['mnist_balanced_dataset_encoder_ratio_min_1_1',
+                             'mnist_balanced_dataset_encoder_ratio_min_1_2',
+                             'mnist_balanced_dataset_encoder_ratio_min_1_3',
+                             'mnist_balanced_dataset_encoder_ratio_min_1_4',
+                             'mnist_balanced_dataset_encoder_ratio_min_1_5',
+                             'mnist_balanced_dataset_encoder_ratio_min_2_1',
+                             'mnist_balanced_dataset_encoder_ratio_min_2_2',
+                             'mnist_balanced_dataset_encoder_ratio_min_2_3',
+                             'mnist_balanced_dataset_encoder_ratio_min_2_4',
+                             'mnist_balanced_dataset_encoder_ratio_min_2_5',
+                             'mnist_balanced_dataset_encoder_ratio_min_3_1',
+                             'mnist_balanced_dataset_encoder_ratio_min_3_2',
+                             'mnist_balanced_dataset_encoder_ratio_min_3_3',
+                             'mnist_balanced_dataset_encoder_ratio_min_3_4',
+                             'mnist_balanced_dataset_encoder_ratio_min_3_5']
 
-    exp_classif_distance = ['mnist_classif_distance_intra_class_1',
-                            'mnist_classif_distance_intra_class_2',
-                            'mnist_classif_distance_intra_class_3',
-                            'mnist_classif_distance_intra_class_4',
-                            'mnist_classif_distance_intra_class_5',
-                            'mnist_classif_distance_intra_class_6',
-                            'mnist_classif_distance_intra_class_7']
+    exp_classif_min_max = ['mnist_balanced_dataset_encoder_ratio_min_and_mean_1_1_1',
+                           'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1',
+                           'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_3_1',
+                           'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_1_2',
+                           'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_2',
+                           'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_3_2',
+                           'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_1_3',
+                           'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_3',
+                           'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_3_3']
 
-    exp_classif_distance_mean_max = ['mnist_classif_distance_intra_class_max_mean_1_1',
-                                     'mnist_classif_distance_intra_class_max_mean_1_2',
-                                     'mnist_classif_distance_intra_class_max_mean_1_3',
-                                     'mnist_classif_distance_intra_class_max_mean_1_4',
-                                     'mnist_classif_distance_intra_class_max_mean_1_5',
-                                     'mnist_classif_distance_intra_class_max_mean_1_6',
-                                     'mnist_classif_distance_intra_class_max_mean_1_7',
-                                     'mnist_classif_distance_intra_class_max_mean_2_1',
-                                     'mnist_classif_distance_intra_class_max_mean_2_2',
-                                     'mnist_classif_distance_intra_class_max_mean_2_3',
-                                     'mnist_classif_distance_intra_class_max_mean_2_4',
-                                     'mnist_classif_distance_intra_class_max_mean_2_5',
-                                     'mnist_classif_distance_intra_class_max_mean_2_6',
-                                     'mnist_classif_distance_intra_class_max_mean_2_7',
-                                     'mnist_classif_distance_intra_class_max_mean_3_1',
-                                     'mnist_classif_distance_intra_class_max_mean_3_2',
-                                     'mnist_classif_distance_intra_class_max_mean_3_3',
-                                     'mnist_classif_distance_intra_class_max_mean_3_4',
-                                     'mnist_classif_distance_intra_class_max_mean_3_5',
-                                     'mnist_classif_distance_intra_class_max_mean_3_6',
-                                     'mnist_classif_distance_intra_class_max_mean_3_7',
-                                     'mnist_classif_distance_intra_class_max_mean_4_1',
-                                     'mnist_classif_distance_intra_class_max_mean_4_2',
-                                     'mnist_classif_distance_intra_class_max_mean_4_3',
-                                     'mnist_classif_distance_intra_class_max_mean_4_4',
-                                     'mnist_classif_distance_intra_class_max_mean_4_5',
-                                     'mnist_classif_distance_intra_class_max_mean_4_6',
-                                     'mnist_classif_distance_intra_class_max_mean_4_7',
-                                     'mnist_classif_distance_intra_class_max_mean_5_1',
-                                     'mnist_classif_distance_intra_class_max_mean_5_2',
-                                     'mnist_classif_distance_intra_class_max_mean_5_3',
-                                     'mnist_classif_distance_intra_class_max_mean_5_4',
-                                     'mnist_classif_distance_intra_class_max_mean_5_5',
-                                     'mnist_classif_distance_intra_class_max_mean_5_6',
-                                     'mnist_classif_distance_intra_class_max_mean_5_7',
-                                     'mnist_classif_distance_intra_class_max_mean_6_1',
-                                     'mnist_classif_distance_intra_class_max_mean_6_2',
-                                     'mnist_classif_distance_intra_class_max_mean_6_3',
-                                     'mnist_classif_distance_intra_class_max_mean_6_4',
-                                     'mnist_classif_distance_intra_class_max_mean_6_5',
-                                     'mnist_classif_distance_intra_class_max_mean_6_6',
-                                     'mnist_classif_distance_intra_class_max_mean_6_7']
+    exp_classif_diff_var = ['mnist_balanced_dataset_encoder_diff_var_1_1',
+                            'mnist_balanced_dataset_encoder_diff_var_1_2',
+                            'mnist_balanced_dataset_encoder_diff_var_1_3',
+                            'mnist_balanced_dataset_encoder_diff_var_1_4',
+                            'mnist_balanced_dataset_encoder_diff_var_1_5',
+                            'mnist_balanced_dataset_encoder_diff_var_1_6',
+                            'mnist_balanced_dataset_encoder_diff_var_2_1',
+                            'mnist_balanced_dataset_encoder_diff_var_2_2',
+                            'mnist_balanced_dataset_encoder_diff_var_2_3',
+                            'mnist_balanced_dataset_encoder_diff_var_2_4',
+                            'mnist_balanced_dataset_encoder_diff_var_2_5',
+                            'mnist_balanced_dataset_encoder_diff_var_2_6',
+                            'mnist_balanced_dataset_encoder_diff_var_3_1',
+                            'mnist_balanced_dataset_encoder_diff_var_3_2',
+                            'mnist_balanced_dataset_encoder_diff_var_3_3',
+                            'mnist_balanced_dataset_encoder_diff_var_3_4',
+                            'mnist_balanced_dataset_encoder_diff_var_3_5',
+                            'mnist_balanced_dataset_encoder_diff_var_3_6',
+                            'mnist_balanced_dataset_encoder_diff_var_4_1',
+                            'mnist_balanced_dataset_encoder_diff_var_4_2',
+                            'mnist_balanced_dataset_encoder_diff_var_4_3',
+                            'mnist_balanced_dataset_encoder_diff_var_4_4',
+                            'mnist_balanced_dataset_encoder_diff_var_4_5',
+                            'mnist_balanced_dataset_encoder_diff_var_4_6',
+                            'mnist_balanced_dataset_encoder_diff_var_5_1',
+                            'mnist_balanced_dataset_encoder_diff_var_5_2',
+                            'mnist_balanced_dataset_encoder_diff_var_5_3',
+                            'mnist_balanced_dataset_encoder_diff_var_5_4',
+                            'mnist_balanced_dataset_encoder_diff_var_5_5',
+                            'mnist_balanced_dataset_encoder_diff_var_5_6']
 
-    exp_classif_ratio_var_intra = [  # 'mnist_classif_ratio_variacnce_intra_1_1',
-        # 'mnist_classif_ratio_variacnce_intra_1_2',
-        # 'mnist_classif_ratio_variacnce_intra_1_3',
-        # 'mnist_classif_ratio_variacnce_intra_1_4',
-        # 'mnist_classif_ratio_variacnce_intra_1_5',
-        # 'mnist_classif_ratio_variacnce_intra_1_6',
-        # 'mnist_classif_ratio_variacnce_intra_1_7',
-        # 'mnist_classif_ratio_variacnce_intra_2_1',
-        # 'mnist_classif_ratio_variacnce_intra_2_2',
-        # 'mnist_classif_ratio_variacnce_intra_2_3',
-        # 'mnist_classif_ratio_variacnce_intra_2_4',
-        # 'mnist_classif_ratio_variacnce_intra_2_5',
-        # 'mnist_classif_ratio_variacnce_intra_2_6',
-        # 'mnist_classif_ratio_variacnce_intra_2_7',
-        # 'mnist_classif_ratio_variacnce_intra_3_1',
-        # 'mnist_classif_ratio_variacnce_intra_3_2',
-        # 'mnist_classif_ratio_variacnce_intra_3_3',
-        # 'mnist_classif_ratio_variacnce_intra_3_4',
-        # 'mnist_classif_ratio_variacnce_intra_3_5',
-        # 'mnist_classif_ratio_variacnce_intra_3_6',
-        # 'mnist_classif_ratio_variacnce_intra_3_7',
-        # 'mnist_classif_ratio_variacnce_intra_4_1',
-        # 'mnist_classif_ratio_variacnce_intra_4_2',
-        # 'mnist_classif_ratio_variacnce_intra_4_3',
-        # 'mnist_classif_ratio_variacnce_intra_4_4',
-        # 'mnist_classif_ratio_variacnce_intra_4_5',
-        # 'mnist_classif_ratio_variacnce_intra_4_6',
-        # 'mnist_classif_ratio_variacnce_intra_4_7',
-        # 'mnist_classif_ratio_variacnce_intra_5_1',
-        # 'mnist_classif_ratio_variacnce_intra_5_2',
-        # 'mnist_classif_ratio_variacnce_intra_5_3',
-        # 'mnist_classif_ratio_variacnce_intra_5_4',
-        # 'mnist_classif_ratio_variacnce_intra_5_5',
-        # 'mnist_classif_ratio_variacnce_intra_5_6',
-        # 'mnist_classif_ratio_variacnce_intra_5_7',
-        # 'mnist_classif_ratio_variacnce_intra_6_1',
-        # 'mnist_classif_ratio_variacnce_intra_6_2',
-        # 'mnist_classif_ratio_variacnce_intra_6_3',
-        'mnist_classif_ratio_variacnce_intra_6_4',
-        'mnist_classif_ratio_variacnce_intra_6_5',
-        'mnist_classif_ratio_variacnce_intra_6_6',
-        'mnist_classif_ratio_variacnce_intra_6_7']
+    list_classif_diff_var_min = ['mnist_balanced_dataset_encoder_diff_var_min_1_1_1',
+                                 'mnist_balanced_dataset_encoder_diff_var_min_1_1_2',
+                                 'mnist_balanced_dataset_encoder_diff_var_min_1_1_3',
+                                 'mnist_balanced_dataset_encoder_diff_var_min_1_2_1',
+                                 'mnist_balanced_dataset_encoder_diff_var_min_1_2_2',
+                                 'mnist_balanced_dataset_encoder_diff_var_min_1_2_3',
+                                 'mnist_balanced_dataset_encoder_diff_var_min_1_3_1',
+                                 'mnist_balanced_dataset_encoder_diff_var_min_1_3_2',
+                                 'mnist_balanced_dataset_encoder_diff_var_min_1_3_3',
+                                 'mnist_balanced_dataset_encoder_diff_var_min_2_1_1',
+                                 'mnist_balanced_dataset_encoder_diff_var_min_2_1_2',
+                                 'mnist_balanced_dataset_encoder_diff_var_min_2_1_3',
+                                 'mnist_balanced_dataset_encoder_diff_var_min_2_2_1',
+                                 'mnist_balanced_dataset_encoder_diff_var_min_2_2_2',
+                                 'mnist_balanced_dataset_encoder_diff_var_min_2_2_3',
+                                 'mnist_balanced_dataset_encoder_diff_var_min_2_3_1',
+                                 'mnist_balanced_dataset_encoder_diff_var_min_2_3_2',
+                                 'mnist_balanced_dataset_encoder_diff_var_min_2_3_3',
+                                 'mnist_balanced_dataset_encoder_diff_var_min_3_1_1',
+                                 'mnist_balanced_dataset_encoder_diff_var_min_3_1_2',
+                                 'mnist_balanced_dataset_encoder_diff_var_min_3_1_3',
+                                 'mnist_balanced_dataset_encoder_diff_var_min_3_2_1',
+                                 'mnist_balanced_dataset_encoder_diff_var_min_3_2_2',
+                                 'mnist_balanced_dataset_encoder_diff_var_min_3_2_3',
+                                 'mnist_balanced_dataset_encoder_diff_var_min_3_3_1',
+                                 'mnist_balanced_dataset_encoder_diff_var_min_3_3_2',
+                                 'mnist_balanced_dataset_encoder_diff_var_min_3_3_3']
 
-    exp_classif_ratio_distance_max_mean = [  # 'mnist_classif_ratio_distance_intra_class_max_mean_1_1_1',
-        # 'mnist_classif_ratio_distance_intra_class_max_mean_1_1_2',
-        # 'mnist_classif_ratio_distance_intra_class_max_mean_1_1_3',
-        # 'mnist_classif_ratio_distance_intra_class_max_mean_1_1_4',
-        # 'mnist_classif_ratio_distance_intra_class_max_mean_1_1_5',
-        # 'mnist_classif_ratio_distance_intra_class_max_mean_1_1_6',
-        # 'mnist_classif_ratio_distance_intra_class_max_mean_1_2_1',
-        # 'mnist_classif_ratio_distance_intra_class_max_mean_1_2_2',
-        # 'mnist_classif_ratio_distance_intra_class_max_mean_1_2_3',
-        # 'mnist_classif_ratio_distance_intra_class_max_mean_1_2_4',
-        # 'mnist_classif_ratio_distance_intra_class_max_mean_1_2_5',
-        # 'mnist_classif_ratio_distance_intra_class_max_mean_1_2_6',
-        # 'mnist_classif_ratio_distance_intra_class_max_mean_1_3_1',
-        # 'mnist_classif_ratio_distance_intra_class_max_mean_1_3_2',
-        # 'mnist_classif_ratio_distance_intra_class_max_mean_1_3_3',
-        # 'mnist_classif_ratio_distance_intra_class_max_mean_1_3_4',
-        # 'mnist_classif_ratio_distance_intra_class_max_mean_1_3_5',
-        # 'mnist_classif_ratio_distance_intra_class_max_mean_1_3_6',
-        # 'mnist_classif_ratio_distance_intra_class_max_mean_1_4_1',
-        # 'mnist_classif_ratio_distance_intra_class_max_mean_1_4_2',
-        # 'mnist_classif_ratio_distance_intra_class_max_mean_1_4_3',
-        # 'mnist_classif_ratio_distance_intra_class_max_mean_1_4_4',
-        # 'mnist_classif_ratio_distance_intra_class_max_mean_1_4_5',
-        # 'mnist_classif_ratio_distance_intra_class_max_mean_1_4_6',
-        # 'mnist_classif_ratio_distance_intra_class_max_mean_1_5_1',
-        # 'mnist_classif_ratio_distance_intra_class_max_mean_1_5_2',
-        # 'mnist_classif_ratio_distance_intra_class_max_mean_1_5_3',
-        # 'mnist_classif_ratio_distance_intra_class_max_mean_1_5_4',
-        'mnist_classif_ratio_distance_intra_class_max_mean_1_5_5',
-        'mnist_classif_ratio_distance_intra_class_max_mean_1_5_6',
-        'mnist_classif_ratio_distance_intra_class_max_mean_1_6_1',
-        'mnist_classif_ratio_distance_intra_class_max_mean_1_6_2',
-        'mnist_classif_ratio_distance_intra_class_max_mean_1_6_3',
-        'mnist_classif_ratio_distance_intra_class_max_mean_1_6_4',
-        'mnist_classif_ratio_distance_intra_class_max_mean_1_6_5',
-        'mnist_classif_ratio_distance_intra_class_max_mean_1_6_6',
-        'mnist_classif_ratio_distance_intra_class_max_mean_2_1_1',
-        'mnist_classif_ratio_distance_intra_class_max_mean_2_1_2',
-        'mnist_classif_ratio_distance_intra_class_max_mean_2_1_3',
-        'mnist_classif_ratio_distance_intra_class_max_mean_2_1_4',
-        'mnist_classif_ratio_distance_intra_class_max_mean_2_1_5',
-        'mnist_classif_ratio_distance_intra_class_max_mean_2_1_6',
-        'mnist_classif_ratio_distance_intra_class_max_mean_2_2_1',
-        'mnist_classif_ratio_distance_intra_class_max_mean_2_2_2',
-        'mnist_classif_ratio_distance_intra_class_max_mean_2_2_3',
-        'mnist_classif_ratio_distance_intra_class_max_mean_2_2_4',
-        'mnist_classif_ratio_distance_intra_class_max_mean_2_2_5',
-        'mnist_classif_ratio_distance_intra_class_max_mean_2_2_6',
-        'mnist_classif_ratio_distance_intra_class_max_mean_2_3_1',
-        'mnist_classif_ratio_distance_intra_class_max_mean_2_3_2',
-        'mnist_classif_ratio_distance_intra_class_max_mean_2_3_3',
-        'mnist_classif_ratio_distance_intra_class_max_mean_2_3_4',
-        'mnist_classif_ratio_distance_intra_class_max_mean_2_3_5',
-        'mnist_classif_ratio_distance_intra_class_max_mean_2_3_6',
-        'mnist_classif_ratio_distance_intra_class_max_mean_2_4_1',
-        'mnist_classif_ratio_distance_intra_class_max_mean_2_4_2',
-        'mnist_classif_ratio_distance_intra_class_max_mean_2_4_3',
-        'mnist_classif_ratio_distance_intra_class_max_mean_2_4_4',
-        'mnist_classif_ratio_distance_intra_class_max_mean_2_4_5',
-        'mnist_classif_ratio_distance_intra_class_max_mean_2_4_6',
-        'mnist_classif_ratio_distance_intra_class_max_mean_2_5_1',
-        'mnist_classif_ratio_distance_intra_class_max_mean_2_5_2',
-        'mnist_classif_ratio_distance_intra_class_max_mean_2_5_3',
-        'mnist_classif_ratio_distance_intra_class_max_mean_2_5_4',
-        'mnist_classif_ratio_distance_intra_class_max_mean_2_5_5',
-        'mnist_classif_ratio_distance_intra_class_max_mean_2_5_6',
-        'mnist_classif_ratio_distance_intra_class_max_mean_2_6_1',
-        'mnist_classif_ratio_distance_intra_class_max_mean_2_6_2',
-        'mnist_classif_ratio_distance_intra_class_max_mean_2_6_3',
-        'mnist_classif_ratio_distance_intra_class_max_mean_2_6_4',
-        'mnist_classif_ratio_distance_intra_class_max_mean_2_6_5',
-        'mnist_classif_ratio_distance_intra_class_max_mean_2_6_6']
-
-    exp_classif_ratio_balanced_dataset = ['mnist_classif_ratio_1_balanced_dataset',
-                                          'mnist_classif_ratio_2_balanced_dataset',
-                                          'mnist_classif_ratio_3_balanced_dataset',
-                                          'mnist_classif_ratio_4_balanced_dataset',
-                                          'mnist_classif_ratio_5_balanced_dataset',
-                                          'mnist_classif_ratio_6_balanced_dataset',
-                                          'mnist_classif_ratio_7_balanced_dataset']
-
-    exp_classif_distance_balanced_dataset = [  # 'mnist_classif_distance_intra_class_1_balanced_dataset',
-        # 'mnist_classif_distance_intra_class_2_balanced_dataset',
-        # 'mnist_classif_distance_intra_class_3_balanced_dataset',
-        # 'mnist_classif_distance_intra_class_4_balanced_dataset',
-        # 'mnist_classif_distance_intra_class_5_balanced_dataset',
-        # 'mnist_classif_distance_intra_class_6_balanced_dataset',
-        # 'mnist_classif_distance_intra_class_7_balanced_dataset']
-    ]
-
-    exp_classif_distance_mean_max_balanced_dataset = [
-        'mnist_classif_distance_intra_class_max_mean_1_1_balanced_dataset',
-        'mnist_classif_distance_intra_class_max_mean_1_2_balanced_dataset',
-        'mnist_classif_distance_intra_class_max_mean_1_3_balanced_dataset',
-        'mnist_classif_distance_intra_class_max_mean_1_4_balanced_dataset',
-        'mnist_classif_distance_intra_class_max_mean_1_5_balanced_dataset',
-        'mnist_classif_distance_intra_class_max_mean_1_6_balanced_dataset',
-        'mnist_classif_distance_intra_class_max_mean_1_7_balanced_dataset',
-        'mnist_classif_distance_intra_class_max_mean_2_1_balanced_dataset',
-        'mnist_classif_distance_intra_class_max_mean_2_2_balanced_dataset',
-        'mnist_classif_distance_intra_class_max_mean_2_3_balanced_dataset',
-        'mnist_classif_distance_intra_class_max_mean_2_4_balanced_dataset',
-        'mnist_classif_distance_intra_class_max_mean_2_5_balanced_dataset',
-        'mnist_classif_distance_intra_class_max_mean_2_6_balanced_dataset',
-        'mnist_classif_distance_intra_class_max_mean_2_7_balanced_dataset',
-        'mnist_classif_distance_intra_class_max_mean_3_1_balanced_dataset',
-        'mnist_classif_distance_intra_class_max_mean_3_2_balanced_dataset',
-        'mnist_classif_distance_intra_class_max_mean_3_3_balanced_dataset',
-        'mnist_classif_distance_intra_class_max_mean_3_4_balanced_dataset',
-        'mnist_classif_distance_intra_class_max_mean_3_5_balanced_dataset',
-        'mnist_classif_distance_intra_class_max_mean_3_6_balanced_dataset',
-        'mnist_classif_distance_intra_class_max_mean_3_7_balanced_dataset',
-        'mnist_classif_distance_intra_class_max_mean_4_1_balanced_dataset',
-        'mnist_classif_distance_intra_class_max_mean_4_2_balanced_dataset',
-        'mnist_classif_distance_intra_class_max_mean_4_3_balanced_dataset',
-        'mnist_classif_distance_intra_class_max_mean_4_4_balanced_dataset',
-        'mnist_classif_distance_intra_class_max_mean_4_5_balanced_dataset',
-        'mnist_classif_distance_intra_class_max_mean_4_6_balanced_dataset',
-        'mnist_classif_distance_intra_class_max_mean_4_7_balanced_dataset',
-        'mnist_classif_distance_intra_class_max_mean_5_1_balanced_dataset',
-        'mnist_classif_distance_intra_class_max_mean_5_2_balanced_dataset',
-        'mnist_classif_distance_intra_class_max_mean_5_3_balanced_dataset',
-        'mnist_classif_distance_intra_class_max_mean_5_4_balanced_dataset',
-        'mnist_classif_distance_intra_class_max_mean_5_5_balanced_dataset',
-        'mnist_classif_distance_intra_class_max_mean_5_6_balanced_dataset',
-        'mnist_classif_distance_intra_class_max_mean_5_7_balanced_dataset',
-        'mnist_classif_distance_intra_class_max_mean_6_1_balanced_dataset',
-        'mnist_classif_distance_intra_class_max_mean_6_2_balanced_dataset',
-        'mnist_classif_distance_intra_class_max_mean_6_3_balanced_dataset',
-        'mnist_classif_distance_intra_class_max_mean_6_4_balanced_dataset',
-        'mnist_classif_distance_intra_class_max_mean_6_5_balanced_dataset',
-        'mnist_classif_distance_intra_class_max_mean_6_6_balanced_dataset',
-        'mnist_classif_distance_intra_class_max_mean_6_7_balanced_dataset']
-
-    exp_classif_ratio_var_intra_balanced_dataset = [  # 'mnist_classif_ratio_variacnce_intra_1_1_balanced_dataset',
-        # 'mnist_classif_ratio_variacnce_intra_1_2_balanced_dataset',
-        # 'mnist_classif_ratio_variacnce_intra_1_3_balanced_dataset',
-        # 'mnist_classif_ratio_variacnce_intra_1_4_balanced_dataset',
-        # 'mnist_classif_ratio_variacnce_intra_1_5_balanced_dataset',
-        # 'mnist_classif_ratio_variacnce_intra_1_6_balanced_dataset',
-        # 'mnist_classif_ratio_variacnce_intra_1_7_balanced_dataset',
-        # 'mnist_classif_ratio_variacnce_intra_2_1_balanced_dataset',
-        # 'mnist_classif_ratio_variacnce_intra_2_2_balanced_dataset',
-        # 'mnist_classif_ratio_variacnce_intra_2_3_balanced_dataset',
-        # 'mnist_classif_ratio_variacnce_intra_2_4_balanced_dataset',
-        # 'mnist_classif_ratio_variacnce_intra_2_5_balanced_dataset',
-        # 'mnist_classif_ratio_variacnce_intra_2_6_balanced_dataset',
-        # 'mnist_classif_ratio_variacnce_intra_2_7_balanced_dataset',
-        'mnist_classif_ratio_variacnce_intra_3_1_balanced_dataset',
-        'mnist_classif_ratio_variacnce_intra_3_2_balanced_dataset',
-        'mnist_classif_ratio_variacnce_intra_3_3_balanced_dataset',
-        'mnist_classif_ratio_variacnce_intra_3_4_balanced_dataset',
-        'mnist_classif_ratio_variacnce_intra_3_5_balanced_dataset',
-        'mnist_classif_ratio_variacnce_intra_3_6_balanced_dataset',
-        'mnist_classif_ratio_variacnce_intra_3_7_balanced_dataset',
-        'mnist_classif_ratio_variacnce_intra_4_1_balanced_dataset',
-        'mnist_classif_ratio_variacnce_intra_4_2_balanced_dataset',
-        'mnist_classif_ratio_variacnce_intra_4_3_balanced_dataset',
-        'mnist_classif_ratio_variacnce_intra_4_4_balanced_dataset',
-        'mnist_classif_ratio_variacnce_intra_4_5_balanced_dataset',
-        'mnist_classif_ratio_variacnce_intra_4_6_balanced_dataset',
-        'mnist_classif_ratio_variacnce_intra_4_7_balanced_dataset',
-        'mnist_classif_ratio_variacnce_intra_5_1_balanced_dataset',
-        'mnist_classif_ratio_variacnce_intra_5_2_balanced_dataset',
-        'mnist_classif_ratio_variacnce_intra_5_3_balanced_dataset',
-        'mnist_classif_ratio_variacnce_intra_5_4_balanced_dataset',
-        'mnist_classif_ratio_variacnce_intra_5_5_balanced_dataset',
-        'mnist_classif_ratio_variacnce_intra_5_6_balanced_dataset',
-        'mnist_classif_ratio_variacnce_intra_5_7_balanced_dataset',
-        'mnist_classif_ratio_variacnce_intra_6_1_balanced_dataset',
-        'mnist_classif_ratio_variacnce_intra_6_2_balanced_dataset',
-        'mnist_classif_ratio_variacnce_intra_6_3_balanced_dataset',
-        'mnist_classif_ratio_variacnce_intra_6_4_balanced_dataset',
-        'mnist_classif_ratio_variacnce_intra_6_5_balanced_dataset',
-        'mnist_classif_ratio_variacnce_intra_6_6_balanced_dataset',
-        'mnist_classif_ratio_variacnce_intra_6_7_balanced_dataset']
-
-    exp_classif_ratio_distance_max_mean_balanced_dataset = [
-        # 'mnist_classif_ratio_distance_intra_class_max_mean_1_1_1_balanced_dataset',
-        # 'mnist_classif_ratio_distance_intra_class_max_mean_1_1_2_balanced_dataset',
-        # 'mnist_classif_ratio_distance_intra_class_max_mean_1_1_3_balanced_dataset',
-        # 'mnist_classif_ratio_distance_intra_class_max_mean_1_1_4_balanced_dataset',
-        # 'mnist_classif_ratio_distance_intra_class_max_mean_1_1_5_balanced_dataset',
-        # 'mnist_classif_ratio_distance_intra_class_max_mean_1_1_6_balanced_dataset',
-        # 'mnist_classif_ratio_distance_intra_class_max_mean_1_2_1_balanced_dataset',
-        # 'mnist_classif_ratio_distance_intra_class_max_mean_1_2_2_balanced_dataset',
-        # 'mnist_classif_ratio_distance_intra_class_max_mean_1_2_3_balanced_dataset',
-        # 'mnist_classif_ratio_distance_intra_class_max_mean_1_2_4_balanced_dataset',
-        # 'mnist_classif_ratio_distance_intra_class_max_mean_1_2_5_balanced_dataset',
-        # 'mnist_classif_ratio_distance_intra_class_max_mean_1_2_6_balanced_dataset',
-        # 'mnist_classif_ratio_distance_intra_class_max_mean_1_3_1_balanced_dataset',
-        # 'mnist_classif_ratio_distance_intra_class_max_mean_1_3_2_balanced_dataset',
-        # 'mnist_classif_ratio_distance_intra_class_max_mean_1_3_3_balanced_dataset',
-        # 'mnist_classif_ratio_distance_intra_class_max_mean_1_3_4_balanced_dataset',
-        # 'mnist_classif_ratio_distance_intra_class_max_mean_1_3_5_balanced_dataset',
-        # 'mnist_classif_ratio_distance_intra_class_max_mean_1_3_6_balanced_dataset',
-        # 'mnist_classif_ratio_distance_intra_class_max_mean_1_4_1_balanced_dataset',
-        # 'mnist_classif_ratio_distance_intra_class_max_mean_1_4_2_balanced_dataset',
-        # 'mnist_classif_ratio_distance_intra_class_max_mean_1_4_3_balanced_dataset',
-        # 'mnist_classif_ratio_distance_intra_class_max_mean_1_4_4_balanced_dataset',
-        # 'mnist_classif_ratio_distance_intra_class_max_mean_1_4_5_balanced_dataset',
-        # 'mnist_classif_ratio_distance_intra_class_max_mean_1_4_6_balanced_dataset',
-        # 'mnist_classif_ratio_distance_intra_class_max_mean_1_5_1_balanced_dataset',
-        # 'mnist_classif_ratio_distance_intra_class_max_mean_1_5_2_balanced_dataset',
-        'mnist_classif_ratio_distance_intra_class_max_mean_1_5_3_balanced_dataset',
-        'mnist_classif_ratio_distance_intra_class_max_mean_1_5_4_balanced_dataset',
-        'mnist_classif_ratio_distance_intra_class_max_mean_1_5_5_balanced_dataset',
-        'mnist_classif_ratio_distance_intra_class_max_mean_1_5_6_balanced_dataset',
-        'mnist_classif_ratio_distance_intra_class_max_mean_1_6_1_balanced_dataset',
-        'mnist_classif_ratio_distance_intra_class_max_mean_1_6_2_balanced_dataset',
-        'mnist_classif_ratio_distance_intra_class_max_mean_1_6_3_balanced_dataset',
-        'mnist_classif_ratio_distance_intra_class_max_mean_1_6_4_balanced_dataset',
-        'mnist_classif_ratio_distance_intra_class_max_mean_1_6_5_balanced_dataset',
-        'mnist_classif_ratio_distance_intra_class_max_mean_1_6_6_balanced_dataset',
-        'mnist_classif_ratio_distance_intra_class_max_mean_2_1_1_balanced_dataset',
-        'mnist_classif_ratio_distance_intra_class_max_mean_2_1_2_balanced_dataset',
-        'mnist_classif_ratio_distance_intra_class_max_mean_2_1_3_balanced_dataset',
-        'mnist_classif_ratio_distance_intra_class_max_mean_2_1_4_balanced_dataset',
-        'mnist_classif_ratio_distance_intra_class_max_mean_2_1_5_balanced_dataset',
-        'mnist_classif_ratio_distance_intra_class_max_mean_2_1_6_balanced_dataset',
-        'mnist_classif_ratio_distance_intra_class_max_mean_2_2_1_balanced_dataset',
-        'mnist_classif_ratio_distance_intra_class_max_mean_2_2_2_balanced_dataset',
-        'mnist_classif_ratio_distance_intra_class_max_mean_2_2_3_balanced_dataset',
-        'mnist_classif_ratio_distance_intra_class_max_mean_2_2_4_balanced_dataset',
-        'mnist_classif_ratio_distance_intra_class_max_mean_2_2_5_balanced_dataset',
-        'mnist_classif_ratio_distance_intra_class_max_mean_2_2_6_balanced_dataset',
-        'mnist_classif_ratio_distance_intra_class_max_mean_2_3_1_balanced_dataset',
-        'mnist_classif_ratio_distance_intra_class_max_mean_2_3_2_balanced_dataset',
-        'mnist_classif_ratio_distance_intra_class_max_mean_2_3_3_balanced_dataset',
-        'mnist_classif_ratio_distance_intra_class_max_mean_2_3_4_balanced_dataset',
-        'mnist_classif_ratio_distance_intra_class_max_mean_2_3_5_balanced_dataset',
-        'mnist_classif_ratio_distance_intra_class_max_mean_2_3_6_balanced_dataset',
-        'mnist_classif_ratio_distance_intra_class_max_mean_2_4_1_balanced_dataset',
-        'mnist_classif_ratio_distance_intra_class_max_mean_2_4_2_balanced_dataset',
-        'mnist_classif_ratio_distance_intra_class_max_mean_2_4_3_balanced_dataset',
-        'mnist_classif_ratio_distance_intra_class_max_mean_2_4_4_balanced_dataset',
-        'mnist_classif_ratio_distance_intra_class_max_mean_2_4_5_balanced_dataset',
-        'mnist_classif_ratio_distance_intra_class_max_mean_2_4_6_balanced_dataset',
-        'mnist_classif_ratio_distance_intra_class_max_mean_2_5_1_balanced_dataset',
-        'mnist_classif_ratio_distance_intra_class_max_mean_2_5_2_balanced_dataset',
-        'mnist_classif_ratio_distance_intra_class_max_mean_2_5_3_balanced_dataset',
-        'mnist_classif_ratio_distance_intra_class_max_mean_2_5_4_balanced_dataset',
-        'mnist_classif_ratio_distance_intra_class_max_mean_2_5_5_balanced_dataset',
-        'mnist_classif_ratio_distance_intra_class_max_mean_2_5_6_balanced_dataset',
-        'mnist_classif_ratio_distance_intra_class_max_mean_2_6_1_balanced_dataset',
-        'mnist_classif_ratio_distance_intra_class_max_mean_2_6_2_balanced_dataset',
-        'mnist_classif_ratio_distance_intra_class_max_mean_2_6_3_balanced_dataset',
-        'mnist_classif_ratio_distance_intra_class_max_mean_2_6_4_balanced_dataset',
-        'mnist_classif_ratio_distance_intra_class_max_mean_2_6_5_balanced_dataset',
-        'mnist_classif_ratio_distance_intra_class_max_mean_2_6_6_balanced_dataset']
-
-    list_selected_exp = [  # 'mnist_classif_ratio_distance_intra_class_max_mean_2_4_3_balanced_dataset',
-        # 'mnist_classif_ratio_distance_intra_class_max_mean_2_6_3_balanced_dataset',
-        # 'mnist_classif_ratio_distance_intra_class_max_mean_2_3_4_balanced_dataset',
-        # 'mnist_classif_ratio_distance_intra_class_max_mean_1_4_5',
-        # 'mnist_classif_ratio_distance_intra_class_max_mean_1_6_4',
-        # 'mnist_classif_ratio_distance_intra_class_max_mean_1_3_2_balanced_dataset',
-        # 'mnist_classif_ratio_distance_intra_class_max_mean_1_3_3_balanced_dataset',
-        # 'mnist_classif_ratio_distance_intra_class_max_mean_1_3_4_balanced_dataset',
-        # 'mnist_classif_ratio_distance_intra_class_max_mean_1_4_4_balanced_dataset',
-        # 'mnist_classif_ratio_distance_intra_class_max_mean_1_4_5_balanced_dataset',
-        # 'mnist_classif_ratio_distance_intra_class_max_mean_1_5_3_balanced_dataset',
-        # 'mnist_classif_ratio_distance_intra_class_max_mean_1_5_4_balanced_dataset',
-        # 'mnist_classif_ratio_distance_intra_class_max_mean_1_5_5_balanced_dataset',
-        # 'mnist_classif_ratio_distance_intra_class_max_mean_1_6_3_balanced_dataset',
-        'mnist_classif_ratio_distance_intra_class_max_mean_1_6_4_balanced_dataset']
-
-    list_selected_exp_search_target_vlaue = [
-        'mnist_classif_ratio_distance_intra_class_max_mean_target_1_num_1_5_3_balanced_dataset',
-        'mnist_classif_ratio_distance_intra_class_max_mean_target_1_num_1_5_3_balanced_dataset',
-        'mnist_classif_ratio_distance_intra_class_max_mean_target_2_num_1_5_3_balanced_dataset',
-        'mnist_classif_ratio_distance_intra_class_max_mean_target_2_num_1_6_4_balanced_dataset',
-        'mnist_classif_ratio_distance_intra_class_max_mean_target_5_num_1_5_3_balanced_dataset',
-        'mnist_classif_ratio_distance_intra_class_max_mean_target_5_num_1_6_4_balanced_dataset',
-        'mnist_classif_ratio_distance_intra_class_max_mean_target_7_num_1_6_4_balanced_dataset',
-        'mnist_classif_ratio_distance_intra_class_max_mean_target_50_num_1_5_3_balanced_dataset',
-        'mnist_classif_ratio_distance_intra_class_max_mean_target_50_num_1_6_4_balanced_dataset', ]
-
-    list_selected_exp_search_target_vlaue = ['mnist_classif_new_baseline_1']
-
-    list_simple_loss_grid_search = ['mnist_classif_balanced_dataset_intra_inter_1_6_0',
-                                    'mnist_classif_balanced_dataset_intra_inter_1_6_1',
-                                    'mnist_classif_balanced_dataset_intra_inter_1_6_2',
-                                    'mnist_classif_balanced_dataset_intra_inter_1_6_3',
-                                    'mnist_classif_balanced_dataset_intra_inter_1_6_4']
-
-    list_test_binary = [# 'mnist_classif_balanced_dataset_intra_inter_1_6_binary',
-                        'mnist_classif_balanced_dataset_intra_inter_1_6_binary_chain']
+    list_classif_diff_var_min_mean = ['mnist_balanced_dataset_encoder_diff_var_min_and_mean_1_1_1_1',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_1_1_2_1',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_1_1_3_1',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_1_2_1_1',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_1_2_2_1',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_1_2_3_1',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_1_3_1_1',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_1_3_2_1',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_1_3_3_1',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_2_1_1_1',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_2_1_2_1',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_2_1_3_1',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_2_2_1_1',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_2_2_2_1',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_2_2_3_1',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_2_3_1_1',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_2_3_2_1',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_2_3_3_1',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_3_1_1_1',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_3_1_2_1',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_3_1_3_1',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_3_2_1_1',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_3_2_2_1',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_3_2_3_1',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_3_3_1_1',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_3_3_2_1',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_3_3_3_1',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_1_1_1_2',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_1_1_2_2',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_1_1_3_2',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_1_2_1_2',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_1_2_2_2',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_1_2_3_2',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_1_3_1_2',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_1_3_2_2',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_1_3_3_2',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_2_1_1_2',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_2_1_2_2',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_2_1_3_2',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_2_2_1_2',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_2_2_2_2',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_2_2_3_2',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_2_3_1_2',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_2_3_2_2',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_2_3_3_2',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_3_1_1_2',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_3_1_2_2',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_3_1_3_2',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_3_2_1_2',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_3_2_2_2',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_3_2_3_2',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_3_3_1_2',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_3_3_2_2',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_3_3_3_2',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_1_1_1_3',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_1_1_2_3',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_1_1_3_3',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_1_2_1_3',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_1_2_2_3',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_1_2_3_3',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_1_3_1_3',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_1_3_2_3',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_1_3_3_3',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_2_1_1_3',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_2_1_2_3',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_2_1_3_3',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_2_2_1_3',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_2_2_2_3',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_2_2_3_3',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_2_3_1_3',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_2_3_2_3',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_2_3_3_3',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_3_1_1_3',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_3_1_2_3',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_3_1_3_3',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_3_2_1_3',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_3_2_2_3',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_3_2_3_3',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_3_3_1_3',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_3_3_2_3',
+                                      'mnist_balanced_dataset_encoder_diff_var_min_and_mean_3_3_3_3']
 
     lis_decoder = ['mnist_classif_ratio_distance_intra_class_max_mean_1_6_4_balanced_dataset_decoder_1',
                    'mnist_classif_balanced_dataset_intra_inter_decoder']
@@ -1294,112 +1078,57 @@ if __name__ == '__main__':
 
     parameters_mnist_classifier_BK_ratio = "parameters_combinations/mnist_classifier_ratio.txt"
 
-    run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
-                                                   28,
-                                                   29,
-                                                   lis_decoder,
-                                                   is_ratio=False,
-                                                   is_decoder=True)
-
-    run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
-                                                   4,
-                                                   6,
-                                                   lis_encoder,
-                                                   is_ratio=True)
+    # run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
+    #                                                28,
+    #                                                29,
+    #                                                lis_decoder,
+    #                                                is_ratio=False,
+    #                                                is_decoder=True)
 
     # run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
-    #                                                2,
-    #                                                6,
-    #                                                list_simple_loss_grid_search,
-    #                                                is_ratio=True)
-
-    # run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
-    #                                                2,
-    #                                                2,
-    #                                                list_selected_exp_search_target_vlaue,
-    #                                                is_ratio=True)
-
-    # run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
-    #                                                5,
-    #                                                19,
-    #                                                list_selected_exp,
-    #                                                is_ratio=True)
-
-    # run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
-    #                                                21,
-    #                                                30,
-    #                                                list_selected_exp_search_target_vlaue,
-    #                                                is_ratio=True)
-
-    # run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
-    #                                                2,
     #                                                4,
+    #                                                6,
+    #                                                lis_encoder,
+    #                                                is_ratio=True)
+
+    # run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
+    #                                                2,
+    #                                                2,
     #                                                exp_baseline,
     #                                                is_ratio=True)
+
+    # run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
+    #                                                4,
+    #                                                8,
+    #                                                exp_classif_ratio,
+    #                                                is_ratio=True)
 #
-# run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
-#                                                5,
-#                                                11,
-#                                                exp_classif_ratio,
-#                                                is_ratio=True)
+    run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
+                                                   10,
+                                                   24,
+                                                   exp_classif_ratio_min,
+                                                   is_ratio=True)
 #
-# run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
-#                                                12,
-#                                                18,
-#                                                exp_classif_distance,
-#                                                is_ratio=True)
-
-# run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
-#                                                19,
-#                                                54,
-#                                                exp_classif_distance_mean_max,
-#                                                is_ratio=True)
-
-# run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
-#                                                55,
-#                                                96,
-#                                                exp_classif_ratio_var_intra,
-#                                                is_ratio=True)
-
-# run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
-#                                                97,
-#                                                168,
-#                                                exp_classif_ratio_distance_max_mean,
-#                                                is_ratio=True)
-
-# balanced dataset:
-# run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
-#                                                169,
-#                                                171,
-#                                                exp_baseline_balanced,
-#                                                is_ratio=True)
+    # run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
+    #                                                26,
+    #                                                52,
+    #                                                exp_classif_min_max,
+    #                                                is_ratio=True)
 #
-# run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
-#                                                 172,
-#                                                 178,
-#                                                 exp_classif_ratio_balanced_dataset,
-#                                                 is_ratio=True)
-
-# run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
-#                                                 179,
-#                                                 185,
-#                                                 exp_classif_distance_balanced_dataset,
-#                                                 is_ratio=True)
-
-# run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
-#                                                186,
-#                                                221,
-#                                                exp_classif_distance_mean_max_balanced_dataset,
-#                                                is_ratio=True)
-
-# run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
-#                                                222,
-#                                                263,
-#                                                exp_classif_ratio_var_intra_balanced_dataset,
-#                                                is_ratio=True)
+    # run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
+    #                                                54,
+    #                                                83,
+    #                                                exp_classif_diff_var,
+    #                                                is_ratio=True)
 #
-# run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
-#                                                264,
-#                                                335,
-#                                                exp_classif_ratio_distance_max_mean_balanced_dataset,
-#                                                is_ratio=True)
+    # run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
+    #                                                85,
+    #                                                111,
+    #                                                list_classif_diff_var_min,
+    #                                                is_ratio=True)
+#
+    # run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
+    #                                                113,
+    #                                                193,
+    #                                                list_classif_diff_var_min_mean,
+    #                                                is_ratio=True)
