@@ -95,9 +95,9 @@ if __name__ == "__main__":
     parser.add_argument('--E1_VAE', default=False, type=str2bool, help='If E1_VAE')
     parser.add_argument('--E1_AE', default=False, type=str2bool, help='If E1_AE')
     parser.add_argument('--two_encoder', default=False, type=str2bool, help='If two_encoder')
-    parser.add_argument('--big_kernel_size', nargs='+', type=int, default=8, help='big_kernel_size')
+    parser.add_argument('--big_kernel_size', type=int, default=8, metavar='integer value', help='big_kernel_size')
     parser.add_argument('--big_kernel', default=False, type=str2bool, help='If big_kernel')
-    parser.add_argument('--GMP', default=False, type=str2bool, help='If GMP')
+    parser.add_argument('--GMP', default=True, type=str2bool, help='If GMP')
     parser.add_argument('--zeros_W_Classif', default=False, type=str2bool, help='If zeros_W_Classif')
     parser.add_argument('--use_early_stopping', default=True, type=str2bool, help='use early stopping')
 
@@ -108,7 +108,7 @@ if __name__ == "__main__":
                         help='hidden_filters_layer2')
     parser.add_argument('--hidden_filters_layer3', type=int, default=32, metavar='integer value',
                         help='hidden_filters_layer3')
-    parser.add_argument('--stride_size', type=int, default=2, metavar='integer value',
+    parser.add_argument('--stride_size', type=int, default=1, metavar='integer value',
                         help='stride_size')
     parser.add_argument('--kernel_size', type=int, default=4, metavar='integer value',
                         help='kernel_size')
@@ -127,7 +127,6 @@ if __name__ == "__main__":
                                                                                   ' zvar sim loss')
     # ---------- Weights for the loss -----------------
     parser.add_argument('--lambda_zvar_sim', default=1, type=float, help='lambda_zvar_sim_loss parameter for zvar_sim_loss loss')
-    parser.add_argument('--beta', default=1, type=float, help='beta parameter for KL-term in original beta-VAE')
     parser.add_argument('--lambda_class', default=1, type=float, help='lambda_L3 parameter for classification loss')
     parser.add_argument('--lambda_recons', default=1, type=float, help='Wreconstruction parameter for reconstruction loss')
     parser.add_argument('--lambda_recon_wt_rand', default=1, type=float,
@@ -159,8 +158,8 @@ if __name__ == "__main__":
                                                                      ' saved')
     parser.add_argument('--just_train', default=False, type=str2bool, help='if it is just for training without save')
 
-    parser.add_argument('--ckpt_dir', default='checkpoints', type=str, help='checkpoint directory')
-    parser.add_argument('--ckpt_dir_scores', default='checkpoints_scores', type=str, help='checkpoint sample_scores '
+    parser.add_argument('--ckpt_dir', default='checkpoints_CNN', type=str, help='checkpoint directory')
+    parser.add_argument('--ckpt_dir_scores', default='checkpoint_scores_CNN', type=str, help='checkpoint sample_scores '
                                                                                           'directory')
 
     parser.add_argument("--gpu_devices", type=int, nargs='+', default=None, help="GPU devices available")
@@ -168,20 +167,20 @@ if __name__ == "__main__":
                         help='if dataset is balanced or not for ratio loss')
 
     # parameters for classifier:
-    parser.add_argument('--model', default='VAE', type=str, help='model name')
+    parser.add_argument('--model', default='CNN', type=str, help='model name')
     parser.add_argument('--is_default_model', default=True, type=str2bool, help='if use default model')
     parser.add_argument('--is_custom_model', default=False, type=str2bool, help='if use custom model')
     parser.add_argument('--is_custom_model_BK', default=False, type=str2bool, help='if use custom is_custom_model_BK')
     parser.add_argument('--add_z_struct_bottleneck', default=False, type=str2bool, help='if add_z_struct_bottleneck')
-    parser.add_argument('--add_classification_layer', default=False, type=str2bool, help='if add_classification_layer')
-    parser.add_argument('--z_struct_size', default=5, type=int, help='z_struct_size')
+    parser.add_argument('--add_classification_layer', default=True, type=str2bool, help='if add_classification_layer')
+    parser.add_argument('--z_struct_size', default=32, type=int, help='z_struct_size')
     parser.add_argument('--classif_layer_size', default=30, type=int, help='classif_layer_size')
-    parser.add_argument('--BK_in_first_layer', default=False, type=str2bool, help='if BK_in_first_layer')
+    parser.add_argument('--BK_in_first_layer', default=True, type=str2bool, help='if BK_in_first_layer')
     parser.add_argument('--BK_in_second_layer', default=False, type=str2bool, help='if BK_in_second_layer')
     parser.add_argument('--BK_in_third_layer', default=False, type=str2bool, help='if BK_in_third_layer')
-    parser.add_argument('--two_conv_layer', default=False, type=str2bool, help='if two_conv_layer')
+    parser.add_argument('--two_conv_layer', default=True, type=str2bool, help='if two_conv_layer')
     parser.add_argument('--three_conv_layer', default=False, type=str2bool, help='if three_conv_layer')
-    parser.add_argument('--use_scheduler', default=False, type=str2bool, help='if use scheduler')
+    parser.add_argument('--use_scheduler', default=True, type=str2bool, help='if use scheduler')
     parser.add_argument('--add_linear_after_GMP', default=True, type=str2bool, help='linear after GMP')
     parser.add_argument('--without_acc', default=False, type=str2bool, help='linear after GMP')
     parser.add_argument('--contrastive_loss', default=False, type=str2bool, help='contrastive_loss')
@@ -229,7 +228,7 @@ if __name__ == "__main__":
     parser.add_argument('--freeze_Encoder', default=True, type=str2bool, help='if freeze encoder weighs')
     parser.add_argument("--decoder_first_dense", type=int, default=36, metavar='integer value', help="decoder_first_dense")
     parser.add_argument("--decoder_n_filter_1", type=int, default=64, metavar='integer value', help="decoder_n_filter_1")
-    parser.add_argument("--decoder_n_filter_2",  type=int, default=32, metavar='integer value', help="decoder_n_filter_2")
+    parser.add_argument("--decoder_n_filter_2",  type=int, default=64, metavar='integer value', help="decoder_n_filter_2")
     parser.add_argument("--decoder_kernel_size_1", type=int, default=4, metavar='integer value', help="decoder_kernel_size_1")
     parser.add_argument("--decoder_kernel_size_2", type=int, default=3, metavar='integer value', help="decoder_kernel_size_2")
     parser.add_argument("--decoder_kernel_size_3", type=int, default=4, metavar='integer value', help="decoder_kernel_size_3")
@@ -239,7 +238,27 @@ if __name__ == "__main__":
 
     # for reproductibility:
     parser.add_argument('--randomness', default=True, type=str2bool, help='If we use seed for reproducibility')
-    parser.add_argument("--random_seed", type=int, nargs='+', default=10, help="default seed")
+    parser.add_argument("--random_seed", type=int, default=10, metavar='integer value', help="default seed")
+
+    # VAE:
+    parser.add_argument('--use_VAE', default=False, type=str2bool, help='If we use VAE')
+    parser.add_argument("--z_var_size", type=int, default=5, metavar='integer value', help="z var size")
+    parser.add_argument('--lambda_BCE', default=1, type=float, help="lambda BCE")
+    parser.add_argument('--beta', default=1, type=float, help="lambda KLD")
+
+    parser.add_argument('--var_hidden_filters_1', type=int, default=32, metavar='integer value', help="var_hidden_filters_1")
+    parser.add_argument('--var_hidden_filters_2', type=int, default=32, metavar='integer value',
+                        help="var_hidden_filters_2")
+    parser.add_argument('--var_hidden_filters_3', type=int, default=32, metavar='integer value',
+                        help="var_hidden_filters_3")
+    parser.add_argument('--var_kernel_size_1', type=int, default=3, metavar='integer value', help="var_kernel_size_1")
+    parser.add_argument('--var_kernel_size_2', type=int, default=3, metavar='integer value', help="var_kernel_size_2")
+    parser.add_argument('--var_kernel_size_3', type=int, default=3, metavar='integer value', help="var_kernel_size_3")
+    parser.add_argument('--var_stride_size_1', type=int, default=1, metavar='integer value', help="var_stride_size_1")
+    parser.add_argument('--var_stride_size_2', type=int, default=1, metavar='integer value', help="var_stride_size_2")
+    parser.add_argument('--var_stride_size_3', type=int, default=1, metavar='integer value', help="var_stride_size_3")
+    parser.add_argument('--var_hidden_dim', type=int, default=256, metavar='integer value', help="var_hidden_dim")
+    parser.add_argument('--var_three_conv_layer', default=False, type=str2bool, help="var_three_conv_layer")
 
     args = parser.parse_args()
 

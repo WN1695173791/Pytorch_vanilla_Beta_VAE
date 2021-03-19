@@ -88,9 +88,9 @@ class Encoder_decoder(nn.Module, ABC):
         elif self.BK_in_third_layer:
             self.kernel_size_3 = self.big_kernel_size
 
-        # -----------_________________ define model: Encoder____________________________________________------------
+        # -----------_________________ define model: encoder_struct____________________________________________------------
         # ----------- add conv bloc:
-        self.encoder = [
+        self.encoder_struct = [
             nn.Conv2d(self.nc, self.hidden_filters_1, self.kernel_size_1, stride=self.stride_size),
             nn.BatchNorm2d(self.hidden_filters_1),
             nn.ReLU(True),
@@ -100,7 +100,7 @@ class Encoder_decoder(nn.Module, ABC):
         if self.two_conv_layer:
             self.hidden_filter_GMP = self.hidden_filters_2
             numChannels = self.hidden_filters_2
-            self.encoder += [
+            self.encoder_struct += [
                 nn.Conv2d(self.hidden_filters_1, self.hidden_filters_2, self.kernel_size_2, stride=self.stride_size),
                 nn.BatchNorm2d(self.hidden_filters_2),
                 nn.ReLU(True),
@@ -110,7 +110,7 @@ class Encoder_decoder(nn.Module, ABC):
         if self.three_conv_layer:
             self.hidden_filter_GMP = self.hidden_filters_3
             numChannels = self.hidden_filters_3
-            self.encoder += [
+            self.encoder_struct += [
                 nn.Conv2d(self.hidden_filters_2, self.hidden_filters_3, self.kernel_size_3, stride=self.stride_size),
                 nn.BatchNorm2d(self.hidden_filters_3),
                 nn.ReLU(True),
@@ -118,14 +118,14 @@ class Encoder_decoder(nn.Module, ABC):
             ]
 
         # ----------- add GMP bloc:
-        self.encoder += [
+        self.encoder_struct += [
             nn.AdaptiveMaxPool2d((1, 1)),  # B, hidden_filters_1, 1, 1
             # PrintLayer(),  # B, hidden_filters_1, 1, 1
             View((-1, self.hidden_filter_GMP)),  # B, hidden_filters_1
             # PrintLayer(),  # B, hidden_filters_1
         ]
 
-        # -----------_________________ end Encoder____________________________________________------------
+        # -----------_________________ end encoder_struct____________________________________________------------
 
         # ----------- Define decoder: ------------
         self.z_struct_size = self.hidden_filter_GMP
@@ -158,7 +158,7 @@ class Encoder_decoder(nn.Module, ABC):
         ]
         # --------------------------------------- end decoder -----------------------------------
 
-        self.encoder = nn.Sequential(*self.encoder)
+        self.encoder_struct = nn.Sequential(*self.encoder_struct)
         self.decoder = nn.Sequential(*self.decoder)
 
         self.weight_init()
@@ -174,7 +174,7 @@ class Encoder_decoder(nn.Module, ABC):
         Forward pass of model.
         """
 
-        z_struct = self.encoder(x)
+        z_struct = self.encoder_struct(x)
         x_recons = self.decoder(z_struct)
 
         return x_recons, z_struct

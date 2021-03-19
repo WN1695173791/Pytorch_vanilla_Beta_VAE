@@ -162,6 +162,19 @@ def run_exp_extraction_and_visualization_custom_BK(path_parameter, line_begin, l
         Binary_z = False
         binary_chain = False
         exp_name = args[-1][-1].split('\n')[0]
+
+        # decoder:
+        if is_decoder:
+            decoder_first_dense = int(args[-11][1])
+            decoder_n_filter_1 = int(args[-10][1])
+            decoder_n_filter_2 = int(args[-9][1])
+            decoder_kernel_size_1 = int(args[-8][1])
+            decoder_kernel_size_2 = int(args[-7][1])
+            decoder_kernel_size_3 = int(args[-6][1])
+            decoder_stride_1 = int(args[-5][1])
+            decoder_stride_2 = int(args[-4][1])
+            decoder_stride_3 = int(args[-3][1])
+
         if args[-2][0] == 'binary_chain':
             if args[-2][1] == 'True':
                 binary_chain = True
@@ -317,7 +330,15 @@ def run_exp_extraction_and_visualization_custom_BK(path_parameter, line_begin, l
                                   BK_in_third_layer=BK_in_third_layer,
                                   Binary_z=Binary_z,
                                   add_linear_after_GMP=add_linear_after_GMP,
-                                  before_GMP_shape=before_GMP_shape)
+                                  decoder_first_dense=decoder_first_dense,
+                                  decoder_n_filter_1=decoder_n_filter_1,
+                                  decoder_n_filter_2=decoder_n_filter_2,
+                                  decoder_kernel_size_1=decoder_kernel_size_1,
+                                  decoder_kernel_size_2=decoder_kernel_size_2,
+                                  decoder_kernel_size_3=decoder_kernel_size_3,
+                                  decoder_stride_1=decoder_stride_1,
+                                  decoder_stride_2=decoder_stride_2,
+                                  decoder_stride_3=decoder_stride_3)
 
         if exp_name in list_model:
             if is_decoder:
@@ -1098,18 +1119,30 @@ if __name__ == '__main__':
                          'mnist_balanced_dataset_encoder_ratio_min_1_1_z_struct_16',
                          'mnist_balanced_dataset_encoder_ratio_min_1_1_z_struct_64']
 
-    lis_decoder = ['mnist_balanced_dataset_baseline_decoder_1',
-                   'mnist_balanced_dataset_baseline_decoder_2',
-                   'mnist_balanced_dataset_baseline_decoder_3',
-                   'mnist_balanced_dataset_baseline_decoder_4',
-                   'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_decoder_1',
-                   'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_decoder_2',
-                   'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_decoder_3',
-                   'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_decoder_4',
-                   'mnist_balanced_dataset_encoder_ratio_min_1_1_decoder_1',
-                   'mnist_balanced_dataset_encoder_ratio_min_1_1_decoder_2',
-                   'mnist_balanced_dataset_encoder_ratio_min_1_1_decoder_3',
-                   'mnist_balanced_dataset_encoder_ratio_min_1_1_decoder_4']
+    lis_decoder = ['mnist_balanced_dataset_baseline_decoder_1_1',
+                   'mnist_balanced_dataset_baseline_decoder_1_2',
+                   'mnist_balanced_dataset_baseline_decoder_1_3',
+                   'mnist_balanced_dataset_baseline_decoder_1_4',
+                   'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_decoder_1_1',
+                   'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_decoder_1_2',
+                   'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_decoder_1_3',
+                   'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_decoder_1_4',
+                   'mnist_balanced_dataset_encoder_ratio_min_1_1_decoder_1_1',
+                   'mnist_balanced_dataset_encoder_ratio_min_1_1_decoder_1_2',
+                   'mnist_balanced_dataset_encoder_ratio_min_1_1_decoder_1_3',
+                   'mnist_balanced_dataset_encoder_ratio_min_1_1_decoder_1_4',
+                   'mnist_balanced_dataset_baseline_decoder_2_1',
+                   'mnist_balanced_dataset_baseline_decoder_2_2',
+                   'mnist_balanced_dataset_baseline_decoder_2_3',
+                   'mnist_balanced_dataset_baseline_decoder_2_4',
+                   'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_decoder_2_1',
+                   'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_decoder_2_2',
+                   'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_decoder_2_3',
+                   'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_decoder_2_4',
+                   'mnist_balanced_dataset_encoder_ratio_min_1_1_decoder_2_1',
+                   'mnist_balanced_dataset_encoder_ratio_min_1_1_decoder_2_2',
+                   'mnist_balanced_dataset_encoder_ratio_min_1_1_decoder_2_3',
+                   'mnist_balanced_dataset_encoder_ratio_min_1_1_decoder_2_4']
 
     lis_encoder = ['mnist_classif_balanced_dataset_intra_inter_1_6',
                    'mnist_baseline_balanced_128',
@@ -1119,7 +1152,7 @@ if __name__ == '__main__':
 
     run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
                                                    2,
-                                                   13,
+                                                   25,
                                                    lis_decoder,
                                                    is_ratio=False,
                                                    is_decoder=True)
