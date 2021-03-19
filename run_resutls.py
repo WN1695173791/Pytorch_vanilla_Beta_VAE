@@ -527,7 +527,7 @@ def run_VAE(exp_name, net, lambda_BCE, beta, z_struct_size, z_var_size):
 
     # reconstruction:
     viz_reconstructino_VAE(net, loader, exp_name, z_var_size, z_struct_size, nb_img=10, nb_class=nb_class, save=True,
-                           z_struct_reconstruction=True, z_var_reconstruction=True)
+                           z_struct_reconstruction=False, z_var_reconstruction=False)
 
     return
 
@@ -1204,24 +1204,24 @@ if __name__ == '__main__':
                    'mnist_baseline_balanced_128',
                    'mnist_classif_ratio_distance_intra_class_max_mean_1_6_4_balanced_dataset']
     
-    list_exp_VAE = ['mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_3']
+    list_exp_VAE = ['mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_1']
 
     parameters_mnist_classifier_BK_ratio = "parameters_combinations/mnist_classifier_ratio.txt"
 
-    # run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
-    #                                                2,
-    #                                                5,
-    #                                                list_exp_VAE,
-    #                                                is_ratio=False,
-    #                                                is_decoder=False,
-    #                                                is_VAE=True)
-    
     run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
-                                                   8,
-                                                   31,
-                                                   lis_decoder,
+                                                   2,
+                                                   265,
+                                                   list_exp_VAE,
                                                    is_ratio=False,
-                                                   is_decoder=True)
+                                                   is_decoder=False,
+                                                   is_VAE=True)
+    
+    # run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
+    #                                                8,
+    #                                                31,
+    #                                                lis_decoder,
+    #                                                is_ratio=False,
+    #                                                is_decoder=True)
 
     # run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
     #                                                4,

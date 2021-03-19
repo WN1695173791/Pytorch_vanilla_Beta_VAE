@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name="VAE"       # Job Name
+#SBATCH --job-name="VAE_test"       # Job Name
 #SBATCH --partition=gpu_p2             # partition name
 #SBATCH --qos=qos_gpu-t4             # for jean-zay
 #SBATCH --gres=gpu:1                # nombre de GPU a reserver
@@ -14,7 +14,7 @@
 #BATCH --mail-type=ALL           
 #SBATCH --mail-user=julien.dejasmin@lis-lab.fr
 
-#SBATCH --array=2-5
+#SBATCH --array=2-265
 echo "$SLURM_ARRAY_TASK_ID"
 
 # nettoyage des modules charges en interactif et herites par defaut

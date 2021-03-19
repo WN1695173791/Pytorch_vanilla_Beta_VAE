@@ -744,9 +744,9 @@ class SolverClassifier(object):
                     for params in self.net.encoder_struct.parameters():
                         params.requires_grad = False
 
-                print('-----------::::::::::::Before:::::::-----------------:')
-                print(self.net.encoder_struct[0].weight[0][0])
-                print(self.net.encoder_var[0].weight[0][0])
+                # print('-----------::::::::::::Before:::::::-----------------:')
+                # print(self.net.encoder_struct[0].weight[0][0])
+                # print(self.net.encoder_var[0].weight[0][0])
                 # print(list(self.net.parameters())[0])
 
                 self.optimizer.zero_grad()
@@ -763,9 +763,9 @@ class SolverClassifier(object):
                     for params in self.net.encoder_struct.parameters():
                         params.requires_grad = True
 
-                print('-----------::::::::::::After:::::::-----------------:')
-                print(self.net.encoder_struct[0].weight[0][0])
-                print(self.net.encoder_var[0].weight[0][0])
+                # print('-----------::::::::::::After:::::::-----------------:')
+                # print(self.net.encoder_struct[0].weight[0][0])
+                # print(self.net.encoder_var[0].weight[0][0])
 
                 if self.contrastive_loss:
                     torch.nn.utils.clip_grad_value_(self.net.parameters(), 10)
