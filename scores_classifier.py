@@ -125,7 +125,7 @@ def compute_scores(net, loader, device, loader_size, nb_class, ratio_reg, z_stru
            variance_inter, loss_distance_cl, loss_distance_mean, total_loss
 
 
-def compute_scores_VAE(net, loader, device, lambda_BCE, beta):
+def compute_scores_VAE(net, loader, loader_size, device, lambda_BCE, beta):
 
     BCE_loss = 0
     KLD_loss = 0
@@ -149,18 +149,18 @@ def compute_scores_VAE(net, loader, device, lambda_BCE, beta):
             BCE_loss_iter = F.binary_cross_entropy(x_recons, data)
             BCE_loss += BCE_loss_iter
             # KL divergence loss:
-            KLD_loss_iter = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp()).mean(0, True)
+            KLD_loss_iter = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
             KLD_loss += KLD_loss_iter
 
             total_loss_iter = (lambda_BCE * BCE_loss_iter) + (beta * KLD_loss_iter)
             total_loss += total_loss_iter
 
     # losses:
-    BCE_loss_iter = BCE_loss / len(loader)
-    KLD_loss_iter = KLD_loss / len(loader)
-    total_loss = total_loss_iter / len(loader)
+    BCE_loss = BCE_loss / len(loader)
+    KLD_loss = KLD_loss / len(loader)
+    total_loss = total_loss / len(loader)
 
-    return total_loss, BCE_loss_iter, KLD_loss_iter
+    return total_loss, BCE_loss, KLD_loss
 
 
 def compute_scores_prediction(prediction, labels):

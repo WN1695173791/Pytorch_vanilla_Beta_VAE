@@ -1775,7 +1775,7 @@ def viz_decoder_multi_label(net, loader, exp_name, nb_img=8, nb_class=10, save=T
     # get n data per classes:
     first = True
     for data, label in loader:
-        print('loader ', len(label))
+        # print('loader ', len(label))
         for lab in range(nb_class):
             batch_lab = data[torch.where(label == lab)[0][:nb_img]]
             if first:
@@ -1820,6 +1820,91 @@ def viz_decoder_multi_label(net, loader, exp_name, nb_img=8, nb_class=10, save=T
 
     if save:
         fig.savefig("fig_results/reconstructions/fig_reconstructions_multi_label_" + exp_name + ".png")
+
+    return
+
+
+def reconstruction_local(nb_class, nb_img, input_data, x_recon, exp_name, size, save=True):
+    first = True
+    for class_id in range(nb_class):
+        start_cl_id = class_id * nb_img
+        end_cl_id = start_cl_id + nb_img
+        original_batch = input_data[start_cl_id:end_cl_id].cpu()
+        reconstruction_batch = x_recon[start_cl_id:end_cl_id].cpu()
+        comparaison_batch = torch.cat([original_batch, reconstruction_batch])
+        if first:
+            comparison = comparaison_batch
+            first = False
+        else:
+            comparison = torch.cat((comparison, comparaison_batch), dim=0)
+
+    reconstructions = make_grid(comparison.data, nrow=size[0])
+
+    # grid with originals data
+    recon_grid = reconstructions.permute(1, 2, 0)
+    fig, ax = plt.subplots(figsize=(10, 20), facecolor='w', edgecolor='k')
+    ax.set(title=('model: {}:'.format(exp_name)))
+
+    ax.imshow(recon_grid.numpy())
+    # ax.axhline(y=size[0] // 2, linewidth=4, color='r')
+    plt.show()
+
+    if save:
+        fig.savefig("fig_results/reconstructions/fig_reconstructions_multi_label_" + exp_name + ".png")
+
+    return
+
+
+def viz_reconstructino_VAE(net, loader, exp_name, z_var_size, z_struct_size, nb_img=8, nb_class=10, save=True,
+                           z_struct_reconstruction=False, z_var_reconstruction=False):
+    """
+    plot multi data for the same label for each line.
+    nb_class row and for each label they are one row with original data and one with reconstructed data.
+    :param loader:
+    :param net:
+    :return:
+    """
+
+    net.eval()
+    size = (nb_img, nb_class*2)
+
+    # get n data per classes:
+    first = True
+    for data, label in loader:
+        # print('loader ', len(label))
+        for lab in range(nb_class):
+            batch_lab = data[torch.where(label == lab)[0][:nb_img]]
+            if first:
+                batch = batch_lab
+                first = False
+            else:
+                batch = torch.cat((batch, batch_lab), dim=0)
+
+    # get reconstruction
+    with torch.no_grad():
+        input_data = batch
+    if torch.cuda.is_available():
+        input_data = input_data.cuda()
+
+    x_recon, z_struct, z_var, z_var_sample, _ = net(input_data)
+
+    net.train()
+
+    reconstruction_local(nb_class, nb_img, input_data, x_recon, exp_name, size, save=save)
+
+    if z_struct_reconstruction:
+        random_var = torch.randn((x_recon.shape[0], z_var_size))
+        z_struct_random = torch.cat((random_var, z_struct), dim=1)
+        x_recon_struct = net.decoder(z_struct_random)
+        exp_name = exp_name + "_z_struct"
+        reconstruction_local(nb_class, nb_img, input_data, x_recon_struct, exp_name, size, save=save)
+
+    if z_var_reconstruction:
+        random_struct = torch.randn((x_recon.shape[0], z_struct_size))
+        z_var_random = torch.cat((z_var_sample, random_struct), dim=1)
+        x_recon_var = net.decoder(z_var_random)
+        exp_name = exp_name + "_z_var"
+        reconstruction_local(nb_class, nb_img, input_data, x_recon_var, exp_name, size, save=save)
 
     return
 

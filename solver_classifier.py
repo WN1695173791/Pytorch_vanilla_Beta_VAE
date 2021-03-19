@@ -133,15 +133,18 @@ def compute_scores_and_loss(net, train_loader, test_loader, device, train_loader
     return scores, losses
 
 
-def compute_scores_and_loss_VAE(net, train_loader, test_loader, device, lambda_BCE, beta):
+def compute_scores_and_loss_VAE(net, train_loader, test_loader, train_loader_size, test_loader_size, device,
+                                lambda_BCE, beta):
 
     Total_loss_train, BCE_train, KLD_train = compute_scores_VAE(net,
                                                                 train_loader,
+                                                                train_loader_size,
                                                                 device,
                                                                 lambda_BCE,
                                                                 beta)
     Total_loss_test, BCE_test, KLD_test = compute_scores_VAE(net,
                                                              test_loader,
+                                                             test_loader_size,
                                                              device,
                                                              lambda_BCE,
                                                              beta)
@@ -677,7 +680,7 @@ class SolverClassifier(object):
                     # BCE loss:
                     BCE_loss = F.binary_cross_entropy(x_recons, data)
                     # KL divergence loss:
-                    KLD_loss = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp()).mean(0, True)
+                    KLD_loss = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
 
                     loss = (self.lambda_BCE * BCE_loss) + (self.beta * KLD_loss)
                 else:
@@ -741,28 +744,28 @@ class SolverClassifier(object):
                     for params in self.net.encoder_struct.parameters():
                         params.requires_grad = False
 
-                # print('-----------::::::::::::Before:::::::-----------------:')
-                # print(self.net.encoder_struct[3].weight[0][0])
-                # print(self.net.encoder_struct[3].weight[0])
+                print('-----------::::::::::::Before:::::::-----------------:')
+                print(self.net.encoder_struct[0].weight[0][0])
+                print(self.net.encoder_var[0].weight[0][0])
                 # print(list(self.net.parameters())[0])
 
                 self.optimizer.zero_grad()
                 loss.backward()
+                self.optimizer.step()
 
                 # backpropagation loss
                 if self.use_scheduler:
                     self.scheduler.step(loss)
-                else:
-                    self.optimizer.step()
+
 
                 # unfreeze encoder_struct if train decoder:
                 if (self.use_decoder or self.use_VAE) and self.freeze_Encoder:
                     for params in self.net.encoder_struct.parameters():
                         params.requires_grad = True
 
-                # print('-----------::::::::::::After:::::::-----------------:')
-                # print(self.net.encoder_struct[3].weight[0][0])
-                # print(self.net.decoder[3].weight[0])
+                print('-----------::::::::::::After:::::::-----------------:')
+                print(self.net.encoder_struct[0].weight[0][0])
+                print(self.net.encoder_var[0].weight[0][0])
 
                 if self.contrastive_loss:
                     torch.nn.utils.clip_grad_value_(self.net.parameters(), 10)
@@ -786,6 +789,8 @@ class SolverClassifier(object):
                 self.losses = compute_scores_and_loss_VAE(self.net,
                                                           self.train_loader,
                                                           self.test_loader,
+                                                          self.train_loader_size,
+                                                          self.test_loader_size,
                                                           self.device,
                                                           self.lambda_BCE,
                                                           self.beta)

@@ -7,6 +7,7 @@ from visualizer_CNN import *
 from viz.viz_regions import *
 from scores_classifier import compute_scores
 from models.Encoder_decoder import Encoder_decoder
+from models.VAE import VAE
 from visualizer import viz_reconstruction
 from viz.visualize import Visualizer
 import torch.nn.functional as F
@@ -120,7 +121,7 @@ def run_exp_extraction_and_visualization_custom(path_parameter, line_begin, line
 
 
 def run_exp_extraction_and_visualization_custom_BK(path_parameter, line_begin, line_end, list_model, is_ratio=False,
-                                                   is_decoder=False):
+                                                   is_decoder=False, is_VAE=False):
     file = open(path_parameter, "r")
     # 28 arguments to recuperate
     arguments_2 = {}
@@ -163,158 +164,174 @@ def run_exp_extraction_and_visualization_custom_BK(path_parameter, line_begin, l
         binary_chain = False
         exp_name = args[-1][-1].split('\n')[0]
 
-        # decoder:
-        if is_decoder:
-            decoder_first_dense = int(args[-11][1])
-            decoder_n_filter_1 = int(args[-10][1])
-            decoder_n_filter_2 = int(args[-9][1])
-            decoder_kernel_size_1 = int(args[-8][1])
-            decoder_kernel_size_2 = int(args[-7][1])
-            decoder_kernel_size_3 = int(args[-6][1])
-            decoder_stride_1 = int(args[-5][1])
-            decoder_stride_2 = int(args[-4][1])
-            decoder_stride_3 = int(args[-3][1])
-
-        if args[-2][0] == 'binary_chain':
-            if args[-2][1] == 'True':
-                binary_chain = True
-            elif args[-2][1] == 'False':
-                binary_chain = False
-        if args[-2][0] == 'binary_z':
-            if args[-2][1] == 'True':
-                Binary_z = True
-            elif args[-2][1] == 'False':
-                Binary_z = False
-        else:
-            if args[-3][0] == 'binary_z':
-                if args[-3][1] == 'True':
-                    Binary_z = True
-                elif args[-3][1] == 'False':
-                    Binary_z = False
-
-        # diff var loss:
-        if args[-4][0] == 'diff_var':
-            if args[-4][1] == 'True':
-                diff_var = True
-            elif args[-4][1] == 'False':
-                diff_var = False
-
-        if args[-3][0] == 'loss_distance_mean':
-            if args[-3][1] == 'True':
-                loss_distance_mean = True
-            elif args[-3][1] == 'False':
-                loss_distance_mean = False
-        else:
-            loss_distance_mean = False
-        if is_ratio:
-            ratio_reg = True
-            lambda_ratio = args[28][1]
-            lambda_class = args[29][1]
-            if args[31][0] == 'alpha':
-                alpha = args[31][0]
-                loss = args[32][0]
-                optimizer = args[33][0]
-                mrg = args[34][0]
-                IPC = args[35][0]
-                warm = args[36][0]
-                sz_embedding = args[37][0]
-                add_linear_after_GMP = True
-            elif args[30][0] == 'other_ratio':
-                if args[30][1] == 'True':
-                    other_ratio = True
-                elif args[30][1] == 'False':
-                    other_ratio = False
-                if args[31][0] == 'loss_min_distance_cl':
-                    if args[31][1] == 'True':
-                        loss_min_distance_cl = True
-                    elif args[31][1] == 'False':
-                        loss_min_distance_cl = False
-                    lambda_var_distance = args[32][1]
-                    intra_class_variance_loss = args[33][1]
-                    lambda_intra_class_var = args[34][1]
-
-                    if args[-2][0] == 'binary_z':
-                        if args[-2][1] == 'True':
-                            Binary_z = True
-                        elif args[-2][1] == 'False':
-                            Binary_z = False
-                add_linear_after_GMP = True
-            elif args[30][0] == 'add_linear_after_GMP':
-                if args[30][1] == 'True':
-                    add_linear_after_GMP = True
-                elif args[30][1] == 'False':
-                    add_linear_after_GMP = False
-            elif args[30][0] == 'without_acc':
-                add_linear_after_GMP = True
-            else:
-                add_linear_after_GMP = True
-        else:
-            ratio_reg = False
-            add_linear_after_GMP = True
-
-        z_struct_size = int(args[11][1])
-        stride_size = int(args[23][1])
-        classif_layer_size = int(args[13][1])
-        hidden_filters_1 = int(args[24][1])
-        hidden_filters_2 = int(args[25][1])
-        hidden_filters_3 = int(args[26][1])
-        if args[18][1] == 'True':
-            two_conv_layer = True
-        elif args[18][1] == 'False':
-            two_conv_layer = False
-        if args[19][1] == 'True':
-            three_conv_layer = True
-        elif args[19][1] == 'False':
-            three_conv_layer = False
-        if args[12][1] == 'True':
+        # VAE:
+        if is_VAE:
+            # encoder struct:
+            z_struct_size = 32
+            big_kernel_size = 8
+            stride_size = 1
+            classif_layer_size = 30
             add_classification_layer = True
-        elif args[12][1] == 'False':
-            add_classification_layer = False
-        if args[20][1] == 'True':
+            hidden_filters_1 = 32
+            hidden_filters_2 = 32
+            hidden_filters_3 = 32
             BK_in_first_layer = True
-        elif args[20][1] == 'False':
-            BK_in_first_layer = False
-        if args[21][1] == 'True':
-            BK_in_second_layer = True
-        elif args[21][1] == 'False':
+            two_conv_layer = True
+            three_conv_layer = False
             BK_in_second_layer = False
-        if args[22][1] == 'True':
-            BK_in_third_layer = True
-        elif args[22][1] == 'False':
             BK_in_third_layer = False
-
-        big_kernel_size = int(args[17][1])
-
-        if two_conv_layer:
-            zstruct_size = str(hidden_filters_2)
-        elif three_conv_layer:
-            zstruct_size = str(hidden_filters_3)
+            add_linear_after_GMP = True
+            # VAE:
+            z_var_size = int(args[-15][1])
+            lambda_BCE = int(args[-14][1])
+            beta = int(args[-13][1])
+            var_hidden_filters_1 = int(args[-12][1])
+            var_hidden_filters_2 = int(args[-11][1])
+            var_hidden_filters_3 = int(args[-10][1])
+            var_kernel_size_1 = int(args[-9][1])
+            var_kernel_size_2 = int(args[-8][1])
+            var_kernel_size_3 = int(args[-7][1])
+            var_stride_size_1 = int(args[-6][1])
+            var_stride_size_2 = int(args[-5][1])
+            var_stride_size_3 = int(args[-4][1])
+            var_hidden_dim = int(args[-3][1])
+            if args[-2][1] == 'True':
+                var_three_conv_layer = True
+            elif args[-2][1] == 'False':
+                var_three_conv_layer = False
         else:
-            zstruct_size = str(hidden_filters_1)
-        cat = 'zstruct_' + zstruct_size
+            # decoder:
+            if is_decoder:
+                decoder_first_dense = int(args[-11][1])
+                decoder_n_filter_1 = int(args[-10][1])
+                decoder_n_filter_2 = int(args[-9][1])
+                decoder_kernel_size_1 = int(args[-8][1])
+                decoder_kernel_size_2 = int(args[-7][1])
+                decoder_kernel_size_3 = int(args[-6][1])
+                decoder_stride_1 = int(args[-5][1])
+                decoder_stride_2 = int(args[-4][1])
+                decoder_stride_3 = int(args[-3][1])
+
+            if args[-2][0] == 'binary_chain':
+                if args[-2][1] == 'True':
+                    binary_chain = True
+                elif args[-2][1] == 'False':
+                    binary_chain = False
+            if args[-2][0] == 'binary_z':
+                if args[-2][1] == 'True':
+                    Binary_z = True
+                elif args[-2][1] == 'False':
+                    Binary_z = False
+            else:
+                if args[-3][0] == 'binary_z':
+                    if args[-3][1] == 'True':
+                        Binary_z = True
+                    elif args[-3][1] == 'False':
+                        Binary_z = False
+
+            # diff var loss:
+            if args[-4][0] == 'diff_var':
+                if args[-4][1] == 'True':
+                    diff_var = True
+                elif args[-4][1] == 'False':
+                    diff_var = False
+
+            if args[-3][0] == 'loss_distance_mean':
+                if args[-3][1] == 'True':
+                    loss_distance_mean = True
+                elif args[-3][1] == 'False':
+                    loss_distance_mean = False
+            else:
+                loss_distance_mean = False
+            if is_ratio:
+                ratio_reg = True
+                lambda_ratio = args[28][1]
+                lambda_class = args[29][1]
+                if args[31][0] == 'alpha':
+                    alpha = args[31][0]
+                    loss = args[32][0]
+                    optimizer = args[33][0]
+                    mrg = args[34][0]
+                    IPC = args[35][0]
+                    warm = args[36][0]
+                    sz_embedding = args[37][0]
+                    add_linear_after_GMP = True
+                elif args[30][0] == 'other_ratio':
+                    if args[30][1] == 'True':
+                        other_ratio = True
+                    elif args[30][1] == 'False':
+                        other_ratio = False
+                    if args[31][0] == 'loss_min_distance_cl':
+                        if args[31][1] == 'True':
+                            loss_min_distance_cl = True
+                        elif args[31][1] == 'False':
+                            loss_min_distance_cl = False
+                        lambda_var_distance = args[32][1]
+                        intra_class_variance_loss = args[33][1]
+                        lambda_intra_class_var = args[34][1]
+
+                        if args[-2][0] == 'binary_z':
+                            if args[-2][1] == 'True':
+                                Binary_z = True
+                            elif args[-2][1] == 'False':
+                                Binary_z = False
+                    add_linear_after_GMP = True
+                elif args[30][0] == 'add_linear_after_GMP':
+                    if args[30][1] == 'True':
+                        add_linear_after_GMP = True
+                    elif args[30][1] == 'False':
+                        add_linear_after_GMP = False
+                elif args[30][0] == 'without_acc':
+                    add_linear_after_GMP = True
+                else:
+                    add_linear_after_GMP = True
+            else:
+                ratio_reg = False
+                add_linear_after_GMP = True
+
+            z_struct_size = int(args[11][1])
+            stride_size = int(args[23][1])
+            classif_layer_size = int(args[13][1])
+            hidden_filters_1 = int(args[24][1])
+            hidden_filters_2 = int(args[25][1])
+            hidden_filters_3 = int(args[26][1])
+            if args[18][1] == 'True':
+                two_conv_layer = True
+            elif args[18][1] == 'False':
+                two_conv_layer = False
+            if args[19][1] == 'True':
+                three_conv_layer = True
+            elif args[19][1] == 'False':
+                three_conv_layer = False
+            if args[12][1] == 'True':
+                add_classification_layer = True
+            elif args[12][1] == 'False':
+                add_classification_layer = False
+            if args[20][1] == 'True':
+                BK_in_first_layer = True
+            elif args[20][1] == 'False':
+                BK_in_first_layer = False
+            if args[21][1] == 'True':
+                BK_in_second_layer = True
+            elif args[21][1] == 'False':
+                BK_in_second_layer = False
+            if args[22][1] == 'True':
+                BK_in_third_layer = True
+            elif args[22][1] == 'False':
+                BK_in_third_layer = False
+
+            big_kernel_size = int(args[17][1])
+
+            if two_conv_layer:
+                zstruct_size = str(hidden_filters_2)
+            elif three_conv_layer:
+                zstruct_size = str(hidden_filters_3)
+            else:
+                zstruct_size = str(hidden_filters_1)
+            cat = 'zstruct_' + zstruct_size
 
         # print(binary_chain, Binary_z)
-
-        net = Custom_CNN_BK(z_struct_size=z_struct_size,
-                            big_kernel_size=big_kernel_size,
-                            stride_size=stride_size,
-                            classif_layer_size=classif_layer_size,
-                            add_classification_layer=add_classification_layer,
-                            hidden_filters_1=hidden_filters_1,
-                            hidden_filters_2=hidden_filters_2,
-                            hidden_filters_3=hidden_filters_3,
-                            BK_in_first_layer=BK_in_first_layer,
-                            two_conv_layer=two_conv_layer,
-                            three_conv_layer=three_conv_layer,
-                            BK_in_second_layer=BK_in_second_layer,
-                            BK_in_third_layer=BK_in_third_layer,
-                            Binary_z=Binary_z,
-                            binary_chain=binary_chain,
-                            add_linear_after_GMP=add_linear_after_GMP)
         if is_decoder:
-            z_struct_layer_num = get_layer_zstruct_num(net)
-            input_test = torch.rand(*img_size).to(device)
-            before_GMP_shape = net.net[:z_struct_layer_num - 2](input_test.unsqueeze(0)).data.shape
             net = Encoder_decoder(z_struct_size=z_struct_size,
                                   big_kernel_size=big_kernel_size,
                                   stride_size=stride_size,
@@ -339,10 +356,53 @@ def run_exp_extraction_and_visualization_custom_BK(path_parameter, line_begin, l
                                   decoder_stride_1=decoder_stride_1,
                                   decoder_stride_2=decoder_stride_2,
                                   decoder_stride_3=decoder_stride_3)
+        elif is_VAE:
+            net = VAE(z_struct_size=z_struct_size,
+                      big_kernel_size=big_kernel_size,
+                      stride_size=stride_size,
+                      hidden_filters_1=hidden_filters_1,
+                      hidden_filters_2=hidden_filters_2,
+                      hidden_filters_3=hidden_filters_3,
+                      BK_in_first_layer=BK_in_first_layer,
+                      two_conv_layer=two_conv_layer,
+                      three_conv_layer=three_conv_layer,
+                      BK_in_second_layer=BK_in_second_layer,
+                      BK_in_third_layer=BK_in_third_layer,
+                      z_var_size=z_var_size,
+                      var_hidden_filters_1=var_hidden_filters_1,
+                      var_hidden_filters_2=var_hidden_filters_2,
+                      var_hidden_filters_3=var_hidden_filters_3,
+                      var_kernel_size_1=var_kernel_size_1,
+                      var_kernel_size_2=var_kernel_size_2,
+                      var_kernel_size_3=var_kernel_size_3,
+                      var_stride_size_1=var_stride_size_1,
+                      var_stride_size_2=var_stride_size_2,
+                      var_stride_size_3=var_stride_size_3,
+                      var_hidden_dim=var_hidden_dim,
+                      var_three_conv_layer=var_three_conv_layer)
+        else:
+            net = Custom_CNN_BK(z_struct_size=z_struct_size,
+                                big_kernel_size=big_kernel_size,
+                                stride_size=stride_size,
+                                classif_layer_size=classif_layer_size,
+                                add_classification_layer=add_classification_layer,
+                                hidden_filters_1=hidden_filters_1,
+                                hidden_filters_2=hidden_filters_2,
+                                hidden_filters_3=hidden_filters_3,
+                                BK_in_first_layer=BK_in_first_layer,
+                                two_conv_layer=two_conv_layer,
+                                three_conv_layer=three_conv_layer,
+                                BK_in_second_layer=BK_in_second_layer,
+                                BK_in_third_layer=BK_in_third_layer,
+                                Binary_z=Binary_z,
+                                binary_chain=binary_chain,
+                                add_linear_after_GMP=add_linear_after_GMP)
 
         if exp_name in list_model:
             if is_decoder:
                 run_decoder(exp_name, net)
+            elif is_VAE:
+                run_VAE(exp_name, net, lambda_BCE, beta, z_struct_size, z_var_size)
             else:
                 run_viz_expes(exp_name, net, is_ratio, loss_min_distance_cl, loss_distance_mean,
                               net_type='Custom_CNN_BK',
@@ -449,6 +509,25 @@ def run_decoder(exp_name, net, multi_label=True):
             fig.savefig("fig_results/reconstructions/fig_reconstructions_z_" + exp_name + ".png")
 
     # viz_latent_prediction_reconstruction(net_trained, exp_name, img_size, size=8, random=True, batch=batch)
+
+    return
+
+
+def run_VAE(exp_name, net, lambda_BCE, beta, z_struct_size, z_var_size):
+    print(exp_name, 'run VAE')
+    path = 'checkpoints_CNN/'
+    path_scores = 'checkpoint_scores_CNN'
+    net_trained, _, _ = get_checkpoints(net, path, exp_name)
+    print(net)
+
+    loader = test_loader
+
+    # losses:
+    # plot_loss_results_VAE(path_scores, exp_name, beta, lambda_BCE, save=True)
+
+    # reconstruction:
+    viz_reconstructino_VAE(net, loader, exp_name, z_var_size, z_struct_size, nb_img=10, nb_class=nb_class, save=True,
+                           z_struct_reconstruction=True, z_var_reconstruction=True)
 
     return
 
@@ -1119,40 +1198,27 @@ if __name__ == '__main__':
                          'mnist_balanced_dataset_encoder_ratio_min_1_1_z_struct_16',
                          'mnist_balanced_dataset_encoder_ratio_min_1_1_z_struct_64']
 
-    lis_decoder = ['mnist_balanced_dataset_baseline_decoder_1_1',
-                   'mnist_balanced_dataset_baseline_decoder_1_2',
-                   'mnist_balanced_dataset_baseline_decoder_1_3',
-                   'mnist_balanced_dataset_baseline_decoder_1_4',
-                   'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_decoder_1_1',
-                   'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_decoder_1_2',
-                   'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_decoder_1_3',
-                   'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_decoder_1_4',
-                   'mnist_balanced_dataset_encoder_ratio_min_1_1_decoder_1_1',
-                   'mnist_balanced_dataset_encoder_ratio_min_1_1_decoder_1_2',
-                   'mnist_balanced_dataset_encoder_ratio_min_1_1_decoder_1_3',
-                   'mnist_balanced_dataset_encoder_ratio_min_1_1_decoder_1_4',
-                   'mnist_balanced_dataset_baseline_decoder_2_1',
-                   'mnist_balanced_dataset_baseline_decoder_2_2',
-                   'mnist_balanced_dataset_baseline_decoder_2_3',
-                   'mnist_balanced_dataset_baseline_decoder_2_4',
-                   'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_decoder_2_1',
-                   'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_decoder_2_2',
-                   'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_decoder_2_3',
-                   'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_decoder_2_4',
-                   'mnist_balanced_dataset_encoder_ratio_min_1_1_decoder_2_1',
-                   'mnist_balanced_dataset_encoder_ratio_min_1_1_decoder_2_2',
-                   'mnist_balanced_dataset_encoder_ratio_min_1_1_decoder_2_3',
-                   'mnist_balanced_dataset_encoder_ratio_min_1_1_decoder_2_4']
+    lis_decoder = ['mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_decoder_1_2']
 
     lis_encoder = ['mnist_classif_balanced_dataset_intra_inter_1_6',
                    'mnist_baseline_balanced_128',
                    'mnist_classif_ratio_distance_intra_class_max_mean_1_6_4_balanced_dataset']
+    
+    list_exp_VAE = ['mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_3']
 
     parameters_mnist_classifier_BK_ratio = "parameters_combinations/mnist_classifier_ratio.txt"
 
+    # run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
+    #                                                2,
+    #                                                5,
+    #                                                list_exp_VAE,
+    #                                                is_ratio=False,
+    #                                                is_decoder=False,
+    #                                                is_VAE=True)
+    
     run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
-                                                   2,
-                                                   25,
+                                                   8,
+                                                   31,
                                                    lis_decoder,
                                                    is_ratio=False,
                                                    is_decoder=True)

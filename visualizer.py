@@ -33,6 +33,49 @@ def get_checkpoints(net, path, expe_name):
     return net, nb_iter, nb_epochs
 
 
+def get_checkpoints_scores_VAE(path_scores, expe_name):
+
+    file_path = os.path.join(path_scores, expe_name, 'last')
+    checkpoints_scores = torch.load(file_path, map_location=torch.device(device))
+
+    global_iter = checkpoints_scores['iter']
+    epochs = checkpoints_scores['epochs']
+    train_score = checkpoints_scores['Total_loss_train']
+    test_score = checkpoints_scores['Total_loss_test']
+    BCE_train = checkpoints_scores['BCE_train']
+    BCE_test = checkpoints_scores['BCE_test']
+    KLD_train = checkpoints_scores['KLD_train']
+    KLD_test = checkpoints_scores['KLD_test']
+
+    return global_iter, epochs, train_score, test_score, BCE_train, BCE_test, KLD_train, KLD_test
+
+
+def plot_loss_results_VAE(path_scores, expe_name, beta, lambda_BCE, save=True):
+
+    global_iter, epochs, train_score, test_score, BCE_train, BCE_test, KLD_train, \
+    KLD_test = get_checkpoints_scores_VAE(path_scores, expe_name)
+
+    fig, ax = plt.subplots(figsize=(15, 10), facecolor='w', edgecolor='k')
+
+    ax.set(xlabel='nb_iter', ylabel='loss',
+           title=('VAE losses: {}, with lambda BCE: {} and beta: {} '.format(expe_name, lambda_BCE, beta)))
+
+    ax.plot(epochs, train_score, label='Total train')
+    ax.plot(epochs, test_score, label='Total test')
+    ax.plot(epochs, BCE_train, label='BCE train')
+    ax.plot(epochs, BCE_test, label='BCE test')
+    ax.plot(epochs, KLD_train, label='KLD train')
+    ax.plot(epochs, KLD_test, label='KLD test')
+
+    ax.legend(loc=1)
+    plt.show()
+
+    if save:
+        fig.savefig("fig_results/losses/fig_losses_Test_Mnist_VAE_" + expe_name + ".png")
+
+    return
+
+
 def get_checkpoints_scores_CNN(path_scores, expe_name, is_ratio=False, is_distance_loss=False,
                                loss_distance_mean=False):
     file_path = os.path.join(path_scores, expe_name, 'last')
