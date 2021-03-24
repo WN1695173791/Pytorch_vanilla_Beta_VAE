@@ -64,7 +64,6 @@ def compute_scores_and_loss(net, train_loader, test_loader, device, train_loader
                             without_acc, lambda_classification,
                             lambda_contrastive, lambda_ratio_reg, diff_var, lambda_var_intra, lambda_var_inter,
                             lambda_var_distance, lambda_distance_mean, z_struct_out):
-
     score_train, classification_loss_train, total_loss_iter_train, ratio_loss_train, contrastive_loss_train, \
     diff_var_loss_train, variance_intra_train, \
     variance_inter_train, loss_distance_cl_train, loss_distance_mean_train, total_loss_train = compute_scores(net,
@@ -135,7 +134,6 @@ def compute_scores_and_loss(net, train_loader, test_loader, device, train_loader
 
 def compute_scores_and_loss_VAE(net, train_loader, test_loader, train_loader_size, test_loader_size, device,
                                 lambda_BCE, beta):
-
     Total_loss_train, BCE_train, KLD_train = compute_scores_VAE(net,
                                                                 train_loader,
                                                                 train_loader_size,
@@ -226,6 +224,7 @@ class SolverClassifier(object):
         self.dataset_balanced = args.dataset_balanced
         self.value_target_distance_mean = args.value_target_distance_mean
         # decoder:
+        self.other_architecture = args.other_architecture
         self.use_decoder = args.use_decoder
         self.freeze_Encoder = args.freeze_Encoder
         self.diff_var = args.diff_var
@@ -510,6 +509,7 @@ class SolverClassifier(object):
                                   BK_in_third_layer=self.BK_in_third_layer,
                                   Binary_z=self.binary_z,
                                   add_linear_after_GMP=self.add_linear_after_GMP,
+                                  other_architecture=self.other_architecture,
                                   decoder_first_dense=self.decoder_first_dense,
                                   decoder_n_filter_1=self.decoder_n_filter_1,
                                   decoder_n_filter_2=self.decoder_n_filter_2,
@@ -518,7 +518,18 @@ class SolverClassifier(object):
                                   decoder_kernel_size_3=self.decoder_kernel_size_3,
                                   decoder_stride_1=self.decoder_stride_1,
                                   decoder_stride_2=self.decoder_stride_2,
-                                  decoder_stride_3=self.decoder_stride_3)
+                                  decoder_stride_3=self.decoder_stride_3,
+                                  var_hidden_filters_1=self.var_hidden_filters_1,
+                                  var_hidden_filters_2=self.var_hidden_filters_2,
+                                  var_hidden_filters_3=self.var_hidden_filters_3,
+                                  var_kernel_size_1=self.var_kernel_size_1,
+                                  var_kernel_size_2=self.var_kernel_size_2,
+                                  var_kernel_size_3=self.var_kernel_size_3,
+                                  var_stride_size_1=self.var_stride_size_1,
+                                  var_stride_size_2=self.var_stride_size_2,
+                                  var_stride_size_3=self.var_stride_size_3,
+                                  var_hidden_dim=self.var_hidden_dim,
+                                  var_three_conv_layer=self.var_three_conv_layer)
 
             self.checkpoint_dir = os.path.join(args.ckpt_dir, args.exp_name)
             file_path = os.path.join(self.checkpoint_dir, 'last')
@@ -671,7 +682,7 @@ class SolverClassifier(object):
                     self.mse_loss = F.mse_loss(x_recons, data)
                     loss = self.mse_loss
                 elif self.use_VAE:
-                    x_recons, _, _, _, latent_representation = self.net(data)
+                    x_recons, _, _, _, latent_representation, _ = self.net(data)
                     mu = latent_representation['mu']
                     logvar = latent_representation['logvar']
 
@@ -756,7 +767,6 @@ class SolverClassifier(object):
                 # backpropagation loss
                 if self.use_scheduler:
                     self.scheduler.step(loss)
-
 
                 # unfreeze encoder_struct if train decoder:
                 if (self.use_decoder or self.use_VAE) and self.freeze_Encoder:

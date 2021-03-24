@@ -224,6 +224,7 @@ if __name__ == "__main__":
     parser.add_argument('--value_target_distance_mean', default=1, type=float, help="lambda_distance_mean")
     parser.add_argument('--diff_var', default=False, type=str2bool, help='diff_var')
     # use decoder:
+    parser.add_argument('--other_architecture', default=False, type=str2bool, help="other_architecture")
     parser.add_argument('--use_decoder', default=False, type=str2bool, help='train decoder with encoder freeze')
     parser.add_argument('--freeze_Encoder', default=True, type=str2bool, help='if freeze encoder weighs')
     parser.add_argument("--decoder_first_dense", type=int, default=36, metavar='integer value', help="decoder_first_dense")

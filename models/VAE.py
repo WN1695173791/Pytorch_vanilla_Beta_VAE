@@ -130,6 +130,7 @@ class VAE(nn.Module, ABC):
             # PrintLayer(),  # B, hidden_filters_1, 1, 1
             View((-1, self.hidden_filter_GMP)),  # B, hidden_filters_1
             # PrintLayer(),  # B, hidden_filters_1
+            nn.Sigmoid()
         ]
         # -----------_________________ end encoder_struct____________________________________________------------
 
@@ -166,6 +167,7 @@ class VAE(nn.Module, ABC):
             # PrintLayer(),
             nn.Linear(self.var_hidden_dim, self.z_var_size * 2),
             # PrintLayer()
+            nn.ReLU(True)
         ]
         # --------------------------------------- end encoder_var____________________________________________ ----
 
