@@ -183,8 +183,8 @@ def run_exp_extraction_and_visualization_custom_BK(path_parameter, line_begin, l
             add_linear_after_GMP = True
             # VAE:
             z_var_size = int(args[-15][1])
-            lambda_BCE = int(args[-14][1])
-            beta = int(args[-13][1])
+            lambda_BCE = float(args[-14][1])
+            beta = float(args[-13][1])
             var_hidden_filters_1 = int(args[-12][1])
             var_hidden_filters_2 = int(args[-11][1])
             var_hidden_filters_3 = int(args[-10][1])
@@ -484,7 +484,7 @@ def run_decoder(exp_name, net, multi_label=True):
         size = (8, 8)
 
         with torch.no_grad():
-            input_data = batch
+            input_data = batch_test
         if torch.cuda.is_available():
             input_data = input_data.cuda()
         x_recon, _ = net_trained(input_data)
@@ -494,7 +494,7 @@ def run_decoder(exp_name, net, multi_label=True):
         recon_loss = F.mse_loss(x_recon, input_data).detach().numpy()
         recon_loss_around = np.around(recon_loss * 100, 2)
 
-        comparison = build_compare_reconstruction(size, batch, input_data, x_recon)
+        comparison = build_compare_reconstruction(size, batch_test, input_data, x_recon)
         reconstructions = make_grid(comparison.data, nrow=size[0])
 
         # grid with originals data
@@ -518,16 +518,36 @@ def run_VAE(exp_name, net, lambda_BCE, beta, z_struct_size, z_var_size):
     path = 'checkpoints_CNN/'
     path_scores = 'checkpoint_scores_CNN'
     net_trained, _, _ = get_checkpoints(net, path, exp_name)
-    print(net)
 
+    # print(net)
     loader = test_loader
+    batch = batch_test
+    embedding_size = z_struct_size + z_var_size
 
     # losses:
     # plot_loss_results_VAE(path_scores, exp_name, beta, lambda_BCE, save=True)
 
     # reconstruction:
-    viz_reconstructino_VAE(net, loader, exp_name, z_var_size, z_struct_size, nb_img=10, nb_class=nb_class, save=True,
-                           z_struct_reconstruction=False, z_var_reconstruction=False)
+    # _, _, _, _, _ = viz_reconstructino_VAE(net_trained, loader, exp_name, z_var_size, z_struct_size, nb_img=10, nb_class=nb_class,
+    #                                     save=True, z_reconstruction=True, z_struct_reconstruction=True,
+    #                                     z_var_reconstruction=True, return_scores=False)
+
+    # viz_latent_prediction_reconstruction(net_trained, exp_name, embedding_size, z_struct_size, z_var_size, size=8, random=False, batch=batch)
+
+    # Image reconstruction with real distribution:
+
+    # mu_var, sigma_var, mu_struct, sigma_struct = real_distribution_model(net_trained, exp_name, z_struct_size, z_var_size,
+    #                                                                      loader, 'test', plot_gaussian=False, save=True)
+
+    # z_struct sample:  sample from positive gaussian:
+    # z_struct_sample = sigma_struct * np.random.randn(...) + mu_struct
+
+    # _, _, _, _ = viz_reconstructino_VAE(net_trained, loader, exp_name, z_var_size, z_struct_size, nb_img=10,
+    # nb_class=nb_class, save=True, z_reconstruction=True, z_struct_reconstruction=True, z_var_reconstruction=True,
+    # return_scores=False, real_distribution=True, mu_var=mu_var, std_var=sigma_var, mu_struct=mu_struct,
+    # std_struct=sigma_struct)
+
+    switch_img(net, exp_name, loader, z_var_size)
 
     return
 
@@ -756,7 +776,7 @@ def selection(net, exp_name):
 
 # parameters:
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-batch = torch.load('data/batch_mnist.pt')
+batch_test = torch.load('data/batch_mnist.pt')
 batch_size = 128  # 10000 to run regions visualization (we must have only one so all data set test in one batch)
 train_loader, test_loader = get_mnist_dataset(batch_size=batch_size)
 
@@ -789,7 +809,7 @@ is_binary_structural_latent = False
 stride = True
 len_img_h = img_size[-1]
 len_img_w = img_size[-2]
-images = batch
+images = batch_test
 padding = 0
 # for traversal real image:
 indx_image = 0
@@ -1204,13 +1224,24 @@ if __name__ == '__main__':
                    'mnist_baseline_balanced_128',
                    'mnist_classif_ratio_distance_intra_class_max_mean_1_6_4_balanced_dataset']
     
-    list_exp_VAE = ['mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_1']
+    list_exp_VAE = [# 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_2c_32_5_1_2_5',
+                    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_2c_32_15_1_3_3',
+                    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_2c_32_30_1_3_3',
+                    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_2c_64_5_2_2_4',
+                    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_2c_64_15_2_2_3',
+                    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_2c_64_30_1_2_5',
+                    'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_3c_32_5_1_1_4']
+                    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_3c_32_15_1_2_3',
+                    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_3c_32_30_1_2_5']
+                    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_3c_64_5_1_1_5',
+                    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_3c_64_15_1_1_3',
+                    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_3c_64_30_2_1_4']
 
     parameters_mnist_classifier_BK_ratio = "parameters_combinations/mnist_classifier_ratio.txt"
 
     run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
                                                    2,
-                                                   265,
+                                                   13,
                                                    list_exp_VAE,
                                                    is_ratio=False,
                                                    is_decoder=False,

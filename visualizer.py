@@ -353,7 +353,7 @@ def latent_random_traversal(net, epochs, path, expe_name, latent_spec, img_size,
     plt.figure(figsize=(10, 10))
     traversals = traversals.permute(1, 2, 0)
     plt.title(
-        'latent random traversal: {} , with indx = {}, at the epoch: {}'.format(expe_name, str(indx), str(epochs)))
+        'latent random traversal: {} , with index = {}, at the epoch: {}'.format(expe_name, str(indx), str(epochs)))
     plt.imshow(traversals.numpy())
     plt.show()
     return
@@ -828,7 +828,6 @@ def real_distribution_model(net, path_expe, expe_name, loader, latent_spec, trai
                 nb_batch += 1
 
                 data = x[0]
-                labels = x[1]
                 data = data.to(device)  # Variable(data.to(device))
 
                 # compute loss:

@@ -3,7 +3,7 @@ import torch
 from scipy import stats
 
 
-class LatentTraverser():
+class LatentTraverser:
     def __init__(self, latent_spec):
         """
         LatentTraverser is used to generate traversals of the latent space.

@@ -13,6 +13,8 @@ import torch.nn.functional as F
 from visualizer import *
 from torch.autograd import Variable
 
+from viz.latent_traversal import LatentTraverser
+
 EPS = 1e-12
 
 
@@ -1770,7 +1772,7 @@ def viz_decoder_multi_label(net, loader, exp_name, nb_img=8, nb_class=10, save=T
     """
 
     net.eval()
-    size = (nb_img, nb_class*2)
+    size = (nb_img, nb_class * 2)
 
     # get n data per classes:
     first = True
@@ -1856,7 +1858,9 @@ def reconstruction_local(nb_class, nb_img, input_data, x_recon, exp_name, size, 
 
 
 def viz_reconstructino_VAE(net, loader, exp_name, z_var_size, z_struct_size, nb_img=8, nb_class=10, save=True,
-                           z_struct_reconstruction=False, z_var_reconstruction=False):
+                           z_reconstruction=True, z_struct_reconstruction=False, z_var_reconstruction=False,
+                           return_scores=False, real_distribution=True, mu_var=None, std_var=None, mu_struct=None,
+                           std_struct=None):
     """
     plot multi data for the same label for each line.
     nb_class row and for each label they are one row with original data and one with reconstructed data.
@@ -1866,7 +1870,7 @@ def viz_reconstructino_VAE(net, loader, exp_name, z_var_size, z_struct_size, nb_
     """
 
     net.eval()
-    size = (nb_img, nb_class*2)
+    size = (nb_img, nb_class * 2)
 
     # get n data per classes:
     first = True
@@ -1886,27 +1890,71 @@ def viz_reconstructino_VAE(net, loader, exp_name, z_var_size, z_struct_size, nb_
     if torch.cuda.is_available():
         input_data = input_data.cuda()
 
-    x_recon, z_struct, z_var, z_var_sample, _ = net(input_data)
+    # z reconstruction:
+    x_recon, z_struct, z_var, z_var_sample, _, _ = net(input_data)
+
+    # z_struct reconstruction:
+    if real_distribution:
+        first = True
+        for i in range(x_recon.shape[0]):
+            random_var_iter = torch.normal(mean=mu_var, std=std_var).unsqueeze(dim=0)
+            if first:
+                random_var = random_var_iter
+                first = False
+            else:
+                random_var = torch.cat((random_var, random_var_iter), dim=0)
+    else:
+        random_var = torch.randn((x_recon.shape[0], z_var_size))
+    z_struct_random = torch.cat((random_var, z_struct), dim=1)
+    x_recon_struct = net.decoder(z_struct_random)
+
+    # z_var reconstruction:
+    if real_distribution:
+        first = True
+        for i in range(x_recon.shape[0]):
+            random_struct_iter = torch.normal(mean=mu_struct, std=std_struct).unsqueeze(dim=0)
+            if first:
+                random_struct = random_struct_iter
+                first = False
+            else:
+                random_struct = torch.cat((random_struct, random_struct_iter), dim=0)
+    else:
+        random_struct = torch.randn((x_recon.shape[0], z_struct_size))
+    z_var_random = torch.cat((z_var_sample, random_struct), dim=1)
+    x_recon_var = net.decoder(z_var_random)
 
     net.train()
 
-    reconstruction_local(nb_class, nb_img, input_data, x_recon, exp_name, size, save=save)
+    if z_reconstruction:
+        reconstruction_local(nb_class, nb_img, input_data, x_recon, exp_name, size, save=save)
 
     if z_struct_reconstruction:
-        random_var = torch.randn((x_recon.shape[0], z_var_size))
-        z_struct_random = torch.cat((random_var, z_struct), dim=1)
-        x_recon_struct = net.decoder(z_struct_random)
-        exp_name = exp_name + "_z_struct"
-        reconstruction_local(nb_class, nb_img, input_data, x_recon_struct, exp_name, size, save=save)
+        exp_name_struct = exp_name + "_z_struct"
+        reconstruction_local(nb_class, nb_img, input_data, x_recon_struct, exp_name_struct, size, save=save)
 
     if z_var_reconstruction:
-        random_struct = torch.randn((x_recon.shape[0], z_struct_size))
-        z_var_random = torch.cat((z_var_sample, random_struct), dim=1)
-        x_recon_var = net.decoder(z_var_random)
-        exp_name = exp_name + "_z_var"
-        reconstruction_local(nb_class, nb_img, input_data, x_recon_var, exp_name, size, save=save)
+        exp_name_var = exp_name + "_z_var"
+        reconstruction_local(nb_class, nb_img, input_data, x_recon_var, exp_name_var, size, save=save)
 
-    return
+    if return_scores:
+
+        reconstruction_score = F.binary_cross_entropy(x_recon, input_data)
+        recons_struct_score = F.binary_cross_entropy(x_recon_struct, input_data)
+        recons_var_score = F.binary_cross_entropy(x_recon_var, input_data)
+
+        score_vae_reconstruction = recons_var_score / reconstruction_score
+
+        print('reconstructions scores: rapport: {}, z: {}, z_struct: {}, z_var: {}'.format(score_vae_reconstruction,
+                                                                                           reconstruction_score,
+                                                                                           recons_struct_score,
+                                                                                           recons_var_score))
+    else:
+        score_vae_reconstruction = 0
+        reconstruction_score = 0
+        recons_struct_score = 0
+        recons_var_score = 0
+
+    return score_vae_reconstruction, reconstruction_score, recons_struct_score, recons_var_score
 
 
 def traversal_values(size):
@@ -1918,24 +1966,22 @@ def traversal_values_min_max(min, max, size):
     return np.linspace(min, max, size)
 
 
-def viz_latent_prediction_reconstruction(net, exp_name, img_size, size=8, random=False, batch=None):
+def viz_latent_prediction_reconstruction(net, exp_name, embedding_size, z_struct_size, z_var_size, size=8,
+                                         random=False, batch=None):
     """
     Visualize reconstruction with predict label.
     :param net:
     :param exp_name:
     :return:
     """
-    nb_samples = 32
-    embedding_size = 32
-    indx = 0
-    samples = []
-    latent_samples = []
-    indx_image = indx
+    nb_samples = 1
+    idx = 0
 
-    if random:
-        sample = np.random.normal(size=(nb_samples, embedding_size))
-        sample = np.repeat(sample, size, axis=0).reshape((nb_samples, size, embedding_size))
-    else:
+    # Grid traversal:
+    size_grid = (embedding_size, size)
+    samples_grid = []
+
+    if not random:
         net.eval()
         # Pass data through VAE to obtain reconstruction
         with torch.no_grad():
@@ -1943,48 +1989,212 @@ def viz_latent_prediction_reconstruction(net, exp_name, img_size, size=8, random
         if torch.cuda.is_available():
             input_data = input_data.cuda()
 
-        x_recon, embedding = net(input_data)
-
+        x_recons, z_struct, z_var, z_var_sample, latent_representation, z = net(input_data)
         net.train()
 
-        if indx_image is not None:
-            indx = indx_image
-        else:
-            indx = np.random.randint(0, len(embedding))
+        img_latent = z[:nb_samples, :]
+    else:
+        img_latent = None
 
-        img_latent = embedding[indx]
-        x_recons = x_recon[indx]
-        nb_composante = len(embedding)
-        img_latent = img_latent.unsqueeze(dim=0)
+    num_samples = size_grid[0] * size_grid[1]
 
-        sample = np.expand_dims(np.repeat(img_latent.detach().numpy(), size, axis=0), axis=0)  # shape: (1, size, z_dim)
-        sample = np.repeat(sample, nb_composante, axis=0)  # shape: (nb_composante, size, z_dim)
+    # not random img:
+    if img_latent is not None:
+        samples = np.repeat(img_latent.detach().numpy(), num_samples, axis=0).reshape(
+            (num_samples, embedding_size))
+    else:
+        samples = np.random.normal(size=(num_samples, embedding_size))
 
-    # cont_traversal = traversal_values(size)
-    cont_traversal = traversal_values_min_max(np.min(sample) - np.abs(np.min(sample)),
-                                              np.max(sample) + np.abs(np.max(sample)),
-                                              size)  # shape: size
+    if idx is not None:
+        # Sweep over linearly spaced coordinates transformed through the
+        # inverse CDF (ppf) of a gaussian since the prior of the latent
+        # space is gaussian
+        cdf_traversal = np.linspace(0.05, 0.95, size_grid[0])
+        cont_traversal = stats.norm.ppf(cdf_traversal)
+        for i in range(size_grid[0]):
+            for j in range(size_grid[1]):
+                samples[i * size_grid[1] + j, idx] = cont_traversal[i]
+                # samples[i * size_grid[1] + j, idx] = cont_traversal[j]
 
-    for i in range(nb_samples):
-        for j in range(size):
-            sample[i][j, indx] = cont_traversal[j]
+    samples_grid.append(torch.Tensor(samples))
+    latent_samples = torch.cat(samples_grid, dim=1)
 
-    samples.append(torch.Tensor(sample.reshape((nb_samples * (size), embedding_size))))
+    # Map samples through decoder
+    generated = net.decoder(latent_samples)
 
-    latent_samples.append(torch.cat(samples, dim=1))
+    traversals = make_grid(generated.data, nrow=size_grid[1])
 
-    latent_samples = Variable(torch.cat(latent_samples, dim=0))
-    if torch.cuda.is_available():
-        latent_samples = latent_samples.cuda()
-    generated = net.decoder(latent_samples).cpu()
-
-    traversals = make_grid(generated.data, nrow=size)
-
-    plt.figure(figsize=(10, 10))
+    # figure:
+    fig, ax = plt.subplots(figsize=(15, 10), facecolor='w', edgecolor='k')
     traversals = traversals.permute(1, 2, 0)
-    plt.title(
-        'latent random traversal: {} , with index = {}'.format(exp_name, str(indx)))
+    ax.set(title=('latent traversal: {}'.format(exp_name)))
+
+    fig_size = traversals.shape
+
     plt.imshow(traversals.numpy())
+
+    ax.axhline(y=(fig_size[0] * (z_var_size / (z_var_size + z_struct_size))), linewidth=4, color='g')
+    # ax.axvline(x=(fig_size[1] // size) * indx_same_composante, linewidth=3, color='orange')
+    # ax.axvline(x=(fig_size[1] // size) * (indx_same_composante + 1), linewidth=3, color='orange')
+    plt.show()
+
+    # if save:
+    #     fig.savefig("fig_results/traversal_latent/fig_traversal_latent_" + "_" + expe_name + ".png")
+
+    return
+
+
+def real_distribution_model(net, expe_name, z_struct_size, z_var_size, loader, train_test, plot_gaussian=False,
+                            save=False):
+
+    path = 'Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test + '_mu_var.npy'
+
+    if not os.path.exists(path):
+        device = 'cuda' if torch.cuda.is_available() else 'cpu'
+
+        nb_batch = 0
+        nb_images = 0
+        first = True
+        with torch.no_grad():
+            for x in loader:
+                nb_images += len(x)
+                nb_batch += 1
+
+                data = x[0]
+                data = data.to(device)  # Variable(data.to(device))
+
+                # compute loss:
+                x_recons, z_struct, z_var, z_var_sample, latent_representation, z_latent = net(data)
+
+                mu_var_iter = z_var[:, :z_var_size]
+                sigma_var_iter = z_var[:, z_var_size:]
+                z_struct_distribution_iter = z_struct
+
+                if first:
+                    mu_var = mu_var_iter
+                    sigma_var = sigma_var_iter
+                    z_struct_distribution = z_struct_distribution_iter
+                else:
+                    mu_var = torch.cat((mu_var, mu_var_iter), 0)
+                    sigma_var = torch.cat((sigma_var, sigma_var_iter), 0)
+                    z_struct_distribution = torch.cat((z_struct_distribution, z_struct_distribution_iter), 0)
+
+        mu_var = torch.mean(mu_var, axis=0)
+        sigma_var = torch.mean(sigma_var, axis=0)
+
+        mu_struct = torch.mean(z_struct_distribution, axis=0)
+        sigma_struct = torch.std(z_struct_distribution, axis=0)
+
+        np.save('Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test +
+                '_mu_var.npy', mu_var)
+        np.save('Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test +
+                'sigma_var.npy', sigma_var)
+        np.save('Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test +
+                'mu_struct.npy', mu_struct)
+        np.save('Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test +
+                'sigma_struct.npy', sigma_struct)
+
+    mu_var = np.load('Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test +
+                     '_mu_var.npy', allow_pickle=True)
+    sigma_var = np.load('Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test +
+                        'sigma_var.npy', allow_pickle=True)
+    mu_struct = np.load(
+        'Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test +
+        'mu_struct.npy', allow_pickle=True)
+    sigma_struct = np.load(
+        'Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test +
+        'sigma_struct.npy', allow_pickle=True)
+
+    if plot_gaussian:
+
+        for i in range(len(mu_struct)):
+            mu = mu_struct[i]
+            variance = sigma_struct[i]
+            sigma = math.sqrt(variance)
+            x = np.linspace(mu - 3 * sigma, mu + 3 * sigma, 100)
+            plt.plot(x, stats.norm.pdf(x, mu, sigma), label='Gaussian struct', color='blue')
+        plt.show()
+
+        mu = 0
+        variance = 1
+        sigma = math.sqrt(variance)
+        x = np.linspace(mu - 3 * sigma, mu + 3 * sigma, 100)
+
+        # plot figure:
+        fig, ax = plt.subplots(figsize=(15, 10), facecolor='w', edgecolor='k')
+        ax.set(title=('Gaussian: ' + expe_name + "_" + train_test))
+        ax.plot(x, stats.norm.pdf(x, mu, sigma), label='Gaussian (0, I)', color='red')
+
+        for i in range(len(mu_var)):
+            mu_var_iter = mu_var[i]
+            variance_var_iter = np.abs(sigma_var[i])
+            sigma_var_iter = math.sqrt(variance_var_iter)
+            x_var = np.linspace(mu_var_iter - 3 * sigma_var_iter, mu_var_iter + 3 * sigma_var_iter, 100)
+            ax.plot(x_var, stats.norm.pdf(x_var, mu_var_iter, sigma_var_iter), label='real data gaussian', color='blue')
+
+        ax.legend(loc=1)
+        plt.show()
+
+        if save:
+            fig.savefig("fig_results/plot_distribution/fig_plot_distribution_" + expe_name + "_" + train_test + ".png")
+
+    return torch.tensor(mu_var), torch.tensor(sigma_var), torch.tensor(mu_struct), torch.tensor(sigma_struct)
+
+
+def switch_img(net, exp_name, loader, z_var_size):
+
+    with torch.no_grad():
+        for x in loader:
+
+            data = x[0]
+            data = data.to(device)  # Variable(data.to(device))
+
+            # compute loss:
+            x_recons, z_struct, z_var, z_var_sample, latent_representation, z_latent = net(data)
+
+            z_var = z_var_sample
+            z_struct = z_struct
+
+    print(z_var.shape)
+    print(z_struct.shape)
+
+    # select two imges:
+    ind_1 = np.random.randint(len(z_var))
+    ind_2 = np.random.randint(len(z_var))
+
+    # original data:
+    plt.imshow(data[ind_1].squeeze(dim=0), cmap='gray')
+    plt.show()
+
+    plt.imshow(data[ind_2].squeeze(dim=0), cmap='gray')
+    plt.show()
+
+    # switch_data:
+    z_var_1 = z_var[ind_1]
+    z_var_2 = z_var[ind_2]
+
+    z_struct_1 = z_struct[ind_1]
+    z_struct_2 = z_struct[ind_2]
+
+    img_switch_1 = torch.cat((z_var_1, z_struct_2))
+    img_switch_1 = net.decoder(img_switch_1)
+    plt.imshow(img_switch_1.detach().numpy().squeeze().squeeze(), cmap='gray')
+    plt.show()
+
+    img_switch_2 = torch.cat((z_var_2, z_struct_1))
+    img_switch_2 = net.decoder(img_switch_2)
+    plt.imshow(img_switch_2.detach().numpy().squeeze().squeeze(), cmap='gray')
+    plt.show()
+
+    # test if original data:
+    img_ori_1 = torch.cat((z_var_1, z_struct_1))
+    img_ori_1 = net.decoder(img_ori_1)
+    plt.imshow(img_ori_1.detach().numpy().squeeze().squeeze(), cmap='gray')
+    plt.show()
+
+    img_ori_2 = torch.cat((z_var_2, z_struct_2))
+    img_ori_2 = net.decoder(img_ori_2)
+    plt.imshow(img_ori_2.detach().numpy().squeeze().squeeze(), cmap='gray')
     plt.show()
 
     return

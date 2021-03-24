@@ -238,7 +238,7 @@ class VAE(nn.Module, ABC):
 
         x_recons = self.decoder(z)
 
-        return x_recons, z_struct, z_var, z_var_sample, latent_representation
+        return x_recons, z_struct, z_var, z_var_sample, latent_representation, z
 
     def _encode(self, z, z_size):
         """
