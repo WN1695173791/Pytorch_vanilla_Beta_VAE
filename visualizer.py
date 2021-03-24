@@ -1336,7 +1336,7 @@ def plot_average_z_structural(net_trained, loader, device, nb_class, latent_spec
 
 
 def plot_prototyoe_z_struct_per_class(nb_examples, average_representation_z_struct_class, train_test, expe_name,
-                                      nb_class, latent_spec, device, net, save=False):
+                                      nb_class, latent_spec, device, net, z_var_size=None, save=False):
     """
     plot prototyoe z_struct per class
     :return:
@@ -1346,9 +1346,13 @@ def plot_prototyoe_z_struct_per_class(nb_examples, average_representation_z_stru
         # plot:
         images_arr = []
         labels_arr = np.arange(nb_class)
-        # z_var_rand = torch.randn(latent_spec['cont_var'])
-        z_var_zeros = torch.zeros(latent_spec['cont_var'])
-        z_var_rand = z_var_zeros.to(device)
+        if latent_spec is None:
+            z_var_zeros = torch.zeros(z_var_size)
+            z_var_rand = z_var_zeros.to(device)
+        else:
+            # z_var_rand = torch.randn(latent_spec['cont_var'])
+            z_var_zeros = torch.zeros(latent_spec['cont_var'])
+            z_var_rand = z_var_zeros.to(device)
 
         for j in range(nb_class):
             latent = []
@@ -1357,7 +1361,7 @@ def plot_prototyoe_z_struct_per_class(nb_examples, average_representation_z_stru
             latent.append(z_struct_prototype)
 
             latent = torch.cat(latent, dim=0)
-            prototype = net._decode(latent).detach().numpy()
+            prototype = net.decoder(latent).detach().numpy()
             images_arr.append(prototype[0][0])
 
         fig = plt.figure(figsize=(10, 5))
@@ -1424,14 +1428,15 @@ def plot_2d_projection_z_struct(average_representation_z_struct_class, loader, n
 
 
 def plot_struct_fixe_and_z_var_moove(average_representation_z_struct_class, train_test, net_trained,
-                                     device, nb_class, latent_spec, expe_name, save=True):
+                                     device, nb_class, latent_spec, expe_name, z_var_size=None,
+                                     embedding_size=None, save=True, mu_var=None, std_var=None):
     """
     Here we see traversal reconstruction of z_struct prototype wirth z_struct fixed and variable z_rand.
     We should observed always the same class (for the same prototype) but with different variability.
     :return:
     """
 
-    nb_examples = 8
+    nb_examples = 10
     latent_samples = []
     all_latent = []
     samples = []
@@ -1459,12 +1464,18 @@ def plot_struct_fixe_and_z_var_moove(average_representation_z_struct_class, trai
     z_struct_prototype = np.expand_dims(z_struct_prototype, axis=0)  # shape: (1, nb_class, struct_dim)
     z_struct_prototype = torch.tensor(np.repeat(z_struct_prototype, nb_examples + 1, axis=0))
     # shape: (nb_example+1, nb_class, struct_dim)
-    z_var_zeros = torch.zeros((1, nb_class, latent_spec['cont_var']))  # shape: (1, nb_class, var_dim)
+    if latent_spec is None:
+        z_var_zeros = torch.zeros((1, nb_class, z_var_size))  # shape: (1, nb_class, var_dim)
+    else:
+        z_var_zeros = torch.zeros((1, nb_class, latent_spec['cont_var']))  # shape: (1, nb_class, var_dim)
     z_var_zeros = z_var_zeros.to(device)
 
-    z_var_rand = torch.randn((1, nb_examples, latent_spec['cont_var']))  # shape: (nb_examples, var_dim)
-    z_var_rand = torch.tensor(np.repeat(z_var_rand, nb_class, axis=0))  # shape: (nb_class, nb_examples, struct_dim)
-    z_var_rand = z_var_rand.permute(1, 0, 2)  # shape: (nb_examples, nb_class, struct_dim)
+    if latent_spec is None:
+        z_var_rand = std_var * torch.randn((1, nb_examples, z_var_size)) + mu_var
+    else:
+        z_var_rand = std_var * torch.randn((1, nb_examples, latent_spec['cont_var'])) + mu_var  # shape: (nb_examples, var_dim)
+    z_var_rand = torch.tensor(np.repeat(z_var_rand, nb_class, axis=0))  # shape: (nb_class, nb_examples, var_dim)
+    z_var_rand = z_var_rand.permute(1, 0, 2)  # shape: (nb_examples, nb_class, var_dim)
     z_var_rand = z_var_rand.to(device)
 
     latent_zeros = []
@@ -1481,10 +1492,14 @@ def plot_struct_fixe_and_z_var_moove(average_representation_z_struct_class, trai
         all_latent.append(torch.tensor(latent_rand))
 
     all_latent = torch.Tensor(np.array([t.numpy() for t in all_latent])).permute(1, 0, 2)
-    samples.append(all_latent.reshape((nb_class * (nb_examples + 1), latent_spec['cont_var'] +
-                                       latent_spec['cont_class'])))
+
+    if latent_spec is None:
+        samples.append(all_latent.reshape((nb_class * (nb_examples + 1), embedding_size)))
+    else:
+        samples.append(all_latent.reshape((nb_class * (nb_examples + 1), latent_spec['cont_var'] +
+                                           latent_spec['cont_class'])))
     latent_samples.append(torch.cat(samples, dim=1))
-    generated = net_trained._decode(torch.cat(latent_samples, dim=0))
+    generated = net_trained.decoder(torch.cat(latent_samples, dim=0))
     prototype = make_grid(generated.data, nrow=nb_examples + 1)
 
     fig, ax = plt.subplots(figsize=(15, 10), facecolor='w', edgecolor='k')
@@ -1505,73 +1520,66 @@ def plot_struct_fixe_and_z_var_moove(average_representation_z_struct_class, trai
     return
 
 
-def plot_var_fixe_and_z_struct_moove(average_representation_z_struct_class, nb_class, latent_spec, device, size,
-                                     net_trained, expe_name, train_test, save=True):
+def plot_var_fixe_and_z_struct_moove(average_representation_z_struct_class, train_test, net_trained,
+                                     device, nb_class, latent_spec, expe_name, z_struct_size=None, z_var_size=None,
+                                     embedding_size=None, save=True, mu_struct=None, std_struct=None):
     """
     Here we see traversal reconstruction of z_struct prototype over z_struct with z_var fixed.
     We should observed always the same variability along the generated data but with a class who slightly change
     :return:
     """
 
-    z_struct_dim = average_representation_z_struct_class.shape[-1]
+    nb_examples = 10
+    latent_samples = []
+    all_latent = []
+    samples = []
 
-    z_var_rand = torch.randn((1, latent_spec['cont_var']))  # shape: (1, z_var_dim)
-    z_var_rand = torch.tensor(np.repeat(z_var_rand, size, axis=0))  # shape: (size, z_var_dim)
-    z_var_rand = z_var_rand.to(device)
+    z_struct_prototype = torch.tensor(average_representation_z_struct_class).to(device)  # shape: (nb_class, struct_dim)
+    z_struct_prototype = torch.tensor(np.expand_dims(z_struct_prototype, axis=0))  # shape: (1, nb_class, struct_dim)
 
-    indx = 0
-    for c in range(nb_class):
-        class_n = c
+    z_var_zeros = torch.zeros((1, nb_class, z_var_size))  # shape: (nb_examples, nb_class, z_var_size)
+    z_var_zeros = z_var_zeros.to(device)
 
-        images_arr = []
-        latent = []
+    z_struct_rand = std_struct * torch.randn((1, nb_examples, z_struct_size)) + mu_struct
+    z_struct_rand = torch.tensor(np.repeat(z_struct_rand, nb_class, axis=0))  # shape: (nb_class, nb_examples, z_struct_size)
+    z_struct_rand = z_struct_rand.permute(1, 0, 2)  # shape: (nb_examples, nb_class, var_dim)
+    z_struct_rand = z_struct_rand.to(device)
 
-        average_representation_z_struct = average_representation_z_struct_class[class_n].reshape(1,
-                                                                                                 z_struct_dim)  # shape: (1, z_struct_dim)
-        z_struct_prototype = torch.tensor(
-            np.repeat(average_representation_z_struct, size, axis=0))  # shape: (size, z_struct_dim)
+    latent_zeros = []
+    latent_zeros.append(z_var_zeros[0])
+    latent_zeros.append(z_struct_prototype[0, :])
+    latent_zeros = torch.cat(latent_zeros, dim=1)  # shape: (nb_classes, z_dim)
+    all_latent.append(torch.tensor(latent_zeros))  # we add the first column: original z_struct with zeros z_var
 
-        latent.append(z_var_rand)
-        latent.append(z_struct_prototype)
+    for i in range(nb_examples):
+        latent_rand = []
+        latent_rand.append(z_var_zeros[0])
+        latent_rand.append(z_struct_rand[i])
+        latent_rand = torch.cat(latent_rand, dim=1)
+        all_latent.append(torch.tensor(latent_rand))
 
-        sample = torch.cat(latent, dim=1)  # latent shape: (size, z_dim)
+    all_latent = torch.Tensor(np.array([t.numpy() for t in all_latent])).permute(1, 0, 2)
 
-        # sample = np.repeat(latent.detach().numpy(), size, axis=0)  # shape: (size, z_struct_dim, z_dim)
-        cont_traversal = traversal_values(size)
+    samples.append(all_latent.reshape((nb_class * (nb_examples + 1), embedding_size)))
 
-        for j in range(1, size - 1):
-            sample[j][indx] = cont_traversal[j]
+    latent_samples.append(torch.cat(samples, dim=1))
+    generated = net_trained.decoder(torch.cat(latent_samples, dim=0))
+    prototype = make_grid(generated.data, nrow=nb_examples + 1)
 
-        sample = torch.Tensor(sample)
+    fig, ax = plt.subplots(figsize=(15, 10), facecolor='w', edgecolor='k')
+    traversals = prototype.permute(1, 2, 0)
+    ax.set(title=('zvar=0 and z_struct random: {}'.format(expe_name)))
 
-        for i in range(size):
-            images_arr.append(net_trained._decode(sample[i]).detach().numpy())
+    fig_size = prototype.shape
+    plt.imshow(traversals.numpy())
 
-        """
-        # -----------------original data:----------
-        z_struct_class = torch.tensor(average_representation_z_struct_class[class_n]).unsqueeze(dim=0)
-        latent_ori.append(z_var_rand[0].unsqueeze(dim=0))
-        latent_ori.append(z_struct_class)
-
-        latent_ori = torch.cat(latent_ori, dim=1)
-        original_img = net_trained._decode(latent_ori).detach().numpy()
-
-        plt.imshow(original_img[0][0], cmap='gray')
-        plt.show()
-        # ------------------------
-        """
-
-        fig = plt.figure(figsize=(10, 2))
-        plt.title('latent z_struct traversal: {}, bit: {} '.format(expe_name, indx))
-        plt.axis('off')
-        for j in range(size):
-            ax = fig.add_subplot(1, size, j + 1, xticks=[], yticks=[])
-            ax.imshow(np.reshape(images_arr[j], (1, images_arr[0].shape[-1], images_arr[0].shape[-2]))[0],
-                      cmap='gray')
-        plt.show()
+    ax.axvline(x=1.5, linewidth=3, color='orange')
+    ax.axvline(x=(fig_size[1] // nb_class), linewidth=3, color='orange')
+    plt.show()
 
     if save:
         fig.savefig("fig_results/var_fixe_zstruct_moove/fig_zvar_fixe_zstruct_moove_" + expe_name + train_test + ".png")
+
     return
 
 

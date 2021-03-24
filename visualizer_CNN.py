@@ -41,6 +41,110 @@ def get_layer_zstruct_num(net):
     return z_struct_layer_num + add_layer
 
 
+def compute_z_struct_mean_VAE(net_trained, exp_name, loader, train_test=None, return_results=False):
+    """
+    Extract all z_struct representation for a specific model and all images in loader and save it.
+    :param net_type:
+    :param return_results:
+    :param net_trained:
+    :param exp_name:
+    :param loader:
+    :param custom_CNN:
+    :param train_test:
+    :return:
+    """
+
+    path_save = 'structural_representation/z_struct_representation_VAE_' + exp_name + '_' + train_test + '.npy'
+
+    if os.path.exists(path_save):
+        print("path already exist")
+        return
+    else:
+        labels_list = []
+        z_struct_representation = []
+        prediction = []
+
+        for data, labels in loader:
+            # evaluation mode:
+            net_trained.eval()
+
+            with torch.no_grad():
+                input_data = data
+            if torch.cuda.is_available():
+                input_data = input_data.cuda()
+
+            x_recons, z_struct, z_var, z_var_sample, latent_representation, z = net_trained(input_data)
+
+            # train mode:
+            net_trained.eval()
+
+            labels_list.extend(labels.cpu().detach().numpy())
+            z_struct_batch = z_struct.squeeze().cpu().detach().numpy()
+            z_struct_representation.extend(z_struct_batch)
+
+        z_struct_representation = np.array(z_struct_representation)
+        labels_list = np.array(labels_list)
+
+        if return_results:
+            return z_struct_representation, labels_list
+        else:
+            np.save('structural_representation/z_struct_representation_VAE_' + exp_name + '_' + train_test + '.npy',
+                    z_struct_representation)
+            print('save z_struct representation for model {}'.format(exp_name))
+            np.save('structural_representation/label_list_VAE_' + exp_name + '_' + train_test + '.npy',
+                    labels_list)
+            print('save label list')
+
+            return
+
+
+def get_z_struct_per_class_VAE(exp_name, train_test=None, nb_class=10):
+    """
+    return z_struct sort by classes with average z_struct for each class.
+    :param exp_name:
+    :param train_test:
+    :param nb_class:
+    :return:
+    """
+
+    path_save = 'structural_representation/z_struct_representation_per_class_VAE_' + exp_name + '_' + \
+                train_test + '.npy'
+    if os.path.exists(path_save):
+        print("path already exist")
+        representation_z_struct_class = np.load(path_save, allow_pickle=True)
+        average_z_struct_class = np.load('structural_representation/average_z_struct_representation_per_class_VAE_' + exp_name + '_' + \
+                train_test + '.npy', allow_pickle=True)
+        return representation_z_struct_class, average_z_struct_class
+    else:
+        path = 'structural_representation/z_struct_representation_VAE_' + exp_name + '_' + train_test + '.npy'
+
+        z_struct_representation = np.load(path, allow_pickle=True)
+        label_list = np.load('structural_representation/label_list_VAE_' + exp_name + '_' + train_test + '.npy',
+                             allow_pickle=True)
+
+        nb_class = nb_class
+        representation_z_struct_class = []
+        average_z_struct_class = []
+        for class_id in range(nb_class):
+            z_struct_class = z_struct_representation[np.where(label_list == class_id)]
+            representation_z_struct_class.append(z_struct_class)
+            average_z_struct_class.append(np.mean(z_struct_class, axis=0))
+
+        representation_z_struct_class = np.array(representation_z_struct_class)
+        average_z_struct_class = np.array(average_z_struct_class)
+
+        np.save(path_save, representation_z_struct_class)
+        print('save z_struct representation per class for model {}'.format(exp_name))
+
+        np.save('structural_representation/average_z_struct_representation_per_class_VAE_' + exp_name + '_' + \
+                train_test + '.npy', average_z_struct_class)
+
+        print('save z_struct representation per class for model {}'.format(exp_name))
+        print('save average z_struct representation per class for model {}'.format(exp_name))
+
+    return representation_z_struct_class, average_z_struct_class
+
+
 def compute_z_struct(net_trained, exp_name, loader, train_test=None, net_type=None, return_results=False):
     """
     Extract all z_struct representation for a specific model and all images in loader and save it.
@@ -1895,14 +1999,15 @@ def viz_reconstructino_VAE(net, loader, exp_name, z_var_size, z_struct_size, nb_
 
     # z_struct reconstruction:
     if real_distribution:
-        first = True
-        for i in range(x_recon.shape[0]):
-            random_var_iter = torch.normal(mean=mu_var, std=std_var).unsqueeze(dim=0)
-            if first:
-                random_var = random_var_iter
-                first = False
-            else:
-                random_var = torch.cat((random_var, random_var_iter), dim=0)
+        # first = True
+        # for i in range(x_recon.shape[0]):
+        #     random_var_iter = torch.normal(mean=mu_var, std=std_var).unsqueeze(dim=0)
+        #     if first:
+        #         random_var = random_var_iter
+        #         first = False
+        #     else:
+        #         random_var = torch.cat((random_var, random_var_iter), dim=0)
+        random_var = std_var * torch.randn(x_recon.shape[0], z_var_size) + mu_var
     else:
         random_var = torch.randn((x_recon.shape[0], z_var_size))
     z_struct_random = torch.cat((random_var, z_struct), dim=1)
@@ -1918,6 +2023,7 @@ def viz_reconstructino_VAE(net, loader, exp_name, z_var_size, z_struct_size, nb_
                 first = False
             else:
                 random_struct = torch.cat((random_struct, random_struct_iter), dim=0)
+        # random_struct = np.abs(std_struct * torch.randn(x_recon.shape[0], z_struct_size) + mu_struct)
     else:
         random_struct = torch.randn((x_recon.shape[0], z_struct_size))
     z_var_random = torch.cat((z_var_sample, random_struct), dim=1)
@@ -2104,14 +2210,14 @@ def real_distribution_model(net, expe_name, z_struct_size, z_var_size, loader, t
     sigma_struct = np.load(
         'Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test +
         'sigma_struct.npy', allow_pickle=True)
-
+    # print(mu_var, sigma_var)
     if plot_gaussian:
 
         for i in range(len(mu_struct)):
             mu = mu_struct[i]
             variance = sigma_struct[i]
             sigma = math.sqrt(variance)
-            x = np.linspace(mu - 3 * sigma, mu + 3 * sigma, 100)
+            x = np.abs(np.linspace(mu - 3 * sigma, mu + 3 * sigma, 100))
             plt.plot(x, stats.norm.pdf(x, mu, sigma), label='Gaussian struct', color='blue')
         plt.show()
 
@@ -2198,3 +2304,5 @@ def switch_img(net, exp_name, loader, z_var_size):
     plt.show()
 
     return
+
+

@@ -167,13 +167,19 @@ def run_exp_extraction_and_visualization_custom_BK(path_parameter, line_begin, l
         # VAE:
         if is_VAE:
             # encoder struct:
-            z_struct_size = 32
+            if args[-17][0] == 'z_struct_size':
+                z_struct_size = int(args[-17][1])
+            else:
+                z_struct_size = 32
+            if args[-16][0] == 'hidden_filters_layer2':
+                hidden_filters_2 = int(args[-16][1])
+            else:
+                hidden_filters_2 = 32
             big_kernel_size = 8
             stride_size = 1
             classif_layer_size = 30
             add_classification_layer = True
             hidden_filters_1 = 32
-            hidden_filters_2 = 32
             hidden_filters_3 = 32
             BK_in_first_layer = True
             two_conv_layer = True
@@ -199,6 +205,7 @@ def run_exp_extraction_and_visualization_custom_BK(path_parameter, line_begin, l
                 var_three_conv_layer = True
             elif args[-2][1] == 'False':
                 var_three_conv_layer = False
+
         else:
             # decoder:
             if is_decoder:
@@ -211,6 +218,27 @@ def run_exp_extraction_and_visualization_custom_BK(path_parameter, line_begin, l
                 decoder_stride_1 = int(args[-5][1])
                 decoder_stride_2 = int(args[-4][1])
                 decoder_stride_3 = int(args[-3][1])
+
+                other_architecture = True
+
+                if args[-13][1] == 'True':
+                    other_architecture = True
+                elif args[-13][1] == 'False':
+                    other_architecture = False
+                var_hidden_filters_1 = int(args[-12][1])
+                var_hidden_filters_2 = int(args[-11][1])
+                var_hidden_filters_3 = int(args[-10][1])
+                var_kernel_size_1 = int(args[-9][1])
+                var_kernel_size_2 = int(args[-8][1])
+                var_kernel_size_3 = int(args[-7][1])
+                var_stride_size_1 = int(args[-6][1])
+                var_stride_size_2 = int(args[-5][1])
+                var_stride_size_3 = int(args[-4][1])
+                var_hidden_dim = int(args[-3][1])
+                if args[-2][1] == 'True':
+                    var_three_conv_layer = True
+                elif args[-2][1] == 'False':
+                    var_three_conv_layer = False
 
             if args[-2][0] == 'binary_chain':
                 if args[-2][1] == 'True':
@@ -290,11 +318,12 @@ def run_exp_extraction_and_visualization_custom_BK(path_parameter, line_begin, l
                 add_linear_after_GMP = True
 
             z_struct_size = int(args[11][1])
-            stride_size = int(args[23][1])
+            stride_size = 1
             classif_layer_size = int(args[13][1])
             hidden_filters_1 = int(args[24][1])
             hidden_filters_2 = int(args[25][1])
             hidden_filters_3 = int(args[26][1])
+
             if args[18][1] == 'True':
                 two_conv_layer = True
             elif args[18][1] == 'False':
@@ -346,6 +375,7 @@ def run_exp_extraction_and_visualization_custom_BK(path_parameter, line_begin, l
                                   BK_in_second_layer=BK_in_second_layer,
                                   BK_in_third_layer=BK_in_third_layer,
                                   Binary_z=Binary_z,
+                                  other_architecture=other_architecture,
                                   add_linear_after_GMP=add_linear_after_GMP,
                                   decoder_first_dense=decoder_first_dense,
                                   decoder_n_filter_1=decoder_n_filter_1,
@@ -355,7 +385,18 @@ def run_exp_extraction_and_visualization_custom_BK(path_parameter, line_begin, l
                                   decoder_kernel_size_3=decoder_kernel_size_3,
                                   decoder_stride_1=decoder_stride_1,
                                   decoder_stride_2=decoder_stride_2,
-                                  decoder_stride_3=decoder_stride_3)
+                                  decoder_stride_3=decoder_stride_3,
+                                  var_hidden_filters_1=var_hidden_filters_1,
+                                  var_hidden_filters_2=var_hidden_filters_2,
+                                  var_hidden_filters_3=var_hidden_filters_3,
+                                  var_kernel_size_1=var_kernel_size_1,
+                                  var_kernel_size_2=var_kernel_size_2,
+                                  var_kernel_size_3=var_kernel_size_3,
+                                  var_stride_size_1=var_stride_size_1,
+                                  var_stride_size_2=var_stride_size_2,
+                                  var_stride_size_3=var_stride_size_3,
+                                  var_hidden_dim=var_hidden_dim,
+                                  var_three_conv_layer=var_three_conv_layer)
         elif is_VAE:
             net = VAE(z_struct_size=z_struct_size,
                       big_kernel_size=big_kernel_size,
@@ -521,23 +562,18 @@ def run_VAE(exp_name, net, lambda_BCE, beta, z_struct_size, z_var_size):
 
     # print(net)
     loader = test_loader
+    train_test = 'test'
     batch = batch_test
     embedding_size = z_struct_size + z_var_size
 
     # losses:
     # plot_loss_results_VAE(path_scores, exp_name, beta, lambda_BCE, save=True)
 
-    # reconstruction:
-    # _, _, _, _, _ = viz_reconstructino_VAE(net_trained, loader, exp_name, z_var_size, z_struct_size, nb_img=10, nb_class=nb_class,
-    #                                     save=True, z_reconstruction=True, z_struct_reconstruction=True,
-    #                                     z_var_reconstruction=True, return_scores=False)
-
     # viz_latent_prediction_reconstruction(net_trained, exp_name, embedding_size, z_struct_size, z_var_size, size=8, random=False, batch=batch)
 
     # Image reconstruction with real distribution:
-
-    # mu_var, sigma_var, mu_struct, sigma_struct = real_distribution_model(net_trained, exp_name, z_struct_size, z_var_size,
-    #                                                                      loader, 'test', plot_gaussian=False, save=True)
+    mu_var, sigma_var, mu_struct, sigma_struct = real_distribution_model(net_trained, exp_name, z_struct_size, z_var_size,
+                                                                         loader, 'test', plot_gaussian=True, save=False)
 
     # z_struct sample:  sample from positive gaussian:
     # z_struct_sample = sigma_struct * np.random.randn(...) + mu_struct
@@ -547,8 +583,23 @@ def run_VAE(exp_name, net, lambda_BCE, beta, z_struct_size, z_var_size):
     # return_scores=False, real_distribution=True, mu_var=mu_var, std_var=sigma_var, mu_struct=mu_struct,
     # std_struct=sigma_struct)
 
-    switch_img(net, exp_name, loader, z_var_size)
+    # viz switch image:
+    # switch_img(net, exp_name, loader, z_var_size)
 
+    # viz multi sample with same z_var or z_struct:
+    # first: compute z_struct mean per class:
+    compute_z_struct_mean_VAE(net_trained, exp_name, loader, train_test='test', return_results=False)
+    # second: get average z_struct per classe:
+    _, average_z_struct_class = get_z_struct_per_class_VAE(exp_name, train_test='test', nb_class=nb_class)
+    # third: plot:
+    plot_prototyoe_z_struct_per_class(1, average_z_struct_class, train_test, exp_name,
+                                      nb_class, None, device, net_trained, z_var_size=z_var_size, save=save)
+    plot_struct_fixe_and_z_var_moove(average_z_struct_class, train_test, net_trained,
+                                     device, nb_class, None, exp_name, z_var_size=z_var_size,
+                                     embedding_size=embedding_size, save=save, mu_var=mu_var, std_var=sigma_var)
+    plot_var_fixe_and_z_struct_moove(average_z_struct_class, train_test, net_trained,
+                                     device, nb_class, None, exp_name, z_struct_size=z_struct_size, z_var_size=z_var_size,
+                                     embedding_size=embedding_size, save=save, mu_struct=mu_struct, std_struct=sigma_struct)
     return
 
 
@@ -1231,22 +1282,48 @@ if __name__ == '__main__':
                     # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_2c_64_15_2_2_3',
                     # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_2c_64_30_1_2_5',
                     'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_3c_32_5_1_1_4']
-                    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_3c_32_15_1_2_3',
+                    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_3c_32_15_1_2_3']
                     # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_3c_32_30_1_2_5']
                     # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_3c_64_5_1_1_5',
                     # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_3c_64_15_1_1_3',
                     # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_3c_64_30_2_1_4']
 
+    list_exp_VAE_test = ['mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_3c_32_5_1',
+                         'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_3c_32_15_1',
+                         'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_3c_32_30_1',
+                         'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_3c_64_15_1',
+                         'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_3c_64_30_1',
+                         'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_2c_32_5_1',
+                         'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_2c_32_15_1',
+                         'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_2c_32_30_1',
+                         'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_3c_32_5_1',
+                         'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_3c_32_15_1',
+                         'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_3c_32_30_1',
+                         'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_2c_32_5_1',
+                         'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_2c_32_15_1',
+                         'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_2c_32_30_1',
+                         'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_1',
+                         'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_15_1',
+                         'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_30_1']
+
     parameters_mnist_classifier_BK_ratio = "parameters_combinations/mnist_classifier_ratio.txt"
 
     run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
                                                    2,
-                                                   13,
-                                                   list_exp_VAE,
+                                                   24,
+                                                   list_exp_VAE_test,
                                                    is_ratio=False,
                                                    is_decoder=False,
                                                    is_VAE=True)
-    
+
+    # run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
+    #                                                27,
+    #                                                37,
+    #                                                list_exp_VAE,
+    #                                                is_ratio=False,
+    #                                                is_decoder=False,
+    #                                                is_VAE=True)
+    #
     # run_exp_extraction_and_visualization_custom_BK(parameters_mnist_classifier_BK_ratio,
     #                                                8,
     #                                                31,

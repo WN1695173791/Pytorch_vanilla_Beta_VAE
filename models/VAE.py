@@ -167,7 +167,6 @@ class VAE(nn.Module, ABC):
             # PrintLayer(),
             nn.Linear(self.var_hidden_dim, self.z_var_size * 2),
             # PrintLayer()
-            nn.ReLU(True)
         ]
         # --------------------------------------- end encoder_var____________________________________________ ----
 
@@ -205,7 +204,6 @@ class VAE(nn.Module, ABC):
                                self.var_kernel_size_1,
                                stride=self.var_stride_size_1),
             # PrintLayer(),
-            nn.Sigmoid()
         ]
         # --------------------------------------- end decoder ____________________________________________ ----
 
