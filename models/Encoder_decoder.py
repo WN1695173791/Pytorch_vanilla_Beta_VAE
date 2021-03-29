@@ -54,16 +54,10 @@ class Encoder_decoder(nn.Module, ABC):
         self.before_GMP_shape = before_GMP_shape
         self.add_linear_after_GMP = add_linear_after_GMP
         self.Binary_z = Binary_z
+
         # parameters
         self.nc = 1  # number of channels
-        self.hidden_filters_1 = hidden_filters_1
-        self.hidden_filters_2 = hidden_filters_2
-        self.hidden_filters_3 = hidden_filters_3
-        self.kernel_size_1 = 3
-        self.kernel_size_2 = 4
-        self.kernel_size_3 = 4
         self.n_classes = 10
-        self.hidden_filter_GMP = self.hidden_filters_1
 
         # custom parameters:
         self.z_struct_size = z_struct_size
@@ -114,11 +108,7 @@ class Encoder_decoder(nn.Module, ABC):
         w3 = ((self.width_conv2_size - self.var_kernel_size_3 + (2 * self.padding)) / self.var_stride_size_3) + 1 - EPS
         self.width_conv3_size = round(w3)
 
-        if self.var_three_conv_layer:
-            self.var_reshape = (var_hidden_filters_3, self.width_conv3_size, self.width_conv3_size)
-        else:
-            self.var_reshape = (var_hidden_filters_2, self.width_conv2_size, self.width_conv2_size)
-
+        self.var_reshape = (var_hidden_filters_2, self.width_conv2_size, self.width_conv2_size)
 
         if self.BK_in_first_layer:
             self.kernel_size_1 = self.big_kernel_size
@@ -130,28 +120,17 @@ class Encoder_decoder(nn.Module, ABC):
         # -----------_________________ define model: encoder____________________________________________------------
         # ----------- add conv bloc:
         self.encoder = [
-            nn.Conv2d(self.nc, self.hidden_filters_1, self.kernel_size_1, stride=self.stride_size),
-            nn.BatchNorm2d(self.hidden_filters_1),
+            nn.Conv2d(self.nc, self.var_hidden_filters_1, self.var_kernel_size_1, stride=self.var_stride_size_1),
+            nn.BatchNorm2d(self.var_hidden_filters_1),
             nn.ReLU(True),
             # PrintLayer(),  # B, 32, 25, 25
         ]
 
         if self.two_conv_layer:
-            self.hidden_filter_GMP = self.hidden_filters_2
-            numChannels = self.hidden_filters_2
+            self.var_hidden_filter_GMP = self.var_hidden_filters_2
             self.encoder += [
-                nn.Conv2d(self.hidden_filters_1, self.hidden_filters_2, self.kernel_size_2, stride=self.stride_size),
-                nn.BatchNorm2d(self.hidden_filters_2),
-                nn.ReLU(True),
-                # PrintLayer(),  # B, 32, 25, 25
-            ]
-
-        if self.three_conv_layer:
-            self.hidden_filter_GMP = self.hidden_filters_3
-            numChannels = self.hidden_filters_3
-            self.encoder += [
-                nn.Conv2d(self.hidden_filters_2, self.hidden_filters_3, self.kernel_size_3, stride=self.stride_size),
-                nn.BatchNorm2d(self.hidden_filters_3),
+                nn.Conv2d(self.var_hidden_filters_1, self.var_hidden_filters_2, self.var_kernel_size_2, stride=self.var_stride_size_2),
+                nn.BatchNorm2d(self.var_hidden_filters_2),
                 nn.ReLU(True),
                 # PrintLayer(),  # B, 32, 25, 25
             ]
@@ -160,13 +139,13 @@ class Encoder_decoder(nn.Module, ABC):
         self.encoder += [
             nn.AdaptiveMaxPool2d((1, 1)),  # B, hidden_filters_1, 1, 1
             # PrintLayer(),  # B, hidden_filters_1, 1, 1
-            View((-1, self.hidden_filter_GMP)),  # B, hidden_filters_1
+            View((-1, self.var_hidden_filter_GMP)),  # B, hidden_filters_1
             # PrintLayer(),  # B, hidden_filters_1
         ]
 
         # -----------_________________ end encoder____________________________________________------------
-        self.z_struct_size = self.hidden_filter_GMP
         if self.other_architecture:
+            print("hereeeeeeeeeeeeeeeee", self.z_struct_size, self.var_hidden_dim)
             self.decoder = [
                 # PrintLayer(),
                 nn.Linear(self.z_struct_size, self.var_hidden_dim),
@@ -178,15 +157,6 @@ class Encoder_decoder(nn.Module, ABC):
                 View((-1, *self.var_reshape)),
                 # PrintLayer(),
             ]
-            if self.var_three_conv_layer:
-                self.decoder += [
-                    nn.ConvTranspose2d(self.var_hidden_filters_3,
-                                       self.var_hidden_filters_2,
-                                       self.var_kernel_size_3,
-                                       stride=self.var_stride_size_3),
-                    nn.ReLU(True),
-                    # PrintLayer(),
-                ]
 
             self.decoder += [
                 nn.ConvTranspose2d(self.var_hidden_filters_2,

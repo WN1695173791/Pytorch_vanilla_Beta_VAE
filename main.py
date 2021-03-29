@@ -9,6 +9,7 @@ from utils.utils import str2bool
 
 import os
 from utils.helpers import (get_config_section)
+import csv
 
 
 CONFIG_FILE = "hyperparam.ini"
@@ -265,10 +266,17 @@ if __name__ == "__main__":
 
     print(args)
 
+    # transform argparse to dict:
+    dict_args = vars(args)
+    # csv name:
+    csv_name = 'args_parser/' + args.exp_name + '.csv'
+
     if not args.just_train:
-        # save arguments parser:
-        with open('args_parser/commandline_args_test' + args.exp_name + '.txt', 'w') as f:
-            f.write(str(str(args).split('Namespace(')[1]).replace(', ', '\n').replace(')', ''))
+        with open(csv_name, 'w', newline='') as csvfile:
+            fieldnames = dict_args.keys()
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            writer.writeheader()
+            writer.writerow(dict_args)
 
     if args.gpu_devices is not None:
         gpu_devices = ','.join([str(idx) for idx in args.gpu_devices])

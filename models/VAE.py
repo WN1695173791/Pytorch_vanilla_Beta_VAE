@@ -115,15 +115,7 @@ class VAE(nn.Module, ABC):
                 nn.ReLU(True),
                 # PrintLayer(),  # B, 32, 25, 25
             ]
-        if self.three_conv_layer:
-            self.hidden_filter_GMP = self.hidden_filters_3
-            numChannels = self.hidden_filters_3
-            self.encoder_struct += [
-                nn.Conv2d(self.hidden_filters_2, self.hidden_filters_3, self.kernel_size_3, stride=self.stride_size),
-                nn.BatchNorm2d(self.hidden_filters_3),
-                nn.ReLU(True),
-                # PrintLayer(),  # B, 32, 25, 25
-            ]
+
         # ----------- add GMP bloc:
         self.encoder_struct += [
             nn.AdaptiveMaxPool2d((1, 1)),  # B, hidden_filters_1, 1, 1
@@ -204,6 +196,7 @@ class VAE(nn.Module, ABC):
                                self.var_kernel_size_1,
                                stride=self.var_stride_size_1),
             # PrintLayer(),
+            nn.Sigmoid()
         ]
         # --------------------------------------- end decoder ____________________________________________ ----
 
