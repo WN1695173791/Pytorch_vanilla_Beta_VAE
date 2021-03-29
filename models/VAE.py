@@ -75,6 +75,11 @@ class VAE(nn.Module, ABC):
         self.var_hidden_dim = var_hidden_dim
         self.var_three_conv_layer = var_three_conv_layer
 
+        if self.two_conv_layer:
+            self.hidden_filters_2 = self.z_struct_size
+        elif self.three_conv_layer:
+            self.hidden_filters_3 = self.z_struct_size
+
         # reshape size compute:
         w1 = ((32 - self.var_kernel_size_1 + (2 * self.padding)) / self.var_stride_size_1) + 1 - EPS
         self.width_conv1_size = round(w1)
@@ -108,14 +113,20 @@ class VAE(nn.Module, ABC):
         ]
         if self.two_conv_layer:
             self.hidden_filter_GMP = self.hidden_filters_2
-            numChannels = self.hidden_filters_2
             self.encoder_struct += [
                 nn.Conv2d(self.hidden_filters_1, self.hidden_filters_2, self.kernel_size_2, stride=self.stride_size),
                 nn.BatchNorm2d(self.hidden_filters_2),
                 nn.ReLU(True),
                 # PrintLayer(),  # B, 32, 25, 25
             ]
-
+        if self.three_conv_layer:
+            self.encoder_struct += [
+                nn.Conv2d(self.hidden_filters_2, self.hidden_filters_3, self.kernel_size_3,
+                          stride=self.stride_size),
+                nn.BatchNorm2d(self.hidden_filters_3),
+                nn.ReLU(True),
+                # PrintLayer(),
+            ]
         # ----------- add GMP bloc:
         self.encoder_struct += [
             nn.AdaptiveMaxPool2d((1, 1)),  # B, hidden_filters_1, 1, 1

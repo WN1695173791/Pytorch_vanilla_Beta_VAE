@@ -87,7 +87,6 @@ def run_exp_extraction_and_visualization_custom_BK(list_model, is_ratio=False, i
         hidden_filters_2 = 32
         hidden_filters_3 = 32
 
-        print(z_struct_size)
         # print(binary_chain, Binary_z)
         if is_decoder:
             net = Encoder_decoder(z_struct_size=z_struct_size,
@@ -115,17 +114,17 @@ def run_exp_extraction_and_visualization_custom_BK(list_model, is_ratio=False, i
                                   decoder_stride_1=decoder_stride_1,
                                   decoder_stride_2=decoder_stride_2,
                                   decoder_stride_3=decoder_stride_3,
-                                  var_hidden_filters_1=var_hidden_filters_1,
-                                  var_hidden_filters_2=var_hidden_filters_2,
-                                  var_hidden_filters_3=var_hidden_filters_3,
-                                  var_kernel_size_1=var_kernel_size_1,
-                                  var_kernel_size_2=var_kernel_size_2,
-                                  var_kernel_size_3=var_kernel_size_3,
-                                  var_stride_size_1=var_stride_size_1,
-                                  var_stride_size_2=var_stride_size_2,
-                                  var_stride_size_3=var_stride_size_3,
-                                  var_hidden_dim=var_hidden_dim,
-                                  var_three_conv_layer=var_three_conv_layer)
+                                  struct_hidden_filters_1=var_hidden_filters_1,
+                                  struct_hidden_filters_2=var_hidden_filters_2,
+                                  struct_hidden_filters_3=var_hidden_filters_3,
+                                  struct_kernel_size_1=var_kernel_size_1,
+                                  struct_kernel_size_2=var_kernel_size_2,
+                                  struct_kernel_size_3=var_kernel_size_3,
+                                  struct_stride_size_1=var_stride_size_1,
+                                  struct_stride_size_2=var_stride_size_2,
+                                  struct_stride_size_3=var_stride_size_3,
+                                  struct_hidden_dim=var_hidden_dim,
+                                  struct_three_conv_layer=var_three_conv_layer)
         elif is_VAE:
             net = VAE(z_struct_size=z_struct_size,
                       big_kernel_size=big_kernel_size,
@@ -271,6 +270,7 @@ def run_VAE(model_name, net, lambda_BCE, beta, z_struct_size, z_var_size):
     path_scores = 'checkpoint_scores_CNN'
     net, _, _ = get_checkpoints(net, path, model_name)
 
+    print(net)
     loader = test_loader
     train_test = 'test'
     batch = batch_test
@@ -796,15 +796,13 @@ if __name__ == '__main__':
                          'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_15_1',
                          'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_30_1']
 
-    list_exp_decoder = [# 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_decoder_new',
-                        'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_decoder',
-                        'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_decoder',
+    list_exp_decoder = ['mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_decoder_new',
                         'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_decoder_new',
                         'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_decoder_new']
 
     parameters_mnist_classifier_BK_ratio = "parameters_combinations/mnist_classifier_ratio.txt"
 
-    run_exp_extraction_and_visualization_custom_BK(list_exp_decoder,
+    run_exp_extraction_and_visualization_custom_BK(list_exp_VAE_test,
                                                    is_ratio=False,
-                                                   is_decoder=True,
-                                                   is_VAE=False)
+                                                   is_decoder=False,
+                                                   is_VAE=True)
