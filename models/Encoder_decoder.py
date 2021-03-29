@@ -111,11 +111,11 @@ class Encoder_decoder(nn.Module, ABC):
         self.var_reshape = (var_hidden_filters_2, self.width_conv2_size, self.width_conv2_size)
 
         if self.BK_in_first_layer:
-            self.kernel_size_1 = self.big_kernel_size
+            self.var_kernel_size_1 = self.big_kernel_size
         elif self.BK_in_second_layer:
-            self.kernel_size_2 = self.big_kernel_size
+            self.var_kernel_size_2 = self.big_kernel_size
         elif self.BK_in_third_layer:
-            self.kernel_size_3 = self.big_kernel_size
+            self.var_kernel_size_3 = self.big_kernel_size
 
         # -----------_________________ define model: encoder____________________________________________------------
         # ----------- add conv bloc:
