@@ -149,6 +149,11 @@ class Custom_CNN_BK(nn.Module, ABC):
         elif self.BK_in_third_layer:
             self.kernel_size_3 = self.big_kernel_size
 
+        if self.two_conv_layer:
+            self.hidden_filters_2 = self.z_struct_size
+        elif self.three_conv_layer:
+            self.hidden_filters_3 = self.z_struct_size
+
         # ----------- define model: ------------
         # ----------- add conv bloc:
         self.model = [

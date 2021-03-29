@@ -232,6 +232,7 @@ class SolverClassifier(object):
         self.decoder_first_dense = args.decoder_first_dense
         self.decoder_n_filter_1 = args.decoder_n_filter_1
         self.decoder_n_filter_2 = args.decoder_n_filter_2
+        self.decoder_n_filter_3 = args.decoder_n_filter_3
         self.decoder_kernel_size_1 = args.decoder_kernel_size_1
         self.decoder_kernel_size_2 = args.decoder_kernel_size_2
         self.decoder_kernel_size_3 = args.decoder_kernel_size_3
@@ -513,24 +514,24 @@ class SolverClassifier(object):
                                   decoder_first_dense=self.decoder_first_dense,
                                   decoder_n_filter_1=self.decoder_n_filter_1,
                                   decoder_n_filter_2=self.decoder_n_filter_2,
+                                  decoder_n_filter_3=self.decoder_n_filter_3,
                                   decoder_kernel_size_1=self.decoder_kernel_size_1,
                                   decoder_kernel_size_2=self.decoder_kernel_size_2,
                                   decoder_kernel_size_3=self.decoder_kernel_size_3,
                                   decoder_stride_1=self.decoder_stride_1,
                                   decoder_stride_2=self.decoder_stride_2,
                                   decoder_stride_3=self.decoder_stride_3,
-                                  var_hidden_filters_1=self.var_hidden_filters_1,
-                                  var_hidden_filters_2=self.var_hidden_filters_2,
-                                  var_hidden_filters_3=self.var_hidden_filters_3,
-                                  var_kernel_size_1=self.var_kernel_size_1,
-                                  var_kernel_size_2=self.var_kernel_size_2,
-                                  var_kernel_size_3=self.var_kernel_size_3,
-                                  var_stride_size_1=self.var_stride_size_1,
-                                  var_stride_size_2=self.var_stride_size_2,
-                                  var_stride_size_3=self.var_stride_size_3,
-                                  var_hidden_dim=self.var_hidden_dim,
-                                  var_three_conv_layer=self.var_three_conv_layer)
-
+                                  struct_hidden_filters_1=self.var_hidden_filters_1,
+                                  struct_hidden_filters_2=self.var_hidden_filters_2,
+                                  struct_hidden_filters_3=self.var_hidden_filters_3,
+                                  struct_kernel_size_1=self.var_kernel_size_1,
+                                  struct_kernel_size_2=self.var_kernel_size_2,
+                                  struct_kernel_size_3=self.var_kernel_size_3,
+                                  struct_stride_size_1=self.var_stride_size_1,
+                                  struct_stride_size_2=self.var_stride_size_2,
+                                  struct_stride_size_3=self.var_stride_size_3,
+                                  struct_hidden_dim=self.var_hidden_dim,
+                                  struct_three_conv_layer=self.var_three_conv_layer)
             self.checkpoint_dir = os.path.join(args.ckpt_dir, args.exp_name)
             file_path = os.path.join(self.checkpoint_dir, 'last')
             self.checkpoint_dir_encoder = os.path.join(args.ckpt_dir, args.exp_name.split('_decoder')[0])
@@ -679,6 +680,7 @@ class SolverClassifier(object):
 
                 if self.use_decoder:
                     x_recons, z_struct = self.net(data)
+                    # print(x_recons.shape)
                     self.mse_loss = F.mse_loss(x_recons, data)
                     loss = self.mse_loss
                 elif self.use_VAE:
