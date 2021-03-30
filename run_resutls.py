@@ -267,7 +267,7 @@ def run_VAE(model_name, net, lambda_BCE, beta, z_struct_size, z_var_size):
                                                                          z_var_size,
                                                                          loader,
                                                                          'test',
-                                                                         plot_gaussian=False,
+                                                                         plot_gaussian=True,
                                                                          save=True)
 
     # z_struct sample:  sample from positive gaussian:
@@ -288,7 +288,7 @@ def run_VAE(model_name, net, lambda_BCE, beta, z_struct_size, z_var_size):
     # compute_z_struct_mean_VAE(net, model_name, loader, train_test='test', return_results=False)
 
     # second: get average z_struct per classe:
-    _, average_z_struct_class = get_z_struct_per_class_VAE(model_name, train_test='test', nb_class=nb_class)
+    # _, average_z_struct_class = get_z_struct_per_class_VAE(model_name, train_test='test', nb_class=nb_class)
 
     # third: plot:
     # plot_prototyoe_z_struct_per_class(1, average_z_struct_class, train_test, model_name,
@@ -296,11 +296,11 @@ def run_VAE(model_name, net, lambda_BCE, beta, z_struct_size, z_var_size):
     # plot_struct_fixe_and_z_var_moove(average_z_struct_class, train_test, net,
     #                                  device, nb_class, None, model_name, z_var_size=z_var_size,
     #                                  embedding_size=embedding_size, save=save, mu_var=mu_var, std_var=sigma_var)
-    plot_var_fixe_and_z_struct_moove(average_z_struct_class, train_test, net,
-                                     device, nb_class, None, model_name, z_struct_size=z_struct_size,
-                                     z_var_size=z_var_size,
-                                     embedding_size=embedding_size, save=save, mu_struct=mu_struct,
-                                    std_struct=sigma_struct, traversal_latent=True)
+    # plot_var_fixe_and_z_struct_moove(average_z_struct_class, train_test, net,
+    #                                  device, nb_class, None, model_name, z_struct_size=z_struct_size,
+    #                                  z_var_size=z_var_size,
+    #                                  embedding_size=embedding_size, save=save, mu_struct=mu_struct,
+    #                                 std_struct=sigma_struct, traversal_latent=False)
 
 
     return
@@ -447,23 +447,23 @@ if os.path.exists(path_select_model_analyse_50):
     selected_analyse_50 = np.load(path_select_model_analyse_50)
 
 if __name__ == '__main__':
-    list_exp_VAE_test = ['mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_3c_32_5_1',
-                         'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_3c_32_15_1',
-                         'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_3c_32_30_1',
-                         'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_3c_64_15_1',
-                         'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_3c_64_30_1',
-                         'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_2c_32_5_1',
-                         'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_2c_32_15_1',
-                         'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_2c_32_30_1',
-                         'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_3c_32_5_1']
-                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_3c_32_15_1',
-                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_3c_32_30_1',
-                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_2c_32_5_1',
-                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_2c_32_15_1',
-                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_2c_32_30_1',
-                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_1',
-                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_15_1',
-                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_30_1']
+    list_exp_VAE_test = ['mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_3c_32_5_2',
+                         'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_3c_32_15_2',
+                         'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_3c_32_30_2',
+                         'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_3c_64_15_2',
+                         'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_3c_64_30_2',
+                         'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_2c_32_5_2',
+                         'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_2c_32_15_2',
+                         'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_2c_32_30_2',
+                         'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_3c_32_5_2',
+                         'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_3c_32_15_2',
+                         'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_3c_32_30_2',
+                         'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_2c_32_5_2',
+                         'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_2c_32_15_2',
+                         'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_2c_32_30_2',
+                         'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2',
+                         'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_15_2',
+                         'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_30_2']
 
     list_exp_decoder = [  # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_32_decoder_2c',
         'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_decoder_2c',
