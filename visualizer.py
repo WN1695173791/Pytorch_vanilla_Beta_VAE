@@ -1520,9 +1520,14 @@ def plot_struct_fixe_and_z_var_moove(average_representation_z_struct_class, trai
     return
 
 
+def traversal_values_min_max(min, max, size):
+    return np.linspace(min, max, size)
+
+
 def plot_var_fixe_and_z_struct_moove(average_representation_z_struct_class, train_test, net_trained,
                                      device, nb_class, latent_spec, expe_name, z_struct_size=None, z_var_size=None,
-                                     embedding_size=None, save=True, mu_struct=None, std_struct=None):
+                                     embedding_size=None, save=True, mu_struct=None, std_struct=None,
+                                     traversal_latent=False):
     """
     Here we see traversal reconstruction of z_struct prototype over z_struct with z_var fixed.
     We should observed always the same variability along the generated data but with a class who slightly change
@@ -1551,12 +1556,17 @@ def plot_var_fixe_and_z_struct_moove(average_representation_z_struct_class, trai
     latent_zeros = torch.cat(latent_zeros, dim=1)  # shape: (nb_classes, z_dim)
     all_latent.append(torch.tensor(latent_zeros))  # we add the first column: original z_struct with zeros z_var
 
-    for i in range(nb_examples):
-        latent_rand = []
-        latent_rand.append(z_var_zeros[0])
-        latent_rand.append(z_struct_rand[i])
-        latent_rand = torch.cat(latent_rand, dim=1)
-        all_latent.append(torch.tensor(latent_rand))
+    if traversal_latent:
+        cont_traversal = traversal_values_min_max(np.min(average_representation_z_struct_class) - np.abs(np.min(average_representation_z_struct_class)),
+                                                  np.max(average_representation_z_struct_class) + np.abs(np.max(average_representation_z_struct_class)),
+                                                  nb_examples)  # shape: size
+    else:
+        for i in range(nb_examples):
+            latent_rand = []
+            latent_rand.append(z_var_zeros[0])
+            latent_rand.append(z_struct_rand[i])
+            latent_rand = torch.cat(latent_rand, dim=1)
+            all_latent.append(torch.tensor(latent_rand))
 
     all_latent = torch.Tensor(np.array([t.numpy() for t in all_latent])).permute(1, 0, 2)
 

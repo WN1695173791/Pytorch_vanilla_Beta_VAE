@@ -1999,14 +1999,6 @@ def viz_reconstructino_VAE(net, loader, exp_name, z_var_size, z_struct_size, nb_
 
     # z_struct reconstruction:
     if real_distribution:
-        # first = True
-        # for i in range(x_recon.shape[0]):
-        #     random_var_iter = torch.normal(mean=mu_var, std=std_var).unsqueeze(dim=0)
-        #     if first:
-        #         random_var = random_var_iter
-        #         first = False
-        #     else:
-        #         random_var = torch.cat((random_var, random_var_iter), dim=0)
         random_var = std_var * torch.randn(x_recon.shape[0], z_var_size) + mu_var
     else:
         random_var = torch.randn((x_recon.shape[0], z_var_size))
@@ -2015,15 +2007,7 @@ def viz_reconstructino_VAE(net, loader, exp_name, z_var_size, z_struct_size, nb_
 
     # z_var reconstruction:
     if real_distribution:
-        first = True
-        for i in range(x_recon.shape[0]):
-            random_struct_iter = torch.normal(mean=mu_struct, std=std_struct).unsqueeze(dim=0)
-            if first:
-                random_struct = random_struct_iter
-                first = False
-            else:
-                random_struct = torch.cat((random_struct, random_struct_iter), dim=0)
-        # random_struct = np.abs(std_struct * torch.randn(x_recon.shape[0], z_struct_size) + mu_struct)
+        random_struct = torch.abs(std_struct * torch.randn(x_recon.shape[0], z_struct_size) + mu_struct)
     else:
         random_struct = torch.randn((x_recon.shape[0], z_struct_size))
     z_var_random = torch.cat((z_var_sample, random_struct), dim=1)
@@ -2211,8 +2195,8 @@ def real_distribution_model(net, expe_name, z_struct_size, z_var_size, loader, t
         'Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test +
         'sigma_struct.npy', allow_pickle=True)
     # print(mu_var, sigma_var)
-    if plot_gaussian:
 
+    if plot_gaussian:
         for i in range(len(mu_struct)):
             mu = mu_struct[i]
             variance = sigma_struct[i]
@@ -2261,17 +2245,15 @@ def switch_img(net, exp_name, loader, z_var_size):
             z_var = z_var_sample
             z_struct = z_struct
 
-    print(z_var.shape)
-    print(z_struct.shape)
-
     # select two imges:
     ind_1 = np.random.randint(len(z_var))
     ind_2 = np.random.randint(len(z_var))
 
+    assert ind_1 != ind_2, "not lucky ! two random int are same, try again !"
+
     # original data:
     plt.imshow(data[ind_1].squeeze(dim=0), cmap='gray')
     plt.show()
-
     plt.imshow(data[ind_2].squeeze(dim=0), cmap='gray')
     plt.show()
 
@@ -2304,5 +2286,3 @@ def switch_img(net, exp_name, loader, z_var_size):
     plt.show()
 
     return
-
-
