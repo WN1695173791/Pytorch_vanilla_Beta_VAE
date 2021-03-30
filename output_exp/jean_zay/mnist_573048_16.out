@@ -1,0 +1,209 @@
+16
+--gpu_devices 0 --max_iter 100 --batch_size 32 --lr 1e-3 --use_scheduler False --is_default_model False --is_custom_model_BK True --use_VAE True --z_struct_size 16 --hidden_filters_layer2 16 --z_var_size 5 --lambda_BCE 1 --beta 3 --var_hidden_filters_1 32 --var_hidden_filters_2 32 --var_hidden_filters_3 32 --var_kernel_size_1 4 --var_kernel_size_2 4 --var_kernel_size_3 5 --var_stride_size_1 2 --var_stride_size_2 1 --var_stride_size_3 1 --var_hidden_dim 256 --var_three_conv_layer True --exp_name mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2
+Namespace(BK_in_first_layer=True, BK_in_second_layer=False, BK_in_third_layer=False, BN=False, C_max=25, C_stop_iter=100000.0, E1_AE=False, E1_VAE=False, E1_conv=False, E1_dense=False, E1_second_conv=False, E1_second_conv_adapt=False, GMP=True, IPC=False, L1_norm_act=False, L1_norm_weights=False, L3_without_random=False, LOG_DIR='logs', adapt_lr=False, add_classification_layer=True, add_linear_after_GMP=True, add_z_struct_bottleneck=False, alpha=32, batch_size=32, beta=3.0, beta1=0.9, beta2=0.999, big_kernel=False, big_kernel_size=8, binary_chain=False, binary_z=False, ckpt_dir='checkpoints_CNN', ckpt_dir_scores='checkpoint_scores_CNN', classif_layer_size=30, contrastive_loss=False, cuda=True, dataset='mnist', dataset_balanced=False, decoder_first_dense=36, decoder_kernel_size_1=4, decoder_kernel_size_2=3, decoder_kernel_size_3=4, decoder_n_filter_1=64, decoder_n_filter_2=64, decoder_n_filter_3=64, decoder_stride_1=2, decoder_stride_2=2, decoder_stride_3=1, diff_var=False, display_step=10000, dset_dir='data', exp_name='mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2', freeze_Encoder=True, gamma=1000, gpu_devices=[0], hidden_filters_layer1=32, hidden_filters_layer2=16, hidden_filters_layer3=32, image_size=64, intra_class_variance_loss=False, is_C=True, is_E1=False, is_binary_structural_latent=False, is_custom_model=False, is_custom_model_BK=True, is_default_model=False, is_noise_stats=False, is_partial_rand_class=False, is_perturbed_score=False, is_zvar_sim_loss=False, just_train=False, kernel_size=4, lambda_BCE=1.0, lambda_Kl_struct=1, lambda_Kl_var=1, lambda_L1=0.01, lambda_VAE=1, lambda_class=1, lambda_contrastive_loss=1, lambda_distance_mean=1, lambda_intra_class_var=1, lambda_partial_class=1, lambda_ratio_reg=1, lambda_recon_wt_rand=1, lambda_recons=1, lambda_var_distance=1, lambda_var_inter=1, lambda_var_intra=1, lambda_zvar_sim=1, latent_spec_cont=None, latent_spec_cont_class=None, latent_spec_cont_var=None, latent_spec_disc=None, latent_spec_disc_class=None, latent_spec_disc_var=None, log_level='info', loss='Proxy_Anchor', loss_distance_mean=False, loss_min_distance_cl=False, lr=0.001, max_iter=100.0, model='CNN', mrg=0.1, num_workers=2, old_weighted=False, optimizer='adamw', other_architecture=False, other_ratio=False, random_percentage=0.2, random_seed=10, randomness=True, ratio_reg=False, remark='', save_step=10000, second_layer_C=False, seed=1, stride_size=1, sz_embedding=5, three_conv_layer=False, train=True, two_conv_layer=True, two_encoder=False, use_VAE=True, use_decoder=False, use_early_stopping=True, use_scheduler=False, value_target_distance_mean=1, var_hidden_dim=256, var_hidden_filters_1=32, var_hidden_filters_2=32, var_hidden_filters_3=32, var_kernel_size_1=4, var_kernel_size_2=4, var_kernel_size_3=5, var_stride_size_1=2, var_stride_size_2=1, var_stride_size_3=1, var_three_conv_layer=True, warm=1, without_acc=False, z_struct_size=16, z_var_size=5, zeros_W_Classif=False, zvar_sim_change_zvar=False, zvar_sim_loss_for_all_model=False, zvar_sim_loss_only_for_encoder=False, zvar_sim_normal=False, zvar_sim_var_rand=False)
+CUDA Visible devices !
+[Using Seed: 10]
+Load Encoder struct weights for VAE
+use 1 gpu who named: Tesla V100-SXM2-32GB
+=> loaded sample_scores and losses
+=> loaded checkpoint 'checkpoints_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16/last (iter 11070)'
+VAE var doesn't exist load struct encoder weighs !
+use 1 gpu who named: Tesla V100-SXM2-32GB
+Weighs loaded for encoder_struct !
+VAE(
+  (encoder_struct): Sequential(
+    (0): Conv2d(1, 32, kernel_size=(8, 8), stride=(1, 1))
+    (1): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (2): ReLU(inplace=True)
+    (3): Conv2d(32, 16, kernel_size=(4, 4), stride=(1, 1))
+    (4): BatchNorm2d(16, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (5): ReLU(inplace=True)
+    (6): AdaptiveMaxPool2d(output_size=(1, 1))
+    (7): View()
+    (8): Sigmoid()
+  )
+  (encoder_var): Sequential(
+    (0): Conv2d(1, 32, kernel_size=(4, 4), stride=(2, 2))
+    (1): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (2): ReLU(inplace=True)
+    (3): Conv2d(32, 32, kernel_size=(4, 4), stride=(1, 1))
+    (4): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (5): ReLU(inplace=True)
+    (6): Conv2d(32, 32, kernel_size=(5, 5), stride=(1, 1))
+    (7): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (8): ReLU(inplace=True)
+    (9): View()
+    (10): Linear(in_features=2048, out_features=256, bias=True)
+    (11): BatchNorm1d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (12): ReLU(inplace=True)
+    (13): Dropout(p=0.4, inplace=False)
+    (14): Linear(in_features=256, out_features=10, bias=True)
+  )
+  (decoder): Sequential(
+    (0): Linear(in_features=21, out_features=256, bias=True)
+    (1): ReLU(inplace=True)
+    (2): Linear(in_features=256, out_features=2048, bias=True)
+    (3): ReLU(inplace=True)
+    (4): View()
+    (5): ConvTranspose2d(32, 32, kernel_size=(5, 5), stride=(1, 1))
+    (6): ReLU(inplace=True)
+    (7): ConvTranspose2d(32, 32, kernel_size=(4, 4), stride=(1, 1))
+    (8): ReLU(inplace=True)
+    (9): ConvTranspose2d(32, 1, kernel_size=(4, 4), stride=(2, 2))
+    (10): Sigmoid()
+  )
+)
+The number of parameters of model is 1155323
+=> saved checkpoint 'checkpoints_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 1875, epoch 1.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 1875, epoch 1.0)
+[Save Checkpoint] epoch: [1.0], Train: total:-20.97288, BCE:-20.98947, KLD:0.00554,Test: total:-20.85893, BCE:-21.37234, KLD:0.17114
+=> saved checkpoint 'checkpoints_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 3750, epoch 2.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 3750, epoch 2.0)
+[Save Checkpoint] epoch: [2.0], Train: total:-24.68531, BCE:-24.68713, KLD:0.00060,Test: total:-25.21052, BCE:-25.26645, KLD:0.01864
+=> saved checkpoint 'checkpoints_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 5625, epoch 3.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 5625, epoch 3.0)
+[Save Checkpoint] epoch: [3.0], Train: total:-25.48996, BCE:-25.49030, KLD:0.00012,Test: total:-26.07294, BCE:-26.08452, KLD:0.00386
+=> saved checkpoint 'checkpoints_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 7500, epoch 4.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 7500, epoch 4.0)
+[Save Checkpoint] epoch: [4.0], Train: total:-26.95917, BCE:-26.95963, KLD:0.00015,Test: total:-27.59715, BCE:-27.61117, KLD:0.00467
+=> saved checkpoint 'checkpoints_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 9375, epoch 5.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 9375, epoch 5.0)
+[Save Checkpoint] epoch: [5.0], Train: total:-27.69273, BCE:-27.69315, KLD:0.00014,Test: total:-28.29198, BCE:-28.30534, KLD:0.00445
+=> saved checkpoint 'checkpoints_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 11250, epoch 6.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 11250, epoch 6.0)
+[Save Checkpoint] epoch: [6.0], Train: total:-28.34166, BCE:-28.34186, KLD:0.00006,Test: total:-28.90194, BCE:-28.90859, KLD:0.00222
+=> saved checkpoint 'checkpoints_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 13125, epoch 7.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 13125, epoch 7.0)
+EarlyStopping counter: 1 out of 15
+[Save Checkpoint] epoch: [7.0], Train: total:-28.54993, BCE:-28.55022, KLD:0.00009,Test: total:-29.12738, BCE:-29.13796, KLD:0.00353
+=> saved checkpoint 'checkpoints_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 15000, epoch 8.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 15000, epoch 8.0)
+EarlyStopping counter: 2 out of 15
+[Save Checkpoint] epoch: [8.0], Train: total:-28.70390, BCE:-28.70391, KLD:0.00000,Test: total:-29.24429, BCE:-29.24478, KLD:0.00016
+=> saved checkpoint 'checkpoints_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 16875, epoch 9.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 16875, epoch 9.0)
+EarlyStopping counter: 3 out of 15
+[Save Checkpoint] epoch: [9.0], Train: total:-28.89382, BCE:-28.89388, KLD:0.00002,Test: total:-29.46574, BCE:-29.46772, KLD:0.00066
+=> saved checkpoint 'checkpoints_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 18750, epoch 10.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 18750, epoch 10.0)
+EarlyStopping counter: 4 out of 15
+[Save Checkpoint] epoch: [10.0], Train: total:-29.21382, BCE:-29.21387, KLD:0.00002,Test: total:-29.71837, BCE:-29.72081, KLD:0.00081
+=> saved checkpoint 'checkpoints_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 20625, epoch 11.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 20625, epoch 11.0)
+[Save Checkpoint] epoch: [11.0], Train: total:-29.45035, BCE:-29.45037, KLD:0.00001,Test: total:-29.91504, BCE:-29.91571, KLD:0.00022
+=> saved checkpoint 'checkpoints_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 22500, epoch 12.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 22500, epoch 12.0)
+EarlyStopping counter: 1 out of 15
+[Save Checkpoint] epoch: [12.0], Train: total:-29.76194, BCE:-29.76198, KLD:0.00001,Test: total:-30.30836, BCE:-30.30975, KLD:0.00046
+=> saved checkpoint 'checkpoints_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 24375, epoch 13.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 24375, epoch 13.0)
+EarlyStopping counter: 2 out of 15
+[Save Checkpoint] epoch: [13.0], Train: total:-29.93255, BCE:-29.93257, KLD:0.00001,Test: total:-30.44560, BCE:-30.44622, KLD:0.00021
+=> saved checkpoint 'checkpoints_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 26250, epoch 14.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 26250, epoch 14.0)
+EarlyStopping counter: 3 out of 15
+[Save Checkpoint] epoch: [14.0], Train: total:-30.13714, BCE:-30.13715, KLD:0.00001,Test: total:-30.59750, BCE:-30.59811, KLD:0.00020
+=> saved checkpoint 'checkpoints_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 28125, epoch 15.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 28125, epoch 15.0)
+EarlyStopping counter: 4 out of 15
+[Save Checkpoint] epoch: [15.0], Train: total:-30.40650, BCE:-30.40666, KLD:0.00005,Test: total:-30.91083, BCE:-30.91539, KLD:0.00152
+=> saved checkpoint 'checkpoints_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 30000, epoch 16.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 30000, epoch 16.0)
+EarlyStopping counter: 5 out of 15
+[Save Checkpoint] epoch: [16.0], Train: total:-30.10253, BCE:-30.10257, KLD:0.00001,Test: total:-30.65926, BCE:-30.66036, KLD:0.00036
+=> saved checkpoint 'checkpoints_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 31875, epoch 17.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 31875, epoch 17.0)
+EarlyStopping counter: 6 out of 15
+[Save Checkpoint] epoch: [17.0], Train: total:-30.62600, BCE:-30.62602, KLD:0.00001,Test: total:-31.17899, BCE:-31.17974, KLD:0.00025
+=> saved checkpoint 'checkpoints_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 33750, epoch 18.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 33750, epoch 18.0)
+EarlyStopping counter: 7 out of 15
+[Save Checkpoint] epoch: [18.0], Train: total:-30.22437, BCE:-30.22442, KLD:0.00002,Test: total:-30.81146, BCE:-30.81291, KLD:0.00048
+=> saved checkpoint 'checkpoints_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 35625, epoch 19.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 35625, epoch 19.0)
+EarlyStopping counter: 8 out of 15
+[Save Checkpoint] epoch: [19.0], Train: total:-30.11695, BCE:-30.11708, KLD:0.00004,Test: total:-30.70361, BCE:-30.70739, KLD:0.00126
+=> saved checkpoint 'checkpoints_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 37500, epoch 20.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 37500, epoch 20.0)
+EarlyStopping counter: 9 out of 15
+[Save Checkpoint] epoch: [20.0], Train: total:-30.96156, BCE:-30.96159, KLD:0.00001,Test: total:-31.47417, BCE:-31.47524, KLD:0.00036
+=> saved checkpoint 'checkpoints_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 39375, epoch 21.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 39375, epoch 21.0)
+EarlyStopping counter: 10 out of 15
+[Save Checkpoint] epoch: [21.0], Train: total:-31.16669, BCE:-31.16675, KLD:0.00001,Test: total:-31.63233, BCE:-31.63321, KLD:0.00029
+=> saved checkpoint 'checkpoints_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 41250, epoch 22.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 41250, epoch 22.0)
+[Save Checkpoint] epoch: [22.0], Train: total:-30.65367, BCE:-30.65375, KLD:0.00003,Test: total:-31.21313, BCE:-31.21560, KLD:0.00082
+=> saved checkpoint 'checkpoints_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 43125, epoch 23.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 43125, epoch 23.0)
+[Save Checkpoint] epoch: [23.0], Train: total:-31.41443, BCE:-31.41444, KLD:0.00000,Test: total:-31.94837, BCE:-31.94860, KLD:0.00008
+=> saved checkpoint 'checkpoints_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 45000, epoch 24.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 45000, epoch 24.0)
+EarlyStopping counter: 1 out of 15
+[Save Checkpoint] epoch: [24.0], Train: total:-31.59232, BCE:-31.59238, KLD:0.00003,Test: total:-32.16200, BCE:-32.16464, KLD:0.00088
+=> saved checkpoint 'checkpoints_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 46875, epoch 25.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 46875, epoch 25.0)
+[Save Checkpoint] epoch: [25.0], Train: total:-31.70689, BCE:-31.70693, KLD:0.00001,Test: total:-32.20454, BCE:-32.20573, KLD:0.00040
+=> saved checkpoint 'checkpoints_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 48750, epoch 26.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 48750, epoch 26.0)
+EarlyStopping counter: 1 out of 15
+[Save Checkpoint] epoch: [26.0], Train: total:-31.71989, BCE:-31.71992, KLD:0.00001,Test: total:-32.21412, BCE:-32.21480, KLD:0.00023
+=> saved checkpoint 'checkpoints_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 50625, epoch 27.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 50625, epoch 27.0)
+EarlyStopping counter: 2 out of 15
+[Save Checkpoint] epoch: [27.0], Train: total:-31.69006, BCE:-31.69010, KLD:0.00002,Test: total:-32.24601, BCE:-32.24778, KLD:0.00059
+=> saved checkpoint 'checkpoints_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 52500, epoch 28.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 52500, epoch 28.0)
+EarlyStopping counter: 3 out of 15
+[Save Checkpoint] epoch: [28.0], Train: total:-31.89809, BCE:-31.89815, KLD:0.00002,Test: total:-32.41877, BCE:-32.42025, KLD:0.00049
+=> saved checkpoint 'checkpoints_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 54375, epoch 29.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 54375, epoch 29.0)
+EarlyStopping counter: 4 out of 15
+[Save Checkpoint] epoch: [29.0], Train: total:-32.11203, BCE:-32.11204, KLD:0.00000,Test: total:-32.57388, BCE:-32.57424, KLD:0.00012
+=> saved checkpoint 'checkpoints_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 56250, epoch 30.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 56250, epoch 30.0)
+EarlyStopping counter: 5 out of 15
+[Save Checkpoint] epoch: [30.0], Train: total:-32.03907, BCE:-32.03909, KLD:0.00000,Test: total:-32.52065, BCE:-32.52110, KLD:0.00015
+=> saved checkpoint 'checkpoints_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 58125, epoch 31.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 58125, epoch 31.0)
+EarlyStopping counter: 6 out of 15
+[Save Checkpoint] epoch: [31.0], Train: total:-31.46818, BCE:-31.46828, KLD:0.00003,Test: total:-32.06861, BCE:-32.07134, KLD:0.00091
+=> saved checkpoint 'checkpoints_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 60000, epoch 32.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 60000, epoch 32.0)
+EarlyStopping counter: 7 out of 15
+[Save Checkpoint] epoch: [32.0], Train: total:-32.24143, BCE:-32.24147, KLD:0.00001,Test: total:-32.77234, BCE:-32.77371, KLD:0.00046
+=> saved checkpoint 'checkpoints_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 61875, epoch 33.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 61875, epoch 33.0)
+EarlyStopping counter: 8 out of 15
+[Save Checkpoint] epoch: [33.0], Train: total:-31.65375, BCE:-31.65379, KLD:0.00001,Test: total:-32.26600, BCE:-32.26729, KLD:0.00043
+=> saved checkpoint 'checkpoints_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 63750, epoch 34.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 63750, epoch 34.0)
+EarlyStopping counter: 9 out of 15
+[Save Checkpoint] epoch: [34.0], Train: total:-32.47269, BCE:-32.47276, KLD:0.00002,Test: total:-32.95119, BCE:-32.95316, KLD:0.00066
+=> saved checkpoint 'checkpoints_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 65625, epoch 35.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 65625, epoch 35.0)
+EarlyStopping counter: 10 out of 15
+[Save Checkpoint] epoch: [35.0], Train: total:-32.51003, BCE:-32.51009, KLD:0.00002,Test: total:-33.05330, BCE:-33.05537, KLD:0.00069
+=> saved checkpoint 'checkpoints_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 67500, epoch 36.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 67500, epoch 36.0)
+EarlyStopping counter: 11 out of 15
+[Save Checkpoint] epoch: [36.0], Train: total:-32.51545, BCE:-32.51551, KLD:0.00001,Test: total:-33.03137, BCE:-33.03236, KLD:0.00033
+=> saved checkpoint 'checkpoints_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 69375, epoch 37.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 69375, epoch 37.0)
+EarlyStopping counter: 12 out of 15
+[Save Checkpoint] epoch: [37.0], Train: total:-32.20479, BCE:-32.20483, KLD:0.00002,Test: total:-32.81871, BCE:-32.82015, KLD:0.00048
+=> saved checkpoint 'checkpoints_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 71250, epoch 38.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 71250, epoch 38.0)
+EarlyStopping counter: 13 out of 15
+[Save Checkpoint] epoch: [38.0], Train: total:-32.15603, BCE:-32.15622, KLD:0.00007,Test: total:-32.72761, BCE:-32.73376, KLD:0.00205
+=> saved checkpoint 'checkpoints_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 73125, epoch 39.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 73125, epoch 39.0)
+EarlyStopping counter: 14 out of 15
+[Save Checkpoint] epoch: [39.0], Train: total:-32.61352, BCE:-32.61358, KLD:0.00002,Test: total:-33.08440, BCE:-33.08600, KLD:0.00053
+=> saved checkpoint 'checkpoints_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 75000, epoch 40.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2/last' (iter 75000, epoch 40.0)
+EarlyStopping counter: 15 out of 15
+[Save Checkpoint] epoch: [40.0], Train: total:-32.27115, BCE:-32.27119, KLD:0.00001,Test: total:-32.84022, BCE:-32.84141, KLD:0.00040
+Early stopping
+[Training Finished]
+All done !
