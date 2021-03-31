@@ -13,7 +13,10 @@ import torch.nn.functional as F
 from visualizer import *
 from torch.autograd import Variable
 from viz.latent_traversal import LatentTraverser
-import lpips
+import importlib
+lpips_exists = importlib.util.find_spec("lpips") is not None
+if lpips_exists:
+    import lpips
 from torchvision import transforms
 
 EPS = 1e-12

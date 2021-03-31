@@ -692,10 +692,12 @@ class SolverClassifier(object):
                         # every other epoch we train VAE only with z_var:
                         if int(self.epochs) % 2 == 0:
                             z_struct_noise = 0.5 * torch.randn(data.shape[0], self.z_struct_size) + 0.5
+                            z_struct_noise = z_struct_noise.to(self.device)
                             get_z_var_reconstruction = True
                     else:
                         if self.epochs < self.nb_epochs_train_only_zvar:
                             z_struct_noise = 0.5 * torch.randn(data.shape[0], self.z_struct_size) + 0.5
+                            z_struct_noise = z_struct_noise.to(self.device)
                             get_z_var_reconstruction = True
 
                     x_recons, _, z_var, _, latent_representation, _, \
