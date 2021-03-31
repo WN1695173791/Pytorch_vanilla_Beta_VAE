@@ -258,6 +258,8 @@ class SolverClassifier(object):
         self.z_var_size = args.z_var_size
         self.lambda_BCE = args.lambda_BCE
         self.beta = args.beta
+        self.nb_epochs_train_only_zvar = args.nb_epochs_train_only_zvar
+        self.train_var_struct_alternatively = args.train_var_struct_alternatively
 
         # For reproducibility:
         if self.randomness:
@@ -684,14 +686,46 @@ class SolverClassifier(object):
                     self.mse_loss = F.mse_loss(x_recons, data)
                     loss = self.mse_loss
                 elif self.use_VAE:
-                    x_recons, _, _, _, latent_representation, _ = self.net(data)
+                    get_z_var_reconstruction = False
+                    z_struct_noise = None
+                    if self.train_var_struct_alternatively:
+                        # every other epoch we train VAE only with z_var:
+                        if int(self.epochs) % 2 == 0:
+                            z_struct_noise = 0.5 * torch.randn(data.shape[0], self.z_struct_size) + 0.5
+                            get_z_var_reconstruction = True
+                    else:
+                        if self.epochs < self.nb_epochs_train_only_zvar:
+                            z_struct_noise = 0.5 * torch.randn(data.shape[0], self.z_struct_size) + 0.5
+                            get_z_var_reconstruction = True
+
+                    x_recons, _, z_var, _, latent_representation, _, \
+                    x_recons_zvar = self.net(data,
+                                             get_z_var_reconstruction=get_z_var_reconstruction,
+                                             z_struct_noise=z_struct_noise)
+
                     mu = latent_representation['mu']
                     logvar = latent_representation['logvar']
 
                     # BCE tries to make our reconstruction as accurate as possible
                     # KLD tries to push the distributions as close as possible to unit Gaussian
+
                     # BCE loss:
-                    BCE_loss = F.binary_cross_entropy(x_recons, data)
+                    # we try to use for some epochs only zvar with N(0.5, 0.5) gaussian noise
+                    # (because we use sigmoid for z_struct encoder output):
+                    if self.train_var_struct_alternatively:
+                        # every other epoch we train VAE only with z_var:
+                        if int(self.epochs) % 2 == 0:
+                            BCE_loss = F.binary_cross_entropy(x_recons_zvar, data)
+                        else:
+                            print('we use entire z for BCE (epoch: {}), iter: {}'.format(self.epochs, self.global_iter))
+                            BCE_loss = F.binary_cross_entropy(x_recons, data)
+                    else:
+                        if self.epochs < self.nb_epochs_train_only_zvar:
+                            BCE_loss = F.binary_cross_entropy(x_recons_zvar, data)
+                        else:
+                            print('we use entire z for BCE (epoch: {})'.format(self.epochs))
+                            BCE_loss = F.binary_cross_entropy(x_recons, data)
+
                     # KL divergence loss:
                     KLD_loss = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
 

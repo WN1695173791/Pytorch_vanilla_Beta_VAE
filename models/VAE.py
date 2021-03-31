@@ -223,7 +223,7 @@ class VAE(nn.Module, ABC):
                 # weight_init(m)
                 kaiming_init(m)
 
-    def forward(self, x):
+    def forward(self, x, get_z_var_reconstruction=False, z_struct_noise=None):
         """
         Forward pass of model.
         """
@@ -242,7 +242,14 @@ class VAE(nn.Module, ABC):
 
         x_recons = self.decoder(z)
 
-        return x_recons, z_struct, z_var, z_var_sample, latent_representation, z
+        if get_z_var_reconstruction:
+            assert z_struct_noise is not None, 'for z var reconstruction we need z struct noise not None!'
+            z_var_struct_rand = torch.cat((z_var_sample, z_struct_noise), dim=1)
+            x_recons_zvar = self.decoder(z_var_struct_rand)
+        else:
+            x_recons_zvar = None
+
+        return x_recons, z_struct, z_var, z_var_sample, latent_representation, z, x_recons_zvar
 
     def _encode(self, z, z_size):
         """

@@ -263,6 +263,10 @@ if __name__ == "__main__":
     parser.add_argument('--var_stride_size_3', type=int, default=1, metavar='integer value', help="var_stride_size_3")
     parser.add_argument('--var_hidden_dim', type=int, default=256, metavar='integer value', help="var_hidden_dim")
     parser.add_argument('--var_three_conv_layer', default=False, type=str2bool, help="var_three_conv_layer")
+    parser.add_argument('--nb_epochs_train_only_zvar', type=int, default=0, metavar='integer value',
+                        help="nb of epoch during we train VAE only with zvar (and zstruct noise)")
+    parser.add_argument('--train_var_struct_alternatively', default=False, type=str2bool,
+                        help="every other epoch we train VAE only with z_var")
 
     args = parser.parse_args()
 

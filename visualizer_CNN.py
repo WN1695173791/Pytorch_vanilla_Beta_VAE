@@ -12,8 +12,9 @@ from scores_classifier import compute_scores
 import torch.nn.functional as F
 from visualizer import *
 from torch.autograd import Variable
-
 from viz.latent_traversal import LatentTraverser
+import lpips
+from torchvision import transforms
 
 EPS = 1e-12
 
@@ -112,8 +113,9 @@ def get_z_struct_per_class_VAE(exp_name, train_test=None, nb_class=10):
     if os.path.exists(path_save):
         print("path already exist")
         representation_z_struct_class = np.load(path_save, allow_pickle=True)
-        average_z_struct_class = np.load('structural_representation/average_z_struct_representation_per_class_VAE_' + exp_name + '_' + \
-                train_test + '.npy', allow_pickle=True)
+        average_z_struct_class = np.load(
+            'structural_representation/average_z_struct_representation_per_class_VAE_' + exp_name + '_' + \
+            train_test + '.npy', allow_pickle=True)
         return representation_z_struct_class, average_z_struct_class
     else:
         path = 'structural_representation/z_struct_representation_VAE_' + exp_name + '_' + train_test + '.npy'
@@ -1930,7 +1932,7 @@ def viz_decoder_multi_label(net, loader, exp_name, nb_img=8, nb_class=10, save=T
     return
 
 
-def reconstruction_local(nb_class, nb_img, input_data, x_recon, exp_name, size, save=True):
+def reconstruction_local(nb_class, nb_img, input_data, x_recon, exp_name, size, score, save=True):
     first = True
     for class_id in range(nb_class):
         start_cl_id = class_id * nb_img
@@ -1949,7 +1951,7 @@ def reconstruction_local(nb_class, nb_img, input_data, x_recon, exp_name, size, 
     # grid with originals data
     recon_grid = reconstructions.permute(1, 2, 0)
     fig, ax = plt.subplots(figsize=(10, 20), facecolor='w', edgecolor='k')
-    ax.set(title=('model: {}:'.format(exp_name)))
+    ax.set(title=('model: {}, BCE score: {}'.format(exp_name, score)))
 
     ax.imshow(recon_grid.numpy())
     # ax.axhline(y=size[0] // 2, linewidth=4, color='r')
@@ -1961,7 +1963,7 @@ def reconstruction_local(nb_class, nb_img, input_data, x_recon, exp_name, size, 
     return
 
 
-def viz_reconstructino_VAE(net, loader, exp_name, z_var_size, z_struct_size, nb_img=8, nb_class=10, save=True,
+def viz_reconstruction_VAE(net, loader, exp_name, z_var_size, z_struct_size, nb_img=8, nb_class=10, save=True,
                            z_reconstruction=True, z_struct_reconstruction=False, z_var_reconstruction=False,
                            return_scores=False, real_distribution=True, mu_var=None, std_var=None, mu_struct=None,
                            std_struct=None):
@@ -2013,38 +2015,65 @@ def viz_reconstructino_VAE(net, loader, exp_name, z_var_size, z_struct_size, nb_
     z_var_random = torch.cat((z_var_sample, random_struct), dim=1)
     x_recon_var = net.decoder(z_var_random)
 
+    # compute score reconstruction on dataset test:
+    score_reconstruction = 0
+    score_reconstruction_zvar = 0
+    score_reconstruction_zstruct = 0
+
+    for i, (_data_, _label_) in enumerate(loader):
+        print('computing scores.... {}/{}'.format(i, len(loader)))
+        with torch.no_grad():
+            _input_data_ = _data_
+        if torch.cuda.is_available():
+            _input_data_ = _input_data_.cuda()
+
+        # z reconstruction:
+        _x_recon_, _z_struct_, _, _z_var_sample_, _, _ = net(_input_data_)
+        score_reconstruction_iter = F.binary_cross_entropy(_x_recon_, _input_data_)
+
+        # z_var + rand struct reconstruction:
+        _random_struct_ = torch.abs(std_struct * torch.randn(_input_data_.shape[0], z_struct_size) + mu_struct)
+        _z_var_random_ = torch.cat((_z_var_sample_, _random_struct_), dim=1)
+        _x_recon_var_ = net.decoder(_z_var_random_)
+        score_reconstruction_zvar_iter = F.binary_cross_entropy(_x_recon_var_, _input_data_)
+
+        # z_struct + rand var reconstruction:
+        _random_var_ = std_var * torch.randn(_input_data_.shape[0], z_var_size) + mu_var
+        _z_struct_random_ = torch.cat((_random_var_, _z_struct_), dim=1)
+        _x_recon_struct_ = net.decoder(_z_struct_random_)
+        score_reconstruction_zstruct_iter = F.binary_cross_entropy(_x_recon_struct_, _input_data_)
+
+        score_reconstruction += score_reconstruction_iter.detach().numpy()
+        score_reconstruction_zvar += score_reconstruction_zvar_iter.detach().numpy()
+        score_reconstruction_zstruct += score_reconstruction_zstruct_iter.detach().numpy()
+
     net.train()
 
+    score_reconstruction /= len(loader)
+    score_reconstruction_zvar /= len(loader)
+    score_reconstruction_zstruct /= len(loader)
+
+    score_reconstruction = np.around(score_reconstruction, 3)
+    score_reconstruction_zvar = np.around(score_reconstruction_zvar, 3)
+    score_reconstruction_zstruct = np.around(score_reconstruction_zstruct, 3)
+
+    print('reconstructions scores on dataset test: z: {}, z_struct: {}, z_var: {}'.format(score_reconstruction,
+                                                                                          score_reconstruction_zstruct,
+                                                                                          score_reconstruction_zvar))
+
     if z_reconstruction:
-        reconstruction_local(nb_class, nb_img, input_data, x_recon, exp_name, size, save=save)
+        reconstruction_local(nb_class, nb_img, input_data, x_recon, exp_name, size, score_reconstruction, save=save)
 
     if z_struct_reconstruction:
         exp_name_struct = exp_name + "_z_struct"
-        reconstruction_local(nb_class, nb_img, input_data, x_recon_struct, exp_name_struct, size, save=save)
+        reconstruction_local(nb_class, nb_img, input_data, x_recon_struct, exp_name_struct, size,
+                             score_reconstruction_zstruct, save=save)
 
     if z_var_reconstruction:
         exp_name_var = exp_name + "_z_var"
-        reconstruction_local(nb_class, nb_img, input_data, x_recon_var, exp_name_var, size, save=save)
-
-    if return_scores:
-
-        reconstruction_score = F.binary_cross_entropy(x_recon, input_data)
-        recons_struct_score = F.binary_cross_entropy(x_recon_struct, input_data)
-        recons_var_score = F.binary_cross_entropy(x_recon_var, input_data)
-
-        score_vae_reconstruction = recons_var_score / reconstruction_score
-
-        print('reconstructions scores: rapport: {}, z: {}, z_struct: {}, z_var: {}'.format(score_vae_reconstruction,
-                                                                                           reconstruction_score,
-                                                                                           recons_struct_score,
-                                                                                           recons_var_score))
-    else:
-        score_vae_reconstruction = 0
-        reconstruction_score = 0
-        recons_struct_score = 0
-        recons_var_score = 0
-
-    return score_vae_reconstruction, reconstruction_score, recons_struct_score, recons_var_score
+        reconstruction_local(nb_class, nb_img, input_data, x_recon_var, exp_name_var, size, score_reconstruction_zvar,
+                             save=save)
+    return
 
 
 def traversal_values(size):
@@ -2136,7 +2165,6 @@ def viz_latent_prediction_reconstruction(net, exp_name, embedding_size, z_struct
 
 def real_distribution_model(net, expe_name, z_struct_size, z_var_size, loader, train_test, plot_gaussian=False,
                             save=False):
-
     path = 'Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test + '_mu_var.npy'
 
     if not os.path.exists(path):
@@ -2232,10 +2260,8 @@ def real_distribution_model(net, expe_name, z_struct_size, z_var_size, loader, t
 
 
 def switch_img(net, exp_name, loader, z_var_size):
-
     with torch.no_grad():
         for x in loader:
-
             data = x[0]
             data = data.to(device)  # Variable(data.to(device))
 
@@ -2284,5 +2310,86 @@ def switch_img(net, exp_name, loader, z_var_size):
     img_ori_2 = net.decoder(img_ori_2)
     plt.imshow(img_ori_2.detach().numpy().squeeze().squeeze(), cmap='gray')
     plt.show()
+
+    return
+
+
+def images_generation(net, model_name, batch, size=(8, 8), mu_var=None, mu_struct=None, std_var=None, std_struct=None,
+                      z_var_size=None, z_struct_size=None, FID=False, IS=False, LPIPS=False, real_distribution=True,
+                      save=True):
+    """
+    plot image generation and compute three popular scores.
+    :param net:
+    :param model_name:
+    :param FID:
+    :param IS:
+    :param LPIPS:
+    :return:
+    """
+    if real_distribution:
+        sample_var = std_var * torch.randn((size[0] * size[1]), z_var_size) + mu_var
+        sample_struct = std_struct * torch.randn((size[0] * size[1]), z_struct_size) + mu_struct
+        sample = torch.cat((sample_var, sample_struct), dim=1)
+    else:
+        embedding_size = z_var_size + z_struct_size
+        sample = torch.randn(size=(size[0] * size[1], embedding_size))
+
+    # generate:
+    generated = net.decoder(sample)
+
+    grid_generation = make_grid(generated.data, nrow=size[1])
+
+    # compute scores:
+    FID_score = 0
+    IS_score = 0
+    LPIPS_score_alex = 0
+    LPIPS_score_vgg = 0
+
+    # image should be RGB, IMPORTANT: normalized to [-1,1] for IS and LPIPS score
+    # batch = (batch - 0.5)/0.5
+    # generated = (generated - 0.5) / 0.5
+
+    original_batch = batch
+    generation_batch = generated[:len(batch)]
+
+    if FID:
+        FID_score = calculate_fid_given_paths(original_batch,
+                                              generation_batch,
+                                              batch_size=32,
+                                              cuda='',
+                                              dims=2048)
+        FID_score = np.around(FID_score, 3)
+        print('FID score: {}'.format(FID_score))
+    if IS:
+        IS_score = inception_score(generated,
+                                   batch_size=32,
+                                   resize=True)
+        IS_score = np.around(IS_score[0], 3)
+        print('IS score: {}'.format(IS_score))
+    if LPIPS:
+        loss_fn_alex = lpips.LPIPS(net='alex')  # best forward scores
+        loss_fn_vgg = lpips.LPIPS(net='vgg')  # closer to "traditional" perceptual loss, when used for optimization
+
+        # image should be RGB, IMPORTANT: normalized to [-1,1]
+        LPIPS_score_alex = torch.mean(loss_fn_alex(original_batch, generation_batch)).item()
+        LPIPS_score_vgg = torch.mean(loss_fn_vgg(original_batch, generation_batch)).item()
+        LPIPS_score_alex = np.around(LPIPS_score_alex, 3)
+        LPIPS_score_vgg = np.around(LPIPS_score_vgg, 3)
+        print('LPIPS score: alex: {}, vgg: {}'.format(LPIPS_score_alex, LPIPS_score_vgg))
+    # plot:
+    fig, ax = plt.subplots(figsize=(10, 10), facecolor='w', edgecolor='k')
+
+    samples = grid_generation.permute(1, 2, 0)
+    ax.set(title=('Images generation: {}. Scores: FID(\u2193): {}, IS(\u2191): {}, LPIPS (alex) (\u2191): {}'
+                  ', LPIPS (vgg) (\u2191): {}'.format(model_name.split('1_2_1_1_')[-1],
+                                                      FID_score,
+                                                      IS_score,
+                                                      LPIPS_score_alex,
+                                                      LPIPS_score_vgg)))
+    ax.imshow(samples.numpy())
+    plt.show()
+
+    if save:
+        fig.savefig("fig_results/sample/fig_sample_" + model_name + ".png")
 
     return
