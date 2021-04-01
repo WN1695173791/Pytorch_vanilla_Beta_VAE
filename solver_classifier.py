@@ -612,6 +612,8 @@ class SolverClassifier(object):
                 print("Weighs loaded for encoder_struct !")
             else:
                 print("VAE doesn't exist, create VAE")
+                if not os.path.exists(self.checkpoint_dir):
+                    os.makedirs(self.checkpoint_dir, exist_ok=True)
                 self.net, self.device = gpu_config(net)
 
         # print model characteristics:
@@ -637,13 +639,13 @@ class SolverClassifier(object):
         patience: Number of epochs with no improvement after which learning rate will be reduced.
         """
         if self.use_scheduler:
-            # self.scheduler = ReduceLROnPlateau(self.optimizer,
-            #                                    mode='min',
-            #                                    factor=0.2,
-            #                                    patience=5,
-            #                                    min_lr=1e-6,
-            #                                    verbose=True)
-            self.scheduler = StepLR(self.optimizer, step_size=20, gamma=0.2)
+            self.scheduler = ReduceLROnPlateau(self.optimizer,
+                                               mode='min',
+                                               factor=0.2,
+                                               patience=5,
+                                               min_lr=1e-6,
+                                               verbose=True)
+            # self.scheduler = StepLR(self.optimizer, step_size=15, gamma=0.2)
 
 
 
@@ -808,11 +810,6 @@ class SolverClassifier(object):
                 loss.backward()
                 self.optimizer.step()
 
-                # backpropagation loss
-                if self.use_scheduler:
-                    self.scheduler.step()
-                    print('Epoch:', self.epochs, 'LR:', self.scheduler.get_lr())
-
                 # unfreeze encoder_struct if train decoder:
                 if (self.use_decoder or self.use_VAE) and self.freeze_Encoder and self.use_structural_encoder:
                     for params in self.net.encoder_struct.parameters():
@@ -835,6 +832,11 @@ class SolverClassifier(object):
                             self.epochs, batch_idx + 1, len(self.train_loader),
                                          100. * batch_idx / len(self.train_loader),
                             contrastive_loss.item()))
+
+            # backpropagation loss
+            if self.use_scheduler:
+                self.scheduler.step(loss)
+                # print('Epoch:', self.epochs, 'LR:', self.scheduler.get_lr())
 
             # save step
             self.save_checkpoint('last')
