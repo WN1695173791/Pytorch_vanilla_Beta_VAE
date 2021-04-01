@@ -33,7 +33,8 @@ class VAE(nn.Module, ABC):
                  var_stride_size_2=1,
                  var_stride_size_3=1,
                  var_hidden_dim=256,
-                 var_three_conv_layer=False):
+                 var_three_conv_layer=False,
+                 use_structural_encoder=False):
         """
         Class which defines model and forward pass.
         """
@@ -75,6 +76,8 @@ class VAE(nn.Module, ABC):
         self.var_hidden_dim = var_hidden_dim
         self.var_three_conv_layer = var_three_conv_layer
 
+        self.use_structural_encoder = use_structural_encoder
+
         if self.two_conv_layer:
             self.hidden_filters_2 = self.z_struct_size
         elif self.three_conv_layer:
@@ -94,7 +97,10 @@ class VAE(nn.Module, ABC):
             self.var_reshape = (var_hidden_filters_2, self.width_conv2_size, self.width_conv2_size)
 
         # decoder:
-        self.z_size = self.z_var_size + self.z_struct_size
+        if self.use_structural_encoder:
+            self.z_size = self.z_var_size + self.z_struct_size
+        else:
+            self.z_size = self.z_var_size
 
         if self.BK_in_first_layer:
             self.kernel_size_1 = self.big_kernel_size
@@ -105,37 +111,38 @@ class VAE(nn.Module, ABC):
 
         # -----------_________________ define model: encoder_struct____________________________________________--------
         # ----------- add conv bloc:
-        self.encoder_struct = [
-            nn.Conv2d(self.nc, self.hidden_filters_1, self.kernel_size_1, stride=self.stride_size),
-            nn.BatchNorm2d(self.hidden_filters_1),
-            nn.ReLU(True),
-            # PrintLayer(),  # B, 32, 25, 25
-        ]
-        if self.two_conv_layer:
-            self.hidden_filter_GMP = self.hidden_filters_2
-            self.encoder_struct += [
-                nn.Conv2d(self.hidden_filters_1, self.hidden_filters_2, self.kernel_size_2, stride=self.stride_size),
-                nn.BatchNorm2d(self.hidden_filters_2),
+        if self.use_structural_encoder:
+            self.encoder_struct = [
+                nn.Conv2d(self.nc, self.hidden_filters_1, self.kernel_size_1, stride=self.stride_size),
+                nn.BatchNorm2d(self.hidden_filters_1),
                 nn.ReLU(True),
                 # PrintLayer(),  # B, 32, 25, 25
             ]
-        if self.three_conv_layer:
+            if self.two_conv_layer:
+                self.hidden_filter_GMP = self.hidden_filters_2
+                self.encoder_struct += [
+                    nn.Conv2d(self.hidden_filters_1, self.hidden_filters_2, self.kernel_size_2, stride=self.stride_size),
+                    nn.BatchNorm2d(self.hidden_filters_2),
+                    nn.ReLU(True),
+                    # PrintLayer(),  # B, 32, 25, 25
+                ]
+            if self.three_conv_layer:
+                self.encoder_struct += [
+                    nn.Conv2d(self.hidden_filters_2, self.hidden_filters_3, self.kernel_size_3,
+                              stride=self.stride_size),
+                    nn.BatchNorm2d(self.hidden_filters_3),
+                    nn.ReLU(True),
+                    # PrintLayer(),
+                ]
+            # ----------- add GMP bloc:
             self.encoder_struct += [
-                nn.Conv2d(self.hidden_filters_2, self.hidden_filters_3, self.kernel_size_3,
-                          stride=self.stride_size),
-                nn.BatchNorm2d(self.hidden_filters_3),
-                nn.ReLU(True),
-                # PrintLayer(),
+                nn.AdaptiveMaxPool2d((1, 1)),  # B, hidden_filters_1, 1, 1
+                # PrintLayer(),  # B, hidden_filters_1, 1, 1
+                View((-1, self.hidden_filter_GMP)),  # B, hidden_filters_1
+                # PrintLayer(),  # B, hidden_filters_1
+                nn.Sigmoid()
             ]
-        # ----------- add GMP bloc:
-        self.encoder_struct += [
-            nn.AdaptiveMaxPool2d((1, 1)),  # B, hidden_filters_1, 1, 1
-            # PrintLayer(),  # B, hidden_filters_1, 1, 1
-            View((-1, self.hidden_filter_GMP)),  # B, hidden_filters_1
-            # PrintLayer(),  # B, hidden_filters_1
-            nn.Sigmoid()
-        ]
-        # -----------_________________ end encoder_struct____________________________________________------------
+            # -----------_________________ end encoder_struct____________________________________________------------
 
         # -----------_________________ define model: encoder_var____________________________________________--------
         self.encoder_var = [
@@ -211,7 +218,8 @@ class VAE(nn.Module, ABC):
         ]
         # --------------------------------------- end decoder ____________________________________________ ----
 
-        self.encoder_struct = nn.Sequential(*self.encoder_struct)
+        if self.use_structural_encoder:
+            self.encoder_struct = nn.Sequential(*self.encoder_struct)
         self.encoder_var = nn.Sequential(*self.encoder_var)
         self.decoder = nn.Sequential(*self.decoder)
 
@@ -228,18 +236,25 @@ class VAE(nn.Module, ABC):
         Forward pass of model.
         """
 
-        # z_struct:
-        z_struct = self.encoder_struct(x)
+        if self.use_structural_encoder:
+            # z_struct:
+            z_struct = self.encoder_struct(x)
+        else:
+            z_struct = None
 
         # z_var:
         z_var = self.encoder_var(x)
         latent_representation = self._encode(z_var, self.z_var_size)
         z_var_sample = self.reparametrize(latent_representation)
 
-        # concatenate z_struct and z_var:
-        z = torch.cat((z_var_sample, z_struct), dim=1)
-        assert z.shape[-1] == self.z_size, "z concatenation doesn't match with expected z size"
+        if self.use_structural_encoder:
+            # concatenate z_struct and z_var:
+            z = torch.cat((z_var_sample, z_struct), dim=1)
+            assert z.shape[-1] == self.z_size, "z concatenation doesn't match with expected z size"
+        else:
+            z = z_var_sample
 
+        # reconstruction:
         x_recons = self.decoder(z)
 
         if get_z_var_reconstruction:

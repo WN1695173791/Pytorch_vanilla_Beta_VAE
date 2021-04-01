@@ -18,6 +18,7 @@ lpips_exists = importlib.util.find_spec("lpips") is not None
 if lpips_exists:
     import lpips
 from torchvision import transforms
+from scipy.stats import norm
 
 EPS = 1e-12
 
@@ -2000,7 +2001,7 @@ def viz_reconstruction_VAE(net, loader, exp_name, z_var_size, z_struct_size, nb_
         input_data = input_data.cuda()
 
     # z reconstruction:
-    x_recon, z_struct, z_var, z_var_sample, _, _ = net(input_data)
+    x_recon, z_struct, z_var, z_var_sample, _, _, _ = net(input_data)
 
     # z_struct reconstruction:
     if real_distribution:
@@ -2031,7 +2032,7 @@ def viz_reconstruction_VAE(net, loader, exp_name, z_var_size, z_struct_size, nb_
             _input_data_ = _input_data_.cuda()
 
         # z reconstruction:
-        _x_recon_, _z_struct_, _, _z_var_sample_, _, _ = net(_input_data_)
+        _x_recon_, _z_struct_, _, _z_var_sample_, _, _, _ = net(_input_data_)
         score_reconstruction_iter = F.binary_cross_entropy(_x_recon_, _input_data_)
 
         # z_var + rand struct reconstruction:
@@ -2173,19 +2174,15 @@ def real_distribution_model(net, expe_name, z_struct_size, z_var_size, loader, t
     if not os.path.exists(path):
         device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-        nb_batch = 0
-        nb_images = 0
         first = True
         with torch.no_grad():
-            for x in loader:
-                nb_images += len(x)
-                nb_batch += 1
+            for x, label in loader:
 
-                data = x[0]
+                data = x
                 data = data.to(device)  # Variable(data.to(device))
 
                 # compute loss:
-                x_recons, z_struct, z_var, z_var_sample, latent_representation, z_latent = net(data)
+                x_recons, z_struct, z_var, z_var_sample, latent_representation, z_latent, _ = net(data)
 
                 mu_var_iter = z_var[:, :z_var_size]
                 sigma_var_iter = z_var[:, z_var_size:]
@@ -2195,6 +2192,7 @@ def real_distribution_model(net, expe_name, z_struct_size, z_var_size, loader, t
                     mu_var = mu_var_iter
                     sigma_var = sigma_var_iter
                     z_struct_distribution = z_struct_distribution_iter
+                    first = False
                 else:
                     mu_var = torch.cat((mu_var, mu_var_iter), 0)
                     sigma_var = torch.cat((sigma_var, sigma_var_iter), 0)
@@ -2225,15 +2223,20 @@ def real_distribution_model(net, expe_name, z_struct_size, z_var_size, loader, t
     sigma_struct = np.load(
         'Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test +
         'sigma_struct.npy', allow_pickle=True)
-    # print(mu_var, sigma_var)
 
     if plot_gaussian:
+        # if output of encoder sruct is sigmoid so gaussian is N(0.5, 0.5);
+        mu_sigmoid = 0.5
+        std_sigmoid = 0.5
+        sigma_sigmoid = math.sqrt(std_sigmoid)
+        x_sigmoid = np.linspace(mu_sigmoid - 3 * sigma_sigmoid, mu_sigmoid + 3 * sigma_sigmoid, 100)
+        plt.plot(x_sigmoid, stats.norm.pdf(x_sigmoid, mu_sigmoid, sigma_sigmoid), label='Gaussian sigmoid', color='red')
         for i in range(len(mu_struct)):
             mu = mu_struct[i]
             variance = sigma_struct[i]
             sigma = math.sqrt(variance)
             x = np.abs(np.linspace(mu - 3 * sigma, mu + 3 * sigma, 100))
-            plt.plot(x, stats.norm.pdf(x, mu, sigma), label='Gaussian struct', color='blue')
+            plt.plot(x, stats.norm.pdf(x, mu, sigma), label='Gaussian struct ' + str(i), color='blue')
         plt.show()
 
         mu = 0
@@ -2251,7 +2254,8 @@ def real_distribution_model(net, expe_name, z_struct_size, z_var_size, loader, t
             variance_var_iter = np.abs(sigma_var[i])
             sigma_var_iter = math.sqrt(variance_var_iter)
             x_var = np.linspace(mu_var_iter - 3 * sigma_var_iter, mu_var_iter + 3 * sigma_var_iter, 100)
-            ax.plot(x_var, stats.norm.pdf(x_var, mu_var_iter, sigma_var_iter), label='real data gaussian', color='blue')
+            ax.plot(x_var, stats.norm.pdf(x_var, mu_var_iter, sigma_var_iter), label='real data gaussian ' + str(i),
+                    color='blue')
 
         ax.legend(loc=1)
         plt.show()
@@ -2396,3 +2400,63 @@ def images_generation(net, model_name, batch, size=(8, 8), mu_var=None, mu_struc
         fig.savefig("fig_results/sample/fig_sample_" + model_name + ".png")
 
     return
+
+
+def manifold_digit(net, model_name, device, size=(20, 20), component_var=0, component_struct=0, random=False, loader=None,
+                   mu_var=None, std_var=None, mu_struct=None, std_struct=None, z_var_size=None, z_struct_size=None,
+                   img_choice=None):
+    """
+    display 2D manifold of the digits for one component.
+    :param net:
+    :param model_name:
+    :param size:
+    :return:
+    """
+    # create z latent code:
+    if random:
+        sample_var = std_var * torch.randn(1, z_var_size) + mu_var
+        sample_struct = std_struct * torch.randn(1, z_struct_size) + mu_struct
+        sample = torch.cat((sample_var, sample_struct), dim=1)
+    else:
+        with torch.no_grad():
+            for x, label in loader:
+                data = x
+                data = data.to(device)  # Variable(data.to(device))
+
+                # compute loss:
+                _, _, _, _, _, z, _ = net(data)
+                break
+
+        if img_choice is None:
+            img_choice = torch.randint(len(x), (1,))
+        sample = z[img_choice].detach()
+
+    # parameters:
+    digit_size = 32
+    assert component_var < z_var_size, 'Please choose component var in zvar size no more !'
+    assert component_struct < z_struct_size, 'Please choose component struct in zstruct size no more !'
+    figure = np.zeros((digit_size * size[0], digit_size * size[0]))
+
+    # Construct grid of latent variable values
+    grid_x = norm.ppf(np.linspace(0.05, 0.95, size[0]))
+    grid_y = norm.ppf(np.linspace(0.05, 0.95, size[0]))
+
+    # decode for each square in the grid
+    for i, yi in enumerate(grid_x):
+        for j, xi in enumerate(grid_y):
+            z_sample = sample[0]
+            z_sample[component_var] = yi
+            z_sample[z_var_size + component_struct] = xi
+            z_sample = torch.Tensor(z_sample).to(device)
+            x_hat = net.decoder(z_sample)
+            x_hat = x_hat.reshape(digit_size, digit_size).to('cpu').detach().numpy()
+            figure[(size[0] - 1 - i) * digit_size:(size[0] - 1 - i + 1) * digit_size, j * digit_size:(j + 1) * digit_size] = x_hat
+
+    plt.figure(figsize=(10, 10))
+    plt.imshow(figure, cmap='gray')
+    plt.show()
+
+    return
+
+
+

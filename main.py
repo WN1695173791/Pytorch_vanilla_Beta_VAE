@@ -267,6 +267,7 @@ if __name__ == "__main__":
                         help="nb of epoch during we train VAE only with zvar (and zstruct noise)")
     parser.add_argument('--train_var_struct_alternatively', default=False, type=str2bool,
                         help="every other epoch we train VAE only with z_var")
+    parser.add_argument('--use_structural_encoder', default=False, type=str2bool, help="use_structural_encoder")
 
     args = parser.parse_args()
 

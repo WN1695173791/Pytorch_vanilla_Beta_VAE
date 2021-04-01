@@ -273,11 +273,11 @@ def run_VAE(model_name, net, lambda_BCE, beta, z_struct_size, z_var_size):
     # z_struct sample:  sample from positive gaussian:
     # z_struct_sample = sigma_struct * np.random.randn(...) + mu_struct
 
-    viz_reconstruction_VAE(net, loader, model_name, z_var_size, z_struct_size, nb_img=10,
-                           nb_class=nb_class, save=True, z_reconstruction=True,
-                           z_struct_reconstruction=True, z_var_reconstruction=True,
-                           return_scores=False, real_distribution=True, mu_var=mu_var, std_var=sigma_var,
-                           mu_struct=mu_struct, std_struct=sigma_struct)
+    # viz_reconstruction_VAE(net, loader, model_name, z_var_size, z_struct_size, nb_img=10,
+    #                        nb_class=nb_class, save=True, z_reconstruction=True,
+    #                        z_struct_reconstruction=True, z_var_reconstruction=True,
+    #                        return_scores=False, real_distribution=True, mu_var=mu_var, std_var=sigma_var,
+    #                        mu_struct=mu_struct, std_struct=sigma_struct)
 
     # viz switch image:
     # switch_img(net, model_name, loader, z_var_size)
@@ -305,6 +305,11 @@ def run_VAE(model_name, net, lambda_BCE, beta, z_struct_size, z_var_size):
     # images_generation(net, model_name, batch, size=(8, 8), mu_var=mu_var, mu_struct=mu_struct, std_var=sigma_var,
     #                   std_struct=sigma_struct, z_var_size=z_var_size, z_struct_size=z_struct_size, FID=True, IS=True,
     #                   LPIPS=True, real_distribution=True, save=True)
+
+    # Display a 2D manifold of the digits:
+    manifold_digit(net, model_name, device, size=(20, 20), component_var=0, component_struct=0, random=False,
+                   loader=loader, mu_var=mu_var, std_var=sigma_var, mu_struct=mu_struct, std_struct=sigma_struct,
+                   z_var_size=z_var_size, z_struct_size=z_struct_size, img_choice=None)
 
     return
 
@@ -450,7 +455,14 @@ if os.path.exists(path_select_model_analyse_50):
     selected_analyse_50 = np.load(path_select_model_analyse_50)
 
 if __name__ == '__main__':
-    list_exp_VAE_test = ['mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_2c_32_15_2_1']
+    list_exp_VAE_test = ['mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_ft_1']
+                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_ft_2',
+                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_ft_3',
+                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_ft_4',
+                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_ft_5',
+                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_eoe_1',
+                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_eoe_2']
+                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_2c_32_15_2_1']
                          # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_2c_32_15_2_2',
                          # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_2c_32_15_2_3',
                          # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_2c_32_15_2_4',

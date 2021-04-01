@@ -4,7 +4,7 @@ import os
 import torch
 import torch.nn.functional as F
 import torch.optim as optimizer
-from torch.optim.lr_scheduler import ReduceLROnPlateau
+from torch.optim.lr_scheduler import ReduceLROnPlateau, StepLR
 from torch.utils.data.sampler import BatchSampler
 from tqdm import tqdm
 
@@ -260,6 +260,7 @@ class SolverClassifier(object):
         self.beta = args.beta
         self.nb_epochs_train_only_zvar = args.nb_epochs_train_only_zvar
         self.train_var_struct_alternatively = args.train_var_struct_alternatively
+        self.use_structural_encoder = args.use_structural_encoder
 
         # For reproducibility:
         if self.randomness:
@@ -562,6 +563,7 @@ class SolverClassifier(object):
         if self.use_VAE:
             pre_trained_model = nn.Sequential(*[self.net.model[i] for i in range(self.z_struct_layer_num + 1)])
 
+            print('useeeee', self.use_structural_encoder, type(self.use_structural_encoder))
             net = VAE(z_struct_size=self.z_struct_size,
                       big_kernel_size=self.big_kernel_size,
                       stride_size=self.stride_size,
@@ -584,7 +586,8 @@ class SolverClassifier(object):
                       var_stride_size_2=self.var_stride_size_2,
                       var_stride_size_3=self.var_stride_size_3,
                       var_hidden_dim=self.var_hidden_dim,
-                      var_three_conv_layer=self.var_three_conv_layer)
+                      var_three_conv_layer=self.var_three_conv_layer,
+                      use_structural_encoder=self.use_structural_encoder)
 
             self.checkpoint_dir = os.path.join(args.ckpt_dir, args.exp_name)
             file_path = os.path.join(self.checkpoint_dir, 'last')
@@ -595,7 +598,7 @@ class SolverClassifier(object):
                 # config gpu:
                 self.net, self.device = gpu_config(net)
                 self.load_checkpoint('last')
-            elif os.path.isfile(file_path_encoder):
+            elif os.path.isfile(file_path_encoder) and self.use_structural_encoder:
                 print("VAE var doesn't exist load struct encoder weighs !")
                 # checkpoint save:
                 if not os.path.exists(self.checkpoint_dir):
@@ -634,12 +637,15 @@ class SolverClassifier(object):
         patience: Number of epochs with no improvement after which learning rate will be reduced.
         """
         if self.use_scheduler:
-            self.scheduler = ReduceLROnPlateau(self.optimizer,
-                                               mode='min',
-                                               factor=0.2,
-                                               patience=5,
-                                               min_lr=1e-6,
-                                               verbose=True)
+            # self.scheduler = ReduceLROnPlateau(self.optimizer,
+            #                                    mode='min',
+            #                                    factor=0.2,
+            #                                    patience=5,
+            #                                    min_lr=1e-6,
+            #                                    verbose=True)
+            self.scheduler = StepLR(self.optimizer, step_size=20, gamma=0.2)
+
+
 
         # initialize the early_stopping object
         # early stopping patience; how long to wait after last time validation loss improved.
@@ -700,7 +706,7 @@ class SolverClassifier(object):
                             z_struct_noise = z_struct_noise.to(self.device)
                             get_z_var_reconstruction = True
 
-                    x_recons, _, z_var, _, latent_representation, _, \
+                    x_recons, _, z_var, _, latent_representation, z, \
                     x_recons_zvar = self.net(data,
                                              get_z_var_reconstruction=get_z_var_reconstruction,
                                              z_struct_noise=z_struct_noise)
@@ -719,13 +725,13 @@ class SolverClassifier(object):
                         if int(self.epochs) % 2 == 0:
                             BCE_loss = F.binary_cross_entropy(x_recons_zvar, data)
                         else:
-                            print('we use entire z for BCE (epoch: {}), iter: {}'.format(self.epochs, self.global_iter))
+                            # print('we use entire z for BCE (epoch: {}), iter: {}'.format(self.epochs, self.global_iter))
                             BCE_loss = F.binary_cross_entropy(x_recons, data)
                     else:
                         if self.epochs < self.nb_epochs_train_only_zvar:
                             BCE_loss = F.binary_cross_entropy(x_recons_zvar, data)
                         else:
-                            print('we use entire z for BCE (epoch: {})'.format(self.epochs))
+                            # print('we use entire z for BCE (epoch: {})'.format(self.epochs))
                             BCE_loss = F.binary_cross_entropy(x_recons, data)
 
                     # KL divergence loss:
@@ -789,7 +795,7 @@ class SolverClassifier(object):
                         loss += loss_distance_mean
 
                 # freeze encoder_struct if train decoder:
-                if (self.use_decoder or self.use_VAE) and self.freeze_Encoder:
+                if (self.use_decoder or self.use_VAE) and self.freeze_Encoder and self.use_structural_encoder:
                     for params in self.net.encoder_struct.parameters():
                         params.requires_grad = False
 
@@ -804,10 +810,11 @@ class SolverClassifier(object):
 
                 # backpropagation loss
                 if self.use_scheduler:
-                    self.scheduler.step(loss)
+                    self.scheduler.step()
+                    print('Epoch:', self.epochs, 'LR:', self.scheduler.get_lr())
 
                 # unfreeze encoder_struct if train decoder:
-                if (self.use_decoder or self.use_VAE) and self.freeze_Encoder:
+                if (self.use_decoder or self.use_VAE) and self.freeze_Encoder and self.use_structural_encoder:
                     for params in self.net.encoder_struct.parameters():
                         params.requires_grad = True
 
