@@ -72,7 +72,7 @@ class Encoder_struct(nn.Module, ABC):
             nn.BatchNorm2d(self.hidden_filters_1),
             # PrintLayer(),  # B, 32, 25, 25
         ]
-        if self.Binary_z and not self.two_conv_layer:
+        if self.Binary_z:
             self.encoder_struct += [
                 DeterministicBinaryActivation(estimator='ST')
             ]
@@ -86,13 +86,14 @@ class Encoder_struct(nn.Module, ABC):
                 nn.BatchNorm2d(self.hidden_filters_2),
                 # PrintLayer(),  # B, 32, 25, 25
             ]
-        if self.Binary_z and self.two_conv_layer and not self.three_conv_layer:
+        if self.Binary_z and self.two_conv_layer:
             self.encoder_struct += [
                 DeterministicBinaryActivation(estimator='ST')
             ]
         elif self.two_conv_layer:
+        # if self.two_conv_layer:
             self.encoder_struct += [
-                nn.ReLU(True),
+            nn.ReLU(True),
             ]
         if self.three_conv_layer:
             self.encoder_struct += [
