@@ -84,6 +84,8 @@ def run_exp_extraction_and_visualization_custom_BK(list_model, is_ratio=False, i
         var_hidden_dim = int(parameters_dict['var_hidden_dim'])
         var_three_conv_layer = str2bool(parameters_dict['var_three_conv_layer'])
 
+        use_structural_encoder = str2bool(parameters_dict['use_structural_encoder'])
+
         # other default parameters:
         hidden_filters_1 = 32
         hidden_filters_2 = 32
@@ -172,7 +174,7 @@ def run_exp_extraction_and_visualization_custom_BK(list_model, is_ratio=False, i
         if is_decoder:
             run_decoder(model_name, net)
         elif is_VAE:
-            run_VAE(model_name, net, lambda_BCE, beta, z_struct_size, z_var_size)
+            run_VAE(model_name, net, lambda_BCE, beta, z_struct_size, z_var_size, use_structural_encoder)
         else:
             run_viz_expes(model_name, net, is_ratio, loss_min_distance_cl, loss_distance_mean,
                           net_type='Custom_CNN_BK', diff_var_loss=diff_var)
@@ -234,7 +236,7 @@ def run_decoder(exp_name, net, multi_label=True):
     return
 
 
-def run_VAE(model_name, net, lambda_BCE, beta, z_struct_size, z_var_size):
+def run_VAE(model_name, net, lambda_BCE, beta, z_struct_size, z_var_size, VAE_struct):
     print(model_name, 'run VAE')
     print(net)
     path = 'checkpoints_CNN/'
@@ -260,24 +262,25 @@ def run_VAE(model_name, net, lambda_BCE, beta, z_struct_size, z_var_size):
     #                                      random=False,
     #                                      batch=batch)
 
-    # Image reconstruction with real distribution: mu_var, sigma_var, mu_struct, sigma_struct =
+    # Image reconstruction with real distribution: mu_var, sigma_var, mu_struct, sigma_struct
     mu_var, sigma_var, mu_struct, sigma_struct = real_distribution_model(net,
                                                                          model_name,
                                                                          z_struct_size,
                                                                          z_var_size,
                                                                          loader,
                                                                          'test',
-                                                                         plot_gaussian=False,
-                                                                         save=True)
+                                                                         plot_gaussian=True,
+                                                                         save=True,
+                                                                         VAE_struct=VAE_struct)
 
     # z_struct sample:  sample from positive gaussian:
     # z_struct_sample = sigma_struct * np.random.randn(...) + mu_struct
 
-    # viz_reconstruction_VAE(net, loader, model_name, z_var_size, z_struct_size, nb_img=10,
-    #                        nb_class=nb_class, save=True, z_reconstruction=True,
-    #                        z_struct_reconstruction=True, z_var_reconstruction=True,
-    #                        return_scores=False, real_distribution=True, mu_var=mu_var, std_var=sigma_var,
-    #                        mu_struct=mu_struct, std_struct=sigma_struct)
+    viz_reconstruction_VAE(net, loader, model_name, z_var_size, z_struct_size, nb_img=10,
+                           nb_class=nb_class, save=True, z_reconstruction=True,
+                           z_struct_reconstruction=False, z_var_reconstruction=False,
+                           return_scores=False, real_distribution=True, mu_var=mu_var, std_var=sigma_var,
+                           mu_struct=mu_struct, std_struct=sigma_struct)
 
     # viz switch image:
     # switch_img(net, model_name, loader, z_var_size)
@@ -307,9 +310,9 @@ def run_VAE(model_name, net, lambda_BCE, beta, z_struct_size, z_var_size):
     #                   LPIPS=True, real_distribution=True, save=True)
 
     # Display a 2D manifold of the digits:
-    manifold_digit(net, model_name, device, size=(20, 20), component_var=0, component_struct=0, random=False,
-                   loader=loader, mu_var=mu_var, std_var=sigma_var, mu_struct=mu_struct, std_struct=sigma_struct,
-                   z_var_size=z_var_size, z_struct_size=z_struct_size, img_choice=None)
+    # manifold_digit(net, model_name, device, size=(20, 20), component_var=0, component_struct=0, random=False,
+    #                loader=loader, mu_var=mu_var, std_var=sigma_var, mu_struct=mu_struct, std_struct=sigma_struct,
+    #                z_var_size=z_var_size, z_struct_size=z_struct_size, img_choice=None)
 
     return
 
@@ -455,7 +458,43 @@ if os.path.exists(path_select_model_analyse_50):
     selected_analyse_50 = np.load(path_select_model_analyse_50)
 
 if __name__ == '__main__':
-    list_exp_VAE_test = ['mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_ft_1']
+    list_exp_VAE_test = [# 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_1_1',
+                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_1_2',
+                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_1_3',
+                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_1_4',
+                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_1_5',
+                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_1_6',
+                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_2_1',
+                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_2_2',
+                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_2_3',
+                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_2_4',
+                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_2_5',
+                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_2_6',
+                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_3_1',
+                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_3_2',
+                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_3_3',
+                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_3_4',
+                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_3_5',
+                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_3_6',
+                         'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_1_1']
+                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_1_2',
+                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_1_3',
+                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_1_4',
+                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_1_5',
+                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_1_6',
+                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_2_1',
+                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_2_2',
+                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_2_3',
+                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_2_4',
+                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_2_5',
+                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_2_6',
+                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_3_1',
+                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_3_2',
+                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_3_3',
+                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_3_4',
+                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_3_5',
+                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_3_6']
+                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_ft_1']
                          # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_ft_2',
                          # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_ft_3',
                          # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_ft_4',

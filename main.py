@@ -169,9 +169,10 @@ if __name__ == "__main__":
 
     # parameters for classifier:
     parser.add_argument('--model', default='CNN', type=str, help='model name')
-    parser.add_argument('--is_default_model', default=True, type=str2bool, help='if use default model')
+    parser.add_argument('--is_default_model', default=False, type=str2bool, help='if use default model')
     parser.add_argument('--is_custom_model', default=False, type=str2bool, help='if use custom model')
     parser.add_argument('--is_custom_model_BK', default=False, type=str2bool, help='if use custom is_custom_model_BK')
+    parser.add_argument('--is_encoder_struct', default=False, type=str2bool, help='if use encoder struct')
     parser.add_argument('--add_z_struct_bottleneck', default=False, type=str2bool, help='if add_z_struct_bottleneck')
     parser.add_argument('--add_classification_layer', default=True, type=str2bool, help='if add_classification_layer')
     parser.add_argument('--z_struct_size', default=32, type=int, help='z_struct_size')
@@ -268,6 +269,10 @@ if __name__ == "__main__":
     parser.add_argument('--train_var_struct_alternatively', default=False, type=str2bool,
                         help="every other epoch we train VAE only with z_var")
     parser.add_argument('--use_structural_encoder', default=False, type=str2bool, help="use_structural_encoder")
+    # encoder struct:
+    parser.add_argument('--kernel_size_1', type=int, default=4, metavar='integer value', help="kernel_size_1")
+    parser.add_argument('--kernel_size_2', type=int, default=4, metavar='integer value', help="kernel_size_2")
+    parser.add_argument('--kernel_size_3', type=int, default=4, metavar='integer value', help="kernel_size_3")
 
     args = parser.parse_args()
 

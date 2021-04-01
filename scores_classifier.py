@@ -37,7 +37,6 @@ def compute_scores(net, loader, device, loader_size, nb_class, ratio_reg, z_stru
                                                                   use_ratio=ratio_reg,
                                                                   z_struct_out=z_struct_out,
                                                                   z_struct_layer_num=z_struct_layer_num,
-                                                                  other_ratio=other_ratio,
                                                                   loss_min_distance_cl=loss_min_distance_cl)
 
             # classification loss:

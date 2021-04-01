@@ -2003,21 +2003,23 @@ def viz_reconstruction_VAE(net, loader, exp_name, z_var_size, z_struct_size, nb_
     # z reconstruction:
     x_recon, z_struct, z_var, z_var_sample, _, _, _ = net(input_data)
 
-    # z_struct reconstruction:
-    if real_distribution:
-        random_var = std_var * torch.randn(x_recon.shape[0], z_var_size) + mu_var
-    else:
-        random_var = torch.randn((x_recon.shape[0], z_var_size))
-    z_struct_random = torch.cat((random_var, z_struct), dim=1)
-    x_recon_struct = net.decoder(z_struct_random)
+    if z_struct_reconstruction:
+        # z_struct reconstruction:
+        if real_distribution:
+            random_var = std_var * torch.randn(x_recon.shape[0], z_var_size) + mu_var
+        else:
+            random_var = torch.randn((x_recon.shape[0], z_var_size))
+        z_struct_random = torch.cat((random_var, z_struct), dim=1)
+        x_recon_struct = net.decoder(z_struct_random)
 
-    # z_var reconstruction:
-    if real_distribution:
-        random_struct = torch.abs(std_struct * torch.randn(x_recon.shape[0], z_struct_size) + mu_struct)
-    else:
-        random_struct = torch.randn((x_recon.shape[0], z_struct_size))
-    z_var_random = torch.cat((z_var_sample, random_struct), dim=1)
-    x_recon_var = net.decoder(z_var_random)
+    if z_var_reconstruction:
+        # z_var reconstruction:
+        if real_distribution:
+            random_struct = torch.abs(std_struct * torch.randn(x_recon.shape[0], z_struct_size) + mu_struct)
+        else:
+            random_struct = torch.randn((x_recon.shape[0], z_struct_size))
+        z_var_random = torch.cat((z_var_sample, random_struct), dim=1)
+        x_recon_var = net.decoder(z_var_random)
 
     # compute score reconstruction on dataset test:
     score_reconstruction = 0
@@ -2034,22 +2036,23 @@ def viz_reconstruction_VAE(net, loader, exp_name, z_var_size, z_struct_size, nb_
         # z reconstruction:
         _x_recon_, _z_struct_, _, _z_var_sample_, _, _, _ = net(_input_data_)
         score_reconstruction_iter = F.binary_cross_entropy(_x_recon_, _input_data_)
-
-        # z_var + rand struct reconstruction:
-        _random_struct_ = torch.abs(std_struct * torch.randn(_input_data_.shape[0], z_struct_size) + mu_struct)
-        _z_var_random_ = torch.cat((_z_var_sample_, _random_struct_), dim=1)
-        _x_recon_var_ = net.decoder(_z_var_random_)
-        score_reconstruction_zvar_iter = F.binary_cross_entropy(_x_recon_var_, _input_data_)
-
-        # z_struct + rand var reconstruction:
-        _random_var_ = std_var * torch.randn(_input_data_.shape[0], z_var_size) + mu_var
-        _z_struct_random_ = torch.cat((_random_var_, _z_struct_), dim=1)
-        _x_recon_struct_ = net.decoder(_z_struct_random_)
-        score_reconstruction_zstruct_iter = F.binary_cross_entropy(_x_recon_struct_, _input_data_)
-
         score_reconstruction += score_reconstruction_iter.detach().numpy()
-        score_reconstruction_zvar += score_reconstruction_zvar_iter.detach().numpy()
-        score_reconstruction_zstruct += score_reconstruction_zstruct_iter.detach().numpy()
+
+        if z_var_reconstruction:
+            # z_var + rand struct reconstruction:
+            _random_struct_ = torch.abs(std_struct * torch.randn(_input_data_.shape[0], z_struct_size) + mu_struct)
+            _z_var_random_ = torch.cat((_z_var_sample_, _random_struct_), dim=1)
+            _x_recon_var_ = net.decoder(_z_var_random_)
+            score_reconstruction_zvar_iter = F.binary_cross_entropy(_x_recon_var_, _input_data_)
+            score_reconstruction_zvar += score_reconstruction_zvar_iter.detach().numpy()
+
+        if z_struct_reconstruction:
+            # z_struct + rand var reconstruction:
+            _random_var_ = std_var * torch.randn(_input_data_.shape[0], z_var_size) + mu_var
+            _z_struct_random_ = torch.cat((_random_var_, _z_struct_), dim=1)
+            _x_recon_struct_ = net.decoder(_z_struct_random_)
+            score_reconstruction_zstruct_iter = F.binary_cross_entropy(_x_recon_struct_, _input_data_)
+            score_reconstruction_zstruct += score_reconstruction_zstruct_iter.detach().numpy()
 
     net.train()
 
@@ -2168,7 +2171,7 @@ def viz_latent_prediction_reconstruction(net, exp_name, embedding_size, z_struct
 
 
 def real_distribution_model(net, expe_name, z_struct_size, z_var_size, loader, train_test, plot_gaussian=False,
-                            save=False):
+                            save=False, VAE_struct=False):
     path = 'Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test + '_mu_var.npy'
 
     if not os.path.exists(path):
@@ -2191,18 +2194,26 @@ def real_distribution_model(net, expe_name, z_struct_size, z_var_size, loader, t
                 if first:
                     mu_var = mu_var_iter
                     sigma_var = sigma_var_iter
-                    z_struct_distribution = z_struct_distribution_iter
-                    first = False
                 else:
                     mu_var = torch.cat((mu_var, mu_var_iter), 0)
                     sigma_var = torch.cat((sigma_var, sigma_var_iter), 0)
-                    z_struct_distribution = torch.cat((z_struct_distribution, z_struct_distribution_iter), 0)
+
+                if VAE_struct:
+                    if first:
+                        z_struct_distribution = z_struct_distribution_iter
+                    else:
+                        z_struct_distribution = torch.cat((z_struct_distribution, z_struct_distribution_iter), 0)
+                first = False
 
         mu_var = torch.mean(mu_var, axis=0)
         sigma_var = torch.mean(sigma_var, axis=0)
 
-        mu_struct = torch.mean(z_struct_distribution, axis=0)
-        sigma_struct = torch.std(z_struct_distribution, axis=0)
+        if VAE_struct:
+            mu_struct = torch.mean(z_struct_distribution, axis=0)
+            sigma_struct = torch.std(z_struct_distribution, axis=0)
+        else:
+            mu_struct = 0
+            sigma_struct = 0
 
         np.save('Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test +
                 '_mu_var.npy', mu_var)
@@ -2217,6 +2228,7 @@ def real_distribution_model(net, expe_name, z_struct_size, z_var_size, loader, t
                      '_mu_var.npy', allow_pickle=True)
     sigma_var = np.load('Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test +
                         'sigma_var.npy', allow_pickle=True)
+
     mu_struct = np.load(
         'Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test +
         'mu_struct.npy', allow_pickle=True)
@@ -2225,19 +2237,20 @@ def real_distribution_model(net, expe_name, z_struct_size, z_var_size, loader, t
         'sigma_struct.npy', allow_pickle=True)
 
     if plot_gaussian:
-        # if output of encoder sruct is sigmoid so gaussian is N(0.5, 0.5);
-        mu_sigmoid = 0.5
-        std_sigmoid = 0.5
-        sigma_sigmoid = math.sqrt(std_sigmoid)
-        x_sigmoid = np.linspace(mu_sigmoid - 3 * sigma_sigmoid, mu_sigmoid + 3 * sigma_sigmoid, 100)
-        plt.plot(x_sigmoid, stats.norm.pdf(x_sigmoid, mu_sigmoid, sigma_sigmoid), label='Gaussian sigmoid', color='red')
-        for i in range(len(mu_struct)):
-            mu = mu_struct[i]
-            variance = sigma_struct[i]
-            sigma = math.sqrt(variance)
-            x = np.abs(np.linspace(mu - 3 * sigma, mu + 3 * sigma, 100))
-            plt.plot(x, stats.norm.pdf(x, mu, sigma), label='Gaussian struct ' + str(i), color='blue')
-        plt.show()
+        if VAE_struct:
+            # if output of encoder sruct is sigmoid so gaussian is N(0.5, 0.5);
+            mu_sigmoid = 0.5
+            std_sigmoid = 0.5
+            sigma_sigmoid = math.sqrt(std_sigmoid)
+            x_sigmoid = np.linspace(mu_sigmoid - 3 * sigma_sigmoid, mu_sigmoid + 3 * sigma_sigmoid, 100)
+            plt.plot(x_sigmoid, stats.norm.pdf(x_sigmoid, mu_sigmoid, sigma_sigmoid), label='Gaussian sigmoid', color='red')
+            for i in range(len(mu_struct)):
+                mu = mu_struct[i]
+                variance = sigma_struct[i]
+                sigma = math.sqrt(variance)
+                x = np.abs(np.linspace(mu - 3 * sigma, mu + 3 * sigma, 100))
+                plt.plot(x, stats.norm.pdf(x, mu, sigma), label='Gaussian struct ' + str(i), color='blue')
+            plt.show()
 
         mu = 0
         variance = 1

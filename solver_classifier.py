@@ -14,7 +14,7 @@ from dataset.dataset_2 import get_dataloaders, get_mnist_dataset
 from models.custom_CNN import Custom_CNN
 from models.custom_CNN_BK import Custom_CNN_BK
 from models.VAE import VAE
-from models.custom_CNN_BK import compute_ratio_batch_test, compute_var_distance_class_test
+from models.encoder_struct import Encoder_struct
 from models.default_CNN import DefaultCNN
 from pytorchtools import EarlyStopping
 from scores_classifier import compute_scores, compute_scores_VAE
@@ -64,6 +64,7 @@ def compute_scores_and_loss(net, train_loader, test_loader, device, train_loader
                             without_acc, lambda_classification,
                             lambda_contrastive, lambda_ratio_reg, diff_var, lambda_var_intra, lambda_var_inter,
                             lambda_var_distance, lambda_distance_mean, z_struct_out):
+
     score_train, classification_loss_train, total_loss_iter_train, ratio_loss_train, contrastive_loss_train, \
     diff_var_loss_train, variance_intra_train, \
     variance_inter_train, loss_distance_cl_train, loss_distance_mean_train, total_loss_train = compute_scores(net,
@@ -261,6 +262,11 @@ class SolverClassifier(object):
         self.nb_epochs_train_only_zvar = args.nb_epochs_train_only_zvar
         self.train_var_struct_alternatively = args.train_var_struct_alternatively
         self.use_structural_encoder = args.use_structural_encoder
+        # encoder struct:
+        self.is_encoder_struct = args.is_encoder_struct
+        self.kernel_size_1 = args.kernel_size_1
+        self.kernel_size_2 = args.kernel_size_2
+        self.kernel_size_3 = args.kernel_size_3
 
         # For reproducibility:
         if self.randomness:
@@ -382,6 +388,23 @@ class SolverClassifier(object):
                              hidden_filters_3=self.hidden_filters_3,
                              two_conv_layer=self.two_conv_layer,
                              three_conv_layer=self.three_conv_layer)
+        elif self.is_encoder_struct:
+            self.net_type = 'encoder_struct'
+            net = Encoder_struct(z_struct_size=self.z_struct_size,
+                                 big_kernel_size=self.big_kernel_size,
+                                 stride_size=self.stride_size,
+                                 kernel_size_1=self.kernel_size_1,
+                                 kernel_size_2=self.kernel_size_2,
+                                 kernel_size_3=self.kernel_size_3,
+                                 hidden_filters_1=self.hidden_filters_1,
+                                 hidden_filters_2=self.hidden_filters_2,
+                                 hidden_filters_3=self.hidden_filters_3,
+                                 BK_in_first_layer=self.BK_in_first_layer,
+                                 BK_in_second_layer=self.BK_in_second_layer,
+                                 BK_in_third_layer=self.BK_in_third_layer,
+                                 two_conv_layer=self.two_conv_layer,
+                                 three_conv_layer=self.three_conv_layer,
+                                 Binary_z=self.binary_z)
 
         # get layer num to extract z_struct:
         self.z_struct_out = True
@@ -642,17 +665,15 @@ class SolverClassifier(object):
             self.scheduler = ReduceLROnPlateau(self.optimizer,
                                                mode='min',
                                                factor=0.2,
-                                               patience=5,
+                                               patience=4,
                                                min_lr=1e-6,
                                                verbose=True)
             # self.scheduler = StepLR(self.optimizer, step_size=15, gamma=0.2)
 
-
-
         # initialize the early_stopping object
         # early stopping patience; how long to wait after last time validation loss improved.
         if self.use_early_stopping:
-            self.patience = 15
+            self.patience = 20
             self.early_stopping = EarlyStopping(patience=self.patience, verbose=True)
 
         # other parameters for train:
@@ -752,7 +773,6 @@ class SolverClassifier(object):
                                               use_ratio=self.ratio_reg,
                                               z_struct_out=self.z_struct_out,
                                               z_struct_layer_num=self.z_struct_layer_num,
-                                              other_ratio=self.other_ratio,
                                               loss_min_distance_cl=self.loss_min_distance_cl)
 
                     loss = 0
