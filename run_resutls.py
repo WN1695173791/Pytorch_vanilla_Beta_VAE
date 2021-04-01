@@ -7,6 +7,8 @@ from visualizer_CNN import *
 from viz.viz_regions import *
 from scores_classifier import compute_scores
 from models.Encoder_decoder import Encoder_decoder
+from models.encoder_struct import Encoder_struct
+
 from models.VAE import VAE
 from visualizer import viz_reconstruction
 from viz.visualize import Visualizer
@@ -20,7 +22,8 @@ def str2bool(string):
 
 
 # ___________________________________ begin extrraction parameters models _____________________________________________
-def run_exp_extraction_and_visualization_custom_BK(list_model, is_ratio=False, is_decoder=False, is_VAE=False):
+def run_exp_extraction_and_visualization_custom_BK(list_model, is_ratio=False, is_decoder=False, is_VAE=False,
+                                                   is_custom=False, is_encoder_struct=False):
     for exp_name in list_model:
 
         # load csv parameters:
@@ -86,10 +89,16 @@ def run_exp_extraction_and_visualization_custom_BK(list_model, is_ratio=False, i
 
         use_structural_encoder = str2bool(parameters_dict['use_structural_encoder'])
 
+        # encoder struct:
+        kernel_size_1 = int(parameters_dict['kernel_size_1'])
+        kernel_size_2 = int(parameters_dict['kernel_size_2'])
+        kernel_size_3 = int(parameters_dict['kernel_size_3'])
+        binary_z = str2bool(parameters_dict['binary_z'])
+
         # other default parameters:
-        hidden_filters_1 = 32
-        hidden_filters_2 = 32
-        hidden_filters_3 = 32
+        hidden_filters_1 = int(parameters_dict['hidden_filters_layer1'])
+        hidden_filters_2 = int(parameters_dict['hidden_filters_layer2'])
+        hidden_filters_3 = int(parameters_dict['hidden_filters_layer3'])
 
         # print(binary_chain, Binary_z)
         if is_decoder:
@@ -153,7 +162,7 @@ def run_exp_extraction_and_visualization_custom_BK(list_model, is_ratio=False, i
                       var_stride_size_3=var_stride_size_3,
                       var_hidden_dim=var_hidden_dim,
                       var_three_conv_layer=var_three_conv_layer)
-        else:
+        elif is_custom:
             net = Custom_CNN_BK(z_struct_size=z_struct_size,
                                 big_kernel_size=big_kernel_size,
                                 stride_size=stride_size,
@@ -170,13 +179,30 @@ def run_exp_extraction_and_visualization_custom_BK(list_model, is_ratio=False, i
                                 Binary_z=Binary_z,
                                 binary_chain=binary_chain,
                                 add_linear_after_GMP=add_linear_after_GMP)
+        elif is_encoder_struct:
+            net_type = 'Encoder_struct'
+            net = Encoder_struct(z_struct_size=z_struct_size,
+                                 big_kernel_size=big_kernel_size,
+                                 stride_size=stride_size,
+                                 kernel_size_1=kernel_size_1,
+                                 kernel_size_2=kernel_size_2,
+                                 kernel_size_3=kernel_size_3,
+                                 hidden_filters_1=hidden_filters_1,
+                                 hidden_filters_2=hidden_filters_2,
+                                 hidden_filters_3=hidden_filters_3,
+                                 BK_in_first_layer=BK_in_first_layer,
+                                 BK_in_second_layer=BK_in_second_layer,
+                                 BK_in_third_layer=BK_in_third_layer,
+                                 two_conv_layer=two_conv_layer,
+                                 three_conv_layer=three_conv_layer,
+                                 Binary_z=binary_z)
 
         if is_decoder:
             run_decoder(model_name, net)
         elif is_VAE:
             run_VAE(model_name, net, lambda_BCE, beta, z_struct_size, z_var_size, use_structural_encoder)
         else:
-            run_viz_expes(model_name, net, is_ratio, loss_min_distance_cl, loss_distance_mean,
+            run_viz_expes(model_name, net, is_ratio, loss_min_distance_cl, loss_distance_mean, cat='Encoder_struct',
                           net_type='Custom_CNN_BK', diff_var_loss=diff_var)
             visualize_regions_of_interest(model_name, net, net_type='Custom_CNN_BK')
 
@@ -339,11 +365,11 @@ def run_viz_expes(exp_name, net, is_ratio, is_distance_loss, loss_distance_mean,
     # print('score Test acc: {:.3f}% and Train set acc: {:.3f}%'.format(score_test, score_train))
 
     # compute features:
-    # compute_z_struct(net_trained, exp_name, loader, train_test=train_test, net_type=net_type)
+    compute_z_struct(net_trained, exp_name, loader, train_test=train_test, net_type=net_type)
     # compute_z_struct_representation_noised(net, exp_name, train_test=train_test, nb_repeat=10, nb_class=nb_class,
     #                                        net_type=net_type)
-    # get_z_struct_per_class(exp_name, train_test=train_test, nb_class=nb_class)
-    # get_average_z_struct_per_classes(exp_name=exp_name, train_test=train_test)
+    get_z_struct_per_class(exp_name, train_test=train_test, nb_class=nb_class)
+    get_average_z_struct_per_classes(exp_name=exp_name, train_test=train_test)
     # get_prediction_per_classes(exp_name, train_test=train_test)
     # get_prediction_noised_per_class(exp_name, train_test=train_test)
     # compute_all_score_acc(exp_name, train_test=train_test)
@@ -378,9 +404,9 @@ def run_viz_expes(exp_name, net, is_ratio, is_distance_loss, loss_distance_mean,
 
     # _ = distance_matrix(net_trained, exp_name, train_test=train_test, plot_fig=True)
 
-    # plot_resume(net_trained, exp_name, is_ratio, is_distance_loss, loss_distance_mean, loader, train_loader,
-    #             device, cat=cat, train_test=train_test, path_scores=path_scores, diff_var=diff_var_loss,
-    #             contrastive_loss=contrastive_loss)
+    plot_resume(net_trained, exp_name, is_ratio, is_distance_loss, loss_distance_mean, loader, train_loader,
+                device, cat=cat, train_test=train_test, path_scores=path_scores, diff_var=diff_var_loss,
+                contrastive_loss=contrastive_loss)
 
     return
 
@@ -394,8 +420,8 @@ def visualize_regions_of_interest(exp_name, net, net_type=None):
 
     net_trained.eval()
 
-    visualize_regions(exp_name, net_trained, len_img_h, len_img_w, loader, plot_activation_value=True,
-                      plot_correlation_regions=True, percentage=1)
+    # visualize_regions(exp_name, net_trained, len_img_h, len_img_w, loader, plot_activation_value=True,
+    #                   plot_correlation_regions=True, percentage=1)
 
     random_index = False  # select one random index just for see a random regions for a random image
     choice_label = True  # Choose a specific label to see images of this label
@@ -458,7 +484,12 @@ if os.path.exists(path_select_model_analyse_50):
     selected_analyse_50 = np.load(path_select_model_analyse_50)
 
 if __name__ == '__main__':
-    list_exp_VAE_test = [# 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_1_1',
+    list_exp_VAE_test = [# 'mnist_struct_baseline_1',
+                         # 'mnist_struct_baseline_2',
+                         # 'mnist_struct_baseline_scheduler_1',
+                         # 'mnist_struct_baseline_scheduler_2',
+                         'mnist_struct_baseline_scheduler_binary_1']
+                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_1_1',
                          # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_1_2',
                          # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_1_3',
                          # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_1_4',
@@ -476,7 +507,7 @@ if __name__ == '__main__':
                          # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_3_4',
                          # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_3_5',
                          # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_3_6',
-                         'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_1_1']
+                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_1_1']
                          # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_1_2',
                          # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_1_3',
                          # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_1_4',
@@ -538,7 +569,8 @@ if __name__ == '__main__':
     run_exp_extraction_and_visualization_custom_BK(list_exp_VAE_test,
                                                    is_ratio=False,
                                                    is_decoder=False,
-                                                   is_VAE=True)
+                                                   is_VAE=False,
+                                                   is_encoder_struct=True)
 
     # run_exp_extraction_and_visualization_custom_BK(list_exp_decoder,
     #                                                is_ratio=False,

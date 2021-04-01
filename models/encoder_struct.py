@@ -25,7 +25,10 @@ class Encoder_struct(nn.Module, ABC):
                  BK_in_third_layer=False,
                  two_conv_layer=True,
                  three_conv_layer=False,
-                 Binary_z=False):
+                 Binary_z=False,
+                 binary_first_conv=False,
+                 binary_second_conv=False,
+                 binary_third_conv=False):
         """
         Class which defines model and forward pass.
         """
@@ -52,6 +55,11 @@ class Encoder_struct(nn.Module, ABC):
         self.two_conv_layer = two_conv_layer
         self.three_conv_layer = three_conv_layer
 
+        # binary:
+        self.binary_first_conv = binary_first_conv
+        self.binary_second_conv = binary_second_conv
+        self.binary_third_conv = binary_third_conv
+
         if self.BK_in_first_layer:
             self.kernel_size_1 = self.big_kernel_size
         elif self.BK_in_second_layer:
@@ -72,7 +80,7 @@ class Encoder_struct(nn.Module, ABC):
             nn.BatchNorm2d(self.hidden_filters_1),
             # PrintLayer(),  # B, 32, 25, 25
         ]
-        if self.Binary_z:
+        if self.Binary_z and self.binary_first_conv:
             self.encoder_struct += [
                 DeterministicBinaryActivation(estimator='ST')
             ]
@@ -86,14 +94,13 @@ class Encoder_struct(nn.Module, ABC):
                 nn.BatchNorm2d(self.hidden_filters_2),
                 # PrintLayer(),  # B, 32, 25, 25
             ]
-        if self.Binary_z and self.two_conv_layer:
+        if self.Binary_z and self.two_conv_layer and self.binary_second_conv:
             self.encoder_struct += [
                 DeterministicBinaryActivation(estimator='ST')
             ]
         elif self.two_conv_layer:
-        # if self.two_conv_layer:
             self.encoder_struct += [
-            nn.ReLU(True),
+                nn.ReLU(True),
             ]
         if self.three_conv_layer:
             self.encoder_struct += [
@@ -101,7 +108,7 @@ class Encoder_struct(nn.Module, ABC):
                 nn.BatchNorm2d(self.hidden_filters_3),
                 # PrintLayer(),  # B, 32, 25, 25
             ]
-        if self.Binary_z and self.three_conv_layer:
+        if self.Binary_z and self.three_conv_layer and self.binary_third_conv:
             self.encoder_struct += [
                 DeterministicBinaryActivation(estimator='ST')
             ]

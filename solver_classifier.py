@@ -64,7 +64,6 @@ def compute_scores_and_loss(net, train_loader, test_loader, device, train_loader
                             without_acc, lambda_classification,
                             lambda_contrastive, lambda_ratio_reg, diff_var, lambda_var_intra, lambda_var_inter,
                             lambda_var_distance, lambda_distance_mean, z_struct_out):
-
     score_train, classification_loss_train, total_loss_iter_train, ratio_loss_train, contrastive_loss_train, \
     diff_var_loss_train, variance_intra_train, \
     variance_inter_train, loss_distance_cl_train, loss_distance_mean_train, total_loss_train = compute_scores(net,
@@ -267,6 +266,9 @@ class SolverClassifier(object):
         self.kernel_size_1 = args.kernel_size_1
         self.kernel_size_2 = args.kernel_size_2
         self.kernel_size_3 = args.kernel_size_3
+        self.binary_first_conv = args.binary_first_conv
+        self.binary_second_conv = args.binary_second_conv
+        self.binary_third_conv = args.binary_third_conv
 
         # For reproducibility:
         if self.randomness:
@@ -404,7 +406,10 @@ class SolverClassifier(object):
                                  BK_in_third_layer=self.BK_in_third_layer,
                                  two_conv_layer=self.two_conv_layer,
                                  three_conv_layer=self.three_conv_layer,
-                                 Binary_z=self.binary_z)
+                                 Binary_z=self.binary_z,
+                                 binary_first_conv=self.binary_first_conv,
+                                 binary_second_conv=self.binary_second_conv,
+                                 binary_third_conv=self.binary_third_conv)
 
         # get layer num to extract z_struct:
         self.z_struct_out = True

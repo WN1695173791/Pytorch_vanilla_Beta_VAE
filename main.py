@@ -273,6 +273,9 @@ if __name__ == "__main__":
     parser.add_argument('--kernel_size_1', type=int, default=4, metavar='integer value', help="kernel_size_1")
     parser.add_argument('--kernel_size_2', type=int, default=4, metavar='integer value', help="kernel_size_2")
     parser.add_argument('--kernel_size_3', type=int, default=4, metavar='integer value', help="kernel_size_3")
+    parser.add_argument('--binary_first_conv', default=False, type=str2bool, help="binary_first_conv")
+    parser.add_argument('--binary_second_conv', default=False, type=str2bool, help="binary_second_conv")
+    parser.add_argument('--binary_third_conv', default=False, type=str2bool, help="binary_third_conv")
 
     args = parser.parse_args()
 
