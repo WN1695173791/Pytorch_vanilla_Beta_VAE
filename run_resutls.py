@@ -163,6 +163,7 @@ def run_exp_extraction_and_visualization_custom_BK(list_model, is_ratio=False, i
                       var_hidden_dim=var_hidden_dim,
                       var_three_conv_layer=var_three_conv_layer)
         elif is_custom:
+            net_type = 'Custom_CNN_BK'
             net = Custom_CNN_BK(z_struct_size=z_struct_size,
                                 big_kernel_size=big_kernel_size,
                                 stride_size=stride_size,
@@ -203,8 +204,8 @@ def run_exp_extraction_and_visualization_custom_BK(list_model, is_ratio=False, i
             run_VAE(model_name, net, lambda_BCE, beta, z_struct_size, z_var_size, use_structural_encoder)
         else:
             run_viz_expes(model_name, net, is_ratio, loss_min_distance_cl, loss_distance_mean, cat='Encoder_struct',
-                          net_type='Custom_CNN_BK', diff_var_loss=diff_var)
-            visualize_regions_of_interest(model_name, net, net_type='Custom_CNN_BK')
+                          net_type=net_type, diff_var_loss=diff_var)
+            # visualize_regions_of_interest(model_name, net, net_type='Custom_CNN_BK')
 
 
 # ______________________________________end extrraction parameters models ______________________________________________
@@ -345,7 +346,7 @@ def run_VAE(model_name, net, lambda_BCE, beta, z_struct_size, z_var_size, VAE_st
 
 def run_viz_expes(exp_name, net, is_ratio, is_distance_loss, loss_distance_mean, net_type=None, cat=None,
                   ratio_reg=False, diff_var_loss=False, contrastive_loss=False):
-    print(exp_name, 'run viz expes')
+    # print(exp_name, 'run viz expes')
     path = 'checkpoints_CNN/'
     path_scores = 'checkpoint_scores_CNN'
     net_trained, _, nb_epochs = get_checkpoints(net, path, exp_name)
@@ -362,14 +363,15 @@ def run_viz_expes(exp_name, net, is_ratio, is_distance_loss, loss_distance_mean,
     #                          diff_var=diff_var_loss, contrastive_loss=contrastive_loss)
     # score_test, _ = compute_scores(net_trained, loader, device, loader_size)
     # score_train, _ = compute_scores(net_trained, train_loader, device, len(train_loader.dataset))
+    print('________________------------------{}-----------------_____________________'.format(exp_name))
     # print('score Test acc: {:.3f}% and Train set acc: {:.3f}%'.format(score_test, score_train))
 
     # compute features:
-    compute_z_struct(net_trained, exp_name, loader, train_test=train_test, net_type=net_type)
+    # compute_z_struct(net_trained, exp_name, loader, train_test=train_test, net_type=net_type)
     # compute_z_struct_representation_noised(net, exp_name, train_test=train_test, nb_repeat=10, nb_class=nb_class,
     #                                        net_type=net_type)
-    get_z_struct_per_class(exp_name, train_test=train_test, nb_class=nb_class)
-    get_average_z_struct_per_classes(exp_name=exp_name, train_test=train_test)
+    # get_z_struct_per_class(exp_name, train_test=train_test, nb_class=nb_class)
+    # get_average_z_struct_per_classes(exp_name=exp_name, train_test=train_test)
     # get_prediction_per_classes(exp_name, train_test=train_test)
     # get_prediction_noised_per_class(exp_name, train_test=train_test)
     # compute_all_score_acc(exp_name, train_test=train_test)
@@ -404,9 +406,9 @@ def run_viz_expes(exp_name, net, is_ratio, is_distance_loss, loss_distance_mean,
 
     # _ = distance_matrix(net_trained, exp_name, train_test=train_test, plot_fig=True)
 
-    plot_resume(net_trained, exp_name, is_ratio, is_distance_loss, loss_distance_mean, loader, train_loader,
-                device, cat=cat, train_test=train_test, path_scores=path_scores, diff_var=diff_var_loss,
-                contrastive_loss=contrastive_loss)
+    # plot_resume(net_trained, exp_name, is_ratio, is_distance_loss, loss_distance_mean, loader, train_loader,
+    #             device, cat=cat, train_test=train_test, path_scores=path_scores, diff_var=diff_var_loss,
+    #             contrastive_loss=contrastive_loss)
 
     return
 
@@ -484,78 +486,78 @@ if os.path.exists(path_select_model_analyse_50):
     selected_analyse_50 = np.load(path_select_model_analyse_50)
 
 if __name__ == '__main__':
-    list_exp_VAE_test = [# 'mnist_struct_baseline_1',
-                         # 'mnist_struct_baseline_2',
-                         # 'mnist_struct_baseline_scheduler_1',
-                         # 'mnist_struct_baseline_scheduler_2',
-                         'mnist_struct_baseline_scheduler_binary_1']
-                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_1_1',
-                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_1_2',
-                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_1_3',
-                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_1_4',
-                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_1_5',
-                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_1_6',
-                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_2_1',
-                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_2_2',
-                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_2_3',
-                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_2_4',
-                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_2_5',
-                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_2_6',
-                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_3_1',
-                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_3_2',
-                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_3_3',
-                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_3_4',
-                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_3_5',
-                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_3_6',
-                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_1_1']
-                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_1_2',
-                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_1_3',
-                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_1_4',
-                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_1_5',
-                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_1_6',
-                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_2_1',
-                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_2_2',
-                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_2_3',
-                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_2_4',
-                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_2_5',
-                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_2_6',
-                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_3_1',
-                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_3_2',
-                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_3_3',
-                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_3_4',
-                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_3_5',
-                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_3_6']
-                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_ft_1']
-                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_ft_2',
-                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_ft_3',
-                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_ft_4',
-                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_ft_5',
-                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_eoe_1',
-                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_eoe_2']
-                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_2c_32_15_2_1']
-                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_2c_32_15_2_2',
-                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_2c_32_15_2_3',
-                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_2c_32_15_2_4',
-                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_2c_32_15_2_5',
-                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_2c_32_15_2_6',
-                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_2c_32_15_2_7']
-                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_3c_32_5_2',
-                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_3c_32_15_2',
-                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_3c_32_30_2',
-                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_3c_64_15_2',
-                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_3c_64_30_2',
-                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_2c_32_5_2',
-                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_2c_32_15_2',
-                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_2c_32_30_2',
-                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_3c_32_5_2',
-                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_3c_32_15_2',
-                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_3c_32_30_2',
-                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_2c_32_5_2',
-                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_2c_32_15_2',
-                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_2c_32_30_2',
-                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2',
-                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_15_2',
-                         # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_30_2']
+    list_exp_VAE_test = [  # 'mnist_struct_baseline_1',
+        # 'mnist_struct_baseline_2',
+        # 'mnist_struct_baseline_scheduler_1',
+        # 'mnist_struct_baseline_scheduler_2',
+        'mnist_struct_baseline_scheduler_binary_1']
+    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_1_1',
+    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_1_2',
+    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_1_3',
+    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_1_4',
+    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_1_5',
+    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_1_6',
+    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_2_1',
+    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_2_2',
+    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_2_3',
+    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_2_4',
+    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_2_5',
+    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_2_6',
+    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_3_1',
+    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_3_2',
+    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_3_3',
+    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_3_4',
+    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_3_5',
+    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_3_6',
+    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_1_1']
+    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_1_2',
+    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_1_3',
+    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_1_4',
+    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_1_5',
+    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_1_6',
+    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_2_1',
+    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_2_2',
+    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_2_3',
+    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_2_4',
+    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_2_5',
+    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_2_6',
+    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_3_1',
+    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_3_2',
+    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_3_3',
+    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_3_4',
+    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_3_5',
+    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_3_6']
+    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_ft_1']
+    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_ft_2',
+    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_ft_3',
+    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_ft_4',
+    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_ft_5',
+    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_eoe_1',
+    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_eoe_2']
+    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_2c_32_15_2_1']
+    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_2c_32_15_2_2',
+    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_2c_32_15_2_3',
+    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_2c_32_15_2_4',
+    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_2c_32_15_2_5',
+    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_2c_32_15_2_6',
+    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_2c_32_15_2_7']
+    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_3c_32_5_2',
+    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_3c_32_15_2',
+    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_3c_32_30_2',
+    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_3c_64_15_2',
+    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_3c_64_30_2',
+    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_2c_32_5_2',
+    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_2c_32_15_2',
+    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_2c_32_30_2',
+    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_3c_32_5_2',
+    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_3c_32_15_2',
+    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_3c_32_30_2',
+    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_2c_32_5_2',
+    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_2c_32_15_2',
+    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_2c_32_30_2',
+    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2',
+    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_15_2',
+    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_30_2']
 
     list_exp_decoder = [  # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_32_decoder_2c',
         'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_decoder_2c',
@@ -564,9 +566,131 @@ if __name__ == '__main__':
         'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_decoder_3c',
         'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_decoder_3c']
 
+    list_encoder_struct_busy = ['mnist_struct_baseline_scheduler_binary_1_10',
+                                'mnist_struct_baseline_scheduler_binary_1_11',
+                                'mnist_struct_min_scheduler_binary_3_6',
+                                'mnist_struct_min_scheduler_binary_3_7',
+                                'mnist_struct_min_scheduler_binary_3_8',
+                                'mnist_struct_min_scheduler_binary_3_9',
+                                'mnist_struct_min_scheduler_binary_3_10',
+                                'mnist_struct_min_scheduler_binary_3_11',
+                                'mnist_struct_mean_scheduler_binary_1_9',
+                                'mnist_struct_mean_scheduler_binary_1_10',
+                                'mnist_struct_mean_scheduler_binary_1_11',
+                                'mnist_struct_mean_scheduler_binary_1_12',
+                                'mnist_struct_mean_scheduler_binary_2_3',
+                                'mnist_struct_mean_scheduler_binary_2_4',
+                                'mnist_struct_mean_scheduler_binary_2_5',
+                                'mnist_struct_mean_scheduler_binary_2_6',
+                                'mnist_struct_mean_scheduler_binary_2_7',
+                                'mnist_struct_mean_scheduler_binary_2_8',
+                                'mnist_struct_mean_scheduler_binary_2_9',
+                                'mnist_struct_mean_scheduler_binary_2_10',
+                                'mnist_struct_mean_scheduler_binary_2_11',
+                                'mnist_struct_mean_scheduler_binary_2_12',
+                                'mnist_struct_mean_scheduler_binary_3_3',
+                                'mnist_struct_mean_scheduler_binary_3_4',
+                                'mnist_struct_mean_scheduler_binary_3_7',
+                                'mnist_struct_mean_scheduler_binary_3_8']
+
+    list_encoder_struct = ['mnist_struct_baseline_scheduler_binary_1_3',
+                           'mnist_struct_baseline_scheduler_binary_1_4',
+                           'mnist_struct_baseline_scheduler_binary_1_5',
+                           'mnist_struct_baseline_scheduler_binary_1_6',
+                           'mnist_struct_baseline_scheduler_binary_1_7',
+                           'mnist_struct_baseline_scheduler_binary_1_8',
+                           'mnist_struct_baseline_scheduler_binary_1_9',
+                           'mnist_struct_baseline_scheduler_binary_1_12',
+                           'mnist_struct_baseline_scheduler_binary_2_3',
+                           'mnist_struct_baseline_scheduler_binary_2_4',
+                           'mnist_struct_baseline_scheduler_binary_2_5',
+                           'mnist_struct_baseline_scheduler_binary_2_6',
+                           'mnist_struct_baseline_scheduler_binary_2_7',
+                           'mnist_struct_baseline_scheduler_binary_2_8',
+                           'mnist_struct_baseline_scheduler_binary_2_9',
+                           'mnist_struct_baseline_scheduler_binary_2_10',
+                           'mnist_struct_baseline_scheduler_binary_2_11',
+                           'mnist_struct_baseline_scheduler_binary_2_12',
+                           'mnist_struct_baseline_scheduler_binary_3_3',
+                           'mnist_struct_baseline_scheduler_binary_3_4',
+                           'mnist_struct_baseline_scheduler_binary_3_5',
+                           'mnist_struct_baseline_scheduler_binary_3_6',
+                           'mnist_struct_baseline_scheduler_binary_3_7',
+                           'mnist_struct_baseline_scheduler_binary_3_8',
+                           'mnist_struct_baseline_scheduler_binary_3_9',
+                           'mnist_struct_baseline_scheduler_binary_3_10',
+                           'mnist_struct_baseline_scheduler_binary_3_11',
+                           'mnist_struct_baseline_scheduler_binary_3_12',
+                           'mnist_struct_min_scheduler_binary_1_3',
+                           'mnist_struct_min_scheduler_binary_1_4',
+                           'mnist_struct_min_scheduler_binary_1_5',
+                           'mnist_struct_min_scheduler_binary_1_6',
+                           'mnist_struct_min_scheduler_binary_1_7',
+                           'mnist_struct_min_scheduler_binary_1_8',
+                           'mnist_struct_min_scheduler_binary_1_9',
+                           'mnist_struct_min_scheduler_binary_1_10',
+                           'mnist_struct_min_scheduler_binary_1_11',
+                           'mnist_struct_min_scheduler_binary_1_12',
+                           'mnist_struct_min_scheduler_binary_2_3',
+                           'mnist_struct_min_scheduler_binary_2_4',
+                           'mnist_struct_min_scheduler_binary_2_5',
+                           'mnist_struct_min_scheduler_binary_2_6',
+                           'mnist_struct_min_scheduler_binary_2_7',
+                           'mnist_struct_min_scheduler_binary_2_8',
+                           'mnist_struct_min_scheduler_binary_2_9',
+                           'mnist_struct_min_scheduler_binary_2_10',
+                           'mnist_struct_min_scheduler_binary_2_11',
+                           'mnist_struct_min_scheduler_binary_2_12',
+                           'mnist_struct_min_scheduler_binary_3_3',
+                           'mnist_struct_min_scheduler_binary_3_4',
+                           'mnist_struct_min_scheduler_binary_3_5',
+                           'mnist_struct_min_scheduler_binary_3_12',
+                           'mnist_struct_mean_scheduler_binary_1_3',
+                           'mnist_struct_mean_scheduler_binary_1_4',
+                           'mnist_struct_mean_scheduler_binary_1_5',
+                           'mnist_struct_mean_scheduler_binary_1_6',
+                           'mnist_struct_mean_scheduler_binary_1_7',
+                           'mnist_struct_mean_scheduler_binary_1_8',
+                           'mnist_struct_mean_scheduler_binary_3_5',
+                           'mnist_struct_mean_scheduler_binary_3_6',
+                           'mnist_struct_mean_scheduler_binary_3_9',
+                           'mnist_struct_mean_scheduler_binary_3_10',
+                           'mnist_struct_mean_scheduler_binary_3_11',
+                           'mnist_struct_mean_scheduler_binary_3_12',
+                           'mnist_struct_min_mean_scheduler_binary_1_3',
+                           'mnist_struct_min_mean_scheduler_binary_1_4',
+                           'mnist_struct_min_mean_scheduler_binary_1_5',
+                           'mnist_struct_min_mean_scheduler_binary_1_6',
+                           'mnist_struct_min_mean_scheduler_binary_1_7',
+                           'mnist_struct_min_mean_scheduler_binary_1_8',
+                           'mnist_struct_min_mean_scheduler_binary_1_9',
+                           'mnist_struct_min_mean_scheduler_binary_1_10',
+                           'mnist_struct_min_mean_scheduler_binary_1_11',
+                           'mnist_struct_min_mean_scheduler_binary_1_12',
+                           'mnist_struct_min_mean_scheduler_binary_2_3',
+                           'mnist_struct_min_mean_scheduler_binary_2_4',
+                           'mnist_struct_min_mean_scheduler_binary_2_5',
+                           'mnist_struct_min_mean_scheduler_binary_2_6',
+                           'mnist_struct_min_mean_scheduler_binary_2_7',
+                           'mnist_struct_min_mean_scheduler_binary_2_8',
+                           'mnist_struct_min_mean_scheduler_binary_2_9',
+                           'mnist_struct_min_mean_scheduler_binary_2_10',
+                           'mnist_struct_min_mean_scheduler_binary_2_11',
+                           'mnist_struct_min_mean_scheduler_binary_2_12',
+                           'mnist_struct_min_mean_scheduler_binary_3_3',
+                           'mnist_struct_min_mean_scheduler_binary_3_4',
+                           'mnist_struct_min_mean_scheduler_binary_3_5',
+                           'mnist_struct_min_mean_scheduler_binary_3_6',
+                           'mnist_struct_min_mean_scheduler_binary_3_7',
+                           'mnist_struct_min_mean_scheduler_binary_3_8',
+                           'mnist_struct_min_mean_scheduler_binary_3_9',
+                           'mnist_struct_min_mean_scheduler_binary_3_10',
+                           'mnist_struct_min_mean_scheduler_binary_3_11',
+                           'mnist_struct_min_mean_scheduler_binary_3_12']
+
     parameters_mnist_classifier_BK_ratio = "parameters_combinations/mnist_classifier_ratio.txt"
 
-    run_exp_extraction_and_visualization_custom_BK(list_exp_VAE_test,
+    run_exp_extraction_and_visualization_custom_BK(list_encoder_struct,
                                                    is_ratio=False,
                                                    is_decoder=False,
                                                    is_VAE=False,
