@@ -8,6 +8,7 @@ from viz.viz_regions import *
 from scores_classifier import compute_scores
 from models.Encoder_decoder import Encoder_decoder
 from models.encoder_struct import Encoder_struct
+from models.vae_var import VAE_var
 
 from models.VAE import VAE
 from visualizer import viz_reconstruction
@@ -99,6 +100,11 @@ def run_exp_extraction_and_visualization_custom_BK(list_model, is_ratio=False, i
         hidden_filters_1 = int(parameters_dict['hidden_filters_layer1'])
         hidden_filters_2 = int(parameters_dict['hidden_filters_layer2'])
         hidden_filters_3 = int(parameters_dict['hidden_filters_layer3'])
+
+        # vae var:
+        is_VAE_var = str2bool(parameters_dict['is_VAE_var'])
+        var_second_cnn_block = str2bool(parameters_dict['var_second_cnn_block'])
+        var_third_cnn_block = str2bool(parameters_dict['var_third_cnn_block'])
 
         # print(binary_chain, Binary_z)
         if is_decoder:
@@ -197,11 +203,15 @@ def run_exp_extraction_and_visualization_custom_BK(list_model, is_ratio=False, i
                                  two_conv_layer=two_conv_layer,
                                  three_conv_layer=three_conv_layer,
                                  Binary_z=binary_z)
-
+        elif is_VAE_var:
+            net_type = 'VAE_var'
+            net = VAE_var(z_var_size=z_var_size,
+                          var_second_cnn_block=var_second_cnn_block,
+                          var_third_cnn_block=var_third_cnn_block)
         if is_decoder:
             run_decoder(model_name, net)
-        elif is_VAE:
-            run_VAE(model_name, net, lambda_BCE, beta, z_struct_size, z_var_size, use_structural_encoder)
+        elif is_VAE or is_VAE_var:
+            run_VAE(model_name, net, lambda_BCE, beta, z_struct_size, z_var_size, use_structural_encoder, is_VAE_var)
         else:
             run_viz_expes(model_name, net, is_ratio, loss_min_distance_cl, loss_distance_mean, cat='Encoder_struct',
                           net_type=net_type, diff_var_loss=diff_var)
@@ -263,7 +273,7 @@ def run_decoder(exp_name, net, multi_label=True):
     return
 
 
-def run_VAE(model_name, net, lambda_BCE, beta, z_struct_size, z_var_size, VAE_struct):
+def run_VAE(model_name, net, lambda_BCE, beta, z_struct_size, z_var_size, VAE_struct, is_vae_var):
     print(model_name, 'run VAE')
     print(net)
     path = 'checkpoints_CNN/'
@@ -298,7 +308,8 @@ def run_VAE(model_name, net, lambda_BCE, beta, z_struct_size, z_var_size, VAE_st
                                                                          'test',
                                                                          plot_gaussian=True,
                                                                          save=True,
-                                                                         VAE_struct=VAE_struct)
+                                                                         VAE_struct=VAE_struct,
+                                                                         is_vae_var=is_vae_var)
 
     # z_struct sample:  sample from positive gaussian:
     # z_struct_sample = sigma_struct * np.random.randn(...) + mu_struct
@@ -307,7 +318,7 @@ def run_VAE(model_name, net, lambda_BCE, beta, z_struct_size, z_var_size, VAE_st
                            nb_class=nb_class, save=True, z_reconstruction=True,
                            z_struct_reconstruction=False, z_var_reconstruction=False,
                            return_scores=False, real_distribution=True, mu_var=mu_var, std_var=sigma_var,
-                           mu_struct=mu_struct, std_struct=sigma_struct)
+                           mu_struct=mu_struct, std_struct=sigma_struct, is_vae_var=is_vae_var)
 
     # viz switch image:
     # switch_img(net, model_name, loader, z_var_size)
@@ -496,86 +507,6 @@ if os.path.exists(path_select_model_analyse_50):
     selected_analyse_50 = np.load(path_select_model_analyse_50)
 
 if __name__ == '__main__':
-    list_exp_VAE_test = [  # 'mnist_struct_baseline_1',
-        # 'mnist_struct_baseline_2',
-        # 'mnist_struct_baseline_scheduler_1',
-        # 'mnist_struct_baseline_scheduler_2',
-        'mnist_struct_baseline_scheduler_binary_1']
-    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_1_1',
-    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_1_2',
-    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_1_3',
-    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_1_4',
-    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_1_5',
-    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_1_6',
-    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_2_1',
-    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_2_2',
-    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_2_3',
-    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_2_4',
-    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_2_5',
-    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_2_6',
-    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_3_1',
-    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_3_2',
-    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_3_3',
-    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_3_4',
-    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_3_5',
-    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_scheduler_3_6',
-    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_1_1']
-    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_1_2',
-    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_1_3',
-    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_1_4',
-    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_1_5',
-    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_1_6',
-    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_2_1',
-    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_2_2',
-    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_2_3',
-    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_2_4',
-    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_2_5',
-    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_2_6',
-    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_3_1',
-    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_3_2',
-    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_3_3',
-    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_3_4',
-    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_3_5',
-    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_var_3_6']
-    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_ft_1']
-    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_ft_2',
-    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_ft_3',
-    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_ft_4',
-    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_ft_5',
-    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_eoe_1',
-    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_eoe_2']
-    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_2c_32_15_2_1']
-    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_2c_32_15_2_2',
-    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_2c_32_15_2_3',
-    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_2c_32_15_2_4',
-    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_2c_32_15_2_5',
-    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_2c_32_15_2_6',
-    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_2c_32_15_2_7']
-    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_3c_32_5_2',
-    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_3c_32_15_2',
-    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_3c_32_30_2',
-    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_3c_64_15_2',
-    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_VAE_3c_64_30_2',
-    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_2c_32_5_2',
-    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_2c_32_15_2',
-    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_2c_32_30_2',
-    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_3c_32_5_2',
-    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_3c_32_15_2',
-    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_VAE_3c_32_30_2',
-    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_2c_32_5_2',
-    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_2c_32_15_2',
-    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_2c_32_30_2',
-    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_5_2',
-    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_15_2',
-    # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_VAE_3c_32_30_2']
-
-    list_exp_decoder = [  # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_32_decoder_2c',
-        'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_decoder_2c',
-        'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_decoder_2c',
-        # 'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_32_decoder_3c',
-        'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_decoder_3c',
-        'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_decoder_3c']
-
     list_encoder_struct = ['mnist_struct_baseline_scheduler_binary_1_3',
                            'mnist_struct_baseline_scheduler_binary_1_5',
                            'mnist_struct_baseline_scheduler_binary_1_6',
@@ -595,15 +526,14 @@ if __name__ == '__main__':
                            'mnist_struct_mean_scheduler_binary_1_11',
                            'mnist_struct_mean_scheduler_binary_1_12']
 
+    list_exp_VAE_var = ['mnist_vae_var_1conv_1',
+                        # 'mnist_vae_var_2conv_1',
+                        'mnist_vae_var_3conv_1']
+
     parameters_mnist_classifier_BK_ratio = "parameters_combinations/mnist_classifier_ratio.txt"
 
-    run_exp_extraction_and_visualization_custom_BK(list_encoder_struct,
+    run_exp_extraction_and_visualization_custom_BK(list_exp_VAE_var,
                                                    is_ratio=False,
                                                    is_decoder=False,
                                                    is_VAE=False,
-                                                   is_encoder_struct=True)
-
-    # run_exp_extraction_and_visualization_custom_BK(list_exp_decoder,
-    #                                                is_ratio=False,
-    #                                                is_decoder=True,
-    #                                                is_VAE=False)
+                                                   is_encoder_struct=False)

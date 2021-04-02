@@ -1970,7 +1970,7 @@ def reconstruction_local(nb_class, nb_img, input_data, x_recon, exp_name, size, 
 def viz_reconstruction_VAE(net, loader, exp_name, z_var_size, z_struct_size, nb_img=8, nb_class=10, save=True,
                            z_reconstruction=True, z_struct_reconstruction=False, z_var_reconstruction=False,
                            return_scores=False, real_distribution=True, mu_var=None, std_var=None, mu_struct=None,
-                           std_struct=None):
+                           std_struct=None, is_vae_var=False):
     """
     plot multi data for the same label for each line.
     nb_class row and for each label they are one row with original data and one with reconstructed data.
@@ -2001,7 +2001,10 @@ def viz_reconstruction_VAE(net, loader, exp_name, z_var_size, z_struct_size, nb_
         input_data = input_data.cuda()
 
     # z reconstruction:
-    x_recon, z_struct, z_var, z_var_sample, _, _, _ = net(input_data)
+    if is_vae_var:
+        x_recon, _ = net(data)
+    else:
+        x_recon, z_struct, z_var, z_var_sample, _, _, _ = net(input_data)
 
     if z_struct_reconstruction:
         # z_struct reconstruction:
@@ -2034,7 +2037,11 @@ def viz_reconstruction_VAE(net, loader, exp_name, z_var_size, z_struct_size, nb_
             _input_data_ = _input_data_.cuda()
 
         # z reconstruction:
-        _x_recon_, _z_struct_, _, _z_var_sample_, _, _, _ = net(_input_data_)
+        if is_vae_var:
+            _x_recon_, _ = net(_input_data_)
+        else:
+            _x_recon_, _z_struct_, _, _z_var_sample_, _, _, _ = net(_input_data_)
+
         score_reconstruction_iter = F.binary_cross_entropy(_x_recon_, _input_data_)
         score_reconstruction += score_reconstruction_iter.detach().numpy()
 
@@ -2171,7 +2178,7 @@ def viz_latent_prediction_reconstruction(net, exp_name, embedding_size, z_struct
 
 
 def real_distribution_model(net, expe_name, z_struct_size, z_var_size, loader, train_test, plot_gaussian=False,
-                            save=False, VAE_struct=False):
+                            save=False, VAE_struct=False, is_vae_var=False):
     path = 'Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test + '_mu_var.npy'
 
     if not os.path.exists(path):
@@ -2185,11 +2192,16 @@ def real_distribution_model(net, expe_name, z_struct_size, z_var_size, loader, t
                 data = data.to(device)  # Variable(data.to(device))
 
                 # compute loss:
-                x_recons, z_struct, z_var, z_var_sample, latent_representation, z_latent, _ = net(data)
+                if is_vae_var:
+                    _, latent_representation = net(data)
+                    mu_var_iter = latent_representation['mu']
+                    sigma_var_iter = latent_representation['log_var']
+                else:
+                    _, z_struct, z_var, z_var_sample, latent_representation, z_latent, _ = net(data)
 
-                mu_var_iter = z_var[:, :z_var_size]
-                sigma_var_iter = z_var[:, z_var_size:]
-                z_struct_distribution_iter = z_struct
+                    z_struct_distribution_iter = z_struct
+                    mu_var_iter = z_var[:, :z_var_size]
+                    sigma_var_iter = z_var[:, z_var_size:]
 
                 if first:
                     mu_var = mu_var_iter
