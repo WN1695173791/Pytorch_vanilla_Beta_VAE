@@ -122,7 +122,7 @@ class VAE_var(nn.Module, ABC):
             nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3, stride=1, padding=self.padding_size_4),
             nn.ReLU(True),
             nn.BatchNorm2d(64),
-            nn.Dropout(0.4),
+            # nn.Dropout(0.4),
             # PrintLayer(),
         ]
 
