@@ -106,6 +106,7 @@ def run_exp_extraction_and_visualization_custom_BK(list_model, is_ratio=False, i
         var_second_cnn_block = str2bool(parameters_dict['var_second_cnn_block'])
         var_third_cnn_block = str2bool(parameters_dict['var_third_cnn_block'])
 
+
         # print(binary_chain, Binary_z)
         if is_decoder:
             net = Encoder_decoder(z_struct_size=z_struct_size,
@@ -144,7 +145,7 @@ def run_exp_extraction_and_visualization_custom_BK(list_model, is_ratio=False, i
                                   struct_stride_size_3=var_stride_size_3,
                                   struct_hidden_dim=var_hidden_dim,
                                   struct_three_conv_layer=var_three_conv_layer)
-        elif is_VAE:
+        elif is_VAE and not is_VAE_var:
             net = VAE(z_struct_size=z_struct_size,
                       big_kernel_size=big_kernel_size,
                       stride_size=stride_size,
@@ -424,12 +425,12 @@ def run_viz_expes(model_name, net, is_ratio, is_distance_loss, loss_distance_mea
     # _ = distance_matrix(net, model_name, train_test=train_test, plot_fig=True)
 
     # Plot resume:
-    compute_z_struct(net, model_name, loader, train_test=train_test, net_type=net_type)
-    get_z_struct_per_class(model_name, train_test=train_test, nb_class=nb_class)
-    get_average_z_struct_per_classes(exp_name=model_name, train_test=train_test)
-    plot_resume(net, model_name, is_ratio, is_distance_loss, loss_distance_mean, loader, train_loader,
-                device, cat=cat, train_test=train_test, path_scores=path_scores, diff_var=diff_var_loss,
-                contrastive_loss=contrastive_loss)
+    # compute_z_struct(net, model_name, loader, train_test=train_test, net_type=net_type)
+    # get_z_struct_per_class(model_name, train_test=train_test, nb_class=nb_class)
+    # get_average_z_struct_per_classes(exp_name=model_name, train_test=train_test)
+    # plot_resume(net, model_name, is_ratio, is_distance_loss, loss_distance_mean, loader, train_loader,
+    #             device, cat=cat, train_test=train_test, path_scores=path_scores, diff_var=diff_var_loss,
+    #             contrastive_loss=contrastive_loss)
 
     return
 
@@ -443,8 +444,8 @@ def visualize_regions_of_interest(exp_name, net, net_type=None):
 
     net_trained.eval()
 
-    # visualize_regions(exp_name, net_trained, len_img_h, len_img_w, loader, plot_activation_value=True,
-    #                   plot_correlation_regions=True, percentage=1)
+    visualize_regions(exp_name, net_trained, len_img_h, len_img_w, loader, plot_activation_value=True,
+                      plot_correlation_regions=True, percentage=1)
 
     random_index = False  # select one random index just for see a random regions for a random image
     choice_label = True  # Choose a specific label to see images of this label
@@ -507,33 +508,35 @@ if os.path.exists(path_select_model_analyse_50):
     selected_analyse_50 = np.load(path_select_model_analyse_50)
 
 if __name__ == '__main__':
-    list_encoder_struct = ['mnist_struct_baseline_scheduler_binary_1_3',
-                           'mnist_struct_baseline_scheduler_binary_1_5',
-                           'mnist_struct_baseline_scheduler_binary_1_6',
-                           'mnist_struct_baseline_scheduler_binary_1_7',
-                           'mnist_struct_baseline_scheduler_binary_1_8',
-                           'mnist_struct_baseline_scheduler_binary_1_9',
-                           'mnist_struct_baseline_scheduler_binary_1_10',
-                           'mnist_struct_baseline_scheduler_binary_1_11',
-                           'mnist_struct_baseline_scheduler_binary_1_12',
-                           'mnist_struct_min_scheduler_binary_1_10',
-                           'mnist_struct_mean_scheduler_binary_1_3',
-                           'mnist_struct_mean_scheduler_binary_1_5',
-                           'mnist_struct_mean_scheduler_binary_1_6',
-                           'mnist_struct_mean_scheduler_binary_1_8',
-                           'mnist_struct_mean_scheduler_binary_1_9',
-                           'mnist_struct_mean_scheduler_binary_1_10',
-                           'mnist_struct_mean_scheduler_binary_1_11',
-                           'mnist_struct_mean_scheduler_binary_1_12']
+    list_encoder_struct = ['mnist_struct_baseline_scheduler_binary_1_3']
+                           # 'mnist_struct_baseline_scheduler_binary_1_5',
+                           # 'mnist_struct_baseline_scheduler_binary_1_6',
+                           # 'mnist_struct_baseline_scheduler_binary_1_7',
+                           # 'mnist_struct_baseline_scheduler_binary_1_8',
+                           # 'mnist_struct_baseline_scheduler_binary_1_9',
+                           # 'mnist_struct_baseline_scheduler_binary_1_10',
+                           # 'mnist_struct_baseline_scheduler_binary_1_11',
+                           # 'mnist_struct_baseline_scheduler_binary_1_12',
+                           # 'mnist_struct_min_scheduler_binary_1_10',
+                           # 'mnist_struct_mean_scheduler_binary_1_3',
+                           # 'mnist_struct_mean_scheduler_binary_1_5',
+                           # 'mnist_struct_mean_scheduler_binary_1_6',
+                           # 'mnist_struct_mean_scheduler_binary_1_8',
+                           # 'mnist_struct_mean_scheduler_binary_1_9',
+                           # 'mnist_struct_mean_scheduler_binary_1_10',
+                           # 'mnist_struct_mean_scheduler_binary_1_11',
+                           # 'mnist_struct_mean_scheduler_binary_1_12']
 
-    list_exp_VAE_var = ['mnist_vae_var_1conv_1',
+    list_exp_VAE_var = ['mnist_vae_var_1',
+                        'mnist_vae_var_2']
+                        # 'mnist_vae_var_1conv_1',
                         # 'mnist_vae_var_2conv_1',
-                        'mnist_vae_var_3conv_1']
+                        # 'mnist_vae_var_3conv_1']
 
     parameters_mnist_classifier_BK_ratio = "parameters_combinations/mnist_classifier_ratio.txt"
 
     run_exp_extraction_and_visualization_custom_BK(list_exp_VAE_var,
                                                    is_ratio=False,
                                                    is_decoder=False,
-                                                   is_VAE=False,
+                                                   is_VAE=True,
                                                    is_encoder_struct=False)
