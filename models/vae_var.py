@@ -65,23 +65,27 @@ class VAE_var(nn.Module, ABC):
         # Other architecture:
         # reshape size compute:
         # ((w-1)*s - w + f)/2
-        self.padding_size_1 = ((32 - 1) * 1 - 32 + 3) / 2 + EPS
-        self.padding_size_1 = round(self.padding_size_1)
+        # self.padding_size_1 = ((32 - 1) * 1 - 32 + 3) / 2 + EPS
+        # self.padding_size_1 = round(self.padding_size_1)
+        self.padding_size_1 = 0
         w1 = ((32 - 3 + (2 * self.padding_size_1)) / 1) + 1 - EPS
         self.width_conv1_size = round(w1)
 
-        self.padding_size_2 = ((self.width_conv1_size - 1) * 1 - self.width_conv1_size + 3) / 2 + EPS
-        self.padding_size_2 = round(self.padding_size_2)
+        # self.padding_size_2 = ((self.width_conv1_size - 1) * 1 - self.width_conv1_size + 3) / 2 + EPS
+        # self.padding_size_2 = round(self.padding_size_2)
+        self.padding_size_2 = 0
         w2 = ((self.width_conv1_size - 3 + (2 * self.padding_size_2)) / 2) + 1 - EPS
         self.width_conv2_size = round(w2)
 
-        self.padding_size_3 = ((self.width_conv2_size - 1) * 1 - self.width_conv2_size + 3) / 2 + EPS
-        self.padding_size_3 = round(self.padding_size_3)
+        # self.padding_size_3 = ((self.width_conv2_size - 1) * 1 - self.width_conv2_size + 3) / 2 + EPS
+        # self.padding_size_3 = round(self.padding_size_3)
+        self.padding_size_3 = 0
         w3 = ((self.width_conv2_size - 3 + (2 * self.padding_size_3)) / 1) + 1 - EPS
         self.width_conv3_size = round(w3)
 
-        self.padding_size_4 = ((self.width_conv3_size - 1) * 1 - self.width_conv3_size + 3) / 2 + EPS
-        self.padding_size_4 = round(self.padding_size_4)
+        # self.padding_size_4 = ((self.width_conv3_size - 1) * 1 - self.width_conv3_size + 3) / 2 + EPS
+        # self.padding_size_4 = round(self.padding_size_4)
+        self.padding_size_4 = 0
         w4 = ((self.width_conv3_size - 3 + (2 * self.padding_size_4)) / 1) + 1 - EPS
         self.width_conv4_size = round(w4)
 
@@ -95,16 +99,16 @@ class VAE_var(nn.Module, ABC):
         #     nn.Conv2d(in_channels=self.nc, out_channels=32, kernel_size=3, stride=1),
         #     nn.ReLU(True),
         #     nn.BatchNorm2d(32),
-        #     PrintLayer(),
+        #     # PrintLayer(),
         #     nn.Conv2d(in_channels=32, out_channels=32, kernel_size=3, stride=1),
         #     nn.ReLU(True),
         #     nn.BatchNorm2d(32),
-        #     PrintLayer(),
+        #     # PrintLayer(),
         #     nn.Conv2d(in_channels=32, out_channels=32, kernel_size=3, stride=2, padding=self.padding_size_1),
         #     nn.ReLU(True),
         #     nn.BatchNorm2d(32),
         #     nn.Dropout(0.4),
-        #     PrintLayer(),
+        #     # PrintLayer(),
         # ]
 
         self.encoder_var = [
@@ -148,7 +152,7 @@ class VAE_var(nn.Module, ABC):
                 nn.Conv2d(in_channels=64, out_channels=128, kernel_size=4, stride=1),
                 nn.ReLU(True),
                 nn.BatchNorm2d(128),
-                PrintLayer(),
+                # PrintLayer(),
             ]
 
         self.encoder_var += [
@@ -177,7 +181,7 @@ class VAE_var(nn.Module, ABC):
             self.decoder_var += [
                 nn.ConvTranspose2d(in_channels=128, out_channels=64, kernel_size=4, stride=1),
                 nn.ReLU(True),
-                PrintLayer(),
+                # PrintLayer(),
             ]
 
         if self.var_second_cnn_block:
@@ -185,26 +189,26 @@ class VAE_var(nn.Module, ABC):
                 nn.ConvTranspose2d(in_channels=64, out_channels=64, kernel_size=4, stride=2,
                                    padding=self.padding_size_2-1),
                 nn.ReLU(True),
-                PrintLayer(),
+                # PrintLayer(),
                 nn.ConvTranspose2d(in_channels=64, out_channels=64, kernel_size=3, stride=1),
                 nn.ReLU(True),
-                PrintLayer(),
+                # PrintLayer(),
                 nn.ConvTranspose2d(in_channels=64, out_channels=32, kernel_size=3, stride=1),
                 nn.ReLU(True),
-                PrintLayer(),
+                # PrintLayer(),
             ]
 
         # self.decoder_var += [
         #     nn.ConvTranspose2d(in_channels=32, out_channels=32, kernel_size=4, stride=2,
         #                        padding=self.padding_size_1-1),
         #     nn.ReLU(True),
-        #     PrintLayer(),
+        #     # PrintLayer(),
         #     nn.ConvTranspose2d(in_channels=32, out_channels=32, kernel_size=3, stride=1),
         #     nn.ReLU(True),
-        #     PrintLayer(),
+        #     # PrintLayer(),
         #     nn.ConvTranspose2d(in_channels=32, out_channels=self.nc, kernel_size=3, stride=1),
         #     nn.ReLU(True),
-        #     PrintLayer(),
+        #     # PrintLayer(),
         #     nn.Sigmoid()
         # ]
 

@@ -733,6 +733,13 @@ class SolverClassifier(object):
                                               z_struct_layer_num=self.z_struct_layer_num,
                                               loss_min_distance_cl=self.loss_min_distance_cl)
 
+                    # for i in range(self.nb_class):
+                    #     print('__________________-------------------class {}-----------------___________________'.format(i))
+                    #     arg = embedding[np.where(labels == i)].detach().numpy()
+                    #     for j in range(len(arg)):
+                    #         print(arg[j][:, 0, 0])
+                    # break
+
                     loss = 0
                     # compute losses:
                     if not self.without_acc:
