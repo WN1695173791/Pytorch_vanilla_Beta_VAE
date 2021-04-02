@@ -14,6 +14,7 @@ from dataset.dataset_2 import get_dataloaders, get_mnist_dataset
 from models.custom_CNN import Custom_CNN
 from models.custom_CNN_BK import Custom_CNN_BK
 from models.VAE import VAE
+from models.vae_var import VAE_var
 from models.encoder_struct import Encoder_struct
 from models.default_CNN import DefaultCNN
 from pytorchtools import EarlyStopping
@@ -133,19 +134,21 @@ def compute_scores_and_loss(net, train_loader, test_loader, device, train_loader
 
 
 def compute_scores_and_loss_VAE(net, train_loader, test_loader, train_loader_size, test_loader_size, device,
-                                lambda_BCE, beta):
+                                lambda_BCE, beta, is_vae_var):
     Total_loss_train, BCE_train, KLD_train = compute_scores_VAE(net,
                                                                 train_loader,
                                                                 train_loader_size,
                                                                 device,
                                                                 lambda_BCE,
-                                                                beta)
+                                                                beta,
+                                                                is_vae_var)
     Total_loss_test, BCE_test, KLD_test = compute_scores_VAE(net,
                                                              test_loader,
                                                              test_loader_size,
                                                              device,
                                                              lambda_BCE,
-                                                             beta)
+                                                             beta,
+                                                             is_vae_var)
     losses = {'Total_loss_train': Total_loss_train,
               'BCE_train': BCE_train,
               'KLD_train': KLD_train,
@@ -269,6 +272,10 @@ class SolverClassifier(object):
         self.binary_first_conv = args.binary_first_conv
         self.binary_second_conv = args.binary_second_conv
         self.binary_third_conv = args.binary_third_conv
+        # VAE var:
+        self.is_VAE_var = args.is_VAE_var
+        self.var_second_cnn_block = args.var_second_cnn_block
+        self.var_third_cnn_block = args.var_third_cnn_block
 
         # For reproducibility:
         if self.randomness:
@@ -313,36 +320,7 @@ class SolverClassifier(object):
             _, self.test_loader = get_mnist_dataset(batch_size=self.batch_size)
             print('Balanced dataset loaded')
 
-        if self.contrastive_loss:
-            # use other sampler for specific contrastive loss:
-            self.train_loader_bf, _ = get_mnist_dataset(batch_size=self.batch_size,
-                                                        return_Dataloader=False)
-            if self.IPC:
-                balanced_sampler = sampler.BalancedSampler(self.train_loader_bf,
-                                                           batch_size=self.batch_size,
-                                                           images_per_class=3)
-                batch_sampler = BatchSampler(balanced_sampler,
-                                             batch_size=self.batch_size,
-                                             drop_last=True)
-                self.train_loader = torch.utils.data.DataLoader(
-                    self.train_loader_bf,
-                    num_workers=self.num_workers,
-                    pin_memory=True,
-                    batch_sampler=batch_sampler
-                )
-                print('Balance dataset loaded for contrastive loss')
-            else:
-                self.train_loader = torch.utils.data.DataLoader(
-                    self.train_loader_bf,
-                    batch_size=self.batch_size,
-                    shuffle=True,
-                    num_workers=self.num_workers,
-                    drop_last=True,
-                    pin_memory=True
-                )
-                print('Random Sampling')
-
-        if self.dataset_balanced or self.contrastive_loss:
+        if self.dataset_balanced:
             _, self.test_loader = get_mnist_dataset(batch_size=self.batch_size)
 
         self.train_loader_size = len(self.train_loader.dataset)
@@ -410,50 +388,16 @@ class SolverClassifier(object):
                                  binary_first_conv=self.binary_first_conv,
                                  binary_second_conv=self.binary_second_conv,
                                  binary_third_conv=self.binary_third_conv)
+        elif self.is_VAE_var:
+            self.net_type = 'vae_var'
+            net = VAE_var(z_var_size=self.z_var_size,
+                          var_second_cnn_block=self.var_second_cnn_block,
+                          var_third_cnn_block=self.var_third_cnn_block)
 
         # get layer num to extract z_struct:
-        self.z_struct_out = True
-        self.z_struct_layer_num = get_layer_zstruct_num(net)
-
-        if self.contrastive_loss:
-            # DML Losses
-            if self.loss == 'Proxy_Anchor':
-                if torch.cuda.is_available():
-                    self.criterion = losses.Proxy_Anchor(nb_classes=self.nb_class, sz_embed=self.sz_embedding,
-                                                         mrg=self.mrg,
-                                                         alpha=args.alpha).cuda()
-                else:
-                    self.criterion = losses.Proxy_Anchor(nb_classes=self.nb_class, sz_embed=self.sz_embedding,
-                                                         mrg=self.mrg,
-                                                         alpha=args.alpha)
-            elif self.loss == 'Proxy_NCA':
-                if torch.cuda.is_available():
-                    self.criterion = losses.Proxy_NCA(nb_classes=self.nb_class, sz_embed=self.sz_embedding).cuda()
-                else:
-                    self.criterion = losses.Proxy_NCA(nb_classes=self.nb_class, sz_embed=self.sz_embedding)
-            elif self.loss == 'MS':
-                if torch.cuda.is_available():
-                    self.criterion = losses.MultiSimilarityLoss().cuda()
-                else:
-                    self.criterion = losses.MultiSimilarityLoss()
-            elif self.loss == 'Contrastive':
-                if torch.cuda.is_available():
-                    self.criterion = losses.ContrastiveLoss().cuda()
-                else:
-                    self.criterion = losses.ContrastiveLoss()
-            elif self.loss == 'Triplet':
-                if torch.cuda.is_available():
-                    self.criterion = losses.TripletLoss().cuda()
-                else:
-                    self.criterion = losses.TripletLoss()
-            elif self.loss == 'NPair':
-                if torch.cuda.is_available():
-                    self.criterion = losses.NPairLoss().cuda()
-                else:
-                    self.criterion = losses.NPairLoss()
-            self.contrastive_criterion = self.criterion
-        else:
-            self.contrastive_criterion = False
+        if not self.is_VAE_var:
+            self.z_struct_out = True
+            self.z_struct_layer_num = get_layer_zstruct_num(net)
 
         # experience name:
         if self.use_decoder:
@@ -588,10 +532,8 @@ class SolverClassifier(object):
                 print("encoder doesn't exist, create encoder and decoder")
                 self.net, self.device = gpu_config(net)
 
-        if self.use_VAE:
+        if self.use_VAE and not self.is_VAE_var:
             pre_trained_model = nn.Sequential(*[self.net.model[i] for i in range(self.z_struct_layer_num + 1)])
-
-            print('useeeee', self.use_structural_encoder, type(self.use_structural_encoder))
             net = VAE(z_struct_size=self.z_struct_size,
                       big_kernel_size=self.big_kernel_size,
                       stride_size=self.stride_size,
@@ -684,8 +626,6 @@ class SolverClassifier(object):
         # other parameters for train:
         self.global_iter = 0
         self.epochs = 0
-        if self.contrastive_loss:
-            self.pbar = tqdm(enumerate(self.train_loader))
         self.losses_list = []
         self.best_recall = [0]
         self.best_epoch = 0
@@ -719,7 +659,7 @@ class SolverClassifier(object):
                     # print(x_recons.shape)
                     self.mse_loss = F.mse_loss(x_recons, data)
                     loss = self.mse_loss
-                elif self.use_VAE:
+                elif self.use_VAE and not self.is_VAE_var:
                     get_z_var_reconstruction = False
                     z_struct_noise = None
                     if self.train_var_struct_alternatively:
@@ -766,6 +706,19 @@ class SolverClassifier(object):
                     KLD_loss = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
 
                     loss = (self.lambda_BCE * BCE_loss) + (self.beta * KLD_loss)
+                elif self.is_VAE_var:
+                    x_recons, latent_representation = self.net(data)
+
+                    mu = latent_representation['mu']
+                    log_var = latent_representation['log_var']
+
+                    # BCE tries to make our reconstruction as accurate as possible:
+                    BCE_loss = F.binary_cross_entropy(x_recons, data)
+
+                    # KLD tries to push the distributions as close as possible to unit Gaussian:
+                    KLD_loss = -0.5 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
+
+                    loss = (self.lambda_BCE * BCE_loss) + (self.beta * KLD_loss)
                 else:
                     self.mse_loss = 0
 
@@ -787,13 +740,6 @@ class SolverClassifier(object):
                         Classification_loss = F.nll_loss(prediction, labels)
                         Classification_loss = Classification_loss * self.lambda_classification
                         loss += Classification_loss
-
-                    if self.contrastive_loss:
-                        # loss take embedding, not prediction
-                        embedding = embedding.squeeze(axis=-1).squeeze(axis=-1)
-                        contrastive_loss = self.criterion(embedding, labels)
-                        contrastive_loss = contrastive_loss * self.lambda_contrastive_loss
-                        loss += contrastive_loss
 
                     if self.ratio_reg:
                         # ratio loss:
@@ -822,7 +768,8 @@ class SolverClassifier(object):
                         loss += loss_distance_mean
 
                 # freeze encoder_struct if train decoder:
-                if (self.use_decoder or self.use_VAE) and self.freeze_Encoder and self.use_structural_encoder:
+                if (self.use_decoder or self.use_VAE) and self.freeze_Encoder and self.use_structural_encoder \
+                        and not self.is_VAE_var:
                     for params in self.net.encoder_struct.parameters():
                         params.requires_grad = False
 
@@ -836,27 +783,14 @@ class SolverClassifier(object):
                 self.optimizer.step()
 
                 # unfreeze encoder_struct if train decoder:
-                if (self.use_decoder or self.use_VAE) and self.freeze_Encoder and self.use_structural_encoder:
+                if (self.use_decoder or self.use_VAE) and self.freeze_Encoder and self.use_structural_encoder \
+                        and not self.is_VAE_var:
                     for params in self.net.encoder_struct.parameters():
                         params.requires_grad = True
 
                 # print('-----------::::::::::::After:::::::-----------------:')
                 # print(self.net.encoder_struct[0].weight[0][0])
                 # print(self.net.encoder_var[0].weight[0][0])
-
-                if self.contrastive_loss:
-                    torch.nn.utils.clip_grad_value_(self.net.parameters(), 10)
-                    if self.loss == 'Proxy_Anchor':
-                        torch.nn.utils.clip_grad_value_(self.criterion.parameters(), 10)
-                    if torch.cuda.is_available():
-                        losses_per_epoch.append(contrastive_loss.data.cpu().numpy())
-                    else:
-                        losses_per_epoch.append(contrastive_loss.data.numpy())
-                    self.pbar.set_description(
-                        'Train Epoch: {} [{}/{} ({:.0f}%)] Contrastive Loss: {:.6f}'.format(
-                            self.epochs, batch_idx + 1, len(self.train_loader),
-                                         100. * batch_idx / len(self.train_loader),
-                            contrastive_loss.item()))
 
             # backpropagation loss
             if self.use_scheduler:
@@ -875,7 +809,8 @@ class SolverClassifier(object):
                                                           self.test_loader_size,
                                                           self.device,
                                                           self.lambda_BCE,
-                                                          self.beta)
+                                                          self.beta,
+                                                          self.is_VAE_var)
             elif not self.use_decoder:
                 self.scores, self.losses = compute_scores_and_loss(self.net,
                                                                    self.train_loader,
@@ -902,9 +837,6 @@ class SolverClassifier(object):
 
             self.save_checkpoint_scores_loss()
             self.net_mode(train=True)
-
-            if self.contrastive_loss:
-                self.losses_list.append(np.mean(losses_per_epoch))
 
             # early_stopping needs the validation loss to check if it has decresed,
             # and if it has, it will make a checkpoint of the current model

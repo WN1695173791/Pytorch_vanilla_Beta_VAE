@@ -276,6 +276,10 @@ if __name__ == "__main__":
     parser.add_argument('--binary_first_conv', default=False, type=str2bool, help="binary_first_conv")
     parser.add_argument('--binary_second_conv', default=False, type=str2bool, help="binary_second_conv")
     parser.add_argument('--binary_third_conv', default=False, type=str2bool, help="binary_third_conv")
+    # VAE var:
+    parser.add_argument('--is_VAE_var', default=False, type=str2bool, help="is_VAE_var")
+    parser.add_argument('--var_second_cnn_block', default=False, type=str2bool, help="var_second_cnn_block")
+    parser.add_argument('--var_third_cnn_block', default=False, type=str2bool, help="var_third_cnn_block")
 
     args = parser.parse_args()
 

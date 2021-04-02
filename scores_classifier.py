@@ -124,7 +124,7 @@ def compute_scores(net, loader, device, loader_size, nb_class, ratio_reg, z_stru
            variance_inter, loss_distance_cl, loss_distance_mean, total_loss
 
 
-def compute_scores_VAE(net, loader, loader_size, device, lambda_BCE, beta):
+def compute_scores_VAE(net, loader, loader_size, device, lambda_BCE, beta, is_vae_var=False):
 
     BCE_loss = 0
     KLD_loss = 0
@@ -134,15 +134,16 @@ def compute_scores_VAE(net, loader, loader_size, device, lambda_BCE, beta):
         for x in loader:
 
             data = x[0]
-            labels = x[1]
             data = data.to(device)  # Variable(data.to(device))
-            labels = labels.to(device)  # Variable(labels.to(device))
 
             # compute loss:
-            x_recons, _, _, _, latent_representation, _, _ = net(data)
+            if is_vae_var:
+                x_recons, latent_representation = net(data)
+            else:
+                x_recons, _, _, _, latent_representation, _, _ = net(data)
 
             mu = latent_representation['mu']
-            logvar = latent_representation['logvar']
+            logvar = latent_representation['log_var']
 
             # BCE loss:
             BCE_loss_iter = F.binary_cross_entropy(x_recons, data)

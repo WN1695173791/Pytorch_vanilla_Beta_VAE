@@ -344,54 +344,60 @@ def run_VAE(model_name, net, lambda_BCE, beta, z_struct_size, z_var_size, VAE_st
     return
 
 
-def run_viz_expes(exp_name, net, is_ratio, is_distance_loss, loss_distance_mean, net_type=None, cat=None,
+def run_viz_expes(model_name, net, is_ratio, is_distance_loss, loss_distance_mean, net_type=None, cat=None,
                   ratio_reg=False, diff_var_loss=False, contrastive_loss=False):
-    # print(exp_name, 'run viz expes')
+    print('________________------------------{}-----------------_____________________'.format(model_name))
     path = 'checkpoints_CNN/'
     path_scores = 'checkpoint_scores_CNN'
-    net_trained, _, nb_epochs = get_checkpoints(net, path, exp_name)
+    net, _, nb_epochs = get_checkpoints(net, path, model_name)
     # print(net)
-    net_trained.eval()
+    net.eval()
 
     train_test = 'test'
     loader = test_loader
     loader_size = len(loader.dataset)
 
     # scores and losses:
-    # plot_scores_and_loss_CNN(net_trained, exp_name, path_scores, is_ratio=ratio_reg, save=True,
+    # plot_scores_and_loss_CNN(net, model_name, path_scores, is_ratio=ratio_reg, save=True,
     #                          is_distance_loss=is_distance_loss, loss_distance_mean=loss_distance_mean,
     #                          diff_var=diff_var_loss, contrastive_loss=contrastive_loss)
-    # score_test, _ = compute_scores(net_trained, loader, device, loader_size)
-    # score_train, _ = compute_scores(net_trained, train_loader, device, len(train_loader.dataset))
-    print('________________------------------{}-----------------_____________________'.format(exp_name))
-    # print('score Test acc: {:.3f}% and Train set acc: {:.3f}%'.format(score_test, score_train))
+    # score_test, _, _, _, _, _, _, \
+    # _, _, _, _ = compute_scores(net, loader, device, loader_size, False, False,
+    #                             False, False, False, False, False, False, False, False,
+    #                             False, False, False, False, False, False)
+    # score_train, _, _, _, _, _, _, \
+    # _, _, _, _ = compute_scores(net, train_loader, device, len(train_loader.dataset), False, False,
+    #                             False, False, False, False, False, False, False, False,
+    #                             False, False, False, False, False, False)
+    # print('________________------------------{}-----------------_____________________'.format(model_name))
+    # print('score Test acc: {:.3f}%'.format(score_test))
 
     # compute features:
-    # compute_z_struct(net_trained, exp_name, loader, train_test=train_test, net_type=net_type)
-    # compute_z_struct_representation_noised(net, exp_name, train_test=train_test, nb_repeat=10, nb_class=nb_class,
+    # compute_z_struct(net, model_name, loader, train_test=train_test, net_type=net_type)
+    # compute_z_struct_representation_noised(net, model_name, train_test=train_test, nb_repeat=10, nb_class=nb_class,
     #                                        net_type=net_type)
-    # get_z_struct_per_class(exp_name, train_test=train_test, nb_class=nb_class)
-    # get_average_z_struct_per_classes(exp_name=exp_name, train_test=train_test)
-    # get_prediction_per_classes(exp_name, train_test=train_test)
-    # get_prediction_noised_per_class(exp_name, train_test=train_test)
-    # compute_all_score_acc(exp_name, train_test=train_test)
-    # compute_mean_std_prediction(exp_name, train_test=train_test)
+    # get_z_struct_per_class(model_name, train_test=train_test, nb_class=nb_class)
+    # get_average_z_struct_per_classes(exp_name=model_name, train_test=train_test)
+    # get_prediction_per_classes(model_name, train_test=train_test)
+    # get_prediction_noised_per_class(model_name, train_test=train_test)
+    # compute_all_score_acc(model_name, train_test=train_test)
+    # compute_mean_std_prediction(model_name, train_test=train_test)
 
-    # receptive_field = get_receptive_field(net_trained, img_size, net_type=net_type)
+    # receptive_field = get_receptive_field(net, img_size, net_type=net_type)
 
     # plot:
-    # ratio_variance, variance_intra_class, variance_inter_class = ratio(exp_name, train_test=train_test, cat=cat)
+    # ratio_variance, variance_intra_class, variance_inter_class = ratio(model_name, train_test=train_test, cat=cat)
     # print('ratio:', ratio_variance)
     # print('Variance intra class:', np.mean(variance_intra_class, axis=1))
     # print('Variance intra class averaged:', np.mean(np.mean(variance_intra_class, axis=1)))
 
-    # score = correlation_filters(net_trained, exp_name, train_test=train_test, ch=nc, vis_filters=False, plot_fig=True,
+    # score = correlation_filters(net, model_name, train_test=train_test, ch=nc, vis_filters=False, plot_fig=True,
     #                             cat=cat)
-    # score_corr_class = dispersion_classes(exp_name, train_test=train_test, plot_fig=True, cat=cat)
+    # score_corr_class = dispersion_classes(model_name, train_test=train_test, plot_fig=True, cat=cat)
     # ratio_variance = 'Nan'
-    # plot_2d_projection_z_struct(nb_class, exp_name, train_test=train_test, ratio=ratio_variance)
+    # plot_2d_projection_z_struct(nb_class, model_name, train_test=train_test, ratio=ratio_variance)
 
-    # plot_acc_bit_noised_per_class(exp_name,
+    # plot_acc_bit_noised_per_class(model_name,
     #                               train_test=train_test,
     #                               plot_all_classes=False,
     #                               plot_prediction_mean_std=False,
@@ -404,11 +410,15 @@ def run_viz_expes(exp_name, net, is_ratio, is_distance_loss, loss_distance_mean,
 
     # compute distance matrix er class:
 
-    # _ = distance_matrix(net_trained, exp_name, train_test=train_test, plot_fig=True)
+    # _ = distance_matrix(net, model_name, train_test=train_test, plot_fig=True)
 
-    # plot_resume(net_trained, exp_name, is_ratio, is_distance_loss, loss_distance_mean, loader, train_loader,
-    #             device, cat=cat, train_test=train_test, path_scores=path_scores, diff_var=diff_var_loss,
-    #             contrastive_loss=contrastive_loss)
+    # Plot resume:
+    compute_z_struct(net, model_name, loader, train_test=train_test, net_type=net_type)
+    get_z_struct_per_class(model_name, train_test=train_test, nb_class=nb_class)
+    get_average_z_struct_per_classes(exp_name=model_name, train_test=train_test)
+    plot_resume(net, model_name, is_ratio, is_distance_loss, loss_distance_mean, loader, train_loader,
+                device, cat=cat, train_test=train_test, path_scores=path_scores, diff_var=diff_var_loss,
+                contrastive_loss=contrastive_loss)
 
     return
 
@@ -566,127 +576,24 @@ if __name__ == '__main__':
         'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_8_decoder_3c',
         'mnist_balanced_dataset_encoder_ratio_min_and_mean_1_2_1_1_z_struct_16_decoder_3c']
 
-    list_encoder_struct_busy = ['mnist_struct_baseline_scheduler_binary_1_10',
-                                'mnist_struct_baseline_scheduler_binary_1_11',
-                                'mnist_struct_min_scheduler_binary_3_6',
-                                'mnist_struct_min_scheduler_binary_3_7',
-                                'mnist_struct_min_scheduler_binary_3_8',
-                                'mnist_struct_min_scheduler_binary_3_9',
-                                'mnist_struct_min_scheduler_binary_3_10',
-                                'mnist_struct_min_scheduler_binary_3_11',
-                                'mnist_struct_mean_scheduler_binary_1_9',
-                                'mnist_struct_mean_scheduler_binary_1_10',
-                                'mnist_struct_mean_scheduler_binary_1_11',
-                                'mnist_struct_mean_scheduler_binary_1_12',
-                                'mnist_struct_mean_scheduler_binary_2_3',
-                                'mnist_struct_mean_scheduler_binary_2_4',
-                                'mnist_struct_mean_scheduler_binary_2_5',
-                                'mnist_struct_mean_scheduler_binary_2_6',
-                                'mnist_struct_mean_scheduler_binary_2_7',
-                                'mnist_struct_mean_scheduler_binary_2_8',
-                                'mnist_struct_mean_scheduler_binary_2_9',
-                                'mnist_struct_mean_scheduler_binary_2_10',
-                                'mnist_struct_mean_scheduler_binary_2_11',
-                                'mnist_struct_mean_scheduler_binary_2_12',
-                                'mnist_struct_mean_scheduler_binary_3_3',
-                                'mnist_struct_mean_scheduler_binary_3_4',
-                                'mnist_struct_mean_scheduler_binary_3_7',
-                                'mnist_struct_mean_scheduler_binary_3_8']
-
     list_encoder_struct = ['mnist_struct_baseline_scheduler_binary_1_3',
-                           'mnist_struct_baseline_scheduler_binary_1_4',
                            'mnist_struct_baseline_scheduler_binary_1_5',
                            'mnist_struct_baseline_scheduler_binary_1_6',
                            'mnist_struct_baseline_scheduler_binary_1_7',
                            'mnist_struct_baseline_scheduler_binary_1_8',
                            'mnist_struct_baseline_scheduler_binary_1_9',
+                           'mnist_struct_baseline_scheduler_binary_1_10',
+                           'mnist_struct_baseline_scheduler_binary_1_11',
                            'mnist_struct_baseline_scheduler_binary_1_12',
-                           'mnist_struct_baseline_scheduler_binary_2_3',
-                           'mnist_struct_baseline_scheduler_binary_2_4',
-                           'mnist_struct_baseline_scheduler_binary_2_5',
-                           'mnist_struct_baseline_scheduler_binary_2_6',
-                           'mnist_struct_baseline_scheduler_binary_2_7',
-                           'mnist_struct_baseline_scheduler_binary_2_8',
-                           'mnist_struct_baseline_scheduler_binary_2_9',
-                           'mnist_struct_baseline_scheduler_binary_2_10',
-                           'mnist_struct_baseline_scheduler_binary_2_11',
-                           'mnist_struct_baseline_scheduler_binary_2_12',
-                           'mnist_struct_baseline_scheduler_binary_3_3',
-                           'mnist_struct_baseline_scheduler_binary_3_4',
-                           'mnist_struct_baseline_scheduler_binary_3_5',
-                           'mnist_struct_baseline_scheduler_binary_3_6',
-                           'mnist_struct_baseline_scheduler_binary_3_7',
-                           'mnist_struct_baseline_scheduler_binary_3_8',
-                           'mnist_struct_baseline_scheduler_binary_3_9',
-                           'mnist_struct_baseline_scheduler_binary_3_10',
-                           'mnist_struct_baseline_scheduler_binary_3_11',
-                           'mnist_struct_baseline_scheduler_binary_3_12',
-                           'mnist_struct_min_scheduler_binary_1_3',
-                           'mnist_struct_min_scheduler_binary_1_4',
-                           'mnist_struct_min_scheduler_binary_1_5',
-                           'mnist_struct_min_scheduler_binary_1_6',
-                           'mnist_struct_min_scheduler_binary_1_7',
-                           'mnist_struct_min_scheduler_binary_1_8',
-                           'mnist_struct_min_scheduler_binary_1_9',
                            'mnist_struct_min_scheduler_binary_1_10',
-                           'mnist_struct_min_scheduler_binary_1_11',
-                           'mnist_struct_min_scheduler_binary_1_12',
-                           'mnist_struct_min_scheduler_binary_2_3',
-                           'mnist_struct_min_scheduler_binary_2_4',
-                           'mnist_struct_min_scheduler_binary_2_5',
-                           'mnist_struct_min_scheduler_binary_2_6',
-                           'mnist_struct_min_scheduler_binary_2_7',
-                           'mnist_struct_min_scheduler_binary_2_8',
-                           'mnist_struct_min_scheduler_binary_2_9',
-                           'mnist_struct_min_scheduler_binary_2_10',
-                           'mnist_struct_min_scheduler_binary_2_11',
-                           'mnist_struct_min_scheduler_binary_2_12',
-                           'mnist_struct_min_scheduler_binary_3_3',
-                           'mnist_struct_min_scheduler_binary_3_4',
-                           'mnist_struct_min_scheduler_binary_3_5',
-                           'mnist_struct_min_scheduler_binary_3_12',
                            'mnist_struct_mean_scheduler_binary_1_3',
-                           'mnist_struct_mean_scheduler_binary_1_4',
                            'mnist_struct_mean_scheduler_binary_1_5',
                            'mnist_struct_mean_scheduler_binary_1_6',
-                           'mnist_struct_mean_scheduler_binary_1_7',
                            'mnist_struct_mean_scheduler_binary_1_8',
-                           'mnist_struct_mean_scheduler_binary_3_5',
-                           'mnist_struct_mean_scheduler_binary_3_6',
-                           'mnist_struct_mean_scheduler_binary_3_9',
-                           'mnist_struct_mean_scheduler_binary_3_10',
-                           'mnist_struct_mean_scheduler_binary_3_11',
-                           'mnist_struct_mean_scheduler_binary_3_12',
-                           'mnist_struct_min_mean_scheduler_binary_1_3',
-                           'mnist_struct_min_mean_scheduler_binary_1_4',
-                           'mnist_struct_min_mean_scheduler_binary_1_5',
-                           'mnist_struct_min_mean_scheduler_binary_1_6',
-                           'mnist_struct_min_mean_scheduler_binary_1_7',
-                           'mnist_struct_min_mean_scheduler_binary_1_8',
-                           'mnist_struct_min_mean_scheduler_binary_1_9',
-                           'mnist_struct_min_mean_scheduler_binary_1_10',
-                           'mnist_struct_min_mean_scheduler_binary_1_11',
-                           'mnist_struct_min_mean_scheduler_binary_1_12',
-                           'mnist_struct_min_mean_scheduler_binary_2_3',
-                           'mnist_struct_min_mean_scheduler_binary_2_4',
-                           'mnist_struct_min_mean_scheduler_binary_2_5',
-                           'mnist_struct_min_mean_scheduler_binary_2_6',
-                           'mnist_struct_min_mean_scheduler_binary_2_7',
-                           'mnist_struct_min_mean_scheduler_binary_2_8',
-                           'mnist_struct_min_mean_scheduler_binary_2_9',
-                           'mnist_struct_min_mean_scheduler_binary_2_10',
-                           'mnist_struct_min_mean_scheduler_binary_2_11',
-                           'mnist_struct_min_mean_scheduler_binary_2_12',
-                           'mnist_struct_min_mean_scheduler_binary_3_3',
-                           'mnist_struct_min_mean_scheduler_binary_3_4',
-                           'mnist_struct_min_mean_scheduler_binary_3_5',
-                           'mnist_struct_min_mean_scheduler_binary_3_6',
-                           'mnist_struct_min_mean_scheduler_binary_3_7',
-                           'mnist_struct_min_mean_scheduler_binary_3_8',
-                           'mnist_struct_min_mean_scheduler_binary_3_9',
-                           'mnist_struct_min_mean_scheduler_binary_3_10',
-                           'mnist_struct_min_mean_scheduler_binary_3_11',
-                           'mnist_struct_min_mean_scheduler_binary_3_12']
+                           'mnist_struct_mean_scheduler_binary_1_9',
+                           'mnist_struct_mean_scheduler_binary_1_10',
+                           'mnist_struct_mean_scheduler_binary_1_11',
+                           'mnist_struct_mean_scheduler_binary_1_12']
 
     parameters_mnist_classifier_BK_ratio = "parameters_combinations/mnist_classifier_ratio.txt"
 
