@@ -1,0 +1,240 @@
+24
+--gpu_devices 0 --max_iter 100 --batch_size 250 --use_scheduler True --lr 1e-3 --GMP True --z_struct_size 10 --is_encoder_struct True --big_kernel_size 8 --two_conv_layer True --three_conv_layer True --kernel_size_1 4 --kernel_size_2 4 --kernel_size_3 4 --BK_in_first_layer True --BK_in_second_layer False --BK_in_third_layer False --stride_size 1 --hidden_filters_layer1 64 --hidden_filters_layer2 64 --hidden_filters_layer3 64 --lambda_class 1 --ratio_reg False --lambda_ratio_reg 1 --loss_min_distance_cl False --lambda_var_distance 1 --loss_distance_mean True --lambda_distance_mean 1 --dataset_balanced True --binary_z True --binary_first_conv True --binary_second_conv True --binary_third_conv True --exp_name mnist_struct_mean_scheduler_binary_3_3
+Namespace(BK_in_first_layer=True, BK_in_second_layer=False, BK_in_third_layer=False, BN=False, C_max=25, C_stop_iter=100000.0, E1_AE=False, E1_VAE=False, E1_conv=False, E1_dense=False, E1_second_conv=False, E1_second_conv_adapt=False, GMP=True, IPC=False, L1_norm_act=False, L1_norm_weights=False, L3_without_random=False, LOG_DIR='logs', adapt_lr=False, add_classification_layer=True, add_linear_after_GMP=True, add_z_struct_bottleneck=False, alpha=32, batch_size=250, beta=1, beta1=0.9, beta2=0.999, big_kernel=False, big_kernel_size=8, binary_chain=False, binary_first_conv=True, binary_second_conv=True, binary_third_conv=True, binary_z=True, ckpt_dir='checkpoints_CNN', ckpt_dir_scores='checkpoint_scores_CNN', classif_layer_size=30, contrastive_loss=False, cuda=True, dataset='mnist', dataset_balanced=True, decoder_first_dense=36, decoder_kernel_size_1=4, decoder_kernel_size_2=3, decoder_kernel_size_3=4, decoder_n_filter_1=64, decoder_n_filter_2=64, decoder_n_filter_3=64, decoder_stride_1=2, decoder_stride_2=2, decoder_stride_3=1, diff_var=False, display_step=10000, dset_dir='data', exp_name='mnist_struct_mean_scheduler_binary_3_3', freeze_Encoder=True, gamma=1000, gpu_devices=[0], hidden_filters_layer1=64, hidden_filters_layer2=64, hidden_filters_layer3=64, image_size=64, intra_class_variance_loss=False, is_C=True, is_E1=False, is_binary_structural_latent=False, is_custom_model=False, is_custom_model_BK=False, is_default_model=False, is_encoder_struct=True, is_noise_stats=False, is_partial_rand_class=False, is_perturbed_score=False, is_zvar_sim_loss=False, just_train=False, kernel_size=4, kernel_size_1=4, kernel_size_2=4, kernel_size_3=4, lambda_BCE=1, lambda_Kl_struct=1, lambda_Kl_var=1, lambda_L1=0.01, lambda_VAE=1, lambda_class=1.0, lambda_contrastive_loss=1, lambda_distance_mean=1.0, lambda_intra_class_var=1, lambda_partial_class=1, lambda_ratio_reg=1.0, lambda_recon_wt_rand=1, lambda_recons=1, lambda_var_distance=1.0, lambda_var_inter=1, lambda_var_intra=1, lambda_zvar_sim=1, latent_spec_cont=None, latent_spec_cont_class=None, latent_spec_cont_var=None, latent_spec_disc=None, latent_spec_disc_class=None, latent_spec_disc_var=None, log_level='info', loss='Proxy_Anchor', loss_distance_mean=True, loss_min_distance_cl=False, lr=0.001, max_iter=100.0, model='CNN', mrg=0.1, nb_epochs_train_only_zvar=0, num_workers=2, old_weighted=False, optimizer='adamw', other_architecture=False, other_ratio=False, random_percentage=0.2, random_seed=10, randomness=True, ratio_reg=False, remark='', save_step=10000, second_layer_C=False, seed=1, stride_size=1, sz_embedding=5, three_conv_layer=True, train=True, train_var_struct_alternatively=False, two_conv_layer=True, two_encoder=False, use_VAE=False, use_decoder=False, use_early_stopping=True, use_scheduler=True, use_structural_encoder=False, value_target_distance_mean=1, var_hidden_dim=256, var_hidden_filters_1=32, var_hidden_filters_2=32, var_hidden_filters_3=32, var_kernel_size_1=3, var_kernel_size_2=3, var_kernel_size_3=3, var_stride_size_1=1, var_stride_size_2=1, var_stride_size_3=1, var_three_conv_layer=False, warm=1, without_acc=False, z_struct_size=10, z_var_size=5, zeros_W_Classif=False, zvar_sim_change_zvar=False, zvar_sim_loss_for_all_model=False, zvar_sim_loss_only_for_encoder=False, zvar_sim_normal=False, zvar_sim_var_rand=False)
+CUDA Visible devices !
+[Using Seed: 10]
+Balanced dataset loaded
+use 1 gpu who named: Tesla V100-SXM2-32GB
+=> loaded sample_scores and losses
+=> no checkpoint found at 'checkpoints_CNN/mnist_struct_mean_scheduler_binary_3_3/last'
+Encoder_struct(
+  (encoder_struct): Sequential(
+    (0): Conv2d(1, 64, kernel_size=(8, 8), stride=(1, 1))
+    (1): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (2): DeterministicBinaryActivation(
+      (act): Hardsigmoid(
+        (act): Hardtanh(min_val=-1.0, max_val=1.0)
+      )
+    )
+    (3): Conv2d(64, 64, kernel_size=(4, 4), stride=(1, 1))
+    (4): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (5): DeterministicBinaryActivation(
+      (act): Hardsigmoid(
+        (act): Hardtanh(min_val=-1.0, max_val=1.0)
+      )
+    )
+    (6): Conv2d(64, 10, kernel_size=(4, 4), stride=(1, 1))
+    (7): BatchNorm2d(10, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (8): DeterministicBinaryActivation(
+      (act): Hardsigmoid(
+        (act): Hardtanh(min_val=-1.0, max_val=1.0)
+      )
+    )
+    (9): AdaptiveMaxPool2d(output_size=(1, 1))
+    (10): View()
+    (11): Linear(in_features=10, out_features=10, bias=True)
+    (12): Softmax(dim=None)
+  )
+)
+The number of parameters of model is 80396
+=> saved checkpoint 'checkpoints_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 270, epoch 1.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 270, epoch 1.0)
+[Save Checkpoint] epoch: [1.0], Train score:11.23667, Test score:11.35000, train loss:2.16829, test loss:2.15983, ratio_train_loss:0.00000,ratio_test_loss:0.00000, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 540, epoch 2.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 540, epoch 2.0)
+[Save Checkpoint] epoch: [2.0], Train score:29.83333, Test score:27.88000, train loss:2.09551, test loss:2.08356, ratio_train_loss:0.00000,ratio_test_loss:0.00000, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 810, epoch 3.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 810, epoch 3.0)
+[Save Checkpoint] epoch: [3.0], Train score:41.28167, Test score:39.01000, train loss:2.04249, test loss:2.02584, ratio_train_loss:0.00000,ratio_test_loss:0.00000, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 1080, epoch 4.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 1080, epoch 4.0)
+[Save Checkpoint] epoch: [4.0], Train score:44.73500, Test score:41.81000, train loss:1.98868, test loss:1.97366, ratio_train_loss:0.00000,ratio_test_loss:0.00000, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 1350, epoch 5.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 1350, epoch 5.0)
+[Save Checkpoint] epoch: [5.0], Train score:45.29500, Test score:42.25000, train loss:1.97513, test loss:1.95990, ratio_train_loss:0.00000,ratio_test_loss:0.00000, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 1620, epoch 6.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 1620, epoch 6.0)
+[Save Checkpoint] epoch: [6.0], Train score:45.47667, Test score:42.85000, train loss:1.96922, test loss:1.94985, ratio_train_loss:0.00000,ratio_test_loss:0.00000, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 1890, epoch 7.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 1890, epoch 7.0)
+[Save Checkpoint] epoch: [7.0], Train score:45.53667, Test score:42.82000, train loss:1.95708, test loss:1.93919, ratio_train_loss:0.00000,ratio_test_loss:0.00000, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 2160, epoch 8.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 2160, epoch 8.0)
+[Save Checkpoint] epoch: [8.0], Train score:48.24667, Test score:45.02000, train loss:1.94259, test loss:1.92523, ratio_train_loss:0.00000,ratio_test_loss:0.00000, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 2430, epoch 9.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 2430, epoch 9.0)
+[Save Checkpoint] epoch: [9.0], Train score:53.01833, Test score:48.81000, train loss:1.92250, test loss:1.90482, ratio_train_loss:0.00000,ratio_test_loss:0.00000, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 2700, epoch 10.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 2700, epoch 10.0)
+[Save Checkpoint] epoch: [10.0], Train score:52.91500, Test score:48.82000, train loss:1.90379, test loss:1.88627, ratio_train_loss:0.00000,ratio_test_loss:0.00000, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 2970, epoch 11.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 2970, epoch 11.0)
+[Save Checkpoint] epoch: [11.0], Train score:56.04333, Test score:51.65000, train loss:1.88563, test loss:1.87025, ratio_train_loss:0.00000,ratio_test_loss:0.00000, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 3240, epoch 12.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 3240, epoch 12.0)
+[Save Checkpoint] epoch: [12.0], Train score:56.09000, Test score:51.75000, train loss:1.88302, test loss:1.86404, ratio_train_loss:0.00000,ratio_test_loss:0.00000, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 3510, epoch 13.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 3510, epoch 13.0)
+[Save Checkpoint] epoch: [13.0], Train score:55.67333, Test score:51.58000, train loss:1.87836, test loss:1.85969, ratio_train_loss:0.00000,ratio_test_loss:0.00000, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 3780, epoch 14.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 3780, epoch 14.0)
+[Save Checkpoint] epoch: [14.0], Train score:55.63000, Test score:51.69000, train loss:1.86944, test loss:1.84975, ratio_train_loss:0.00000,ratio_test_loss:0.00000, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 4050, epoch 15.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 4050, epoch 15.0)
+[Save Checkpoint] epoch: [15.0], Train score:57.93833, Test score:53.83000, train loss:1.84959, test loss:1.82993, ratio_train_loss:0.00000,ratio_test_loss:0.00000, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 4320, epoch 16.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 4320, epoch 16.0)
+EarlyStopping counter: 1 out of 20
+[Save Checkpoint] epoch: [16.0], Train score:57.32167, Test score:53.05000, train loss:1.85606, test loss:1.83809, ratio_train_loss:0.00000,ratio_test_loss:0.00000, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 4590, epoch 17.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 4590, epoch 17.0)
+EarlyStopping counter: 2 out of 20
+[Save Checkpoint] epoch: [17.0], Train score:58.33667, Test score:53.91000, train loss:1.84727, test loss:1.82797, ratio_train_loss:0.00000,ratio_test_loss:0.00000, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 4860, epoch 18.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 4860, epoch 18.0)
+[Save Checkpoint] epoch: [18.0], Train score:58.24333, Test score:53.81000, train loss:1.84922, test loss:1.82978, ratio_train_loss:0.00000,ratio_test_loss:0.00000, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 5130, epoch 19.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 5130, epoch 19.0)
+[Save Checkpoint] epoch: [19.0], Train score:59.81500, Test score:55.14000, train loss:1.83643, test loss:1.81917, ratio_train_loss:0.00000,ratio_test_loss:0.00000, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 5400, epoch 20.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 5400, epoch 20.0)
+[Save Checkpoint] epoch: [20.0], Train score:65.16833, Test score:59.72000, train loss:1.79955, test loss:1.78261, ratio_train_loss:0.00000,ratio_test_loss:0.00000, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 5670, epoch 21.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 5670, epoch 21.0)
+[Save Checkpoint] epoch: [21.0], Train score:71.61500, Test score:64.76000, train loss:1.75414, test loss:1.74377, ratio_train_loss:0.00000,ratio_test_loss:0.00000, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 5940, epoch 22.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 5940, epoch 22.0)
+[Save Checkpoint] epoch: [22.0], Train score:72.29000, Test score:65.71000, train loss:1.74159, test loss:1.72998, ratio_train_loss:0.00000,ratio_test_loss:0.00000, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 6210, epoch 23.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 6210, epoch 23.0)
+[Save Checkpoint] epoch: [23.0], Train score:73.65000, Test score:66.74000, train loss:1.73154, test loss:1.72101, ratio_train_loss:0.00000,ratio_test_loss:0.00000, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 6480, epoch 24.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 6480, epoch 24.0)
+EarlyStopping counter: 1 out of 20
+[Save Checkpoint] epoch: [24.0], Train score:73.63000, Test score:67.19000, train loss:1.72452, test loss:1.71010, ratio_train_loss:0.00000,ratio_test_loss:0.00000, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 6750, epoch 25.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 6750, epoch 25.0)
+EarlyStopping counter: 2 out of 20
+[Save Checkpoint] epoch: [25.0], Train score:73.54667, Test score:67.28000, train loss:1.72992, test loss:1.71132, ratio_train_loss:0.00000,ratio_test_loss:0.00000, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 7020, epoch 26.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 7020, epoch 26.0)
+[Save Checkpoint] epoch: [26.0], Train score:74.68667, Test score:67.55000, train loss:1.71489, test loss:1.70327, ratio_train_loss:0.00000,ratio_test_loss:0.00000, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 7290, epoch 27.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 7290, epoch 27.0)
+EarlyStopping counter: 1 out of 20
+[Save Checkpoint] epoch: [27.0], Train score:73.69500, Test score:67.24000, train loss:1.71740, test loss:1.70525, ratio_train_loss:0.00000,ratio_test_loss:0.00000, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 7560, epoch 28.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 7560, epoch 28.0)
+[Save Checkpoint] epoch: [28.0], Train score:74.95667, Test score:68.21000, train loss:1.70966, test loss:1.69685, ratio_train_loss:0.00000,ratio_test_loss:0.00000, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 7830, epoch 29.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 7830, epoch 29.0)
+[Save Checkpoint] epoch: [29.0], Train score:74.97333, Test score:67.87000, train loss:1.70730, test loss:1.69776, ratio_train_loss:0.00000,ratio_test_loss:0.00000, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 8100, epoch 30.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 8100, epoch 30.0)
+EarlyStopping counter: 1 out of 20
+[Save Checkpoint] epoch: [30.0], Train score:73.71500, Test score:67.01000, train loss:1.71760, test loss:1.70459, ratio_train_loss:0.00000,ratio_test_loss:0.00000, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 8370, epoch 31.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 8370, epoch 31.0)
+EarlyStopping counter: 2 out of 20
+[Save Checkpoint] epoch: [31.0], Train score:74.80167, Test score:67.86000, train loss:1.70704, test loss:1.69587, ratio_train_loss:0.00000,ratio_test_loss:0.00000, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 8640, epoch 32.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 8640, epoch 32.0)
+EarlyStopping counter: 3 out of 20
+[Save Checkpoint] epoch: [32.0], Train score:75.13000, Test score:67.87000, train loss:1.70189, test loss:1.69215, ratio_train_loss:0.00000,ratio_test_loss:0.00000, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 8910, epoch 33.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 8910, epoch 33.0)
+[Save Checkpoint] epoch: [33.0], Train score:75.75667, Test score:68.35000, train loss:1.69886, test loss:1.69004, ratio_train_loss:0.00000,ratio_test_loss:0.00000, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 9180, epoch 34.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 9180, epoch 34.0)
+EarlyStopping counter: 1 out of 20
+[Save Checkpoint] epoch: [34.0], Train score:75.55167, Test score:68.07000, train loss:1.69941, test loss:1.69320, ratio_train_loss:0.00000,ratio_test_loss:0.00000, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 9450, epoch 35.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 9450, epoch 35.0)
+[Save Checkpoint] epoch: [35.0], Train score:75.62667, Test score:68.41000, train loss:1.70085, test loss:1.69099, ratio_train_loss:0.00000,ratio_test_loss:0.00000, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 9720, epoch 36.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 9720, epoch 36.0)
+EarlyStopping counter: 1 out of 20
+[Save Checkpoint] epoch: [36.0], Train score:76.35000, Test score:68.87000, train loss:1.68909, test loss:1.67893, ratio_train_loss:0.00000,ratio_test_loss:0.00000, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 9990, epoch 37.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 9990, epoch 37.0)
+EarlyStopping counter: 2 out of 20
+[Save Checkpoint] epoch: [37.0], Train score:75.30500, Test score:67.82000, train loss:1.69608, test loss:1.68835, ratio_train_loss:0.00000,ratio_test_loss:0.00000, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 10260, epoch 38.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 10260, epoch 38.0)
+EarlyStopping counter: 3 out of 20
+[Save Checkpoint] epoch: [38.0], Train score:76.48833, Test score:68.75000, train loss:1.68676, test loss:1.67914, ratio_train_loss:0.00000,ratio_test_loss:0.00000, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 10530, epoch 39.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 10530, epoch 39.0)
+EarlyStopping counter: 4 out of 20
+[Save Checkpoint] epoch: [39.0], Train score:77.03333, Test score:69.37000, train loss:1.68305, test loss:1.67543, ratio_train_loss:0.00000,ratio_test_loss:0.00000, var distance inter class train:0.00000,var distance inter class test:0.00000
+Epoch    40: reducing learning rate of group 0 to 2.0000e-04.
+=> saved checkpoint 'checkpoints_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 10800, epoch 40.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 10800, epoch 40.0)
+EarlyStopping counter: 5 out of 20
+[Save Checkpoint] epoch: [40.0], Train score:76.33000, Test score:68.78000, train loss:1.69043, test loss:1.68226, ratio_train_loss:0.00000,ratio_test_loss:0.00000, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 11070, epoch 41.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 11070, epoch 41.0)
+EarlyStopping counter: 6 out of 20
+[Save Checkpoint] epoch: [41.0], Train score:78.62667, Test score:70.68000, train loss:1.66932, test loss:1.66275, ratio_train_loss:0.00000,ratio_test_loss:0.00000, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 11340, epoch 42.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 11340, epoch 42.0)
+EarlyStopping counter: 7 out of 20
+[Save Checkpoint] epoch: [42.0], Train score:77.52333, Test score:69.64000, train loss:1.67640, test loss:1.67075, ratio_train_loss:0.00000,ratio_test_loss:0.00000, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 11610, epoch 43.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 11610, epoch 43.0)
+EarlyStopping counter: 8 out of 20
+[Save Checkpoint] epoch: [43.0], Train score:78.15500, Test score:70.18000, train loss:1.67190, test loss:1.66637, ratio_train_loss:0.00000,ratio_test_loss:0.00000, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 11880, epoch 44.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 11880, epoch 44.0)
+EarlyStopping counter: 9 out of 20
+[Save Checkpoint] epoch: [44.0], Train score:77.26667, Test score:69.57000, train loss:1.67777, test loss:1.67080, ratio_train_loss:0.00000,ratio_test_loss:0.00000, var distance inter class train:0.00000,var distance inter class test:0.00000
+Epoch    45: reducing learning rate of group 0 to 4.0000e-05.
+=> saved checkpoint 'checkpoints_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 12150, epoch 45.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 12150, epoch 45.0)
+EarlyStopping counter: 10 out of 20
+[Save Checkpoint] epoch: [45.0], Train score:78.14167, Test score:69.94000, train loss:1.67036, test loss:1.66722, ratio_train_loss:0.00000,ratio_test_loss:0.00000, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 12420, epoch 46.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 12420, epoch 46.0)
+EarlyStopping counter: 11 out of 20
+[Save Checkpoint] epoch: [46.0], Train score:78.30500, Test score:70.59000, train loss:1.67020, test loss:1.66278, ratio_train_loss:0.00000,ratio_test_loss:0.00000, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 12690, epoch 47.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 12690, epoch 47.0)
+EarlyStopping counter: 12 out of 20
+[Save Checkpoint] epoch: [47.0], Train score:78.54000, Test score:70.52000, train loss:1.66755, test loss:1.66288, ratio_train_loss:0.00000,ratio_test_loss:0.00000, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 12960, epoch 48.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 12960, epoch 48.0)
+EarlyStopping counter: 13 out of 20
+[Save Checkpoint] epoch: [48.0], Train score:78.29000, Test score:70.14000, train loss:1.67032, test loss:1.66626, ratio_train_loss:0.00000,ratio_test_loss:0.00000, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 13230, epoch 49.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 13230, epoch 49.0)
+EarlyStopping counter: 14 out of 20
+[Save Checkpoint] epoch: [49.0], Train score:78.18500, Test score:70.06000, train loss:1.67118, test loss:1.66689, ratio_train_loss:0.00000,ratio_test_loss:0.00000, var distance inter class train:0.00000,var distance inter class test:0.00000
+Epoch    50: reducing learning rate of group 0 to 8.0000e-06.
+=> saved checkpoint 'checkpoints_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 13500, epoch 50.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 13500, epoch 50.0)
+EarlyStopping counter: 15 out of 20
+[Save Checkpoint] epoch: [50.0], Train score:78.21167, Test score:70.47000, train loss:1.67045, test loss:1.66392, ratio_train_loss:0.00000,ratio_test_loss:0.00000, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 13770, epoch 51.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 13770, epoch 51.0)
+EarlyStopping counter: 16 out of 20
+[Save Checkpoint] epoch: [51.0], Train score:78.30333, Test score:70.36000, train loss:1.66935, test loss:1.66407, ratio_train_loss:0.00000,ratio_test_loss:0.00000, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 14040, epoch 52.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 14040, epoch 52.0)
+EarlyStopping counter: 17 out of 20
+[Save Checkpoint] epoch: [52.0], Train score:78.30167, Test score:70.45000, train loss:1.66962, test loss:1.66296, ratio_train_loss:0.00000,ratio_test_loss:0.00000, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 14310, epoch 53.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 14310, epoch 53.0)
+EarlyStopping counter: 18 out of 20
+[Save Checkpoint] epoch: [53.0], Train score:78.24833, Test score:70.23000, train loss:1.67009, test loss:1.66468, ratio_train_loss:0.00000,ratio_test_loss:0.00000, var distance inter class train:0.00000,var distance inter class test:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 14580, epoch 54.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 14580, epoch 54.0)
+EarlyStopping counter: 19 out of 20
+[Save Checkpoint] epoch: [54.0], Train score:78.44333, Test score:70.55000, train loss:1.66870, test loss:1.66355, ratio_train_loss:0.00000,ratio_test_loss:0.00000, var distance inter class train:0.00000,var distance inter class test:0.00000
+Epoch    55: reducing learning rate of group 0 to 1.6000e-06.
+=> saved checkpoint 'checkpoints_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 14850, epoch 55.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_struct_mean_scheduler_binary_3_3/last' (iter 14850, epoch 55.0)
+EarlyStopping counter: 20 out of 20
+[Save Checkpoint] epoch: [55.0], Train score:78.47667, Test score:70.38000, train loss:1.66832, test loss:1.66336, ratio_train_loss:0.00000,ratio_test_loss:0.00000, var distance inter class train:0.00000,var distance inter class test:0.00000
+Early stopping
+[Training Finished]
+All done !
