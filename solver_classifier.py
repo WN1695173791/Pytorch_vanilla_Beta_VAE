@@ -29,6 +29,7 @@ import torch.nn as nn
 
 import matplotlib.pyplot as plt
 from visualizer import *
+from torch.autograd import Variable
 
 EPS = 1e-12
 worker_id = 0
@@ -792,6 +793,8 @@ class SolverClassifier(object):
                         loss += loss_distance_mean
 
                     if self.Hmg_dst_loss:
+                        # global_avg_Hmg_dst = Variable(global_avg_Hmg_dst, requires_grad=True)
+                        # global_avg_Hmg_dst.requires_grad_(True)
                         loss += global_avg_Hmg_dst * self.lambda_hmg_dst
 
                 # freeze encoder_struct if train decoder:

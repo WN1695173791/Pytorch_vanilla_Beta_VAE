@@ -521,9 +521,10 @@ if os.path.exists(path_select_model_analyse_50):
     selected_analyse_50 = np.load(path_select_model_analyse_50)
 
 if __name__ == '__main__':
-    list_encoder_struct = ['mnist_struct_baseline_scheduler_binary_1_5_test_wt_sfmax']
+    list_encoder_struct = ['mnist_struct_baseline_scheduler_binary_1_5_Hamming_dst_2_1',
+                           'mnist_struct_baseline_scheduler_binary_Hamming_dst_1',
                            # 'mnist_struct_baseline_scheduler_binary_1_3']
-                           # 'mnist_struct_baseline_scheduler_binary_1_5']
+                           'mnist_struct_baseline_scheduler_binary_1_5']
                            # 'mnist_struct_baseline_scheduler_binary_1_6',
                            # 'mnist_struct_baseline_scheduler_binary_1_7',
                            # 'mnist_struct_baseline_scheduler_binary_1_8',

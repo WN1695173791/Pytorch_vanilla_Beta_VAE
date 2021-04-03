@@ -2505,7 +2505,7 @@ def same_binary_code(net, model_name, loader, nb_class):
         label = label.to(device)
 
         # compute loss:
-        _, embedding, _, _, _, _, _ = net(data, z_struct_out=True, z_struct_layer_num=z_struct_layer_num)
+        _, embedding, _, _, _, _, _, _, _ = net(data, z_struct_out=True, z_struct_layer_num=z_struct_layer_num)
 
         if first:
             labels_list = label.detach()
@@ -2555,3 +2555,4 @@ def same_binary_code(net, model_name, loader, nb_class):
                     dist += distance_hamming_class
         distance_mean.append((dist/nb_distance))
         print('class {}: Average distance Hamming: {}'.format(class_id, distance_mean[class_id]))
+    print('average distance: {}'.format(torch.mean(torch.tensor(distance_mean))))

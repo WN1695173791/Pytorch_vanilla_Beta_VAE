@@ -265,21 +265,23 @@ class Encoder_struct(nn.Module, ABC):
 
         avg_dst_classes = torch.zeros(nb_class)
         for class_id in range(nb_class):
+            first = True
             z_struct_class_iter = batch_z_struct[torch.where(labels_batch == class_id)]
-            nb_distance = 0
-            avg_dst_class_id = 0
             # computing distance:
             for i in range(len(z_struct_class_iter)):
                 for j in range(len(z_struct_class_iter)):
                     if i == j:
                         pass
                     else:
-                        nb_distance += 1
                         Hmg_dist = torch.mean((z_struct_class_iter[i] != z_struct_class_iter[j]).double())
-                        avg_dst_class_id += Hmg_dist
-            avg_dst_class_id /= nb_distance
-            avg_dst_classes[class_id] = avg_dst_class_id
+                        # print(Hmg_dist)
+                        if first:
+                            avg_dst_class_id = Hmg_dist.unsqueeze(dim=0)
+                            first = False
+                        else:
+                            avg_dst_class_id = torch.cat((avg_dst_class_id, Hmg_dist.unsqueeze(dim=0)), dim=0)
 
+            avg_dst_classes[class_id] = torch.mean(avg_dst_class_id)
         global_avg_Hmg_dst = torch.mean(avg_dst_classes)
 
         return global_avg_Hmg_dst, avg_dst_classes
