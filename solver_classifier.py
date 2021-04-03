@@ -64,7 +64,7 @@ def compute_scores_and_loss(net, train_loader, test_loader, device, train_loader
                             ratio_reg, other_ratio, loss_min_distance_cl, z_struct_layer_num, contrastive_criterion,
                             without_acc, lambda_classification,
                             lambda_contrastive, lambda_ratio_reg, diff_var, lambda_var_intra, lambda_var_inter,
-                            lambda_var_distance, lambda_distance_mean, z_struct_out):
+                            lambda_var_distance, lambda_distance_mean, z_struct_out, Hmg_dst_loss, lambda_hmg_dst):
     score_train, classification_loss_train, total_loss_iter_train, ratio_loss_train, contrastive_loss_train, \
     diff_var_loss_train, variance_intra_train, \
     variance_inter_train, loss_distance_cl_train, loss_distance_mean_train, total_loss_train = compute_scores(net,
@@ -86,7 +86,9 @@ def compute_scores_and_loss(net, train_loader, test_loader, device, train_loader
                                                                                                               lambda_var_inter,
                                                                                                               lambda_var_distance,
                                                                                                               lambda_distance_mean,
-                                                                                                              z_struct_out)
+                                                                                                              z_struct_out,
+                                                                                                              Hmg_dst_loss,
+                                                                                                              lambda_hmg_dst)
     score_test, classification_loss_test, total_loss_iter_test, ratio_loss_test, contrastive_loss_test, \
     diff_var_loss_test, variance_intra_test, \
     variance_inter_test, loss_distance_cl_test, loss_distance_mean_test, total_loss_test = compute_scores(net,
@@ -108,7 +110,9 @@ def compute_scores_and_loss(net, train_loader, test_loader, device, train_loader
                                                                                                           lambda_var_inter,
                                                                                                           lambda_var_distance,
                                                                                                           lambda_distance_mean,
-                                                                                                          z_struct_out)
+                                                                                                          z_struct_out,
+                                                                                                          Hmg_dst_loss,
+                                                                                                          lambda_hmg_dst)
 
     scores = {'train': score_train, 'test': score_test}
     losses = {'total_train': total_loss_train,
@@ -272,6 +276,8 @@ class SolverClassifier(object):
         self.binary_first_conv = args.binary_first_conv
         self.binary_second_conv = args.binary_second_conv
         self.binary_third_conv = args.binary_third_conv
+        self.Hmg_dst_loss = args.Hmg_dst_loss
+        self.lambda_hmg_dst = args.lambda_hmg_dst
         # VAE var:
         self.is_VAE_var = args.is_VAE_var
         self.var_second_cnn_block = args.var_second_cnn_block
@@ -397,8 +403,8 @@ class SolverClassifier(object):
                           var_third_cnn_block=self.var_third_cnn_block)
 
         # get layer num to extract z_struct:
+        self.z_struct_out = True
         if not self.is_VAE_var:
-            self.z_struct_out = True
             self.z_struct_layer_num = get_layer_zstruct_num(net)
 
         # experience name:
@@ -464,7 +470,13 @@ class SolverClassifier(object):
 
         # load checkpoints:
         self.load_checkpoint_scores('last')
-        self.load_checkpoint('last')
+        if self.Hmg_dst_loss:
+            print('USe encoder struct with Hamming distance with pre trained encoder, load it !')
+            self.checkpoint_dir = os.path.join(args.ckpt_dir, args.exp_name.split('_Hamming')[0])
+            self.load_checkpoint('last')
+            self.checkpoint_dir = os.path.join(args.ckpt_dir, args.exp_name)
+        else:
+            self.load_checkpoint('last')
 
         # create encoder + decoder decoder:
         if self.use_decoder:
@@ -727,13 +739,16 @@ class SolverClassifier(object):
                     prediction, embedding, ratio, \
                     variance_distance_iter_class, \
                     variance_intra, mean_distance_intra_class, \
-                    variance_inter = self.net(data,
-                                              labels=labels,
-                                              nb_class=self.nb_class,
-                                              use_ratio=self.ratio_reg,
-                                              z_struct_out=self.z_struct_out,
-                                              z_struct_layer_num=self.z_struct_layer_num,
-                                              loss_min_distance_cl=self.loss_min_distance_cl)
+                    variance_inter,  global_avg_Hmg_dst, \
+                    avg_dst_classes = self.net(data,
+                                               labels=labels,
+                                               nb_class=self.nb_class,
+                                               use_ratio=self.ratio_reg,
+                                               z_struct_out=self.z_struct_out,
+                                               z_struct_layer_num=self.z_struct_layer_num,
+                                               loss_min_distance_cl=self.loss_min_distance_cl,
+                                               Hmg_dst_loss=self.Hmg_dst_loss)
+
 
                     # for i in range(self.nb_class):
                     #     print('__________________-------------------class {}-----------------___________________'.format(i))
@@ -775,6 +790,9 @@ class SolverClassifier(object):
                         loss_distance_mean = -(
                             torch.abs(1 / (target_mean - mean_distance_intra_class + EPS))) * self.lambda_distance_mean
                         loss += loss_distance_mean
+
+                    if self.Hmg_dst_loss:
+                        loss += global_avg_Hmg_dst * self.lambda_hmg_dst
 
                 # freeze encoder_struct if train decoder:
                 if (self.use_decoder or self.use_VAE) and self.freeze_Encoder and self.use_structural_encoder \
@@ -842,7 +860,9 @@ class SolverClassifier(object):
                                                                    self.lambda_var_inter,
                                                                    self.lambda_var_distance,
                                                                    self.lambda_distance_mean,
-                                                                   self.z_struct_out)
+                                                                   self.z_struct_out,
+                                                                   self.Hmg_dst_loss,
+                                                                   self.lambda_hmg_dst)
 
             self.save_checkpoint_scores_loss()
             self.net_mode(train=True)

@@ -7,7 +7,7 @@ EPS = 1e-12
 def compute_scores(net, loader, device, loader_size, nb_class, ratio_reg, z_struct_layer_num,
                    other_ratio, loss_min_distance_cl, contrastive_criterion, without_acc, lambda_classification,
                    lambda_contrastive, lambda_ratio_reg, diff_var, lambda_var_intra, lambda_var_inter,
-                   lambda_var_distance, lambda_distance_mean, z_struct_out):
+                   lambda_var_distance, lambda_distance_mean, z_struct_out, Hmg_dst_loss, lambda_hmg_dst):
 
     classification_loss = 0
     classification_score = 0
@@ -31,13 +31,14 @@ def compute_scores(net, loader, device, loader_size, nb_class, ratio_reg, z_stru
 
             # compute loss:
             prediction, embedding, ratio, var_distance_classes_train, \
-            intra_var, mean_distance_intra_class, inter_var = net(data,
-                                                                  labels=labels,
-                                                                  nb_class=nb_class,
-                                                                  use_ratio=ratio_reg,
-                                                                  z_struct_out=z_struct_out,
-                                                                  z_struct_layer_num=z_struct_layer_num,
-                                                                  loss_min_distance_cl=loss_min_distance_cl)
+            intra_var, mean_distance_intra_class, inter_var, global_avg_Hmg_dst, _ = net(data,
+                                                                                         labels=labels,
+                                                                                         nb_class=nb_class,
+                                                                                         use_ratio=ratio_reg,
+                                                                                         z_struct_out=z_struct_out,
+                                                                                         z_struct_layer_num=z_struct_layer_num,
+                                                                                         loss_min_distance_cl=loss_min_distance_cl,
+                                                                                         Hmg_dst_loss=Hmg_dst_loss)
 
             # classification loss:
             classification_loss_iter = F.nll_loss(prediction, labels)
@@ -77,6 +78,9 @@ def compute_scores(net, loader, device, loader_size, nb_class, ratio_reg, z_stru
             loss_distance_mean_iter = -(torch.abs(1 / (target_mean - mean_distance_intra_class + EPS)))
             loss_distance_mean += loss_distance_mean_iter
 
+            # hamming distance loss:
+            hmg_dst_loss_iter = global_avg_Hmg_dst
+
             # Total loss:
             total_loss_iter = 0
             if not without_acc:
@@ -102,6 +106,9 @@ def compute_scores(net, loader, device, loader_size, nb_class, ratio_reg, z_stru
 
             if loss_distance_mean:
                 total_loss_iter += loss_distance_mean_iter * lambda_distance_mean
+
+            if Hmg_dst_loss:
+                total_loss_iter += hmg_dst_loss_iter * lambda_hmg_dst
 
             total_loss += total_loss_iter
 

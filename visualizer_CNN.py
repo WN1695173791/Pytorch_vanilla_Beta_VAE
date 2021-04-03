@@ -14,6 +14,9 @@ from visualizer import *
 from torch.autograd import Variable
 from viz.latent_traversal import LatentTraverser
 import importlib
+
+from scipy.spatial import distance
+
 lpips_exists = importlib.util.find_spec("lpips") is not None
 if lpips_exists:
     import lpips
@@ -2255,7 +2258,8 @@ def real_distribution_model(net, expe_name, z_struct_size, z_var_size, loader, t
             std_sigmoid = 0.5
             sigma_sigmoid = math.sqrt(std_sigmoid)
             x_sigmoid = np.linspace(mu_sigmoid - 3 * sigma_sigmoid, mu_sigmoid + 3 * sigma_sigmoid, 100)
-            plt.plot(x_sigmoid, stats.norm.pdf(x_sigmoid, mu_sigmoid, sigma_sigmoid), label='Gaussian sigmoid', color='red')
+            plt.plot(x_sigmoid, stats.norm.pdf(x_sigmoid, mu_sigmoid, sigma_sigmoid), label='Gaussian sigmoid',
+                     color='red')
             for i in range(len(mu_struct)):
                 mu = mu_struct[i]
                 variance = sigma_struct[i]
@@ -2427,7 +2431,8 @@ def images_generation(net, model_name, batch, size=(8, 8), mu_var=None, mu_struc
     return
 
 
-def manifold_digit(net, model_name, device, size=(20, 20), component_var=0, component_struct=0, random=False, loader=None,
+def manifold_digit(net, model_name, device, size=(20, 20), component_var=0, component_struct=0, random=False,
+                   loader=None,
                    mu_var=None, std_var=None, mu_struct=None, std_struct=None, z_var_size=None, z_struct_size=None,
                    img_choice=None):
     """
@@ -2475,7 +2480,8 @@ def manifold_digit(net, model_name, device, size=(20, 20), component_var=0, comp
             z_sample = torch.Tensor(z_sample).to(device)
             x_hat = net.decoder(z_sample)
             x_hat = x_hat.reshape(digit_size, digit_size).to('cpu').detach().numpy()
-            figure[(size[0] - 1 - i) * digit_size:(size[0] - 1 - i + 1) * digit_size, j * digit_size:(j + 1) * digit_size] = x_hat
+            figure[(size[0] - 1 - i) * digit_size:(size[0] - 1 - i + 1) * digit_size,
+            j * digit_size:(j + 1) * digit_size] = x_hat
 
     plt.figure(figsize=(10, 10))
     plt.imshow(figure, cmap='gray')
@@ -2484,4 +2490,68 @@ def manifold_digit(net, model_name, device, size=(20, 20), component_var=0, comp
     return
 
 
+def same_binary_code(net, model_name, loader, nb_class):
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    z_struct_layer_num = get_layer_zstruct_num(net)
 
+    first = True
+    i = 0
+    net.eval()
+    for x, label in loader:
+        i += 1
+
+        data = x
+        data = data.to(device)  # Variable(data.to(device))
+        label = label.to(device)
+
+        # compute loss:
+        _, embedding, _, _, _, _, _ = net(data, z_struct_out=True, z_struct_layer_num=z_struct_layer_num)
+
+        if first:
+            labels_list = label.detach()
+            embedding_struct = embedding.detach()
+            first = False
+        else:
+            embedding_struct = torch.cat((embedding_struct, embedding.detach()), 0)
+            labels_list = torch.cat((labels_list, label.detach()), 0)
+
+        if i % 1 == 0:
+            break
+
+    net.train()
+
+    embedding_struct = embedding_struct.numpy()[:, :, 0, 0]
+    labels_list = labels_list.numpy()
+
+    embedding_class = []
+    for class_id in range(nb_class):
+        embed_cl = embedding_struct[np.where(labels_list == class_id)]
+        embedding_class.append(embed_cl)
+
+    embedding_class = np.array(embedding_class)  # shape: nb_class, nb_z, z_size
+
+    # compute percentage same binary code:
+    # first: unique code:
+    # uniq_code = []
+    # for class_id in range(nb_class):
+    #     uniq_code.append(np.unique(embedding_class[class_id], axis=0))
+    #     print('class {}: unique code: {}/{}'.format(class_id, len(uniq_code[class_id]), len(embedding_class[class_id])))
+
+    # uniq_code = np.array(uniq_code)  # shape: nb_class, nb_different_code, z_size
+
+    # compute hamming distance: differentiable hamming loss distance.
+    distance_mean = []
+    for class_id in range(nb_class):
+        nb_vector = len(embedding_class[class_id])
+        dist = 0
+        nb_distance = 0
+        for i in range(nb_vector):
+            for j in range(nb_vector):
+                if i == j:
+                    pass
+                else:
+                    nb_distance += 1
+                    distance_hamming_class = torch.mean((torch.tensor(embedding_class[class_id][i]) != torch.tensor(embedding_class[class_id][j])).double())
+                    dist += distance_hamming_class
+        distance_mean.append((dist/nb_distance))
+        print('class {}: Average distance Hamming: {}'.format(class_id, distance_mean[class_id]))

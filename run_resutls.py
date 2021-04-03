@@ -95,6 +95,9 @@ def run_exp_extraction_and_visualization_custom_BK(list_model, is_ratio=False, i
         kernel_size_2 = int(parameters_dict['kernel_size_2'])
         kernel_size_3 = int(parameters_dict['kernel_size_3'])
         binary_z = str2bool(parameters_dict['binary_z'])
+        binary_first_conv = str2bool(parameters_dict['binary_first_conv'])
+        binary_second_conv = str2bool(parameters_dict['binary_second_conv'])
+        binary_third_conv = str2bool(parameters_dict['binary_third_conv'])
 
         # other default parameters:
         hidden_filters_1 = int(parameters_dict['hidden_filters_layer1'])
@@ -102,10 +105,14 @@ def run_exp_extraction_and_visualization_custom_BK(list_model, is_ratio=False, i
         hidden_filters_3 = int(parameters_dict['hidden_filters_layer3'])
 
         # vae var:
-        is_VAE_var = str2bool(parameters_dict['is_VAE_var'])
-        var_second_cnn_block = str2bool(parameters_dict['var_second_cnn_block'])
-        var_third_cnn_block = str2bool(parameters_dict['var_third_cnn_block'])
-
+        if is_encoder_struct:
+            is_VAE_var = False
+            var_second_cnn_block = False
+            var_third_cnn_block = False
+        else:
+            is_VAE_var = str2bool(parameters_dict['is_VAE_var'])
+            var_second_cnn_block = str2bool(parameters_dict['var_second_cnn_block'])
+            var_third_cnn_block = str2bool(parameters_dict['var_third_cnn_block'])
 
         # print(binary_chain, Binary_z)
         if is_decoder:
@@ -203,7 +210,10 @@ def run_exp_extraction_and_visualization_custom_BK(list_model, is_ratio=False, i
                                  BK_in_third_layer=BK_in_third_layer,
                                  two_conv_layer=two_conv_layer,
                                  three_conv_layer=three_conv_layer,
-                                 Binary_z=binary_z)
+                                 Binary_z=binary_z,
+                                 binary_first_conv=binary_first_conv,
+                                 binary_second_conv=binary_second_conv,
+                                 binary_third_conv=binary_third_conv)
         elif is_VAE_var:
             net_type = 'VAE_var'
             net = VAE_var(z_var_size=z_var_size,
@@ -362,7 +372,7 @@ def run_viz_expes(model_name, net, is_ratio, is_distance_loss, loss_distance_mea
     path = 'checkpoints_CNN/'
     path_scores = 'checkpoint_scores_CNN'
     net, _, nb_epochs = get_checkpoints(net, path, model_name)
-    # print(net)
+    print(net)
     net.eval()
 
     train_test = 'test'
@@ -431,6 +441,9 @@ def run_viz_expes(model_name, net, is_ratio, is_distance_loss, loss_distance_mea
     # plot_resume(net, model_name, is_ratio, is_distance_loss, loss_distance_mean, loader, train_loader,
     #             device, cat=cat, train_test=train_test, path_scores=path_scores, diff_var=diff_var_loss,
     #             contrastive_loss=contrastive_loss)
+
+    # see percentage of same binary code for encoder struct:
+    same_binary_code(net, model_name, loader, nb_class)
 
     return
 
@@ -508,8 +521,9 @@ if os.path.exists(path_select_model_analyse_50):
     selected_analyse_50 = np.load(path_select_model_analyse_50)
 
 if __name__ == '__main__':
-    list_encoder_struct = ['mnist_struct_baseline_scheduler_binary_1_3']
-                           # 'mnist_struct_baseline_scheduler_binary_1_5',
+    list_encoder_struct = ['mnist_struct_baseline_scheduler_binary_1_5_test_wt_sfmax']
+                           # 'mnist_struct_baseline_scheduler_binary_1_3']
+                           # 'mnist_struct_baseline_scheduler_binary_1_5']
                            # 'mnist_struct_baseline_scheduler_binary_1_6',
                            # 'mnist_struct_baseline_scheduler_binary_1_7',
                            # 'mnist_struct_baseline_scheduler_binary_1_8',
@@ -527,16 +541,12 @@ if __name__ == '__main__':
                            # 'mnist_struct_mean_scheduler_binary_1_11',
                            # 'mnist_struct_mean_scheduler_binary_1_12']
 
-    list_exp_VAE_var = ['mnist_vae_var_1',
-                        'mnist_vae_var_2']
-                        # 'mnist_vae_var_1conv_1',
-                        # 'mnist_vae_var_2conv_1',
-                        # 'mnist_vae_var_3conv_1']
+    list_exp_VAE_var = ['mnist_vae_var_oa_1']
 
     parameters_mnist_classifier_BK_ratio = "parameters_combinations/mnist_classifier_ratio.txt"
 
-    run_exp_extraction_and_visualization_custom_BK(list_exp_VAE_var,
+    run_exp_extraction_and_visualization_custom_BK(list_encoder_struct,
                                                    is_ratio=False,
                                                    is_decoder=False,
-                                                   is_VAE=True,
-                                                   is_encoder_struct=False)
+                                                   is_VAE=False,
+                                                   is_encoder_struct=True)

@@ -136,7 +136,7 @@ class Encoder_struct(nn.Module, ABC):
                 kaiming_init(m)
 
     def forward(self, x, labels=None, nb_class=None, use_ratio=False, z_struct_out=False, z_struct_prediction=False,
-                z_struct_layer_num=None, loss_min_distance_cl=False):
+                z_struct_layer_num=None, loss_min_distance_cl=False, Hmg_dst_loss=False):
         """
         Forward pass of model.
         """
@@ -152,6 +152,8 @@ class Encoder_struct(nn.Module, ABC):
         variance_intra = 0
         mean_distance_intra_class = 0
         variance_inter = 0
+        global_avg_Hmg_dst = 0
+        avg_dst_classes = 0
 
         if z_struct_out:
             z_struct = self.encoder_struct[:z_struct_layer_num](x)
@@ -163,11 +165,11 @@ class Encoder_struct(nn.Module, ABC):
             else:
                 prediction = self.encoder_struct[z_struct_layer_num:](x)
         else:
+            out = self.encoder_struct(x)
             if self.Binary_z:
-                out = self.encoder_struct(x)
                 prediction = F.log_softmax(out, dim=1)
             else:
-                prediction = self.encoder_struct(x)
+                prediction = F.softmax(out, dim=1)
 
         if use_ratio:
             ratio, variance_intra, variance_inter = self.compute_ratio_batch(z_struct,
@@ -179,9 +181,11 @@ class Encoder_struct(nn.Module, ABC):
                                                                                                       labels,
                                                                                                       nb_class)
 
-        return prediction, z_struct, ratio, variance_distance_iter_class, variance_intra, mean_distance_intra_class, \
-               variance_inter
+        if Hmg_dst_loss:
+            global_avg_Hmg_dst, avg_dst_classes = self.hamming_distance_loss(z_struct, nb_class, labels)
 
+        return prediction, z_struct, ratio, variance_distance_iter_class, variance_intra, mean_distance_intra_class, \
+               variance_inter, global_avg_Hmg_dst, avg_dst_classes
 
     def compute_ratio_batch(self, batch_z_struct, labels_batch, nb_class):
         """
@@ -214,7 +218,6 @@ class Encoder_struct(nn.Module, ABC):
 
         return ratio_variance_mean, torch.mean(variance_intra_class_mean_components), torch.mean(variance_inter_class)
 
-
     def compute_var_distance_class(self, batch_z_struct, labels_batch, nb_class):
         """
         compute ratio of one batch:
@@ -230,7 +233,6 @@ class Encoder_struct(nn.Module, ABC):
                 first = False
             else:
                 mean_class = torch.cat((mean_class, mean_class_iter), dim=0)
-
 
         first = True
         # add distance between all classes:
@@ -251,3 +253,33 @@ class Encoder_struct(nn.Module, ABC):
         variance_intra_class_distance_mean = torch.mean(variance_intra_class_distance, axis=0)
 
         return variance_intra_class_distance_mean, torch.mean(distance_inter_class)
+
+    def hamming_distance_loss(self, batch_z_struct, nb_class, labels_batch):
+        """
+        computing hamming distance between z_struct in the same class
+        :param z_struct:
+        :return:
+        """
+        assert batch_z_struct is not None, "z_struct mustn't be None to compute Hamming distance"
+        assert labels_batch is not None, "labels_batch mustn't be None to compute Hamming distance"
+
+        avg_dst_classes = torch.zeros(nb_class)
+        for class_id in range(nb_class):
+            z_struct_class_iter = batch_z_struct[torch.where(labels_batch == class_id)]
+            nb_distance = 0
+            avg_dst_class_id = 0
+            # computing distance:
+            for i in range(len(z_struct_class_iter)):
+                for j in range(len(z_struct_class_iter)):
+                    if i == j:
+                        pass
+                    else:
+                        nb_distance += 1
+                        Hmg_dist = torch.mean((z_struct_class_iter[i] != z_struct_class_iter[j]).double())
+                        avg_dst_class_id += Hmg_dist
+            avg_dst_class_id /= nb_distance
+            avg_dst_classes[class_id] = avg_dst_class_id
+
+        global_avg_Hmg_dst = torch.mean(avg_dst_classes)
+
+        return global_avg_Hmg_dst, avg_dst_classes
