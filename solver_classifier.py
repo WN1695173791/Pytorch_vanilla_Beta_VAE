@@ -276,6 +276,8 @@ class SolverClassifier(object):
         self.is_VAE_var = args.is_VAE_var
         self.var_second_cnn_block = args.var_second_cnn_block
         self.var_third_cnn_block = args.var_third_cnn_block
+       
+        self.contrastive_criterion = False
 
         # For reproducibility:
         if self.randomness:

@@ -121,8 +121,8 @@ class Encoder_struct(nn.Module, ABC):
         self.encoder_struct += [
             nn.AdaptiveMaxPool2d((1, 1)),  # B, z_struct_size
             View((-1, self.z_struct_size)),  # B, z_struct_size
-            nn.Linear(self.z_struct_size, self.n_classes),  # B, nb_class
-            nn.Softmax()
+            nn.Linear(self.z_struct_size, self.n_classes)  # B, nb_class
+            # nn.Softmax()
         ]
         # _________________________---------------- end encoder_struct: ------------_____________________________
 
