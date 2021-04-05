@@ -693,9 +693,24 @@ if __name__ == '__main__':
                         # 'mnist_vae_var_kaggle_3cl_3_m',
                         # 'mnist_vae_var_kaggle_3cl_4_m']
 
+    list_exp_VAE_var_2 = ['mnist_vae_var_deeper_2cb_1',
+                          'mnist_vae_var_deeper_2cb_2',
+                          'mnist_vae_var_deeper_2cb_3',
+                          'mnist_vae_var_deeper_2cb_4',
+                          'mnist_vae_var_deeper_2cb_5',
+                          'mnist_vae_var_deeper_2cb_6',
+                          'mnist_vae_var_deeper_2cb_7',
+                          'mnist_vae_var_deeper_3cb_1',
+                          'mnist_vae_var_deeper_3cb_2',
+                          'mnist_vae_var_deeper_3cb_3',
+                          'mnist_vae_var_deeper_3cb_4',
+                          'mnist_vae_var_deeper_3cb_5',
+                          'mnist_vae_var_deeper_3cb_6',
+                          'mnist_vae_var_deeper_3cb_7']
+
     parameters_mnist_classifier_BK_ratio = "parameters_combinations/mnist_classifier_ratio.txt"
 
-    run_exp_extraction_and_visualization_custom_BK(list_exp_VAE_var,
+    run_exp_extraction_and_visualization_custom_BK(list_exp_VAE_var_2,
                                                    is_ratio=False,
                                                    is_decoder=False,
                                                    is_VAE=True,
