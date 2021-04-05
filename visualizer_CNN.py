@@ -2495,10 +2495,8 @@ def same_binary_code(net, model_name, loader, nb_class):
     z_struct_layer_num = get_layer_zstruct_num(net)
 
     first = True
-    i = 0
     net.eval()
     for x, label in loader:
-        i += 1
 
         data = x
         data = data.to(device)  # Variable(data.to(device))
@@ -2515,9 +2513,6 @@ def same_binary_code(net, model_name, loader, nb_class):
             embedding_struct = torch.cat((embedding_struct, embedding.detach()), 0)
             labels_list = torch.cat((labels_list, label.detach()), 0)
 
-        if i % 1 == 0:
-            break
-
     net.train()
 
     embedding_struct = embedding_struct.numpy()[:, :, 0, 0]
@@ -2532,10 +2527,10 @@ def same_binary_code(net, model_name, loader, nb_class):
 
     # compute percentage same binary code:
     # first: unique code:
-    # uniq_code = []
-    # for class_id in range(nb_class):
-    #     uniq_code.append(np.unique(embedding_class[class_id], axis=0))
-    #     print('class {}: unique code: {}/{}'.format(class_id, len(uniq_code[class_id]), len(embedding_class[class_id])))
+    uniq_code = []
+    for class_id in range(nb_class):
+        uniq_code.append(np.unique(embedding_class[class_id], axis=0))
+        print('class {}: unique code: {}/{}'.format(class_id, len(uniq_code[class_id]), len(embedding_class[class_id])))
 
     # uniq_code = np.array(uniq_code)  # shape: nb_class, nb_different_code, z_size
 
