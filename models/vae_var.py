@@ -15,7 +15,8 @@ class VAE_var(nn.Module, ABC):
                  var_second_cnn_block=True,
                  var_third_cnn_block=False):
         """
-        Class which defines model and forward pass.
+        Class which defines model and forward pass:
+        model https://www.kaggle.com/vincentman0403/vae-with-convolution-on-mnist
         """
         super(VAE_var, self).__init__()
 

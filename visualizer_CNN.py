@@ -188,10 +188,10 @@ def compute_z_struct(net_trained, exp_name, loader, train_test=None, net_type=No
             if torch.cuda.is_available():
                 input_data = input_data.cuda()
 
-            _, z_struct, _, _, _, _, _ = net_trained(input_data,
-                                                     z_struct_out=True,
-                                                     z_struct_layer_num=z_struct_layer_num)
-            pred, _, _, _, _, _, _ = net_trained(input_data)
+            _, z_struct, _, _, _, _, _, _, _ = net_trained(input_data,
+                                                           z_struct_out=True,
+                                                           z_struct_layer_num=z_struct_layer_num)
+            pred, _, _, _, _, _, _, _, _ = net_trained(input_data)
 
             # train mode:
             net_trained.eval()
@@ -1720,7 +1720,8 @@ def distance_matrix(net, exp_name, train_test=None, plot_fig=False):
 
 
 def plot_resume(net, exp_name, is_ratio, is_distance_loss, loss_distance_mean, loader, loader_train, device, cat=None,
-                train_test=None, path_scores=None, save=True, diff_var=False, contrastive_loss=False):
+                train_test=None, path_scores=None, save=True, diff_var=False, contrastive_loss=False,
+                encoder_struct=False):
     """
     plot interesting values to resume experiementation behavior: distance matrix, loss, acc, ratio, var intra, var inter
     :param net:
@@ -1741,7 +1742,7 @@ def plot_resume(net, exp_name, is_ratio, is_distance_loss, loss_distance_mean, l
     nb_class = len(variance_intra_class)
 
     # print('ratio:', ratio_variance_mean)
-    # print('vari intra mean per class:', variance_intra_class_mean_per_class.shape)
+    # print('var intra mean per class:', variance_intra_class_mean_per_class.shape)
     # print('var intra mean', variance_intra_class_mean)
     # print('var inter', variance_inter_class.shape)
     # print('var inter mean', variance_inter_class_mean)
@@ -1769,11 +1770,12 @@ def plot_resume(net, exp_name, is_ratio, is_distance_loss, loss_distance_mean, l
     print('Computing scores...')
     score_test, _, _, _, _, _, _, _, _, _, _ = compute_scores(net, loader, device, len(loader.dataset), False, False,
                                                               False, False, False, False, False, False, False, False,
-                                                              False, False, False, False, False, False)
+                                                              False, False, False, False, False, False, False, False)
 
-    score_train, _, _, _, _, _, _, _, _, _, _ = compute_scores(net, loader_train, device, len(loader_train.dataset),
-                                                               False, False, False, False, False, False, False, False,
-                                                               False, False, False, False, False, False, False, False)
+    # score_train, _, _, _, _, _, _, _, _, _, _ = compute_scores(net, loader_train, device, len(loader_train.dataset),
+    #                                                            False, False, False, False, False, False, False, False,
+    #                                                            False, False, False, False, False, False, False, False,
+    #                                                            False, False)
 
     # losses:
     axs[0, 0].set(xlabel='nb_iter', ylabel='loss', title=('Losses: ' + exp_name))
@@ -1840,22 +1842,41 @@ def plot_resume(net, exp_name, is_ratio, is_distance_loss, loss_distance_mean, l
             axs[0, 1].text(x, y, "%0.2f" % distance_inter_class[x, y], size=12, color='black', ha="center", va="center")
 
     # values in array: _________________________________________________________________________________________________
+    # Binary encoder struct value:
+    if encoder_struct:
+        uniq_code, Hmg_dst, percentage_uniq_code = same_binary_code(net,
+                                                                    exp_name,
+                                                                    loader,
+                                                                    nb_class,
+                                                                    train_test=train_test,
+                                                                    save=False)
+        avg_hmg_dst = np.mean(Hmg_dst)
+        avg_perc_uniq_code = np.mean(percentage_uniq_code)
+
     axs[1, 1].set(title='Statistics')
 
     text_titles = ["Ratio: ",
                    "Variance intra class mean: ",
                    "Variance inter class mean: ",
                    "Std distances between classes: ",
-                   "Accuracy train: ",
+                   # "Accuracy train: ",
                    "Accuracy test: "]
+    if encoder_struct:
+        text_titles += ['Average Hamming distance in classes: ',
+                        'Average uniq code percentage per classes: ']
+
     n_lines = len(text_titles)
 
     text_values = [ratio_variance_mean,
                    variance_intra_class_mean,
                    variance_inter_class_mean,
                    std_distances,
-                   score_train,
+                   # score_train,
                    score_test]
+
+    if encoder_struct:
+        text_values += [avg_hmg_dst,
+                        avg_perc_uniq_code]
 
     for y in range(n_lines):
         axs[1, 1].text(.1,
@@ -1869,7 +1890,7 @@ def plot_resume(net, exp_name, is_ratio, is_distance_loss, loss_distance_mean, l
     plt.show()
 
     path_save = 'fig_results/resume/plot_resume_' + exp_name + '_' + train_test + '.png'
-    if save and not os.path.exists(path_save):
+    if save:  #  and not os.path.exists(path_save):
         fig.savefig(path_save)
 
     return
@@ -2032,6 +2053,7 @@ def viz_reconstruction_VAE(net, loader, exp_name, z_var_size, z_struct_size, nb_
     score_reconstruction_zvar = 0
     score_reconstruction_zstruct = 0
 
+    """
     for i, (_data_, _label_) in enumerate(loader):
         print('computing scores.... {}/{}'.format(i, len(loader)))
         with torch.no_grad():
@@ -2063,7 +2085,7 @@ def viz_reconstruction_VAE(net, loader, exp_name, z_var_size, z_struct_size, nb_
             _x_recon_struct_ = net.decoder(_z_struct_random_)
             score_reconstruction_zstruct_iter = F.binary_cross_entropy(_x_recon_struct_, _input_data_)
             score_reconstruction_zstruct += score_reconstruction_zstruct_iter.detach().numpy()
-
+    """
     net.train()
 
     score_reconstruction /= len(loader)
@@ -2496,6 +2518,8 @@ def same_binary_code(net, model_name, loader, nb_class, train_test=None, save=Tr
     z_struct_layer_num = get_layer_zstruct_num(net)
 
     path_model_uniq_code = 'binary_encoder_struct_results/uniq_code/' + model_name + '_' + train_test + '.npy'
+    path_model_uniq_code_percent = 'binary_encoder_struct_results/uniq_code/percent_' + model_name + '_' + train_test\
+                                   + '.npy'
     path_model_Hmg_dst = 'binary_encoder_struct_results/Hamming_dst/' + model_name + '_' + train_test + '.npy'
     path_model_encoder_struct_embedding = 'binary_encoder_struct_results/encoder_struct_embedding/' + model_name +\
                                           '_' + train_test + '.npy'
@@ -2508,6 +2532,7 @@ def same_binary_code(net, model_name, loader, nb_class, train_test=None, save=Tr
         Hmg_dst = np.load(path_model_Hmg_dst, allow_pickle=True)
         embedding_struct = np.load(path_model_uniq_code, allow_pickle=True)
         labels_list = np.load(path_model_uniq_code, allow_pickle=True)
+        percentage_uniq_code = np.load(path_model_uniq_code_percent, allow_pickle=True)
 
         embedding_class = []
         for class_id in range(nb_class):
@@ -2518,8 +2543,10 @@ def same_binary_code(net, model_name, loader, nb_class, train_test=None, save=Tr
 
         print('__________------Uniq code:------__________')
         for class_id in range(nb_class):
-            print('class {}: unique code: {}/{}'.format(class_id, len(uniq_code[class_id]),
-                                                        len(embedding_class[class_id])))
+            print('class {}: unique code: {}/{}. In percent: {}'.format(class_id,
+                                                                        len(uniq_code[class_id]),
+                                                                        len(embedding_class[class_id]),
+                                                                        percentage_uniq_code[class_id]))
 
         print('__________------Hamming distance:------__________')
         for class_id in range(nb_class):
@@ -2547,7 +2574,6 @@ def same_binary_code(net, model_name, loader, nb_class, train_test=None, save=Tr
             else:
                 embedding_struct = torch.cat((embedding_struct, embedding.detach()), 0)
                 labels_list = torch.cat((labels_list, label.detach()), 0)
-                break
 
         net.train()
 
@@ -2568,19 +2594,23 @@ def same_binary_code(net, model_name, loader, nb_class, train_test=None, save=Tr
         # compute percentage same binary code:
         # first: unique code:
         uniq_code = []
+        percentage_uniq_code = []
         for class_id in range(nb_class):
             uniq_code.append(np.unique(embedding_class[class_id], axis=0))
-            print('class {}: unique code: {}/{}'.format(class_id,
-                                                        len(uniq_code[class_id]),
-                                                        len(embedding_class[class_id])))
+            percentage_uniq_code.append(len(uniq_code[class_id])/len(embedding_class[class_id]))
+            print('class {}: unique code: {}/{}. In percent: {}'.format(class_id,
+                                                                        len(uniq_code[class_id]),
+                                                                        len(embedding_class[class_id]),
+                                                                        percentage_uniq_code[class_id]))
 
         uniq_code = np.array(uniq_code)  # shape: nb_class, nb_different_code, z_size
-
+        percentage_uniq_code = np.array(percentage_uniq_code)
         if save:
             np.save(path_model_uniq_code, uniq_code)
+            np.save(path_model_uniq_code_percent, percentage_uniq_code)
 
         # compute hamming distance: differentiable hamming loss distance.
-        distance_mean = []
+        Hmg_dst = []
         for class_id in range(nb_class):
             nb_vector = len(embedding_class[class_id])
             dist = 0
@@ -2594,9 +2624,11 @@ def same_binary_code(net, model_name, loader, nb_class, train_test=None, save=Tr
                         distance_hamming_class = torch.mean((torch.tensor(embedding_class[class_id][i]) !=
                                                              torch.tensor(embedding_class[class_id][j])).double())
                         dist += distance_hamming_class
-            distance_mean.append((dist/nb_distance))
-            print('class {}: Average distance Hamming: {}'.format(class_id, distance_mean[class_id]))
-        print('average distance: {}'.format(torch.mean(torch.tensor(distance_mean))))
+            Hmg_dst.append((dist/nb_distance))
+            print('class {}: Average distance Hamming: {}'.format(class_id, Hmg_dst[class_id]))
+        print('average distance: {}'.format(torch.mean(torch.tensor(Hmg_dst))))
 
         if save:
-            np.save(path_model_Hmg_dst, distance_mean)
+            np.save(path_model_Hmg_dst, Hmg_dst)
+
+    return uniq_code, Hmg_dst, percentage_uniq_code

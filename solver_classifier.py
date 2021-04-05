@@ -728,7 +728,7 @@ class SolverClassifier(object):
                     log_var = latent_representation['log_var']
 
                     # BCE tries to make our reconstruction as accurate as possible:
-                    BCE_loss = F.binary_cross_entropy(x_recons, data)
+                    BCE_loss = F.binary_cross_entropy(x_recons, data, size_average=False)
 
                     # KLD tries to push the distributions as close as possible to unit Gaussian:
                     KLD_loss = -0.5 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
