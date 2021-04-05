@@ -433,12 +433,12 @@ def run_viz_expes(model_name, net, is_ratio, is_distance_loss, loss_distance_mea
     # _ = distance_matrix(net, model_name, train_test=train_test, plot_fig=True)
 
     # Plot resume:
-    # compute_z_struct(net, model_name, loader, train_test=train_test, net_type=net_type)
-    # get_z_struct_per_class(model_name, train_test=train_test, nb_class=nb_class)
-    # get_average_z_struct_per_classes(exp_name=model_name, train_test=train_test)
-    # plot_resume(net, model_name, is_ratio, is_distance_loss, loss_distance_mean, loader, train_loader,
-    #             device, cat=cat, train_test=train_test, path_scores=path_scores, diff_var=diff_var_loss,
-    #             contrastive_loss=contrastive_loss, encoder_struct=True)
+    compute_z_struct(net, model_name, loader, train_test=train_test, net_type=net_type)
+    get_z_struct_per_class(model_name, train_test=train_test, nb_class=nb_class)
+    get_average_z_struct_per_classes(exp_name=model_name, train_test=train_test)
+    plot_resume(net, model_name, is_ratio, is_distance_loss, loss_distance_mean, loader, train_loader,
+                device, cat=cat, train_test=train_test, path_scores=path_scores, diff_var=diff_var_loss,
+                contrastive_loss=contrastive_loss, encoder_struct=True)
 
     # see percentage of same binary code for encoder struct:
     # same_binary_code(net, model_name, loader, nb_class, train_test=train_test, save=True)
@@ -540,17 +540,17 @@ if __name__ == '__main__':
                            # 'mnist_struct_mean_scheduler_binary_1_11',
                            # 'mnist_struct_mean_scheduler_binary_1_12']
 
-    list_encoder_struct_2 = ['mnist_struct_min_scheduler_binary_1_10_Hamming_dst_1_1_1',
-                             'mnist_struct_mean_scheduler_binary_1_3_Hamming_dst_1_2_1',
-                             'mnist_struct_mean_scheduler_binary_1_5_Hamming_dst_1_3_1',
-                             'mnist_struct_mean_scheduler_binary_1_8_Hamming_dst_1_4_1',
-                             'mnist_struct_mean_scheduler_binary_1_9_Hamming_dst_1_5_1',
-                             'mnist_struct_mean_scheduler_binary_1_11_Hamming_dst_1_6_1',
-                             'mnist_struct_baseline_scheduler_binary_1_3_Hamming_dst_1_7_1',
-                             'mnist_struct_baseline_scheduler_binary_1_5_Hamming_dst_1_8_1',
-                             'mnist_struct_baseline_scheduler_binary_1_7_Hamming_dst_1_9_1',
-                             'mnist_struct_baseline_scheduler_binary_1_9_Hamming_dst_1_10_1',
-                             'mnist_struct_baseline_scheduler_binary_1_11_Hamming_dst_1_11_1',
+    list_encoder_struct_2 = [# 'mnist_struct_min_scheduler_binary_1_10_Hamming_dst_1_1_1',
+                             # 'mnist_struct_mean_scheduler_binary_1_3_Hamming_dst_1_2_1',
+                             # 'mnist_struct_mean_scheduler_binary_1_5_Hamming_dst_1_3_1',
+                             # 'mnist_struct_mean_scheduler_binary_1_8_Hamming_dst_1_4_1',
+                             # 'mnist_struct_mean_scheduler_binary_1_9_Hamming_dst_1_5_1',
+                             # 'mnist_struct_mean_scheduler_binary_1_11_Hamming_dst_1_6_1',
+                             # 'mnist_struct_baseline_scheduler_binary_1_3_Hamming_dst_1_7_1',
+                             # 'mnist_struct_baseline_scheduler_binary_1_5_Hamming_dst_1_8_1',
+                             # 'mnist_struct_baseline_scheduler_binary_1_7_Hamming_dst_1_9_1',
+                             # 'mnist_struct_baseline_scheduler_binary_1_9_Hamming_dst_1_10_1',
+                             # 'mnist_struct_baseline_scheduler_binary_1_11_Hamming_dst_1_11_1',
                              'mnist_struct_min_scheduler_binary_1_10_Hamming_dst_2_1_1',
                              'mnist_struct_mean_scheduler_binary_1_3_Hamming_dst_2_2_1',
                              'mnist_struct_mean_scheduler_binary_1_5_Hamming_dst_2_3_1',
