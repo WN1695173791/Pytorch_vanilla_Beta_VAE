@@ -2577,8 +2577,8 @@ def same_binary_code(net, model_name, loader, nb_class, train_test=None, save=Tr
 
         net.train()
 
-        embedding_struct = embedding_struct.numpy()[:, :, 0, 0]
-        labels_list = labels_list.numpy()
+        embedding_struct = embedding_struct.cpu().numpy()[:, :, 0, 0]
+        labels_list = labels_list.cpu().numpy()
 
         if save:
             np.save(path_model_encoder_struct_embedding, embedding_struct)
@@ -2611,21 +2611,22 @@ def same_binary_code(net, model_name, loader, nb_class, train_test=None, save=Tr
 
         # compute hamming distance: differentiable hamming loss distance.
         Hmg_dst = []
-        for class_id in range(nb_class):
-            nb_vector = len(embedding_class[class_id])
-            dist = 0
-            nb_distance = 0
-            for i in range(nb_vector):
-                for j in range(nb_vector):
-                    if i == j:
-                        pass
-                    else:
-                        nb_distance += 1
-                        distance_hamming_class = torch.mean((torch.tensor(embedding_class[class_id][i]) !=
-                                                             torch.tensor(embedding_class[class_id][j])).double())
-                        dist += distance_hamming_class
-            Hmg_dst.append((dist/nb_distance))
-            print('class {}: Average distance Hamming: {}'.format(class_id, Hmg_dst[class_id]))
+        # for class_id in range(nb_class):
+        #     nb_vector = len(embedding_class[class_id])
+        #     dist = 0
+        #     nb_distance = 0
+        #     for i in range(nb_vector):
+        #         for j in range(nb_vector):
+        #             if i == j:
+        #                 pass
+        #             else:
+        #                 nb_distance += 1
+        #                 distance_hamming_class = torch.mean((torch.tensor(embedding_class[class_id][i]) !=
+        #                                                      torch.tensor(embedding_class[class_id][j])).double())
+        #                 dist += distance_hamming_class
+        #     Hmg_dst.append((dist/nb_distance))
+        #     print('class {}: Average distance Hamming: {}'.format(class_id, Hmg_dst[class_id]))
+        Hmg_dst = np.zeros(nb_class)
         print('average distance: {}'.format(torch.mean(torch.tensor(Hmg_dst))))
 
         if save:

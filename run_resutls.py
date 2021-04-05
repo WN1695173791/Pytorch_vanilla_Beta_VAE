@@ -15,6 +15,7 @@ from visualizer import viz_reconstruction
 from viz.visualize import Visualizer
 import torch.nn.functional as F
 
+from solver import gpu_config
 import csv
 
 
@@ -370,6 +371,8 @@ def run_viz_expes(model_name, net, is_ratio, is_distance_loss, loss_distance_mea
     path = 'checkpoints_CNN/'
     path_scores = 'checkpoint_scores_CNN'
     net, _, nb_epochs = get_checkpoints(net, path, model_name)
+    net, device = gpu_config(net)
+
     print('________________------------------{}-----------------_____________________'.format(model_name))
     net.eval()
 
@@ -551,13 +554,13 @@ if __name__ == '__main__':
                              # 'mnist_struct_baseline_scheduler_binary_1_7_Hamming_dst_1_9_1',
                              # 'mnist_struct_baseline_scheduler_binary_1_9_Hamming_dst_1_10_1',
                              # 'mnist_struct_baseline_scheduler_binary_1_11_Hamming_dst_1_11_1',
-                             'mnist_struct_min_scheduler_binary_1_10_Hamming_dst_2_1_1',
-                             'mnist_struct_mean_scheduler_binary_1_3_Hamming_dst_2_2_1',
-                             'mnist_struct_mean_scheduler_binary_1_5_Hamming_dst_2_3_1',
-                             'mnist_struct_mean_scheduler_binary_1_8_Hamming_dst_2_4_1',
-                             'mnist_struct_mean_scheduler_binary_1_9_Hamming_dst_2_5_1',
-                             'mnist_struct_mean_scheduler_binary_1_11_Hamming_dst_2_6_1',
-                             'mnist_struct_baseline_scheduler_binary_1_3_Hamming_dst_2_7_1',
+                             # 'mnist_struct_min_scheduler_binary_1_10_Hamming_dst_2_1_1',
+                             # 'mnist_struct_mean_scheduler_binary_1_3_Hamming_dst_2_2_1',
+                             # 'mnist_struct_mean_scheduler_binary_1_5_Hamming_dst_2_3_1',
+                             # 'mnist_struct_mean_scheduler_binary_1_8_Hamming_dst_2_4_1',
+                             # 'mnist_struct_mean_scheduler_binary_1_9_Hamming_dst_2_5_1',
+                             # 'mnist_struct_mean_scheduler_binary_1_11_Hamming_dst_2_6_1',
+                             # 'mnist_struct_baseline_scheduler_binary_1_3_Hamming_dst_2_7_1',
                              'mnist_struct_baseline_scheduler_binary_1_5_Hamming_dst_2_8_1',
                              'mnist_struct_baseline_scheduler_binary_1_7_Hamming_dst_2_9_1',
                              'mnist_struct_baseline_scheduler_binary_1_9_Hamming_dst_2_10_1',
@@ -638,7 +641,24 @@ if __name__ == '__main__':
                              'mnist_struct_baseline_scheduler_binar_Hamming_dst_1_8_3',
                              'mnist_struct_baseline_scheduler_binar_Hamming_dst_1_9_3',
                              'mnist_struct_baseline_scheduler_binary_Hamming_dst_1_10_3',
-                             'mnist_struct_baseline_scheduler_binary_Hamming_dst_1_11_3']
+                             'mnist_struct_baseline_scheduler_binary_Hamming_dst_1_11_3',
+'mnist_struct_baseline_scheduler_binary_1_3',
+    'mnist_struct_baseline_scheduler_binary_1_5',
+    'mnist_struct_baseline_scheduler_binary_1_6',
+    'mnist_struct_baseline_scheduler_binary_1_7',
+    'mnist_struct_baseline_scheduler_binary_1_8',
+    'mnist_struct_baseline_scheduler_binary_1_9',
+    'mnist_struct_baseline_scheduler_binary_1_10',
+    'mnist_struct_baseline_scheduler_binary_1_11',
+    'mnist_struct_baseline_scheduler_binary_1_12',
+    'mnist_struct_min_scheduler_binary_1_10',
+    'mnist_struct_mean_scheduler_binary_1_5',
+    'mnist_struct_mean_scheduler_binary_1_6',
+    'mnist_struct_mean_scheduler_binary_1_8',
+    'mnist_struct_mean_scheduler_binary_1_9',
+    'mnist_struct_mean_scheduler_binary_1_10',
+    'mnist_struct_mean_scheduler_binary_1_11',
+    'mnist_struct_mean_scheduler_binary_1_12']
 
     list_exp_VAE_var = [# 'mnist_vae_var_kaggle_scheduler_1',
                         'mnist_vae_var_kaggle_scheduler_2',
