@@ -2026,7 +2026,7 @@ def viz_reconstruction_VAE(net, loader, exp_name, z_var_size, z_struct_size, nb_
 
     # z reconstruction:
     if is_vae_var:
-        x_recon, _ = net(data)
+        x_recon, _ = net(input_data)
     else:
         x_recon, z_struct, z_var, z_var_sample, _, _, _ = net(input_data)
 
@@ -2052,6 +2052,8 @@ def viz_reconstruction_VAE(net, loader, exp_name, z_var_size, z_struct_size, nb_
     score_reconstruction = 0
     score_reconstruction_zvar = 0
     score_reconstruction_zstruct = 0
+
+    score_reconstruction = F.binary_cross_entropy(x_recon, input_data)
 
     """
     for i, (_data_, _label_) in enumerate(loader):
@@ -2092,7 +2094,7 @@ def viz_reconstruction_VAE(net, loader, exp_name, z_var_size, z_struct_size, nb_
     score_reconstruction_zvar /= len(loader)
     score_reconstruction_zstruct /= len(loader)
 
-    score_reconstruction = np.around(score_reconstruction, 3)
+    score_reconstruction = np.around(score_reconstruction.detach().numpy(), 3)
     score_reconstruction_zvar = np.around(score_reconstruction_zvar, 3)
     score_reconstruction_zstruct = np.around(score_reconstruction_zstruct, 3)
 
@@ -2207,6 +2209,8 @@ def real_distribution_model(net, expe_name, z_struct_size, z_var_size, loader, t
     path = 'Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test + '_mu_var.npy'
 
     if not os.path.exists(path):
+
+        net.eval()
         device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
         first = True
@@ -2241,6 +2245,7 @@ def real_distribution_model(net, expe_name, z_struct_size, z_var_size, loader, t
                     else:
                         z_struct_distribution = torch.cat((z_struct_distribution, z_struct_distribution_iter), 0)
                 first = False
+        net.train()
 
         mu_var = torch.mean(mu_var, axis=0)
         sigma_var = torch.mean(sigma_var, axis=0)

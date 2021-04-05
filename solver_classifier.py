@@ -728,7 +728,7 @@ class SolverClassifier(object):
                     log_var = latent_representation['log_var']
 
                     # BCE tries to make our reconstruction as accurate as possible:
-                    BCE_loss = F.binary_cross_entropy(x_recons, data, size_average=False)
+                    # BCE_loss = F.binary_cross_entropy(x_recons, data, size_average=False)
                     BCE_loss = F.mse_loss(x_recons, data, size_average=False)
 
                     # KLD tries to push the distributions as close as possible to unit Gaussian:
