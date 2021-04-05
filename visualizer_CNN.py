@@ -1721,7 +1721,7 @@ def distance_matrix(net, exp_name, train_test=None, plot_fig=False):
 
 def plot_resume(net, exp_name, is_ratio, is_distance_loss, loss_distance_mean, loader, loader_train, device, cat=None,
                 train_test=None, path_scores=None, save=True, diff_var=False, contrastive_loss=False,
-                encoder_struct=False):
+                encoder_struct=False, Hmg_dst=False):
     """
     plot interesting values to resume experiementation behavior: distance matrix, loss, acc, ratio, var intra, var inter
     :param net:
@@ -1849,7 +1849,8 @@ def plot_resume(net, exp_name, is_ratio, is_distance_loss, loss_distance_mean, l
                                                                     loader,
                                                                     nb_class,
                                                                     train_test=train_test,
-                                                                    save=False)
+                                                                    save=False,
+                                                                    Hmg_dist=Hmg_dst)
         avg_hmg_dst = np.mean(Hmg_dst)
         avg_perc_uniq_code = np.mean(percentage_uniq_code)
 
@@ -2517,7 +2518,7 @@ def manifold_digit(net, model_name, device, size=(20, 20), component_var=0, comp
     return
 
 
-def same_binary_code(net, model_name, loader, nb_class, train_test=None, save=True):
+def same_binary_code(net, model_name, loader, nb_class, train_test=None, save=True, Hmg_dist=True):
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     z_struct_layer_num = get_layer_zstruct_num(net)
@@ -2529,14 +2530,14 @@ def same_binary_code(net, model_name, loader, nb_class, train_test=None, save=Tr
     path_model_encoder_struct_embedding = 'binary_encoder_struct_results/encoder_struct_embedding/' + model_name +\
                                           '_' + train_test + '.npy'
     path_model_list_labels_encoder_struct_embedding = 'binary_encoder_struct_results/encoder_struct_embedding' \
-                                                      '/labels_list_'  + train_test + '.npy '
+                                                      '/labels_list_' + model_name + '_' + train_test + '.npy'
 
-    if os.path.exists(path_model_uniq_code) and os.path.exists(path_model_Hmg_dst):
+    if os.path.exists(path_model_encoder_struct_embedding):
         print('Load all binary encoder struct values:')
         uniq_code = np.load(path_model_uniq_code, allow_pickle=True)
         Hmg_dst = np.load(path_model_Hmg_dst, allow_pickle=True)
-        embedding_struct = np.load(path_model_uniq_code, allow_pickle=True)
-        labels_list = np.load(path_model_uniq_code, allow_pickle=True)
+        embedding_struct = np.load(path_model_encoder_struct_embedding, allow_pickle=True)
+        labels_list = np.load(path_model_list_labels_encoder_struct_embedding, allow_pickle=True)
         percentage_uniq_code = np.load(path_model_uniq_code_percent, allow_pickle=True)
 
         embedding_class = []
@@ -2560,7 +2561,6 @@ def same_binary_code(net, model_name, loader, nb_class, train_test=None, save=Tr
 
     else:
         net.eval()
-
         print('Compute all binary encoder struct values:')
         first = True
         for x, label in loader:
@@ -2615,23 +2615,25 @@ def same_binary_code(net, model_name, loader, nb_class, train_test=None, save=Tr
             np.save(path_model_uniq_code_percent, percentage_uniq_code)
 
         # compute hamming distance: differentiable hamming loss distance.
-        Hmg_dst = []
-        # for class_id in range(nb_class):
-        #     nb_vector = len(embedding_class[class_id])
-        #     dist = 0
-        #     nb_distance = 0
-        #     for i in range(nb_vector):
-        #         for j in range(nb_vector):
-        #             if i == j:
-        #                 pass
-        #             else:
-        #                 nb_distance += 1
-        #                 distance_hamming_class = torch.mean((torch.tensor(embedding_class[class_id][i]) !=
-        #                                                      torch.tensor(embedding_class[class_id][j])).double())
-        #                 dist += distance_hamming_class
-        #     Hmg_dst.append((dist/nb_distance))
-        #     print('class {}: Average distance Hamming: {}'.format(class_id, Hmg_dst[class_id]))
-        Hmg_dst = np.zeros(nb_class)
+        if Hmg_dist:
+            Hmg_dst = []
+            for class_id in range(nb_class):
+                nb_vector = len(embedding_class[class_id])
+                dist = 0
+                nb_distance = 0
+                for i in range(nb_vector):
+                    for j in range(nb_vector):
+                        if i == j:
+                            pass
+                        else:
+                            nb_distance += 1
+                            distance_hamming_class = torch.mean((torch.tensor(embedding_class[class_id][i]) !=
+                                                                 torch.tensor(embedding_class[class_id][j])).double())
+                            dist += distance_hamming_class
+                Hmg_dst.append((dist/nb_distance))
+                print('class {}: Average distance Hamming: {}'.format(class_id, Hmg_dst[class_id]))
+        else:
+            Hmg_dst = np.zeros(nb_class)
         print('average distance: {}'.format(torch.mean(torch.tensor(Hmg_dst))))
 
         if save:

@@ -283,6 +283,7 @@ class SolverClassifier(object):
         self.is_VAE_var = args.is_VAE_var
         self.var_second_cnn_block = args.var_second_cnn_block
         self.var_third_cnn_block = args.var_third_cnn_block
+        self.other_architecture = args.other_architecture
        
         self.contrastive_criterion = False
 
@@ -401,7 +402,8 @@ class SolverClassifier(object):
             self.net_type = 'vae_var'
             net = VAE_var(z_var_size=self.z_var_size,
                           var_second_cnn_block=self.var_second_cnn_block,
-                          var_third_cnn_block=self.var_third_cnn_block)
+                          var_third_cnn_block=self.var_third_cnn_block,
+                          other_architecture=self.other_architecture)
 
         # get layer num to extract z_struct:
         self.z_struct_out = True
@@ -655,8 +657,6 @@ class SolverClassifier(object):
 
         while not out:
             for batch_idx, (data, labels) in enumerate(self.train_loader):
-
-                losses_per_epoch = []
 
                 self.global_iter += 1
                 self.epochs = self.global_iter / len(self.train_loader)

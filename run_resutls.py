@@ -25,7 +25,7 @@ def str2bool(string):
 
 # ___________________________________ begin extrraction parameters models _____________________________________________
 def run_exp_extraction_and_visualization_custom_BK(list_model, is_ratio=False, is_decoder=False, is_VAE=False,
-                                                   is_custom=False, is_encoder_struct=False):
+                                                   is_custom=False, is_encoder_struct=False, other_architecture=False):
     for exp_name in list_model:
 
         # load csv parameters:
@@ -61,7 +61,6 @@ def run_exp_extraction_and_visualization_custom_BK(list_model, is_ratio=False, i
         decoder_stride_1 = int(parameters_dict['decoder_stride_1'])
         decoder_stride_2 = int(parameters_dict['decoder_stride_2'])
         decoder_stride_3 = int(parameters_dict['decoder_stride_3'])
-        other_architecture = parameters_dict['other_architecture']
 
         # Encoder struct parameters:
         big_kernel_size = int(parameters_dict['big_kernel_size'])
@@ -99,8 +98,11 @@ def run_exp_extraction_and_visualization_custom_BK(list_model, is_ratio=False, i
         binary_first_conv = str2bool(parameters_dict['binary_first_conv'])
         binary_second_conv = str2bool(parameters_dict['binary_second_conv'])
         binary_third_conv = str2bool(parameters_dict['binary_third_conv'])
-        Hmg_dst_loss = str2bool(parameters_dict['Hmg_dst_loss'])
-        lambda_hmg_dst = float(parameters_dict['lambda_hmg_dst'])
+        if 'Hamming' not in exp_name:
+            pass
+        else:
+            Hmg_dst_loss = str2bool(parameters_dict['Hmg_dst_loss'])
+            lambda_hmg_dst = float(parameters_dict['lambda_hmg_dst'])
 
         # other default parameters:
         hidden_filters_1 = int(parameters_dict['hidden_filters_layer1'])
@@ -116,6 +118,11 @@ def run_exp_extraction_and_visualization_custom_BK(list_model, is_ratio=False, i
             is_VAE_var = str2bool(parameters_dict['is_VAE_var'])
             var_second_cnn_block = str2bool(parameters_dict['var_second_cnn_block'])
             var_third_cnn_block = str2bool(parameters_dict['var_third_cnn_block'])
+
+        if 'other_architecture' in parameters_dict.keys():
+            other_architecture = str2bool(parameters_dict['other_architecture'])
+        else:
+            other_architecture = False
 
         # print(binary_chain, Binary_z)
         if is_decoder:
@@ -221,7 +228,8 @@ def run_exp_extraction_and_visualization_custom_BK(list_model, is_ratio=False, i
             net_type = 'VAE_var'
             net = VAE_var(z_var_size=z_var_size,
                           var_second_cnn_block=var_second_cnn_block,
-                          var_third_cnn_block=var_third_cnn_block)
+                          var_third_cnn_block=var_third_cnn_block,
+                          other_architecture=other_architecture)
         if is_decoder:
             run_decoder(model_name, net)
         elif is_VAE or is_VAE_var:
@@ -319,11 +327,10 @@ def run_VAE(model_name, net, lambda_BCE, beta, z_struct_size, z_var_size, VAE_st
                                                                          z_var_size,
                                                                          loader,
                                                                          'test',
-                                                                         plot_gaussian=True,
+                                                                         plot_gaussian=False,
                                                                          save=True,
                                                                          VAE_struct=VAE_struct,
                                                                          is_vae_var=is_vae_var)
-
     viz_reconstruction_VAE(net, loader, model_name, z_var_size, z_struct_size, nb_img=10,
                            nb_class=nb_class, save=True, z_reconstruction=True,
                            z_struct_reconstruction=False, z_var_reconstruction=False,
@@ -441,10 +448,10 @@ def run_viz_expes(model_name, net, is_ratio, is_distance_loss, loss_distance_mea
     get_average_z_struct_per_classes(exp_name=model_name, train_test=train_test)
     plot_resume(net, model_name, is_ratio, is_distance_loss, loss_distance_mean, loader, train_loader,
                 device, cat=cat, train_test=train_test, path_scores=path_scores, diff_var=diff_var_loss,
-                contrastive_loss=contrastive_loss, encoder_struct=True)
+                contrastive_loss=contrastive_loss, encoder_struct=True, Hmg_dst=False)
 
     # see percentage of same binary code for encoder struct:
-    # same_binary_code(net, model_name, loader, nb_class, train_test=train_test, save=True)
+    # same_binary_code(net, model_name, loader, nb_class, train_test=train_test, save=True, Hmg_dist=False)
 
     return
 
@@ -522,195 +529,41 @@ if os.path.exists(path_select_model_analyse_50):
     selected_analyse_50 = np.load(path_select_model_analyse_50)
 
 if __name__ == '__main__':
-    list_encoder_struct = ['mnist_struct_baseline_scheduler_binary_1_5_Hamming_dst_2_1',
-                           'mnist_struct_baseline_scheduler_binary_Hamming_dst_1',
-                           # 'mnist_struct_baseline_scheduler_binary_1_3']
-                           'mnist_struct_baseline_scheduler_binary_1_5']
-                           # 'mnist_struct_baseline_scheduler_binary_1_6',
-                           # 'mnist_struct_baseline_scheduler_binary_1_7',
-                           # 'mnist_struct_baseline_scheduler_binary_1_8',
-                           # 'mnist_struct_baseline_scheduler_binary_1_9',
-                           # 'mnist_struct_baseline_scheduler_binary_1_10',
-                           # 'mnist_struct_baseline_scheduler_binary_1_11',
-                           # 'mnist_struct_baseline_scheduler_binary_1_12',
-                           # 'mnist_struct_min_scheduler_binary_1_10',
-                           # 'mnist_struct_mean_scheduler_binary_1_3',
-                           # 'mnist_struct_mean_scheduler_binary_1_5',
-                           # 'mnist_struct_mean_scheduler_binary_1_6',
-                           # 'mnist_struct_mean_scheduler_binary_1_8',
-                           # 'mnist_struct_mean_scheduler_binary_1_9',
-                           # 'mnist_struct_mean_scheduler_binary_1_10',
-                           # 'mnist_struct_mean_scheduler_binary_1_11',
-                           # 'mnist_struct_mean_scheduler_binary_1_12']
 
-    list_encoder_struct_2 = [# 'mnist_struct_min_scheduler_binary_1_10_Hamming_dst_1_1_1',
-                             # 'mnist_struct_mean_scheduler_binary_1_3_Hamming_dst_1_2_1',
-                             # 'mnist_struct_mean_scheduler_binary_1_5_Hamming_dst_1_3_1',
-                             # 'mnist_struct_mean_scheduler_binary_1_8_Hamming_dst_1_4_1',
-                             # 'mnist_struct_mean_scheduler_binary_1_9_Hamming_dst_1_5_1',
-                             # 'mnist_struct_mean_scheduler_binary_1_11_Hamming_dst_1_6_1',
-                             # 'mnist_struct_baseline_scheduler_binary_1_3_Hamming_dst_1_7_1',
-                             # 'mnist_struct_baseline_scheduler_binary_1_5_Hamming_dst_1_8_1',
-                             # 'mnist_struct_baseline_scheduler_binary_1_7_Hamming_dst_1_9_1',
-                             # 'mnist_struct_baseline_scheduler_binary_1_9_Hamming_dst_1_10_1',
-                             # 'mnist_struct_baseline_scheduler_binary_1_11_Hamming_dst_1_11_1',
-                             # 'mnist_struct_min_scheduler_binary_1_10_Hamming_dst_2_1_1',
-                             # 'mnist_struct_mean_scheduler_binary_1_3_Hamming_dst_2_2_1',
-                             # 'mnist_struct_mean_scheduler_binary_1_5_Hamming_dst_2_3_1',
-                             # 'mnist_struct_mean_scheduler_binary_1_8_Hamming_dst_2_4_1',
-                             # 'mnist_struct_mean_scheduler_binary_1_9_Hamming_dst_2_5_1',
-                             # 'mnist_struct_mean_scheduler_binary_1_11_Hamming_dst_2_6_1',
-                             # 'mnist_struct_baseline_scheduler_binary_1_3_Hamming_dst_2_7_1',
-                             'mnist_struct_baseline_scheduler_binary_1_5_Hamming_dst_2_8_1',
-                             'mnist_struct_baseline_scheduler_binary_1_7_Hamming_dst_2_9_1',
-                             'mnist_struct_baseline_scheduler_binary_1_9_Hamming_dst_2_10_1',
-                             'mnist_struct_baseline_scheduler_binary_1_11_Hamming_dst_2_11_1',
-                             'mnist_struct_min_scheduler_binary_Hamming_dst_1_1_1',
-                             'mnist_struct_mean_scheduler_binar_Hamming_dst_1_2_1',
-                             'mnist_struct_mean_scheduler_binar_Hamming_dst_1_3_1',
-                             'mnist_struct_mean_scheduler_binar_Hamming_dst_1_4_1',
-                             'mnist_struct_mean_scheduler_binar_Hamming_dst_1_5_1',
-                             'mnist_struct_mean_scheduler_binary_Hamming_dst_1_6_1',
-                             'mnist_struct_baseline_scheduler_binar_Hamming_dst_1_7_1',
-                             'mnist_struct_baseline_scheduler_binar_Hamming_dst_1_8_1',
-                             'mnist_struct_baseline_scheduler_binar_Hamming_dst_1_9_1',
-                             'mnist_struct_baseline_scheduler_binary_Hamming_dst_1_10_1',
-                             'mnist_struct_baseline_scheduler_binary_Hamming_dst_1_11_1',
-                             'mnist_struct_min_scheduler_binary_1_10_Hamming_dst_1_1_2',
-                             'mnist_struct_mean_scheduler_binary_1_3_Hamming_dst_1_2_2',
-                             'mnist_struct_mean_scheduler_binary_1_5_Hamming_dst_1_3_2',
-                             'mnist_struct_mean_scheduler_binary_1_8_Hamming_dst_1_4_2',
-                             'mnist_struct_mean_scheduler_binary_1_9_Hamming_dst_1_5_2',
-                             'mnist_struct_mean_scheduler_binary_1_11_Hamming_dst_1_6_2',
-                             'mnist_struct_baseline_scheduler_binary_1_3_Hamming_dst_1_7_2',
-                             'mnist_struct_baseline_scheduler_binary_1_5_Hamming_dst_1_8_2',
-                             'mnist_struct_baseline_scheduler_binary_1_7_Hamming_dst_1_9_2',
-                             'mnist_struct_baseline_scheduler_binary_1_9_Hamming_dst_1_10_2',
-                             'mnist_struct_baseline_scheduler_binary_1_11_Hamming_dst_1_11_2',
-                             'mnist_struct_min_scheduler_binary_1_10_Hamming_dst_2_1_2',
-                             'mnist_struct_mean_scheduler_binary_1_3_Hamming_dst_2_2_2',
-                             'mnist_struct_mean_scheduler_binary_1_5_Hamming_dst_2_3_2',
-                             'mnist_struct_mean_scheduler_binary_1_8_Hamming_dst_2_4_2',
-                             'mnist_struct_mean_scheduler_binary_1_9_Hamming_dst_2_5_2',
-                             'mnist_struct_mean_scheduler_binary_1_11_Hamming_dst_2_6_2',
-                             'mnist_struct_baseline_scheduler_binary_1_3_Hamming_dst_2_7_2',
-                             'mnist_struct_baseline_scheduler_binary_1_5_Hamming_dst_2_8_2',
-                             'mnist_struct_baseline_scheduler_binary_1_7_Hamming_dst_2_9_2',
-                             'mnist_struct_baseline_scheduler_binary_1_9_Hamming_dst_2_10_2',
-                             'mnist_struct_baseline_scheduler_binary_1_11_Hamming_dst_2_11_2',
-                             'mnist_struct_min_scheduler_binary_Hamming_dst_1_1_2',
-                             'mnist_struct_mean_scheduler_binar_Hamming_dst_1_2_2',
-                             'mnist_struct_mean_scheduler_binar_Hamming_dst_1_3_2',
-                             'mnist_struct_mean_scheduler_binar_Hamming_dst_1_4_2',
-                             'mnist_struct_mean_scheduler_binar_Hamming_dst_1_5_2',
-                             'mnist_struct_mean_scheduler_binary_Hamming_dst_1_6_2',
-                             'mnist_struct_baseline_scheduler_binar_Hamming_dst_1_7_2',
-                             'mnist_struct_baseline_scheduler_binar_Hamming_dst_1_8_2',
-                             'mnist_struct_baseline_scheduler_binar_Hamming_dst_1_9_2',
-                             'mnist_struct_baseline_scheduler_binary_Hamming_dst_1_10_2',
-                             'mnist_struct_baseline_scheduler_binary_Hamming_dst_1_11_2',
-                             'mnist_struct_min_scheduler_binary_1_10_Hamming_dst_1_1_3',
-                             'mnist_struct_mean_scheduler_binary_1_3_Hamming_dst_1_2_3',
-                             'mnist_struct_mean_scheduler_binary_1_5_Hamming_dst_1_3_3',
-                             'mnist_struct_mean_scheduler_binary_1_8_Hamming_dst_1_4_3',
-                             'mnist_struct_mean_scheduler_binary_1_9_Hamming_dst_1_5_3',
-                             'mnist_struct_mean_scheduler_binary_1_11_Hamming_dst_1_6_3',
-                             'mnist_struct_baseline_scheduler_binary_1_3_Hamming_dst_1_7_3',
-                             'mnist_struct_baseline_scheduler_binary_1_5_Hamming_dst_1_8_3',
-                             'mnist_struct_baseline_scheduler_binary_1_7_Hamming_dst_1_9_3',
-                             'mnist_struct_baseline_scheduler_binary_1_9_Hamming_dst_1_10_3',
-                             'mnist_struct_baseline_scheduler_binary_1_11_Hamming_dst_1_11_3',
-                             'mnist_struct_min_scheduler_binary_1_10_Hamming_dst_2_1_3',
-                             'mnist_struct_mean_scheduler_binary_1_3_Hamming_dst_2_2_3',
-                             'mnist_struct_mean_scheduler_binary_1_5_Hamming_dst_2_3_3',
-                             'mnist_struct_mean_scheduler_binary_1_8_Hamming_dst_2_4_3',
-                             'mnist_struct_mean_scheduler_binary_1_9_Hamming_dst_2_5_3',
-                             'mnist_struct_mean_scheduler_binary_1_11_Hamming_dst_2_6_3',
-                             'mnist_struct_baseline_scheduler_binary_1_3_Hamming_dst_2_7_3',
-                             'mnist_struct_baseline_scheduler_binary_1_5_Hamming_dst_2_8_3',
-                             'mnist_struct_baseline_scheduler_binary_1_7_Hamming_dst_2_9_3',
-                             'mnist_struct_baseline_scheduler_binary_1_9_Hamming_dst_2_10_3',
-                             'mnist_struct_baseline_scheduler_binary_1_11_Hamming_dst_2_11_3',
-                             'mnist_struct_min_scheduler_binary_Hamming_dst_1_1_3',
-                             'mnist_struct_mean_scheduler_binar_Hamming_dst_1_2_3',
-                             'mnist_struct_mean_scheduler_binar_Hamming_dst_1_3_3',
-                             'mnist_struct_mean_scheduler_binar_Hamming_dst_1_4_3',
-                             'mnist_struct_mean_scheduler_binar_Hamming_dst_1_5_3',
-                             'mnist_struct_mean_scheduler_binary_Hamming_dst_1_6_3',
-                             'mnist_struct_baseline_scheduler_binar_Hamming_dst_1_7_3',
-                             'mnist_struct_baseline_scheduler_binar_Hamming_dst_1_8_3',
-                             'mnist_struct_baseline_scheduler_binar_Hamming_dst_1_9_3',
-                             'mnist_struct_baseline_scheduler_binary_Hamming_dst_1_10_3',
-                             'mnist_struct_baseline_scheduler_binary_Hamming_dst_1_11_3',
-'mnist_struct_baseline_scheduler_binary_1_3',
-    'mnist_struct_baseline_scheduler_binary_1_5',
-    'mnist_struct_baseline_scheduler_binary_1_6',
-    'mnist_struct_baseline_scheduler_binary_1_7',
-    'mnist_struct_baseline_scheduler_binary_1_8',
-    'mnist_struct_baseline_scheduler_binary_1_9',
-    'mnist_struct_baseline_scheduler_binary_1_10',
-    'mnist_struct_baseline_scheduler_binary_1_11',
-    'mnist_struct_baseline_scheduler_binary_1_12',
-    'mnist_struct_min_scheduler_binary_1_10',
-    'mnist_struct_mean_scheduler_binary_1_5',
-    'mnist_struct_mean_scheduler_binary_1_6',
-    'mnist_struct_mean_scheduler_binary_1_8',
-    'mnist_struct_mean_scheduler_binary_1_9',
-    'mnist_struct_mean_scheduler_binary_1_10',
-    'mnist_struct_mean_scheduler_binary_1_11',
-    'mnist_struct_mean_scheduler_binary_1_12']
+    list_encoder_struct = ['mnist_struct_baseline_scheduler_binary_1_3',
+                           'mnist_struct_baseline_scheduler_binary_1_6',
+                           'mnist_struct_baseline_scheduler_binary_1_8',
+                           'mnist_struct_baseline_scheduler_binary_1_10',
+                           'mnist_struct_baseline_scheduler_binary_1_12']
 
-    list_exp_VAE_var = [# 'mnist_vae_var_kaggle_scheduler_1',
-                        # 'mnist_vae_var_kaggle_scheduler_2',
-                        # 'mnist_vae_var_kaggle_scheduler_3',
-                        # 'mnist_vae_var_kaggle_scheduler_4',
-                        # 'mnist_vae_var_kaggle_1',
-                        # 'mnist_vae_var_kaggle_2',
-                        # 'mnist_vae_var_kaggle_3',
-                        # # 'mnist_vae_var_kaggle_4',
-                        # # 'mnist_vae_var_kaggle_3cl_scheduler_1',
-                        # 'mnist_vae_var_kaggle_3cl_scheduler_2',
-                        # 'mnist_vae_var_kaggle_3cl_scheduler_3',
-                        # 'mnist_vae_var_kaggle_3cl_scheduler_4',
-                        # # 'mnist_vae_var_kaggle_3cl_1',
-                        # 'mnist_vae_var_kaggle_3cl_2',
-                        # 'mnist_vae_var_kaggle_3cl_3',
-                        # 'mnist_vae_var_kaggle_3cl_4',
-                        # 'mnist_vae_var_kaggle_scheduler_1_m',
-                        'mnist_vae_var_kaggle_scheduler_2_m',
-                        'mnist_vae_var_kaggle_scheduler_3_m',
-                        # 'mnist_vae_var_kaggle_scheduler_4_m',
-                        # 'mnist_vae_var_kaggle_1_m',
-                        'mnist_vae_var_kaggle_2_m',
-                        'mnist_vae_var_kaggle_3_m']
-                        # 'mnist_vae_var_kaggle_4_m',
-                        # 'mnist_vae_var_kaggle_3cl_scheduler_1_m',
-                        # 'mnist_vae_var_kaggle_3cl_scheduler_2_m',
-                        # 'mnist_vae_var_kaggle_3cl_scheduler_3_m',
-                        # 'mnist_vae_var_kaggle_3cl_scheduler_4_m',
-                        # 'mnist_vae_var_kaggle_3cl_1_m',
-                        # 'mnist_vae_var_kaggle_3cl_2_m',
-                        # 'mnist_vae_var_kaggle_3cl_3_m',
-                        # 'mnist_vae_var_kaggle_3cl_4_m']
-
-    list_exp_VAE_var_2 = ['mnist_vae_var_deeper_2cb_1',
-                          'mnist_vae_var_deeper_2cb_2',
-                          'mnist_vae_var_deeper_2cb_3',
-                          'mnist_vae_var_deeper_2cb_4',
-                          'mnist_vae_var_deeper_2cb_5',
-                          'mnist_vae_var_deeper_2cb_6',
-                          'mnist_vae_var_deeper_2cb_7',
-                          'mnist_vae_var_deeper_3cb_1',
-                          'mnist_vae_var_deeper_3cb_2',
-                          'mnist_vae_var_deeper_3cb_3',
-                          'mnist_vae_var_deeper_3cb_4',
-                          'mnist_vae_var_deeper_3cb_5',
-                          'mnist_vae_var_deeper_3cb_6',
-                          'mnist_vae_var_deeper_3cb_7']
+    list_exp_VAE_var = ['mnist_vae_var_deeper_2cb_1_1',
+                        'mnist_vae_var_deeper_2cb_1_2',
+                        'mnist_vae_var_deeper_2cb_1_3',
+                        'mnist_vae_var_deeper_2cb_1_4',
+                        'mnist_vae_var_deeper_2cb_1_5',
+                        'mnist_vae_var_deeper_2cb_1_6',
+                        'mnist_vae_var_deeper_3cb_1_1',
+                        'mnist_vae_var_deeper_3cb_1_2',
+                        'mnist_vae_var_deeper_3cb_1_3',
+                        'mnist_vae_var_deeper_3cb_1_4',
+                        'mnist_vae_var_deeper_3cb_1_5',
+                        'mnist_vae_var_deeper_3cb_1_6',
+                        'mnist_vae_var_kaggle_2cl_1',
+                        'mnist_vae_var_kaggle_2cl_2',
+                        'mnist_vae_var_kaggle_2cl_3',
+                        'mnist_vae_var_kaggle_2cl_4',
+                        'mnist_vae_var_kaggle_2cl_5',
+                        'mnist_vae_var_kaggle_2cl_6',
+                        'mnist_vae_var_kaggle_3cl_1',
+                        'mnist_vae_var_kaggle_3cl_2',
+                        'mnist_vae_var_kaggle_3cl_3',
+                        'mnist_vae_var_kaggle_3cl_4',
+                        'mnist_vae_var_kaggle_3cl_5',
+                        'mnist_vae_var_kaggle_3cl_6']
 
     parameters_mnist_classifier_BK_ratio = "parameters_combinations/mnist_classifier_ratio.txt"
 
-    run_exp_extraction_and_visualization_custom_BK(list_exp_VAE_var_2,
+    run_exp_extraction_and_visualization_custom_BK(list_exp_VAE_var,
                                                    is_ratio=False,
                                                    is_decoder=False,
                                                    is_VAE=True,
