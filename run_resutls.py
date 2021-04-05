@@ -445,7 +445,7 @@ def run_viz_expes(model_name, net, is_ratio, is_distance_loss, loss_distance_mea
     #             contrastive_loss=contrastive_loss)
 
     # see percentage of same binary code for encoder struct:
-    same_binary_code(net, model_name, loader, nb_class)
+    same_binary_code(net, model_name, loader, nb_class, train_test=train_test, save=True)
 
     return
 

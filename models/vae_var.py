@@ -12,7 +12,7 @@ class VAE_var(nn.Module, ABC):
 
     def __init__(self,
                  z_var_size=5,
-                 var_second_cnn_block=False,
+                 var_second_cnn_block=True,
                  var_third_cnn_block=False):
         """
         Class which defines model and forward pass.
@@ -27,186 +27,81 @@ class VAE_var(nn.Module, ABC):
         self.var_second_cnn_block = var_second_cnn_block
         self.var_third_cnn_block = var_third_cnn_block
 
-        """
         # reshape size compute:
-        w1 = ((32 - 3 + (2 * 0)) / 1) + 1 - EPS
-        self.width_conv1_size = round(w1)
-        w2 = ((self.width_conv1_size - 3 + (2 * 0)) / 1) + 1 - EPS
-        self.width_conv2_size = round(w2)
         # computing padding size for have output shape equal to input shape (equivalent to padding="same"):
-        self.padding_size_1 = ((self.width_conv2_size-1)*2 - self.width_conv2_size + 5)/2 + EPS
-        self.padding_size_1 = round(self.padding_size_1)
-        w3 = ((self.width_conv2_size - 5 + (2 * self.padding_size_1)) / 2) + 1 - EPS
-        self.width_conv3_size = round(w3)
+        # Same padding means the size of output feature-maps are the same as the input feature-maps 
+        # (under the assumption of stride=1)
+        # Formula: P = ((W-1)S - W + F) / 2 and with stride=1 we have: P = (F-1)/2
+        self.padding_size = (3-1)/2
+        self.padding_size = round(self.padding_size)
         
+        # output tensor shape: ((W-F + 2P)/S) +1
+        w1 = ((32 - 3 + (2 * self.padding_size)) / 2) + 1 - EPS
+        self.width_conv1_size = round(w1)
         if self.var_second_cnn_block:
-            w4 = ((self.width_conv3_size - 3 + (2 * 0)) / 1) + 1 - EPS
-            self.width_conv4_size = round(w4)
-            w5 = ((self.width_conv4_size - 3 + (2 * 0)) / 1) + 1 - EPS
-            self.width_conv5_size = round(w5)
-            # computing padding size for have output shape equal to input shape (equivalent to padding="same"):
-            self.padding_size_2 = ((self.width_conv5_size - 1) * 2 - self.width_conv5_size + 5) / 2 + EPS
-            self.padding_size_2 = round(self.padding_size_2)
-            w6 = ((self.width_conv5_size - 5 + (2 * self.padding_size_2)) / 2) + 1 - EPS
-            self.width_conv6_size = round(w6)
-
+            w2 = ((self.width_conv1_size - 3 + (2 * self.padding_size)) / 2) + 1 - EPS
+            self.width_conv2_size = round(w2)
         if self.var_third_cnn_block:
-            w7 = ((self.width_conv6_size - 4 + (2 * 0)) / 1) + 1 - EPS
-            self.width_conv7_size = round(w7)
+            w3 = ((self.width_conv2_size - 3 + (2 * self.padding_size)) / 1) + 1 - EPS
+            self.width_conv3_size = round(w3)
 
         if self.var_second_cnn_block and not self.var_third_cnn_block:
-            self.var_reshape = (64, self.width_conv6_size, self.width_conv6_size)
+            self.var_reshape = (64, self.width_conv2_size, self.width_conv2_size)
         elif self.var_third_cnn_block:
-            self.var_reshape = (128, self.width_conv7_size, self.width_conv7_size)
+            self.var_reshape = (64, self.width_conv3_size, self.width_conv3_size)
         else:
             self.var_reshape = (32, self.width_conv3_size, self.width_conv3_size)
-        """
-
-        # Other architecture:
-        # reshape size compute:
-        # ((w-1)*s - w + f)/2
-        # self.padding_size_1 = ((32 - 1) * 1 - 32 + 3) / 2 + EPS
-        # self.padding_size_1 = round(self.padding_size_1)
-        self.padding_size_1 = 0
-        w1 = ((32 - 4 + (2 * self.padding_size_1)) / 1) + 1 - EPS
-        self.width_conv1_size = round(w1)
-
-        # self.padding_size_2 = ((self.width_conv1_size - 1) * 1 - self.width_conv1_size + 3) / 2 + EPS
-        # self.padding_size_2 = round(self.padding_size_2)
-        self.padding_size_2 = 0
-        w2 = ((self.width_conv1_size - 4 + (2 * self.padding_size_2)) / 2) + 1 - EPS
-        self.width_conv2_size = round(w2)
-
-        # self.padding_size_3 = ((self.width_conv2_size - 1) * 1 - self.width_conv2_size + 3) / 2 + EPS
-        # self.padding_size_3 = round(self.padding_size_3)
-        self.padding_size_3 = 0
-        w3 = ((self.width_conv2_size - 4 + (2 * self.padding_size_3)) / 1) + 1 - EPS
-        self.width_conv3_size = round(w3)
-
-        # self.padding_size_4 = ((self.width_conv3_size - 1) * 1 - self.width_conv3_size + 3) / 2 + EPS
-        # self.padding_size_4 = round(self.padding_size_4)
-        # self.padding_size_4 = 0
-        # w4 = ((self.width_conv3_size - 3 + (2 * self.padding_size_4)) / 1) + 1 - EPS
-        # self.width_conv4_size = round(w4)
-
-        self.var_reshape = (64, self.width_conv3_size, self.width_conv3_size)
-
-        print(self.var_reshape, self.width_conv1_size, self.width_conv2_size, self.width_conv3_size)
 
         # -----------_________________ define model: encoder var ____________________________________________--------
-        # self.encoder_var = [
-        #     nn.Conv2d(in_channels=self.nc, out_channels=32, kernel_size=3, stride=1),
-        #     nn.ReLU(True),
-        #     nn.BatchNorm2d(32),
-        #     # PrintLayer(),
-        #     nn.Conv2d(in_channels=32, out_channels=32, kernel_size=3, stride=1),
-        #     nn.ReLU(True),
-        #     nn.BatchNorm2d(32),
-        #     # PrintLayer(),
-        #     nn.Conv2d(in_channels=32, out_channels=32, kernel_size=3, stride=2, padding=self.padding_size_1),
-        #     nn.ReLU(True),
-        #     nn.BatchNorm2d(32),
-        #     nn.Dropout(0.4),
-        #     # PrintLayer(),
-        # ]
-
-        # self.encoder_var = [
-        #     nn.Conv2d(in_channels=self.nc, out_channels=32, kernel_size=3, stride=1, padding=self.padding_size_1),
-        #     nn.ReLU(True),
-        #     nn.BatchNorm2d(32),
-        #     # PrintLayer(),
-        #     nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3, stride=2, padding=self.padding_size_2),
-        #     nn.ReLU(True),
-        #     nn.BatchNorm2d(64),
-        #     # PrintLayer(),
-        #     nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3, stride=1, padding=self.padding_size_3),
-        #     nn.ReLU(True),
-        #     nn.BatchNorm2d(64),
-        #     nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3, stride=1, padding=self.padding_size_4),
-        #     nn.ReLU(True),
-        #     nn.BatchNorm2d(64),
-        #     nn.Dropout(0.4),
-        #     # PrintLayer(),
-        # ]
-
         self.encoder_var = [
-            # PrintLayer(),
-            nn.Conv2d(self.nc, 32, 4, stride=1),
+            nn.Conv2d(in_channels=self.nc, out_channels=32, kernel_size=3, stride=2, padding=self.padding_size),
+            nn.ReLU(True),
             nn.BatchNorm2d(32),
-            nn.ReLU(True),
             # PrintLayer(),
-            nn.Conv2d(32, 64, 4, stride=2),
-            nn.BatchNorm2d(64),
-            nn.ReLU(True),
-            # PrintLayer(),
-            nn.Conv2d(64, 64, 4, stride=1),
-            nn.BatchNorm2d(64),
-            nn.ReLU(True),
-            # PrintLayer(),
-            ]
-
-        self.encoder_var += [
-            View((-1, np.product(self.var_reshape))),
-            # PrintLayer(),
-            nn.Linear(np.product(self.var_reshape), 256),
-            nn.BatchNorm1d(256),
-            nn.ReLU(True),
-            nn.Dropout(0.4),
-            # PrintLayer(),
-            nn.Linear(256, self.z_var_size * 2),
-            # PrintLayer()
         ]
 
         if self.var_second_cnn_block:
             self.encoder_var += [
-                nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3, stride=1),
+                nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3, stride=2, padding=self.padding_size),
                 nn.ReLU(True),
                 nn.BatchNorm2d(64),
-                # PrintLayer(),
-                nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3, stride=1),
-                nn.ReLU(True),
-                nn.BatchNorm2d(64),
-                # PrintLayer(),
-                nn.Conv2d(in_channels=64, out_channels=64, kernel_size=5, stride=2, padding=self.padding_size_2),
-                nn.ReLU(True),
-                nn.BatchNorm2d(64),
-                nn.Dropout(0.4),
                 # PrintLayer(),
             ]
 
         if self.var_third_cnn_block:
             self.encoder_var += [
-                nn.Conv2d(in_channels=64, out_channels=128, kernel_size=4, stride=1),
+                nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3, stride=1, padding=self.padding_size),
                 nn.ReLU(True),
-                nn.BatchNorm2d(128),
+                nn.BatchNorm2d(64),
                 # PrintLayer(),
             ]
 
-        # self.encoder_var += [
-        #     View((-1, np.product(self.var_reshape))),
-        #     nn.Dropout(0.4),
-        #     # PrintLayer(),
-        #     nn.Linear(np.product(self.var_reshape), 32),
-        #     nn.ReLU(True),
-        #     # PrintLayer(),
-        #     nn.Linear(32, self.z_var_size * 2)
-        #     # PrintLayer(),
-        # ]
+        self.encoder_var += [
+            View((-1, np.product(self.var_reshape))),
+            nn.Dropout(0.4),
+            # PrintLayer(),
+            nn.Linear(np.product(self.var_reshape), 128),
+            nn.ReLU(True),
+            # PrintLayer(),
+            nn.Linear(128, self.z_var_size * 2),
+            # PrintLayer(),
+        ]
         # --------------------------------------- end encoder_var____________________________________________ ----
 
         # -----------_________________ define model: decoder_var ____________________________________________--------
-        # self.decoder_var = [
-        #     # PrintLayer(),
-        #     nn.Linear(self.z_var_size, np.product(self.var_reshape)),
-        #     nn.ReLU(True),
-        #     # PrintLayer(),
-        #     View((-1, *self.var_reshape)),
-        #     # PrintLayer(),
-        # ]
+        self.decoder_var = [
+            # PrintLayer(),
+            nn.Linear(self.z_var_size, np.product(self.var_reshape)),
+            nn.ReLU(True),
+            # PrintLayer(),
+            View((-1, *self.var_reshape)),
+            # PrintLayer(),
+        ]
 
         if self.var_third_cnn_block:
             self.decoder_var += [
-                nn.ConvTranspose2d(in_channels=128, out_channels=64, kernel_size=4, stride=1),
+                nn.ConvTranspose2d(in_channels=64, out_channels=64, kernel_size=3, stride=1,
+                                   padding=self.padding_size),
                 nn.ReLU(True),
                 # PrintLayer(),
             ]
@@ -214,73 +109,20 @@ class VAE_var(nn.Module, ABC):
         if self.var_second_cnn_block:
             self.decoder_var += [
                 nn.ConvTranspose2d(in_channels=64, out_channels=64, kernel_size=4, stride=2,
-                                   padding=self.padding_size_2-1),
-                nn.ReLU(True),
-                # PrintLayer(),
-                nn.ConvTranspose2d(in_channels=64, out_channels=64, kernel_size=3, stride=1),
-                nn.ReLU(True),
-                # PrintLayer(),
-                nn.ConvTranspose2d(in_channels=64, out_channels=32, kernel_size=3, stride=1),
+                                   padding=self.padding_size),
                 nn.ReLU(True),
                 # PrintLayer(),
             ]
 
-        # self.decoder_var += [
-        #     nn.ConvTranspose2d(in_channels=32, out_channels=32, kernel_size=4, stride=2,
-        #                        padding=self.padding_size_1-1),
-        #     nn.ReLU(True),
-        #     # PrintLayer(),
-        #     nn.ConvTranspose2d(in_channels=32, out_channels=32, kernel_size=3, stride=1),
-        #     nn.ReLU(True),
-        #     # PrintLayer(),
-        #     nn.ConvTranspose2d(in_channels=32, out_channels=self.nc, kernel_size=3, stride=1),
-        #     nn.ReLU(True),
-        #     # PrintLayer(),
-        #     nn.Sigmoid()
-        # ]
-
-        # self.decoder_var += [
-        #     nn.ConvTranspose2d(in_channels=64, out_channels=64, kernel_size=3, stride=1,
-        #                        padding=self.padding_size_4),
-        #     nn.ReLU(True),
-        #     # PrintLayer(),
-        #     nn.ConvTranspose2d(in_channels=64, out_channels=64, kernel_size=3, stride=1,
-        #                        padding=self.padding_size_3),
-        #     nn.ReLU(True),
-        #     # PrintLayer(),
-        #     nn.ConvTranspose2d(in_channels=64, out_channels=32, kernel_size=3, stride=2,
-        #                        padding=self.padding_size_2),
-        #     nn.ReLU(True),
-        #     # PrintLayer(),
-        #     nn.ConvTranspose2d(in_channels=32, out_channels=self.nc, kernel_size=4, stride=1,
-        #                        padding=self.padding_size_1),
-        #     nn.ReLU(True),
-        #     # PrintLayer(),
-        #     nn.Sigmoid()
-        # ]
-
-        self.decoder_var = [
-            # PrintLayer(),
-            nn.Linear(self.z_var_size, 256),
+        self.decoder_var += [
+            nn.ConvTranspose2d(in_channels=64, out_channels=32, kernel_size=4, stride=2,
+                               padding=self.padding_size),
             nn.ReLU(True),
             # PrintLayer(),
-            nn.Linear(256, np.product(self.var_reshape)),
-            nn.ReLU(True),
-            View((-1, *self.var_reshape)),
+            nn.ConvTranspose2d(in_channels=32, out_channels=self.nc, kernel_size=3, stride=1,
+                               padding=self.padding_size),
+            nn.Sigmoid(),
             # PrintLayer(),
-            nn.ConvTranspose2d(in_channels=64, out_channels=64, kernel_size=4, stride=1,
-                               padding=self.padding_size_3),
-            nn.ReLU(True),
-            # PrintLayer(),
-            nn.ConvTranspose2d(in_channels=64, out_channels=32, kernel_size=5, stride=2,
-                               padding=self.padding_size_2),
-            nn.ReLU(True),
-            # PrintLayer(),
-            nn.ConvTranspose2d(in_channels=32, out_channels=self.nc, kernel_size=4, stride=1,
-                               padding=self.padding_size_1),
-            nn.ReLU(True),
-            # PrintLayer(),
-            nn.Sigmoid()
         ]
         # --------------------------------------- end decoder ____________________________________________ ----
 

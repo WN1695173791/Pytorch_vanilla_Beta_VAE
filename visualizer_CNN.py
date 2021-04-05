@@ -2490,64 +2490,113 @@ def manifold_digit(net, model_name, device, size=(20, 20), component_var=0, comp
     return
 
 
-def same_binary_code(net, model_name, loader, nb_class):
+def same_binary_code(net, model_name, loader, nb_class, train_test=None, save=True):
+
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     z_struct_layer_num = get_layer_zstruct_num(net)
 
-    first = True
-    net.eval()
-    for x, label in loader:
+    path_model_uniq_code = 'binary_encoder_struct_results/uniq_code/' + model_name + '_' + train_test + '.npy'
+    path_model_Hmg_dst = 'binary_encoder_struct_results/Hamming_dst/' + model_name + '_' + train_test + '.npy'
+    path_model_encoder_struct_embedding = 'binary_encoder_struct_results/encoder_struct_embedding/' + model_name +\
+                                          '_' + train_test + '.npy'
+    path_model_list_labels_encoder_struct_embedding = 'binary_encoder_struct_results/encoder_struct_embedding' \
+                                                      '/labels_list_'  + train_test + '.npy '
 
-        data = x
-        data = data.to(device)  # Variable(data.to(device))
-        label = label.to(device)
+    if os.path.exists(path_model_uniq_code) and os.path.exists(path_model_Hmg_dst):
+        print('Load all binary encoder struct values:')
+        uniq_code = np.load(path_model_uniq_code, allow_pickle=True)
+        Hmg_dst = np.load(path_model_Hmg_dst, allow_pickle=True)
+        embedding_struct = np.load(path_model_uniq_code, allow_pickle=True)
+        labels_list = np.load(path_model_uniq_code, allow_pickle=True)
 
-        # compute loss:
-        _, embedding, _, _, _, _, _, _, _ = net(data, z_struct_out=True, z_struct_layer_num=z_struct_layer_num)
+        embedding_class = []
+        for class_id in range(nb_class):
+            embed_cl = embedding_struct[np.where(labels_list == class_id)]
+            embedding_class.append(embed_cl)
 
-        if first:
-            labels_list = label.detach()
-            embedding_struct = embedding.detach()
-            first = False
-        else:
-            embedding_struct = torch.cat((embedding_struct, embedding.detach()), 0)
-            labels_list = torch.cat((labels_list, label.detach()), 0)
+        embedding_class = np.array(embedding_class)  # shape: nb_class, nb_z, z_size
 
-    net.train()
+        print('__________------Uniq code:------__________')
+        for class_id in range(nb_class):
+            print('class {}: unique code: {}/{}'.format(class_id, len(uniq_code[class_id]),
+                                                        len(embedding_class[class_id])))
 
-    embedding_struct = embedding_struct.numpy()[:, :, 0, 0]
-    labels_list = labels_list.numpy()
+        print('__________------Hamming distance:------__________')
+        for class_id in range(nb_class):
+            print('class {}: Average distance Hamming: {}'.format(class_id, Hmg_dst[class_id]))
+        print('average distance: {}'.format(torch.mean(torch.tensor(Hmg_dst))))
 
-    embedding_class = []
-    for class_id in range(nb_class):
-        embed_cl = embedding_struct[np.where(labels_list == class_id)]
-        embedding_class.append(embed_cl)
+    else:
+        net.eval()
 
-    embedding_class = np.array(embedding_class)  # shape: nb_class, nb_z, z_size
+        print('Compute all binary encoder struct values:')
+        first = True
+        for x, label in loader:
 
-    # compute percentage same binary code:
-    # first: unique code:
-    uniq_code = []
-    for class_id in range(nb_class):
-        uniq_code.append(np.unique(embedding_class[class_id], axis=0))
-        print('class {}: unique code: {}/{}'.format(class_id, len(uniq_code[class_id]), len(embedding_class[class_id])))
+            data = x
+            data = data.to(device)  # Variable(data.to(device))
+            label = label.to(device)
 
-    # uniq_code = np.array(uniq_code)  # shape: nb_class, nb_different_code, z_size
+            # compute loss:
+            _, embedding, _, _, _, _, _, _, _ = net(data, z_struct_out=True, z_struct_layer_num=z_struct_layer_num)
 
-    # compute hamming distance: differentiable hamming loss distance.
-    distance_mean = []
-    for class_id in range(nb_class):
-        nb_vector = len(embedding_class[class_id])
-        dist = 0
-        nb_distance = 0
-        for i in range(nb_vector):
-            for j in range(nb_vector):
-                if i == j:
-                    pass
-                else:
-                    nb_distance += 1
-                    distance_hamming_class = torch.mean((torch.tensor(embedding_class[class_id][i]) != torch.tensor(embedding_class[class_id][j])).double())
-                    dist += distance_hamming_class
-        distance_mean.append((dist/nb_distance))
-        print('class {}: Average distance Hamming: {}'.format(class_id, distance_mean[class_id]))
-    print('average distance: {}'.format(torch.mean(torch.tensor(distance_mean))))
+            if first:
+                labels_list = label.detach()
+                embedding_struct = embedding.detach()
+                first = False
+            else:
+                embedding_struct = torch.cat((embedding_struct, embedding.detach()), 0)
+                labels_list = torch.cat((labels_list, label.detach()), 0)
+                break
+
+        net.train()
+
+        embedding_struct = embedding_struct.numpy()[:, :, 0, 0]
+        labels_list = labels_list.numpy()
+
+        if save:
+            np.save(path_model_encoder_struct_embedding, embedding_struct)
+            np.save(path_model_list_labels_encoder_struct_embedding, labels_list)
+
+        embedding_class = []
+        for class_id in range(nb_class):
+            embed_cl = embedding_struct[np.where(labels_list == class_id)]
+            embedding_class.append(embed_cl)
+
+        embedding_class = np.array(embedding_class)  # shape: nb_class, nb_z, z_size
+
+        # compute percentage same binary code:
+        # first: unique code:
+        uniq_code = []
+        for class_id in range(nb_class):
+            uniq_code.append(np.unique(embedding_class[class_id], axis=0))
+            print('class {}: unique code: {}/{}'.format(class_id,
+                                                        len(uniq_code[class_id]),
+                                                        len(embedding_class[class_id])))
+
+        uniq_code = np.array(uniq_code)  # shape: nb_class, nb_different_code, z_size
+
+        if save:
+            np.save(path_model_uniq_code, uniq_code)
+
+        # compute hamming distance: differentiable hamming loss distance.
+        distance_mean = []
+        for class_id in range(nb_class):
+            nb_vector = len(embedding_class[class_id])
+            dist = 0
+            nb_distance = 0
+            for i in range(nb_vector):
+                for j in range(nb_vector):
+                    if i == j:
+                        pass
+                    else:
+                        nb_distance += 1
+                        distance_hamming_class = torch.mean((torch.tensor(embedding_class[class_id][i]) !=
+                                                             torch.tensor(embedding_class[class_id][j])).double())
+                        dist += distance_hamming_class
+            distance_mean.append((dist/nb_distance))
+            print('class {}: Average distance Hamming: {}'.format(class_id, distance_mean[class_id]))
+        print('average distance: {}'.format(torch.mean(torch.tensor(distance_mean))))
+
+        if save:
+            np.save(path_model_Hmg_dst, distance_mean)
