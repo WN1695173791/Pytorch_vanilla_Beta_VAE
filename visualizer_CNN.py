@@ -2798,7 +2798,7 @@ def score_uniq_code(net, loader, device, z_struct_layer_num, nb_class, z_struct_
             embedding_struct = embedding.detach().squeeze(2).squeeze(2)
             first = False
         else:
-            embedding_struct = torch.cat((embedding_struct, embedding.detach()), 0)
+            embedding_struct = torch.cat((embedding_struct, embedding.detach().squeeze(2).squeeze(2)), 0)
             labels_list = torch.cat((labels_list, label.detach()), 0)
 
     # print('zstruct: ', embedding_struct.shape, labels_list.shape)
@@ -2807,7 +2807,7 @@ def score_uniq_code(net, loader, device, z_struct_layer_num, nb_class, z_struct_
     first = True
     for class_id in range(nb_class):
         # print("class ", class_id)
-        embed_cl = embedding_struct[np.where(labels_list == class_id)]
+        embed_cl = embedding_struct[torch.where(labels_list == class_id)]
         # print('embed_cl ', embed_cl.shape)
         uniq_code = torch.unique(embed_cl, dim=0)
         # print('uniq_code ', uniq_code.shape, )
