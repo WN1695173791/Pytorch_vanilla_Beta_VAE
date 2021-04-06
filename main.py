@@ -284,6 +284,12 @@ if __name__ == "__main__":
     parser.add_argument('--var_second_cnn_block', default=False, type=str2bool, help="var_second_cnn_block")
     parser.add_argument('--var_third_cnn_block', default=False, type=str2bool, help="var_third_cnn_block")
     parser.add_argument('--other_architecture', default=False, type=str2bool, help="other_architecture")
+    # VAE:
+    parser.add_argument('--is_VAE', default=False, type=str2bool, help="is_VAE")
+    parser.add_argument('--encoder_var_name', default='mnist_vae_var_deeper_2cb_1_1', type=str,
+                        help='encoder_var_name')
+    parser.add_argument('--exp_name', default='mnist_struct_baseline_scheduler_binary_1_3',
+                        type=str, help='encoder_struct_name')
 
     args = parser.parse_args()
 

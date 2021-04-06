@@ -28,7 +28,6 @@ class VAE_var(nn.Module, ABC):
         # number of CNN blocks:
         self.var_second_cnn_block = var_second_cnn_block
         self.var_third_cnn_block = var_third_cnn_block
-
         self.other_architecture = other_architecture
 
         # reshape size compute:

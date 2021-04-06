@@ -443,18 +443,18 @@ def run_viz_expes(model_name, net, is_ratio, is_distance_loss, loss_distance_mea
     # _ = distance_matrix(net, model_name, train_test=train_test, plot_fig=True)
 
     # Plot resume:
-    # compute_z_struct(net, model_name, loader, train_test=train_test, net_type=net_type)
-    # get_z_struct_per_class(model_name, train_test=train_test, nb_class=nb_class)
-    # get_average_z_struct_per_classes(exp_name=model_name, train_test=train_test)
-    # plot_resume(net, model_name, is_ratio, is_distance_loss, loss_distance_mean, loader, train_loader,
-    #             device, cat=cat, train_test=train_test, path_scores=path_scores, diff_var=diff_var_loss,
-    #             contrastive_loss=contrastive_loss, encoder_struct=True, Hmg_dst=False)
+    compute_z_struct(net, model_name, loader, train_test=train_test, net_type=net_type)
+    get_z_struct_per_class(model_name, train_test=train_test, nb_class=nb_class)
+    get_average_z_struct_per_classes(exp_name=model_name, train_test=train_test)
+    plot_resume(net, model_name, is_ratio, is_distance_loss, loss_distance_mean, loader, train_loader,
+                device, cat=cat, train_test=train_test, path_scores=path_scores, diff_var=diff_var_loss,
+                contrastive_loss=contrastive_loss, encoder_struct=True, Hmg_dst=False)
 
 
     # receptive_field = get_receptive_field_size(net, batch_test)
-    same_binary_code(net, model_name, loader, nb_class, train_test=train_test, save=True, Hmg_dist=False)
-    z_struct_code_classes(net, model_name, nb_class, train_test=train_test)
-    _ = score_with_best_code_uniq(net, model_name, train_test, loader, z_struct_size, loader_size)
+    # same_binary_code(net, model_name, loader, nb_class, train_test=train_test, save=True, Hmg_dist=False)
+    # z_struct_code_classes(net, model_name, nb_class, train_test=train_test)
+    # _ = score_with_best_code_uniq(net, model_name, train_test, loader, z_struct_size, loader_size)
 
     return
 
@@ -539,6 +539,87 @@ if __name__ == '__main__':
                            'mnist_struct_baseline_scheduler_binary_1_10',
                            'mnist_struct_baseline_scheduler_binary_1_12']
 
+    list_encoder_struct_norm_dst = ['mnist_struct_baseline_scheduler_binary_1_3_norm_dst_1',
+                                    'mnist_struct_baseline_scheduler_binary_1_6_norm_dst_1',
+                                    'mnist_struct_baseline_scheduler_binary_1_8_norm_dst_1',
+                                    'mnist_struct_baseline_scheduler_binary_1_10_norm_dst_1',
+                                    'mnist_struct_baseline_scheduler_binary_1_12_norm_dst_1',
+                                    'mnist_struct_baseline_scheduler_binary_1_3_Hamming_dst_1',
+                                    'mnist_struct_baseline_scheduler_binary_1_6_Hamming_dst_1',
+                                    'mnist_struct_baseline_scheduler_binary_1_8_Hamming_dst_1',
+                                    'mnist_struct_baseline_scheduler_binary_1_10_Hamming_dst_1',
+                                    'mnist_struct_baseline_scheduler_binary_1_12_Hamming_dst_1',
+                                    'mnist_struct_baseline_scheduler_binary_1_3_norm_dst_2',
+                                    'mnist_struct_baseline_scheduler_binary_1_6_norm_dst_2',
+                                    'mnist_struct_baseline_scheduler_binary_1_8_norm_dst_2',
+                                    'mnist_struct_baseline_scheduler_binary_1_10_norm_dst_2',
+                                    'mnist_struct_baseline_scheduler_binary_1_12_norm_dst_2',
+                                    'mnist_struct_baseline_scheduler_binary_1_3_Hamming_dst_2',
+                                    'mnist_struct_baseline_scheduler_binary_1_6_Hamming_dst_2',
+                                    'mnist_struct_baseline_scheduler_binary_1_8_Hamming_dst_2',
+                                    'mnist_struct_baseline_scheduler_binary_1_10_Hamming_dst_2',
+                                    'mnist_struct_baseline_scheduler_binary_1_12_Hamming_dst_2',
+                                    'mnist_struct_baseline_scheduler_binary_1_3_norm_dst_3',
+                                    'mnist_struct_baseline_scheduler_binary_1_6_norm_dst_3',
+                                    'mnist_struct_baseline_scheduler_binary_1_8_norm_dst_3',
+                                    'mnist_struct_baseline_scheduler_binary_1_10_norm_dst_3',
+                                    'mnist_struct_baseline_scheduler_binary_1_12_norm_dst_3',
+                                    'mnist_struct_baseline_scheduler_binary_1_3_Hamming_dst_3',
+                                    'mnist_struct_baseline_scheduler_binary_1_6_Hamming_dst_3',
+                                    'mnist_struct_baseline_scheduler_binary_1_8_Hamming_dst_3',
+                                    'mnist_struct_baseline_scheduler_binary_1_10_Hamming_dst_3',
+                                    'mnist_struct_baseline_scheduler_binary_1_12_Hamming_dst_3',
+                                    'mnist_struct_baseline_scheduler_binary_1_3_norm_dst_4',
+                                    'mnist_struct_baseline_scheduler_binary_1_6_norm_dst_4',
+                                    'mnist_struct_baseline_scheduler_binary_1_8_norm_dst_4',
+                                    'mnist_struct_baseline_scheduler_binary_1_10_norm_dst_4',
+                                    'mnist_struct_baseline_scheduler_binary_1_12_norm_dst_4',
+                                    'mnist_struct_baseline_scheduler_binary_1_3_Hamming_dst_4',
+                                    'mnist_struct_baseline_scheduler_binary_1_6_Hamming_dst_4',
+                                    'mnist_struct_baseline_scheduler_binary_1_8_Hamming_dst_4',
+                                    'mnist_struct_baseline_scheduler_binary_1_10_Hamming_dst_4',
+                                    'mnist_struct_baseline_scheduler_binary_1_12_Hamming_dst_4',
+                                    'mnist_struct_baseline_scheduler_binary_1_3_uniq_code_target_1',
+                                    'mnist_struct_baseline_scheduler_binary_1_6_uniq_code_target_1',
+                                    'mnist_struct_baseline_scheduler_binary_1_8_uniq_code_target_1',
+                                    'mnist_struct_baseline_scheduler_binary_1_10_uniq_code_target_1',
+                                    'mnist_struct_baseline_scheduler_binary_1_12_uniq_code_target_1',
+                                    'mnist_struct_baseline_scheduler_binary_1_3_Hamming_uniq_code_target_1',
+                                    'mnist_struct_baseline_scheduler_binary_1_6_Hamming_uniq_code_target_1',
+                                    'mnist_struct_baseline_scheduler_binary_1_8_Hamming_uniq_code_target_1',
+                                    'mnist_struct_baseline_scheduler_binary_1_10_Hamming_uniq_code_target_1',
+                                    'mnist_struct_baseline_scheduler_binary_1_12_Hamming_uniq_code_target_1',
+                                    'mnist_struct_baseline_scheduler_binary_1_3_uniq_code_target_2',
+                                    'mnist_struct_baseline_scheduler_binary_1_6_uniq_code_target_2',
+                                    'mnist_struct_baseline_scheduler_binary_1_8_uniq_code_target_2',
+                                    'mnist_struct_baseline_scheduler_binary_1_10_uniq_code_target_2',
+                                    'mnist_struct_baseline_scheduler_binary_1_12_uniq_code_target_2',
+                                    'mnist_struct_baseline_scheduler_binary_1_3_Hamming_uniq_code_target_2',
+                                    'mnist_struct_baseline_scheduler_binary_1_6_Hamming_uniq_code_target_2',
+                                    'mnist_struct_baseline_scheduler_binary_1_8_Hamming_uniq_code_target_2',
+                                    'mnist_struct_baseline_scheduler_binary_1_10_Hamming_uniq_code_target_2',
+                                    'mnist_struct_baseline_scheduler_binary_1_12_Hamming_uniq_code_target_2',
+                                    'mnist_struct_baseline_scheduler_binary_1_3_uniq_code_target_3',
+                                    'mnist_struct_baseline_scheduler_binary_1_6_uniq_code_target_3',
+                                    'mnist_struct_baseline_scheduler_binary_1_8_uniq_code_target_3',
+                                    'mnist_struct_baseline_scheduler_binary_1_10_uniq_code_target_3',
+                                    'mnist_struct_baseline_scheduler_binary_1_12_uniq_code_target_3',
+                                    'mnist_struct_baseline_scheduler_binary_1_3_Hamming_uniq_code_target_3',
+                                    'mnist_struct_baseline_scheduler_binary_1_6_Hamming_uniq_code_target_3',
+                                    'mnist_struct_baseline_scheduler_binary_1_8_Hamming_uniq_code_target_3',
+                                    'mnist_struct_baseline_scheduler_binary_1_10_Hamming_uniq_code_target_3',
+                                    'mnist_struct_baseline_scheduler_binary_1_12_Hamming_uniq_code_target_3',
+                                    'mnist_struct_baseline_scheduler_binary_1_3_uniq_code_target_4',
+                                    'mnist_struct_baseline_scheduler_binary_1_6_uniq_code_target_4',
+                                    'mnist_struct_baseline_scheduler_binary_1_8_uniq_code_target_4',
+                                    'mnist_struct_baseline_scheduler_binary_1_10_uniq_code_target_4',
+                                    'mnist_struct_baseline_scheduler_binary_1_12_uniq_code_target_4',
+                                    'mnist_struct_baseline_scheduler_binary_1_3_Hamming_uniq_code_target_4',
+                                    'mnist_struct_baseline_scheduler_binary_1_6_Hamming_uniq_code_target_4',
+                                    'mnist_struct_baseline_scheduler_binary_1_8_Hamming_uniq_code_target_4',
+                                    'mnist_struct_baseline_scheduler_binary_1_10_Hamming_uniq_code_target_4',
+                                    'mnist_struct_baseline_scheduler_binary_1_12_Hamming_uniq_code_target_4']
+
     list_exp_VAE_var = ['mnist_vae_var_deeper_2cb_1_1',
                         'mnist_vae_var_deeper_2cb_1_2',
                         'mnist_vae_var_deeper_2cb_1_3',
@@ -548,7 +629,7 @@ if __name__ == '__main__':
 
     parameters_mnist_classifier_BK_ratio = "parameters_combinations/mnist_classifier_ratio.txt"
 
-    run_exp_extraction_and_visualization_custom_BK(list_encoder_struct,
+    run_exp_extraction_and_visualization_custom_BK(list_encoder_struct_norm_dst,
                                                    is_ratio=False,
                                                    is_decoder=False,
                                                    is_VAE=False,

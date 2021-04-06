@@ -1,35 +1,25 @@
 import logging
-import os
 
-import torch
 import torch.nn.functional as F
 import torch.optim as optimizer
-from torch.optim.lr_scheduler import ReduceLROnPlateau, StepLR
+from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.utils.data.sampler import BatchSampler
 from tqdm import tqdm
 
-# import losses
-from dataset import sampler
 from dataset.dataset_2 import get_dataloaders, get_mnist_dataset
-from models.custom_CNN import Custom_CNN
-from models.custom_CNN_BK import Custom_CNN_BK
-from models.VAE import VAE
 from models.vae_var import VAE_var
 from models.encoder_struct import Encoder_struct
-from models.default_CNN import DefaultCNN
 from pytorchtools import EarlyStopping
 from scores_classifier import compute_scores, compute_scores_VAE
 from solver import gpu_config
 from visualizer_CNN import get_layer_zstruct_num, score_uniq_code
-import numpy as np
 from dataset.sampler import BalancedBatchSampler
 import random
 from models.Encoder_decoder import Encoder_decoder
+from models.VAE import VAE
 import torch.nn as nn
 
-import matplotlib.pyplot as plt
 from visualizer import *
-from torch.autograd import Variable
 
 EPS = 1e-12
 worker_id = 0
@@ -250,25 +240,6 @@ class SolverClassifier(object):
         # for reproductibility:
         self.randomness = args.randomness
         self.random_seed = args.random_seed
-        # VAE:
-        self.var_hidden_filters_1 = args.var_hidden_filters_1
-        self.var_hidden_filters_2 = args.var_hidden_filters_2
-        self.var_hidden_filters_3 = args.var_hidden_filters_3
-        self.var_kernel_size_1 = args.var_kernel_size_1
-        self.var_kernel_size_2 = args.var_kernel_size_2
-        self.var_kernel_size_3 = args.var_kernel_size_3
-        self.var_stride_size_1 = args.var_stride_size_1
-        self.var_stride_size_2 = args.var_stride_size_2
-        self.var_stride_size_3 = args.var_stride_size_3
-        self.var_hidden_dim = args.var_hidden_dim
-        self.var_three_conv_layer = args.var_three_conv_layer
-        self.use_VAE = args.use_VAE
-        self.z_var_size = args.z_var_size
-        self.lambda_BCE = args.lambda_BCE
-        self.beta = args.beta
-        self.nb_epochs_train_only_zvar = args.nb_epochs_train_only_zvar
-        self.train_var_struct_alternatively = args.train_var_struct_alternatively
-        self.use_structural_encoder = args.use_structural_encoder
         # encoder struct:
         self.is_encoder_struct = args.is_encoder_struct
         self.kernel_size_1 = args.kernel_size_1
@@ -286,6 +257,14 @@ class SolverClassifier(object):
         self.var_second_cnn_block = args.var_second_cnn_block
         self.var_third_cnn_block = args.var_third_cnn_block
         self.other_architecture = args.other_architecture
+        self.z_var_size = args.z_var_size
+        # VAE parameters:
+        self.is_VAE = args.is_VAE
+        self.use_VAE = args.use_VAE
+        self.lambda_BCE = args.lambda_BCE
+        self.beta = args.beta
+        self.encoder_var_name = args.encoder_var_name
+        self.encoder_struct_name = args.encoder_struct_name
 
         self.contrastive_criterion = False
 
@@ -356,42 +335,7 @@ class SolverClassifier(object):
                                                                                    self.test_loader_size))
 
         # ___________________________________________create model:_________________________________________________
-        if self.is_default_model:
-            self.net_type = 'default'
-            net = DefaultCNN(add_z_struct_bottleneck=self.add_z_struct_bottleneck,
-                             add_classification_layer=self.add_classification_layer,
-                             z_struct_size=self.z_struct_size,
-                             classif_layer_size=self.classif_layer_size)
-        elif self.is_custom_model_BK:
-            self.net_type = 'Custom_CNN_BK'
-            net = Custom_CNN_BK(z_struct_size=self.z_struct_size,
-                                big_kernel_size=self.big_kernel_size,
-                                stride_size=self.stride_size,
-                                classif_layer_size=self.classif_layer_size,
-                                add_classification_layer=self.add_classification_layer,
-                                hidden_filters_1=self.hidden_filters_1,
-                                hidden_filters_2=self.hidden_filters_2,
-                                hidden_filters_3=self.hidden_filters_3,
-                                BK_in_first_layer=self.BK_in_first_layer,
-                                two_conv_layer=self.two_conv_layer,
-                                three_conv_layer=self.three_conv_layer,
-                                BK_in_second_layer=self.BK_in_second_layer,
-                                BK_in_third_layer=self.BK_in_third_layer,
-                                Binary_z=self.binary_z,
-                                binary_chain=self.binary_chain,
-                                add_linear_after_GMP=self.add_linear_after_GMP)
-        elif self.is_custom_model:
-            self.net_type = 'Custom_CNN'
-            net = Custom_CNN(z_struct_size=self.z_struct_size,
-                             stride_size=self.stride_size,
-                             classif_layer_size=self.classif_layer_size,
-                             add_classification_layer=self.add_classification_layer,
-                             hidden_filters_1=self.hidden_filters_1,
-                             hidden_filters_2=self.hidden_filters_2,
-                             hidden_filters_3=self.hidden_filters_3,
-                             two_conv_layer=self.two_conv_layer,
-                             three_conv_layer=self.three_conv_layer)
-        elif self.is_encoder_struct:
+        if self.is_encoder_struct:
             self.net_type = 'encoder_struct'
             net = Encoder_struct(z_struct_size=self.z_struct_size,
                                  big_kernel_size=self.big_kernel_size,
@@ -417,21 +361,37 @@ class SolverClassifier(object):
                           var_second_cnn_block=self.var_second_cnn_block,
                           var_third_cnn_block=self.var_third_cnn_block,
                           other_architecture=self.other_architecture)
+        elif self.is_VAE:
+            self.net_type = 'VAE'
+            net = VAE(z_var_size=self.z_var_size,
+                      var_second_cnn_block=self.var_second_cnn_block,
+                      var_third_cnn_block=self.var_third_cnn_block,
+                      other_architecture=self.other_architecture,
+                      z_struct_size=self.z_struct_size,
+                      big_kernel_size=self.big_kernel_size,
+                      stride_size=self.stride_size,
+                      kernel_size_1=self.kernel_size_1,
+                      kernel_size_2=self.kernel_size_2,
+                      kernel_size_3=self.kernel_size_3,
+                      hidden_filters_1=self.hidden_filters_1,
+                      hidden_filters_2=self.hidden_filters_2,
+                      hidden_filters_3=self.hidden_filters_3,
+                      BK_in_first_layer=self.BK_in_first_layer,
+                      BK_in_second_layer=self.BK_in_second_layer,
+                      BK_in_third_layer=self.BK_in_third_layer,
+                      two_conv_layer=self.two_conv_layer,
+                      three_conv_layer=self.three_conv_layer,
+                      Binary_z=self.binary_z,
+                      binary_first_conv=self.binary_first_conv,
+                      binary_second_conv=self.binary_second_conv,
+                      binary_third_conv=self.binary_third_conv)
 
         # get layer num to extract z_struct:
         self.z_struct_out = True
-        if not self.is_VAE_var:
-            self.z_struct_layer_num = get_layer_zstruct_num(net)
+        self.z_struct_layer_num = get_layer_zstruct_num(net)
 
         # experience name:
-        if self.use_decoder:
-            self.checkpoint_dir = os.path.join(args.ckpt_dir, args.exp_name.split('_decoder')[0])
-        elif self.use_VAE:
-            print("Load Encoder struct weights for VAE")
-            self.checkpoint_dir = os.path.join(args.ckpt_dir, args.exp_name.split('_VAE')[0])
-        else:
-            self.checkpoint_dir = os.path.join(args.ckpt_dir, args.exp_name)
-
+        self.checkpoint_dir = os.path.join(args.ckpt_dir, args.exp_name)
         if not os.path.exists(self.checkpoint_dir):
             os.makedirs(self.checkpoint_dir, exist_ok=True)
 
@@ -481,11 +441,6 @@ class SolverClassifier(object):
             with open(self.file_path_checkpoint_scores, mode='wb+') as f:
                 torch.save(self.checkpoint_scores, f)
 
-        # config gpu:
-        self.net, self.device = gpu_config(net)
-
-        # load checkpoints:
-        self.load_checkpoint_scores('last')
         if self.Hmg_dst_loss or self.uniq_code_dst_loss:
             print('USe encoder struct with Hamming distance with pre trained encoder, load it !')
             self.checkpoint_dir = os.path.join(args.ckpt_dir, args.exp_name.split('_Hamming')[0])
@@ -494,127 +449,57 @@ class SolverClassifier(object):
         else:
             self.load_checkpoint('last')
 
-        # create encoder + decoder decoder:
-        if self.use_decoder:
-            pre_trained_model = nn.Sequential(*[self.net.model[i] for i in range(self.z_struct_layer_num + 1)])
-            # input_test = torch.rand(*self.img_size).to(self.device)
-            # before_GMP_shape = self.net.net[:self.z_struct_layer_num-2](input_test.unsqueeze(0)).data.shape
+        if self.is_VAE:
+            z_struct_layer_num_struct = get_layer_zstruct_num(net.encoder_var)
+            z_struct_layer_num_var = get_layer_zstruct_num(net.encoder_struct)
+            pre_trained_struct_model = nn.Sequential(
+                *[self.net.encoder_struct[i] for i in range(self.z_struct_layer_num_struct)])
+            pre_trained_var_model = nn.Sequential(
+                *[self.net.encoder_var[i] for i in range(self.z_struct_layer_num_var)])
 
-            net = Encoder_decoder(z_struct_size=self.z_struct_size,
-                                  big_kernel_size=self.big_kernel_size,
-                                  stride_size=self.stride_size,
-                                  classif_layer_size=self.classif_layer_size,
-                                  add_classification_layer=self.add_classification_layer,
-                                  hidden_filters_1=self.hidden_filters_1,
-                                  hidden_filters_2=self.hidden_filters_2,
-                                  hidden_filters_3=self.hidden_filters_3,
-                                  BK_in_first_layer=self.BK_in_first_layer,
-                                  two_conv_layer=self.two_conv_layer,
-                                  three_conv_layer=self.three_conv_layer,
-                                  BK_in_second_layer=self.BK_in_second_layer,
-                                  BK_in_third_layer=self.BK_in_third_layer,
-                                  Binary_z=self.binary_z,
-                                  add_linear_after_GMP=self.add_linear_after_GMP,
-                                  other_architecture=self.other_architecture,
-                                  decoder_first_dense=self.decoder_first_dense,
-                                  decoder_n_filter_1=self.decoder_n_filter_1,
-                                  decoder_n_filter_2=self.decoder_n_filter_2,
-                                  decoder_n_filter_3=self.decoder_n_filter_3,
-                                  decoder_kernel_size_1=self.decoder_kernel_size_1,
-                                  decoder_kernel_size_2=self.decoder_kernel_size_2,
-                                  decoder_kernel_size_3=self.decoder_kernel_size_3,
-                                  decoder_stride_1=self.decoder_stride_1,
-                                  decoder_stride_2=self.decoder_stride_2,
-                                  decoder_stride_3=self.decoder_stride_3,
-                                  struct_hidden_filters_1=self.var_hidden_filters_1,
-                                  struct_hidden_filters_2=self.var_hidden_filters_2,
-                                  struct_hidden_filters_3=self.var_hidden_filters_3,
-                                  struct_kernel_size_1=self.var_kernel_size_1,
-                                  struct_kernel_size_2=self.var_kernel_size_2,
-                                  struct_kernel_size_3=self.var_kernel_size_3,
-                                  struct_stride_size_1=self.var_stride_size_1,
-                                  struct_stride_size_2=self.var_stride_size_2,
-                                  struct_stride_size_3=self.var_stride_size_3,
-                                  struct_hidden_dim=self.var_hidden_dim,
-                                  struct_three_conv_layer=self.var_three_conv_layer)
-            self.checkpoint_dir = os.path.join(args.ckpt_dir, args.exp_name)
-            file_path = os.path.join(self.checkpoint_dir, 'last')
-            self.checkpoint_dir_encoder = os.path.join(args.ckpt_dir, args.exp_name.split('_decoder')[0])
-            file_path_encoder = os.path.join(self.checkpoint_dir_encoder, 'last')
-            if os.path.isfile(file_path):
-                print("encoder decoder already exist load it !")
-                # config gpu:
-                self.net, self.device = gpu_config(net)
-                self.load_checkpoint('last')
-            elif os.path.isfile(file_path_encoder):
-                print("decoder doesn't exist load encoder weighs !")
-                # checkpoint save:
-                if not os.path.exists(self.checkpoint_dir):
-                    os.makedirs(self.checkpoint_dir, exist_ok=True)
-                pretrained_dict = pre_trained_model.state_dict()
-                model_dict = net.encoder_struct.state_dict()
-                pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict}
-                model_dict.update(pretrained_dict)
-                net.encoder_struct.load_state_dict(model_dict)
-                self.net, self.device = gpu_config(net)
-                print("Weighs loaded for encoder_struct !")
-            else:
-                print("encoder doesn't exist, create encoder and decoder")
-                self.net, self.device = gpu_config(net)
-
-        if self.use_VAE and not self.is_VAE_var:
-            pre_trained_model = nn.Sequential(*[self.net.model[i] for i in range(self.z_struct_layer_num + 1)])
-            net = VAE(z_struct_size=self.z_struct_size,
-                      big_kernel_size=self.big_kernel_size,
-                      stride_size=self.stride_size,
-                      hidden_filters_1=self.hidden_filters_1,
-                      hidden_filters_2=self.hidden_filters_2,
-                      hidden_filters_3=self.hidden_filters_3,
-                      BK_in_first_layer=self.BK_in_first_layer,
-                      two_conv_layer=self.two_conv_layer,
-                      three_conv_layer=self.three_conv_layer,
-                      BK_in_second_layer=self.BK_in_second_layer,
-                      BK_in_third_layer=self.BK_in_third_layer,
-                      z_var_size=self.z_var_size,
-                      var_hidden_filters_1=self.var_hidden_filters_1,
-                      var_hidden_filters_2=self.var_hidden_filters_2,
-                      var_hidden_filters_3=self.var_hidden_filters_3,
-                      var_kernel_size_1=self.var_kernel_size_1,
-                      var_kernel_size_2=self.var_kernel_size_2,
-                      var_kernel_size_3=self.var_kernel_size_3,
-                      var_stride_size_1=self.var_stride_size_1,
-                      var_stride_size_2=self.var_stride_size_2,
-                      var_stride_size_3=self.var_stride_size_3,
-                      var_hidden_dim=self.var_hidden_dim,
-                      var_three_conv_layer=self.var_three_conv_layer,
-                      use_structural_encoder=self.use_structural_encoder)
+            print(z_struct_layer_num_var, z_struct_layer_num_struct)
+            print(pre_trained_struct_model)
+            print(pre_trained_var_model)
 
             self.checkpoint_dir = os.path.join(args.ckpt_dir, args.exp_name)
             file_path = os.path.join(self.checkpoint_dir, 'last')
-            self.checkpoint_dir_encoder = os.path.join(args.ckpt_dir, args.exp_name.split('_VAE')[0])
-            file_path_encoder = os.path.join(self.checkpoint_dir_encoder, 'last')
+
             if os.path.isfile(file_path):
                 print("VAE already exist load it !")
                 # config gpu:
                 self.net, self.device = gpu_config(net)
                 self.load_checkpoint('last')
-            elif os.path.isfile(file_path_encoder) and self.use_structural_encoder:
-                print("VAE var doesn't exist load struct encoder weighs !")
-                # checkpoint save:
-                if not os.path.exists(self.checkpoint_dir):
-                    os.makedirs(self.checkpoint_dir, exist_ok=True)
-                pretrained_dict = pre_trained_model.state_dict()
-                model_dict = net.encoder_struct.state_dict()
-                pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict}
-                model_dict.update(pretrained_dict)
-                net.encoder_struct.load_state_dict(model_dict)
-                self.net, self.device = gpu_config(net)
-                print("Weighs loaded for encoder_struct !")
             else:
-                print("VAE doesn't exist, create VAE")
-                if not os.path.exists(self.checkpoint_dir):
-                    os.makedirs(self.checkpoint_dir, exist_ok=True)
-                self.net, self.device = gpu_config(net)
+                self.checkpoint_dir_encoder_var = os.path.join(args.ckpt_dir, self.encoder_var_name)
+                file_path_encoder_var = os.path.join(self.checkpoint_dir_encoder_var, 'last')
+                self.checkpoint_dir_encoder_struct = os.path.join(args.ckpt_dir, self.encoder_struct_name)
+                file_path_encoder_struct = os.path.join(self.checkpoint_dir_encoder_struct, 'last')
+                if os.path.isfile(file_path_encoder_var):
+                    print("VAE doesn't exist but encoder var yes ! load var encoder weigh !")
+                    pretrained_dict = pre_trained_var_model.state_dict()
+                    model_dict = net.encoder_var.state_dict()
+                    pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict}
+                    model_dict.update(pretrained_dict)
+                    net.encoder_var.load_state_dict(model_dict)
+                    self.net, self.device = gpu_config(net)
+                    print("Weighs loaded for var encoder !")
+                if os.path.isfile(file_path_encoder_struct):
+                    print("VAE doesn't exist but encoder struct yes ! load struct encoder weigh !")
+                    pretrained_dict = pre_trained_struct_model.state_dict()
+                    model_dict = net.encoder_struct.state_dict()
+                    pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict}
+                    model_dict.update(pretrained_dict)
+                    net.encoder_struct.load_state_dict(model_dict)
+                    self.net, self.device = gpu_config(net)
+                    print("Weighs loaded for struct encoder !")
+                if (not os.path.isfile(file_path_encoder_var)) and (not os.path.isfile(file_path_encoder_struct)):
+                    print("VAE doesn't exist, create VAE and train it from scratch ! good luck !")
+                    self.net, self.device = gpu_config(net)
+        else:
+            # config gpu:
+            self.net, self.device = gpu_config(net)
+            # load checkpoints:
+            self.load_checkpoint_scores('last')
 
         # print model characteristics:
         print(self.net)
@@ -645,12 +530,11 @@ class SolverClassifier(object):
                                                patience=4,
                                                min_lr=1e-6,
                                                verbose=True)
-            # self.scheduler = StepLR(self.optimizer, step_size=15, gamma=0.2)
 
         # initialize the early_stopping object
         # early stopping patience; how long to wait after last time validation loss improved.
         if self.use_early_stopping:
-            self.patience = 20
+            self.patience = 25
             self.early_stopping = EarlyStopping(patience=self.patience, verbose=True)
 
         # other parameters for train:
