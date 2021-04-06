@@ -14,6 +14,8 @@ from visualizer import *
 from torch.autograd import Variable
 from viz.latent_traversal import LatentTraverser
 import importlib
+import collections
+from functools import partial
 
 from scipy.spatial import distance
 
@@ -188,10 +190,10 @@ def compute_z_struct(net_trained, exp_name, loader, train_test=None, net_type=No
             if torch.cuda.is_available():
                 input_data = input_data.cuda()
 
-            _, z_struct, _, _, _, _, _, _, _ = net_trained(input_data,
+            _, z_struct, _, _, _, _, _, _, _, _ = net_trained(input_data,
                                                            z_struct_out=True,
                                                            z_struct_layer_num=z_struct_layer_num)
-            pred, _, _, _, _, _, _, _, _ = net_trained(input_data)
+            pred, _, _, _, _, _, _, _, _, _ = net_trained(input_data)
 
             # train mode:
             net_trained.eval()
@@ -261,7 +263,7 @@ def compute_z_struct_representation_noised(net, exp_name, train_test=None, nb_re
                 z_struct_representation_noised[:, i] = std_z_struct_max[i] * torch.randn(
                     (z_struct_representation.shape[0])) \
                                                        + mean_z_struct[i]
-                pred, _, _, _, _, _, _ = net(z_struct_representation_noised, z_struct_prediction=True,
+                pred, _, _, _, _, _, _, _ = net(z_struct_representation_noised, z_struct_prediction=True,
                                              z_struct_layer_num=z_struct_layer_num)
                 prediction.append(pred.detach().numpy())
             prediction_noised.append(np.mean(np.array(prediction), axis=0))
@@ -1927,7 +1929,7 @@ def viz_decoder_multi_label(net, loader, exp_name, nb_img=8, nb_class=10, save=T
     if torch.cuda.is_available():
         input_data = input_data.cuda()
 
-    x_recon, _ = net(input_data)
+    x_recon, _, _ = net(input_data)
 
     net.train()
 
@@ -2027,9 +2029,9 @@ def viz_reconstruction_VAE(net, loader, exp_name, z_var_size, z_struct_size, nb_
 
     # z reconstruction:
     if is_vae_var:
-        x_recon, _ = net(input_data)
+        x_recon, _, _ = net(input_data)
     else:
-        x_recon, z_struct, z_var, z_var_sample, _, _, _ = net(input_data)
+        x_recon, z_struct, z_var, z_var_sample, _, _, _, _ = net(input_data)
 
     if z_struct_reconstruction:
         # z_struct reconstruction:
@@ -2054,7 +2056,7 @@ def viz_reconstruction_VAE(net, loader, exp_name, z_var_size, z_struct_size, nb_
     score_reconstruction_zvar = 0
     score_reconstruction_zstruct = 0
 
-    score_reconstruction = F.binary_cross_entropy(x_recon, input_data)
+    score_reconstruction = F.mse_loss(x_recon, input_data)
 
     """
     for i, (_data_, _label_) in enumerate(loader):
@@ -2066,27 +2068,27 @@ def viz_reconstruction_VAE(net, loader, exp_name, z_var_size, z_struct_size, nb_
 
         # z reconstruction:
         if is_vae_var:
-            _x_recon_, _ = net(_input_data_)
+            _x_recon_, _, _ = net(_input_data_)
         else:
-            _x_recon_, _z_struct_, _, _z_var_sample_, _, _, _ = net(_input_data_)
+            _x_recon_, _z_struct_, _, _z_var_sample_, _, _, _, _ = net(_input_data_)
 
-        score_reconstruction_iter = F.binary_cross_entropy(_x_recon_, _input_data_)
+        score_reconstruction_iter = F.mse_loss(_x_recon_, _input_data_)
         score_reconstruction += score_reconstruction_iter.detach().numpy()
 
         if z_var_reconstruction:
             # z_var + rand struct reconstruction:
             _random_struct_ = torch.abs(std_struct * torch.randn(_input_data_.shape[0], z_struct_size) + mu_struct)
             _z_var_random_ = torch.cat((_z_var_sample_, _random_struct_), dim=1)
-            _x_recon_var_ = net.decoder(_z_var_random_)
-            score_reconstruction_zvar_iter = F.binary_cross_entropy(_x_recon_var_, _input_data_)
+            _x_recon_var_, _ = net.decoder(_z_var_random_)
+            score_reconstruction_zvar_iter = F.mse_loss(_x_recon_var_, _input_data_)
             score_reconstruction_zvar += score_reconstruction_zvar_iter.detach().numpy()
 
         if z_struct_reconstruction:
             # z_struct + rand var reconstruction:
             _random_var_ = std_var * torch.randn(_input_data_.shape[0], z_var_size) + mu_var
             _z_struct_random_ = torch.cat((_random_var_, _z_struct_), dim=1)
-            _x_recon_struct_ = net.decoder(_z_struct_random_)
-            score_reconstruction_zstruct_iter = F.binary_cross_entropy(_x_recon_struct_, _input_data_)
+            _x_recon_struct_, _ = net.decoder(_z_struct_random_)
+            score_reconstruction_zstruct_iter = F.mse_loss(_x_recon_struct_, _input_data_)
             score_reconstruction_zstruct += score_reconstruction_zstruct_iter.detach().numpy()
     """
     net.train()
@@ -2227,7 +2229,7 @@ def real_distribution_model(net, expe_name, z_struct_size, z_var_size, loader, t
                     mu_var_iter = latent_representation['mu']
                     sigma_var_iter = latent_representation['log_var']
                 else:
-                    _, z_struct, z_var, z_var_sample, latent_representation, z_latent, _ = net(data)
+                    _, z_struct, z_var, z_var_sample, latent_representation, z_latent, _, _ = net(data)
 
                     z_struct_distribution_iter = z_struct
                     mu_var_iter = z_var[:, :z_var_size]
@@ -2482,7 +2484,7 @@ def manifold_digit(net, model_name, device, size=(20, 20), component_var=0, comp
                 data = data.to(device)  # Variable(data.to(device))
 
                 # compute loss:
-                _, _, _, _, _, z, _ = net(data)
+                _, _, _, _, _, z, _, _ = net(data)
                 break
 
         if img_choice is None:
@@ -2570,7 +2572,7 @@ def same_binary_code(net, model_name, loader, nb_class, train_test=None, save=Tr
             label = label.to(device)
 
             # compute loss:
-            _, embedding, _, _, _, _, _, _, _ = net(data, z_struct_out=True, z_struct_layer_num=z_struct_layer_num)
+            _, embedding, _, _, _, _, _, _, _, _ = net(data, z_struct_out=True, z_struct_layer_num=z_struct_layer_num)
 
             if first:
                 labels_list = label.detach()
@@ -2640,3 +2642,239 @@ def same_binary_code(net, model_name, loader, nb_class, train_test=None, save=Tr
             np.save(path_model_Hmg_dst, Hmg_dst)
 
     return uniq_code, Hmg_dst, percentage_uniq_code
+
+
+def get_receptive_field_size(net, images):
+
+    image = images[0].unsqueeze(dim=0)
+    # get activations:
+    # a dictionary that keeps saving the activations as they come
+    activations = collections.defaultdict(list)
+
+    def save_activations(name, mod, inp, out):
+        activations[name].append(out.cpu())
+
+    for name, m in net.named_modules():
+        if type(m) == nn.Conv2d:
+            # partial to assign the layer name to each hook
+            m.register_forward_hook(partial(save_activations, name))
+
+    out, _, _, _, _, _, _, _, _, _ = net(image)
+     # concatenate all the outputs we saved to get the the activations for each layer for the whole dataset
+    activations = {name: torch.cat(outputs, 0) for name, outputs in activations.items()}
+
+    jump = [1]
+    receptive_field_size = [1]
+    i = 0
+    for name, fm in activations.items():
+        i += 1
+        layer_num = int(name.split('.')[-1])
+        stride_size = net.encoder_struct[layer_num].stride[0]
+        filter_size = net.encoder_struct[layer_num].kernel_size[0]
+
+        jump.append(jump[-1] * stride_size)  # represent the cumulative stride
+        receptive_field_size.append(receptive_field_size[-1] + (filter_size - 1) * jump[-2])  # size of receptive field
+
+    print('receptive field: {}'.format(receptive_field_size))
+    return receptive_field_size
+
+
+def z_struct_code_classes(net, model_name, nb_class, train_test=None):
+
+    path_model_uniq_code = 'binary_encoder_struct_results/uniq_code/' + model_name + '_' + train_test + '.npy'
+    path_model_encoder_struct_embedding = 'binary_encoder_struct_results/encoder_struct_embedding/' + model_name +\
+                                          '_' + train_test + '.npy'
+    path_model_list_labels_encoder_struct_embedding = 'binary_encoder_struct_results/encoder_struct_embedding' \
+                                                      '/labels_list_' + model_name + '_' + train_test + '.npy'
+
+    embedding_struct = np.load(path_model_encoder_struct_embedding, allow_pickle=True)
+    uniq_code = np.load(path_model_uniq_code, allow_pickle=True)
+    labels_list = np.load(path_model_list_labels_encoder_struct_embedding, allow_pickle=True)
+
+    embedding_class = []
+    for class_id in range(nb_class):
+        embed_cl = embedding_struct[np.where(labels_list == class_id)]
+        embedding_class.append(embed_cl)
+
+    embedding_class = np.array(embedding_class)  # shape: nb_class, nb_z, z_size
+    np.save('binary_encoder_struct_results/uniq_code/embedding_class_' + model_name + '_' + train_test + '.npy',
+            embedding_class)
+
+    global_count = []
+    for class_id in range(nb_class):
+        count_class = []
+        for code in uniq_code[class_id]:
+            count = 0
+            for z_struct in embedding_class[class_id]:
+                if (code == z_struct).all():
+                    count += 1
+                else:
+                    pass
+            count_class.append(count)
+        global_count.append(np.array(count_class))
+
+    global_count = np.array(global_count)
+    np.save('binary_encoder_struct_results/uniq_code/global_count_' + model_name + '_' + train_test + '.npy',
+            global_count)
+
+    return
+
+
+def score_with_best_code_uniq(net, model_name, train_test, loader, z_struct_size, loader_size):
+
+    global_count = np.load('binary_encoder_struct_results/uniq_code/global_count_' + model_name + '_'
+                           + train_test + '.npy', allow_pickle=True)
+    embedding_class = np.load('binary_encoder_struct_results/uniq_code/embedding_class_' + model_name + '_'
+                              + train_test + '.npy', allow_pickle=True)
+    uniq_code = np.load('binary_encoder_struct_results/uniq_code/' + model_name + '_' + train_test + '.npy',
+                        allow_pickle=True)
+
+    more_represented_class_code = []
+    for i in range(len(global_count)):
+        index_max = np.argmax(global_count[i])
+        nb_code = global_count[i][index_max]
+        percent_code = np.round(nb_code/len(embedding_class[i])*100, 3)
+        print("for class {}, we have {} z_struct with code {}. It represent {}% "
+              "of total z_struct class".format(i, nb_code, uniq_code[i][index_max], percent_code))
+        more_represented_class_code.append(uniq_code[i][index_max])
+
+    # score prediction with uniq best binary code:
+    z_struct_layer_num = get_layer_zstruct_num(net)
+
+    net.eval()
+    print('Compute all binary encoder struct values:')
+    first = True
+    for x, label in loader:
+
+        data = x
+        data = data.to(device)  # Variable(data.to(device))
+        label = label.to(device)
+
+        data_input = torch.zeros((len(data), z_struct_size))
+        for i in range(len(label)):
+            data_input[i] = torch.tensor(more_represented_class_code[label[i]])
+
+        data_input = data_input.to(device)
+
+        # compute loss:
+        prediction = net.encoder_struct[z_struct_layer_num:](data_input)
+
+        if first:
+            prediction_total = prediction.detach()
+            labels = label
+            first = False
+        else:
+            prediction_total = torch.cat((prediction_total, prediction.detach()), 0)
+            labels = torch.cat((labels, label.detach()), 0)
+
+    net.train()
+
+    predicted = prediction_total.argmax(dim=1, keepdim=True)
+    correct = predicted.eq(labels.view_as(predicted)).sum().item()
+    scores = correct
+    scores = 100. * scores / loader_size
+
+    print("prediction with same best uniq code for test set: {} %".format(scores))
+
+    return scores
+
+
+def score_uniq_code(net, loader, device, z_struct_layer_num, nb_class, z_struct_size, loader_size):
+
+    # get z_struct binary code:
+    net.eval()
+    first = True
+    for x, label in loader:
+
+        data = x
+        data = data.to(device)  # Variable(data.to(device))
+        label = label.to(device)
+
+        # compute loss:
+        _, embedding, _, _, _, _, _, _, _, _ = net(data, z_struct_out=True, z_struct_layer_num=z_struct_layer_num)
+
+        if first:
+            labels_list = label.detach()
+            embedding_struct = embedding.detach().squeeze(2).squeeze(2)
+            first = False
+        else:
+            embedding_struct = torch.cat((embedding_struct, embedding.detach()), 0)
+            labels_list = torch.cat((labels_list, label.detach()), 0)
+
+    # print('zstruct: ', embedding_struct.shape, labels_list.shape)
+
+    # get z_struct per class:
+    first = True
+    for class_id in range(nb_class):
+        # print("class ", class_id)
+        embed_cl = embedding_struct[np.where(labels_list == class_id)]
+        # print('embed_cl ', embed_cl.shape)
+        uniq_code = torch.unique(embed_cl, dim=0)
+        # print('uniq_code ', uniq_code.shape, )
+
+        percentage_uniq_code = len(uniq_code) / len(embed_cl)
+        # print('percentage_uniq_code ', percentage_uniq_code)
+        # print('class {}: unique code: {}/{}. In percent: {}'.format(class_id,
+        #                                                             len(uniq_code),
+        #                                                             len(embed_cl),
+        #                                                             percentage_uniq_code))
+        first_class = True
+        for code in uniq_code:
+            count = torch.tensor(0)
+            for z_struct in embed_cl:
+                if (code == z_struct).all():
+                    count += 1
+                else:
+                    pass
+            # print('count', count, code)
+            if first_class:
+                count_class = count.unsqueeze(0)
+                first_class = False
+            else:
+                count_class = torch.cat((count_class, count.unsqueeze(0)), 0)
+
+        index_max = torch.argmax(count_class)
+        # print('count', count_class, index_max, uniq_code[index_max])
+
+        if first:
+            more_represented_class_code = uniq_code[index_max].unsqueeze(0)
+            first = False
+        else:
+            more_represented_class_code = torch.cat((more_represented_class_code, uniq_code[index_max].unsqueeze(0)), 0)
+
+        # print('more_represented_class_code', more_represented_class_code.shape, more_represented_class_code)
+
+    # get prediction:
+    first = True
+    for x, label in loader:
+
+        data = x
+        data = data.to(device)  # Variable(data.to(device))
+        label = label.to(device)
+
+        data_input = torch.zeros((len(data), z_struct_size))
+        for i in range(len(label)):
+            data_input[i] = torch.tensor(more_represented_class_code[label[i]])
+
+        data_input = data_input.to(device)
+
+        # compute loss:
+        prediction = net.encoder_struct[z_struct_layer_num:](data_input)
+
+        if first:
+            prediction_total = prediction.detach()
+            labels = label
+            first = False
+        else:
+            prediction_total = torch.cat((prediction_total, prediction.detach()), 0)
+            labels = torch.cat((labels, label.detach()), 0)
+
+    # compute score:
+    predicted = prediction_total.argmax(dim=1, keepdim=True)
+    correct = predicted.eq(labels.view_as(predicted)).sum().item()
+    scores = correct
+    scores = 100. * scores / loader_size
+
+    net.train()
+
+    return scores, more_represented_class_code

@@ -136,7 +136,8 @@ class Encoder_struct(nn.Module, ABC):
                 kaiming_init(m)
 
     def forward(self, x, labels=None, nb_class=None, use_ratio=False, z_struct_out=False, z_struct_prediction=False,
-                z_struct_layer_num=None, loss_min_distance_cl=False, Hmg_dst_loss=False):
+                z_struct_layer_num=None, loss_min_distance_cl=False, Hmg_dst_loss=False, uniq_bin_code_target=False,
+                target_code=None):
         """
         Forward pass of model.
         """
@@ -154,6 +155,7 @@ class Encoder_struct(nn.Module, ABC):
         variance_inter = 0
         global_avg_Hmg_dst = 0
         avg_dst_classes = 0
+        uniq_target_dist_loss = 0
 
         if z_struct_out:
             z_struct = self.encoder_struct[:z_struct_layer_num](x)
@@ -184,8 +186,11 @@ class Encoder_struct(nn.Module, ABC):
         if Hmg_dst_loss:
             global_avg_Hmg_dst, avg_dst_classes = self.hamming_distance_loss(z_struct, nb_class, labels)
 
+        if uniq_bin_code_target:
+            uniq_target_dist_loss = self.distance_target_uniq_code(z_struct, nb_class, labels, target_code)
+
         return prediction, z_struct, ratio, variance_distance_iter_class, variance_intra, mean_distance_intra_class, \
-               variance_inter, global_avg_Hmg_dst, avg_dst_classes
+               variance_inter, global_avg_Hmg_dst, avg_dst_classes, uniq_target_dist_loss
 
     def compute_ratio_batch(self, batch_z_struct, labels_batch, nb_class):
         """
@@ -263,7 +268,7 @@ class Encoder_struct(nn.Module, ABC):
         assert batch_z_struct is not None, "z_struct mustn't be None to compute Hamming distance"
         assert labels_batch is not None, "labels_batch mustn't be None to compute Hamming distance"
 
-        avg_dst_classes = torch.zeros(nb_class)
+        global_first = True
         for class_id in range(nb_class):
             first = True
             z_struct_class_iter = batch_z_struct[torch.where(labels_batch == class_id)]
@@ -273,15 +278,53 @@ class Encoder_struct(nn.Module, ABC):
                     if i == j:
                         pass
                     else:
-                        Hmg_dist = torch.mean((z_struct_class_iter[i] != z_struct_class_iter[j]).double())
-                        # print(Hmg_dist)
+                        # Hmg_dist = torch.mean(torch.Tensor.float(z_struct_class_iter[i] != z_struct_class_iter[j]))
+                        Hmg_dist = torch.norm(z_struct_class_iter[i] - z_struct_class_iter[j])
+                        Hmg_dist = torch.unsqueeze(Hmg_dist, 0)
                         if first:
-                            avg_dst_class_id = Hmg_dist.unsqueeze(dim=0)
+                            avg_dst_class_id = Hmg_dist
                             first = False
                         else:
-                            avg_dst_class_id = torch.cat((avg_dst_class_id, Hmg_dist.unsqueeze(dim=0)), dim=0)
+                            avg_dst_class_id = torch.cat((avg_dst_class_id, Hmg_dist), dim=0)
+            if global_first:
+                avg_dst_classes = torch.mean(avg_dst_class_id)
+            else:
+                avg_dst_classes = torch.cat((avg_dst_classes, torch.mean(avg_dst_class_id)), dim=0)
 
-            avg_dst_classes[class_id] = torch.mean(avg_dst_class_id)
         global_avg_Hmg_dst = torch.mean(avg_dst_classes)
 
         return global_avg_Hmg_dst, avg_dst_classes
+
+    def distance_target_uniq_code(self, batch_z_struct, nb_class, labels_batch, target_code):
+        """
+        computing distance between target class code and z_struct
+        :param z_struct:
+        :return:
+        """
+
+        global_first = True
+        for class_id in range(nb_class):
+            first = True
+            z_struct_class_iter = batch_z_struct[torch.where(labels_batch == class_id)]
+            # computing distance:
+            for i in range(len(z_struct_class_iter)):
+                for j in range(len(z_struct_class_iter)):
+                    if i == j:
+                        pass
+                    else:
+                        # Hmg_dist = torch.mean(torch.Tensor.float(z_struct_class_iter[i] != z_struct_class_iter[j]))
+                        dst_target = torch.norm(z_struct_class_iter[i] - target_code[class_id])
+                        dst_target = torch.unsqueeze(dst_target, 0)
+                        if first:
+                            avg_dst_class_id = dst_target
+                            first = False
+                        else:
+                            avg_dst_class_id = torch.cat((avg_dst_class_id, dst_target), dim=0)
+            if global_first:
+                avg_dst_classes = torch.mean(avg_dst_class_id)
+            else:
+                avg_dst_classes = torch.cat((avg_dst_classes, torch.mean(avg_dst_class_id)), dim=0)
+
+        global_avg_dst = torch.mean(avg_dst_classes)
+
+        return global_avg_dst

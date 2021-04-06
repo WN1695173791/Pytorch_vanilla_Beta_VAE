@@ -20,7 +20,7 @@ from models.default_CNN import DefaultCNN
 from pytorchtools import EarlyStopping
 from scores_classifier import compute_scores, compute_scores_VAE
 from solver import gpu_config
-from visualizer_CNN import get_layer_zstruct_num
+from visualizer_CNN import get_layer_zstruct_num, score_uniq_code
 import numpy as np
 from dataset.sampler import BalancedBatchSampler
 import random
@@ -279,12 +279,14 @@ class SolverClassifier(object):
         self.binary_third_conv = args.binary_third_conv
         self.Hmg_dst_loss = args.Hmg_dst_loss
         self.lambda_hmg_dst = args.lambda_hmg_dst
+        self.uniq_code_dst_loss = args.uniq_code_dst_loss
+        self.lambda_uniq_code_dst = args.lambda_uniq_code_dst
         # VAE var:
         self.is_VAE_var = args.is_VAE_var
         self.var_second_cnn_block = args.var_second_cnn_block
         self.var_third_cnn_block = args.var_third_cnn_block
         self.other_architecture = args.other_architecture
-       
+
         self.contrastive_criterion = False
 
         # For reproducibility:
@@ -473,7 +475,7 @@ class SolverClassifier(object):
 
         # load checkpoints:
         self.load_checkpoint_scores('last')
-        if self.Hmg_dst_loss:
+        if self.Hmg_dst_loss or self.uniq_code_dst_loss:
             print('USe encoder struct with Hamming distance with pre trained encoder, load it !')
             self.checkpoint_dir = os.path.join(args.ckpt_dir, args.exp_name.split('_Hamming')[0])
             self.load_checkpoint('last')
@@ -646,6 +648,8 @@ class SolverClassifier(object):
         self.losses_list = []
         self.best_recall = [0]
         self.best_epoch = 0
+        self.use_uniq_bin_code_target = False
+        self.target_code = None
 
     def train(self):
         self.net_mode(train=True)
@@ -664,10 +668,6 @@ class SolverClassifier(object):
 
                 data = data.to(self.device)  # Variable(data.to(self.device))
                 labels = labels.to(self.device)  # Variable(labels.to(self.device))
-
-                # print(labels)
-                # for i in range(self.nb_class):
-                #     print(len(torch.where(labels==i)[0]))
 
                 if self.use_decoder:
                     x_recons, z_struct = self.net(data)
@@ -737,29 +737,23 @@ class SolverClassifier(object):
                     loss = (self.lambda_BCE * BCE_loss) + (self.beta * KLD_loss)
                 else:
                     self.mse_loss = 0
+                    loss = 0
 
                     prediction, embedding, ratio, \
                     variance_distance_iter_class, \
                     variance_intra, mean_distance_intra_class, \
-                    variance_inter,  global_avg_Hmg_dst, \
-                    avg_dst_classes = self.net(data,
-                                               labels=labels,
-                                               nb_class=self.nb_class,
-                                               use_ratio=self.ratio_reg,
-                                               z_struct_out=self.z_struct_out,
-                                               z_struct_layer_num=self.z_struct_layer_num,
-                                               loss_min_distance_cl=self.loss_min_distance_cl,
-                                               Hmg_dst_loss=self.Hmg_dst_loss)
+                    variance_inter, global_avg_Hmg_dst, \
+                    avg_dst_classes, uniq_target_dist_loss = self.net(data,
+                                                                      labels=labels,
+                                                                      nb_class=self.nb_class,
+                                                                      use_ratio=self.ratio_reg,
+                                                                      z_struct_out=self.z_struct_out,
+                                                                      z_struct_layer_num=self.z_struct_layer_num,
+                                                                      loss_min_distance_cl=self.loss_min_distance_cl,
+                                                                      Hmg_dst_loss=self.Hmg_dst_loss,
+                                                                      uniq_bin_code_target=self.use_uniq_bin_code_target,
+                                                                      target_code=self.target_code)
 
-
-                    # for i in range(self.nb_class):
-                    #     print('__________________-------------------class {}-----------------___________________'.format(i))
-                    #     arg = embedding[np.where(labels == i)].detach().numpy()
-                    #     for j in range(len(arg)):
-                    #         print(arg[j][:, 0, 0])
-                    # break
-
-                    loss = 0
                     # compute losses:
                     if not self.without_acc:
                         # averaged over each loss element in the batch
@@ -794,9 +788,14 @@ class SolverClassifier(object):
                         loss += loss_distance_mean
 
                     if self.Hmg_dst_loss:
+                        # Hamming distance is not differentiable
                         # global_avg_Hmg_dst = Variable(global_avg_Hmg_dst, requires_grad=True)
                         # global_avg_Hmg_dst.requires_grad_(True)
                         loss += global_avg_Hmg_dst * self.lambda_hmg_dst
+
+                    if self.uniq_code_dst_loss and self.use_uniq_bin_code_target:
+                        dst_target_loss = uniq_target_dist_loss * self.lambda_uniq_code_dst
+                        loss += dst_target_loss
 
                 # freeze encoder_struct if train decoder:
                 if (self.use_decoder or self.use_VAE) and self.freeze_Encoder and self.use_structural_encoder \
@@ -822,6 +821,20 @@ class SolverClassifier(object):
                 # print('-----------::::::::::::After:::::::-----------------:')
                 # print(self.net.encoder_struct[0].weight[0][0])
                 # print(self.net.encoder_var[0].weight[0][0])
+
+            if self.uniq_code_dst_loss and self.epochs > 20.:
+                print("test uniq code target loss:")
+                # test if we can use uniq code for target latent code:
+                score, self.target_code = score_uniq_code(self.net,
+                                                           self.test_loader,
+                                                           self.device,
+                                                           self.z_struct_layer_num,
+                                                           self.nb_class,
+                                                           self.z_struct_size,
+                                                           self.test_loader_size)
+                if score == 100.:
+                    self.use_uniq_bin_code_target = True
+                print(score,  self.use_uniq_bin_code_target, self.target_code)
 
             # backpropagation loss
             if self.use_scheduler:

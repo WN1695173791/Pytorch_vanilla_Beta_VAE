@@ -277,6 +277,8 @@ if __name__ == "__main__":
     parser.add_argument('--binary_third_conv', default=False, type=str2bool, help="binary_third_conv")
     parser.add_argument('--Hmg_dst_loss', default=False, type=str2bool, help="Hmg_dst_loss")
     parser.add_argument('--lambda_hmg_dst', type=float, default=1, help="lambda_hmg_dst")
+    parser.add_argument('--uniq_code_dst_loss', default=False, type=str2bool, help="uniq_code_dst_loss")
+    parser.add_argument('--lambda_uniq_code_dst', type=float, default=1, help="lambda_uniq_code_dst")
     # VAE var:
     parser.add_argument('--is_VAE_var', default=False, type=str2bool, help="is_VAE_var")
     parser.add_argument('--var_second_cnn_block', default=False, type=str2bool, help="var_second_cnn_block")

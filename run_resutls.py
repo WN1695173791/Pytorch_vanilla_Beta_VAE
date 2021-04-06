@@ -236,7 +236,7 @@ def run_exp_extraction_and_visualization_custom_BK(list_model, is_ratio=False, i
             run_VAE(model_name, net, lambda_BCE, beta, z_struct_size, z_var_size, use_structural_encoder, is_VAE_var)
         else:
             run_viz_expes(model_name, net, is_ratio, loss_min_distance_cl, loss_distance_mean, cat='Encoder_struct',
-                          net_type=net_type, diff_var_loss=diff_var)
+                          net_type=net_type, diff_var_loss=diff_var, z_struct_size=z_struct_size)
             # visualize_regions_of_interest(model_name, net, net_type='Custom_CNN_BK')
 
 
@@ -327,7 +327,7 @@ def run_VAE(model_name, net, lambda_BCE, beta, z_struct_size, z_var_size, VAE_st
                                                                          z_var_size,
                                                                          loader,
                                                                          'test',
-                                                                         plot_gaussian=False,
+                                                                         plot_gaussian=True,
                                                                          save=True,
                                                                          VAE_struct=VAE_struct,
                                                                          is_vae_var=is_vae_var)
@@ -373,7 +373,7 @@ def run_VAE(model_name, net, lambda_BCE, beta, z_struct_size, z_var_size, VAE_st
 
 
 def run_viz_expes(model_name, net, is_ratio, is_distance_loss, loss_distance_mean, net_type=None, cat=None,
-                  ratio_reg=False, diff_var_loss=False, contrastive_loss=False):
+                  ratio_reg=False, diff_var_loss=False, contrastive_loss=False, z_struct_size=5):
 
     path = 'checkpoints_CNN/'
     path_scores = 'checkpoint_scores_CNN'
@@ -443,15 +443,18 @@ def run_viz_expes(model_name, net, is_ratio, is_distance_loss, loss_distance_mea
     # _ = distance_matrix(net, model_name, train_test=train_test, plot_fig=True)
 
     # Plot resume:
-    compute_z_struct(net, model_name, loader, train_test=train_test, net_type=net_type)
-    get_z_struct_per_class(model_name, train_test=train_test, nb_class=nb_class)
-    get_average_z_struct_per_classes(exp_name=model_name, train_test=train_test)
-    plot_resume(net, model_name, is_ratio, is_distance_loss, loss_distance_mean, loader, train_loader,
-                device, cat=cat, train_test=train_test, path_scores=path_scores, diff_var=diff_var_loss,
-                contrastive_loss=contrastive_loss, encoder_struct=True, Hmg_dst=False)
+    # compute_z_struct(net, model_name, loader, train_test=train_test, net_type=net_type)
+    # get_z_struct_per_class(model_name, train_test=train_test, nb_class=nb_class)
+    # get_average_z_struct_per_classes(exp_name=model_name, train_test=train_test)
+    # plot_resume(net, model_name, is_ratio, is_distance_loss, loss_distance_mean, loader, train_loader,
+    #             device, cat=cat, train_test=train_test, path_scores=path_scores, diff_var=diff_var_loss,
+    #             contrastive_loss=contrastive_loss, encoder_struct=True, Hmg_dst=False)
 
-    # see percentage of same binary code for encoder struct:
-    # same_binary_code(net, model_name, loader, nb_class, train_test=train_test, save=True, Hmg_dist=False)
+
+    # receptive_field = get_receptive_field_size(net, batch_test)
+    same_binary_code(net, model_name, loader, nb_class, train_test=train_test, save=True, Hmg_dist=False)
+    z_struct_code_classes(net, model_name, nb_class, train_test=train_test)
+    _ = score_with_best_code_uniq(net, model_name, train_test, loader, z_struct_size, loader_size)
 
     return
 
@@ -541,30 +544,12 @@ if __name__ == '__main__':
                         'mnist_vae_var_deeper_2cb_1_3',
                         'mnist_vae_var_deeper_2cb_1_4',
                         'mnist_vae_var_deeper_2cb_1_5',
-                        'mnist_vae_var_deeper_2cb_1_6',
-                        'mnist_vae_var_deeper_3cb_1_1',
-                        'mnist_vae_var_deeper_3cb_1_2',
-                        'mnist_vae_var_deeper_3cb_1_3',
-                        'mnist_vae_var_deeper_3cb_1_4',
-                        'mnist_vae_var_deeper_3cb_1_5',
-                        'mnist_vae_var_deeper_3cb_1_6',
-                        'mnist_vae_var_kaggle_2cl_1',
-                        'mnist_vae_var_kaggle_2cl_2',
-                        'mnist_vae_var_kaggle_2cl_3',
-                        'mnist_vae_var_kaggle_2cl_4',
-                        'mnist_vae_var_kaggle_2cl_5',
-                        'mnist_vae_var_kaggle_2cl_6',
-                        'mnist_vae_var_kaggle_3cl_1',
-                        'mnist_vae_var_kaggle_3cl_2',
-                        'mnist_vae_var_kaggle_3cl_3',
-                        'mnist_vae_var_kaggle_3cl_4',
-                        'mnist_vae_var_kaggle_3cl_5',
-                        'mnist_vae_var_kaggle_3cl_6']
+                        'mnist_vae_var_deeper_2cb_1_6']
 
     parameters_mnist_classifier_BK_ratio = "parameters_combinations/mnist_classifier_ratio.txt"
 
-    run_exp_extraction_and_visualization_custom_BK(list_exp_VAE_var,
+    run_exp_extraction_and_visualization_custom_BK(list_encoder_struct,
                                                    is_ratio=False,
                                                    is_decoder=False,
-                                                   is_VAE=True,
-                                                   is_encoder_struct=False)
+                                                   is_VAE=False,
+                                                   is_encoder_struct=True)

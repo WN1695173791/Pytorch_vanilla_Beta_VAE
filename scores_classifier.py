@@ -31,14 +31,15 @@ def compute_scores(net, loader, device, loader_size, nb_class, ratio_reg, z_stru
 
             # compute loss:
             prediction, embedding, ratio, var_distance_classes_train, \
-            intra_var, mean_distance_intra_class, inter_var, global_avg_Hmg_dst, _ = net(data,
-                                                                                         labels=labels,
-                                                                                         nb_class=nb_class,
-                                                                                         use_ratio=ratio_reg,
-                                                                                         z_struct_out=z_struct_out,
-                                                                                         z_struct_layer_num=z_struct_layer_num,
-                                                                                         loss_min_distance_cl=loss_min_distance_cl,
-                                                                                         Hmg_dst_loss=Hmg_dst_loss)
+            intra_var, mean_distance_intra_class, inter_var,\
+            global_avg_Hmg_dst, _, _ = net(data,
+                                           labels=labels,
+                                           nb_class=nb_class,
+                                           use_ratio=ratio_reg,
+                                           z_struct_out=z_struct_out,
+                                           z_struct_layer_num=z_struct_layer_num,
+                                           loss_min_distance_cl=loss_min_distance_cl,
+                                           Hmg_dst_loss=Hmg_dst_loss)
 
             # classification loss:
             classification_loss_iter = F.nll_loss(prediction, labels)
