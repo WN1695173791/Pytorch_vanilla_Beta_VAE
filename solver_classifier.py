@@ -289,6 +289,17 @@ class SolverClassifier(object):
 
         self.contrastive_criterion = False
 
+        # pre trained parameters:
+        if 'Hamming' in args.exp_name:
+            self.pre_trained_encoder_struct = True
+        else:
+            self.pre_trained_encoder_struct = False
+
+        if self.pre_trained_encoder_struct:
+            self.n_epoch_before_uniq_loss = 5.
+        else:
+            self.n_epoch_before_uniq_loss = 20.
+
         # For reproducibility:
         if self.randomness:
             seed_all(self.random_seed)
@@ -822,7 +833,7 @@ class SolverClassifier(object):
                 # print(self.net.encoder_struct[0].weight[0][0])
                 # print(self.net.encoder_var[0].weight[0][0])
 
-            if self.uniq_code_dst_loss and self.epochs > 20.:
+            if self.uniq_code_dst_loss and self.epochs > self.n_epoch_before_uniq_loss:
                 print("test uniq code target loss:")
                 # test if we can use uniq code for target latent code:
                 score, self.target_code = score_uniq_code(self.net,
