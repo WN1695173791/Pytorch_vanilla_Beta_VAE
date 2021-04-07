@@ -561,7 +561,7 @@ class SolverClassifier(object):
         self.losses_list = []
         self.best_recall = [0]
         self.best_epoch = 0
-        self.use_uniq_bin_code_target = True
+        self.use_uniq_bin_code_target = False
         self.target_code = None
 
         # init lambda uniq code target:
@@ -654,7 +654,6 @@ class SolverClassifier(object):
                 else:
                     self.mse_loss = 0
                     loss = 0
-
                     prediction, embedding, ratio, \
                     variance_distance_iter_class, \
                     variance_intra, mean_distance_intra_class, \
