@@ -238,7 +238,6 @@ class SolverClassifier(object):
         self.value_target_distance_mean = args.value_target_distance_mean
         # decoder:
         self.other_architecture = args.other_architecture
-        self.use_decoder = args.use_decoder
         self.freeze_Encoder = args.freeze_Encoder
         self.diff_var = args.diff_var
         self.add_linear_after_GMP = args.add_linear_after_GMP
@@ -276,13 +275,16 @@ class SolverClassifier(object):
         self.z_var_size = args.z_var_size
         # VAE parameters:
         self.is_VAE = args.is_VAE
-        self.use_VAE = args.use_VAE
         self.lambda_BCE = args.lambda_BCE
         self.beta = args.beta
         self.encoder_var_name = args.encoder_var_name
         self.encoder_struct_name = args.encoder_struct_name
 
         self.contrastive_criterion = False
+        if self.is_encoder_struct:
+            self.use_VAE = False
+        elif self.is_VAE or self.is_VAE_var:
+            self.use_VAE = True
 
         # For reproducibility:
         if self.randomness:
@@ -391,8 +393,6 @@ class SolverClassifier(object):
                       binary_second_conv=self.binary_second_conv,
                       binary_third_conv=self.binary_third_conv)
 
-        print('load VAE architecture:', net)
-
         # get layer num to extract z_struct:
         self.z_struct_out = True
         if self.is_encoder_struct:
@@ -410,11 +410,7 @@ class SolverClassifier(object):
         # checkpoint save:
         self.file_path_checkpoint_scores = os.path.join(self.checkpoint_dir_scores, 'last')
         if not os.path.exists(self.file_path_checkpoint_scores):
-            if self.use_decoder:
-                self.checkpoint_scores = {'iter': [],
-                                          'epochs': [],
-                                          'MSE_decoder': []}
-            elif self.use_VAE:
+            if self.use_VAE:
                 self.checkpoint_scores = {'iter': [],
                                           'epochs': [],
                                           'BCE_train': [],
@@ -459,17 +455,13 @@ class SolverClassifier(object):
             self.load_checkpoint('last')
 
         if self.is_VAE:
-            print("i'm in VAE parameters....")
-            z_struct_layer_num_struct = get_layer_zstruct_num(net.encoder_var)
-            z_struct_layer_num_var = get_layer_zstruct_num(net.encoder_struct)
+            z_struct_layer_num_struct = get_layer_zstruct_num(net.encoder_struct)
             pre_trained_struct_model = nn.Sequential(
-                *[self.net.encoder_struct[i] for i in range(self.z_struct_layer_num_struct)])
-            pre_trained_var_model = nn.Sequential(
-                *[self.net.encoder_var[i] for i in range(self.z_struct_layer_num_var)])
+                *[net.encoder_struct[i] for i in range(z_struct_layer_num_struct)])
+            pre_trained_var_model = net.encoder_var
 
-            print(z_struct_layer_num_var, z_struct_layer_num_struct)
-            print(pre_trained_struct_model)
-            print(pre_trained_var_model)
+            # print(pre_trained_struct_model)
+            # print(pre_trained_var_model)
 
             self.checkpoint_dir = os.path.join(args.ckpt_dir, args.exp_name)
             file_path = os.path.join(self.checkpoint_dir, 'last')
@@ -576,60 +568,12 @@ class SolverClassifier(object):
                 data = data.to(self.device)  # Variable(data.to(self.device))
                 labels = labels.to(self.device)  # Variable(labels.to(self.device))
 
-                if self.use_decoder:
-                    x_recons, z_struct = self.net(data)
-                    # print(x_recons.shape)
-                    self.mse_loss = F.mse_loss(x_recons, data)
-                    loss = self.mse_loss
-                elif self.use_VAE and not self.is_VAE_var:
-                    get_z_var_reconstruction = False
-                    z_struct_noise = None
-                    if self.train_var_struct_alternatively:
-                        # every other epoch we train VAE only with z_var:
-                        if int(self.epochs) % 2 == 0:
-                            z_struct_noise = 0.5 * torch.randn(data.shape[0], self.z_struct_size) + 0.5
-                            z_struct_noise = z_struct_noise.to(self.device)
-                            get_z_var_reconstruction = True
+                if self.use_VAE:
+
+                    if self.is_VAE:
+                        x_recons, z_struct, z_var, z_var_sample, latent_representation, z = self.net(data)
                     else:
-                        if self.epochs < self.nb_epochs_train_only_zvar:
-                            z_struct_noise = 0.5 * torch.randn(data.shape[0], self.z_struct_size) + 0.5
-                            z_struct_noise = z_struct_noise.to(self.device)
-                            get_z_var_reconstruction = True
-
-                    x_recons, _, z_var, _, latent_representation, z, \
-                    x_recons_zvar = self.net(data,
-                                             get_z_var_reconstruction=get_z_var_reconstruction,
-                                             z_struct_noise=z_struct_noise)
-
-                    mu = latent_representation['mu']
-                    logvar = latent_representation['logvar']
-
-                    # BCE tries to make our reconstruction as accurate as possible
-                    # KLD tries to push the distributions as close as possible to unit Gaussian
-
-                    # BCE loss:
-                    # we try to use for some epochs only zvar with N(0.5, 0.5) gaussian noise
-                    # (because we use sigmoid for z_struct encoder output):
-                    if self.train_var_struct_alternatively:
-                        # every other epoch we train VAE only with z_var:
-                        if int(self.epochs) % 2 == 0:
-                            BCE_loss = F.binary_cross_entropy(x_recons_zvar, data)
-                        else:
-                            # print('we use entire z for BCE (epoch: {}), iter: {}'.format(self.epochs, self.global_iter))
-                            BCE_loss = F.binary_cross_entropy(x_recons, data)
-                    else:
-                        if self.epochs < self.nb_epochs_train_only_zvar:
-                            BCE_loss = F.binary_cross_entropy(x_recons_zvar, data)
-                        else:
-                            # print('we use entire z for BCE (epoch: {})'.format(self.epochs))
-                            BCE_loss = F.binary_cross_entropy(x_recons, data)
-
-                    # KL divergence loss:
-                    KLD_loss = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
-
-                    loss = (self.lambda_BCE * BCE_loss) + (self.beta * KLD_loss)
-                elif self.is_VAE_var:
-                    x_recons, latent_representation = self.net(data)
+                        x_recons, latent_representation = self.net(data)
 
                     mu = latent_representation['mu']
                     log_var = latent_representation['log_var']
@@ -642,6 +586,8 @@ class SolverClassifier(object):
                     KLD_loss = -0.5 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
 
                     loss = (self.lambda_BCE * BCE_loss) + (self.beta * KLD_loss)
+
+                    print('loss:', loss, BCE_loss, KLD_loss)
                 else:
                     self.mse_loss = 0
                     loss = 0
@@ -704,8 +650,7 @@ class SolverClassifier(object):
                         loss += dst_target_loss
 
                 # freeze encoder_struct if train decoder:
-                if (self.use_decoder or self.use_VAE) and self.freeze_Encoder and self.use_structural_encoder \
-                        and not self.is_VAE_var:
+                if self.is_VAE and self.freeze_Encoder:
                     for params in self.net.encoder_struct.parameters():
                         params.requires_grad = False
 
@@ -719,8 +664,7 @@ class SolverClassifier(object):
                 self.optimizer.step()
 
                 # unfreeze encoder_struct if train decoder:
-                if (self.use_decoder or self.use_VAE) and self.freeze_Encoder and self.use_structural_encoder \
-                        and not self.is_VAE_var:
+                if self.is_VAE and self.freeze_Encoder:
                     for params in self.net.encoder_struct.parameters():
                         params.requires_grad = True
 
@@ -769,7 +713,7 @@ class SolverClassifier(object):
                                                           self.lambda_BCE,
                                                           self.beta,
                                                           self.is_VAE_var)
-            elif not self.use_decoder:
+            elif self.is_encoder_struct:
                 self.scores, self.losses = compute_scores_and_loss(self.net,
                                                                    self.train_loader,
                                                                    self.test_loader,
@@ -803,10 +747,7 @@ class SolverClassifier(object):
             if self.use_early_stopping:
                 self.early_stopping(loss, self.net)
 
-            if self.use_decoder:
-                print_bar.write(
-                    '[Save Checkpoint] epoch: [{:.1f}], Train MSE:{:.5f},'.format(self.epochs, self.mse_loss))
-            elif self.use_VAE:
+            if self.use_VAE:
                 print_bar.write(
                     '[Save Checkpoint] epoch: [{:.1f}], Train: total:{:.5f}, BCE:{:.5f}, KLD:{:.5f},'
                     'Test: total:{:.5f}, BCE:{:.5f}, KLD:{:.5f}'.format(self.epochs,
@@ -856,7 +797,7 @@ class SolverClassifier(object):
         """
         self.checkpoint_scores['iter'].append(self.global_iter)
         self.checkpoint_scores['epochs'].append(self.epochs)
-        if not (self.use_decoder or self.use_VAE):
+        if self.is_encoder_struct:
             # sample_scores
             self.checkpoint_scores['train_score'].append(self.scores['train'])
             self.checkpoint_scores['test_score'].append(self.scores['test'])
@@ -881,8 +822,6 @@ class SolverClassifier(object):
             self.checkpoint_scores['contrastive_test'].append(self.losses['contrastive_test'])
             self.checkpoint_scores['classification_test'].append(self.losses['classification_test'])
             self.checkpoint_scores['classification_train'].append(self.losses['classification_train'])
-        elif self.use_decoder:
-            self.checkpoint_scores['MSE_decoder'].append(self.mse_loss)
         elif self.use_VAE:
             self.checkpoint_scores['Total_loss_train'].append(self.losses['Total_loss_train'])
             self.checkpoint_scores['BCE_train'].append(self.losses['BCE_train'])

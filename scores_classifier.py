@@ -148,7 +148,7 @@ def compute_scores_VAE(net, loader, loader_size, device, lambda_BCE, beta, is_va
             if is_vae_var:
                 x_recons, latent_representation = net(data)
             else:
-                x_recons, _, _, _, latent_representation, _, _ = net(data)
+                x_recons, _, _, _, latent_representation, _ = net(data)
 
             mu = latent_representation['mu']
             logvar = latent_representation['log_var']

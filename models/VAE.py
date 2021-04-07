@@ -16,7 +16,7 @@ class VAE(nn.Module, ABC):
                  var_second_cnn_block=True,
                  var_third_cnn_block=False,
                  other_architecture=False,
-                 z_struct_size=5,
+                 z_struct_size=15,
                  big_kernel_size=8,
                  stride_size=1,
                  kernel_size_1=4,
@@ -41,6 +41,7 @@ class VAE(nn.Module, ABC):
 
         # parameters:
         self.nc = 1  # number of channels
+        self.z_size = z_var_size + z_struct_size
 
         # encoder var parameters:
         self.z_var_size = z_var_size
@@ -140,7 +141,7 @@ class VAE(nn.Module, ABC):
         # -----------_________________ define model: encoder_struct____________________________________________--------
         self.encoder_struct = [
             nn.Conv2d(self.nc, self.hidden_filters_1, self.kernel_size_1, stride=self.stride_size),
-            nn.BatchNorm2d(self.hidden_filters_1),
+            # nn.BatchNorm2d(self.hidden_filters_1),
             # PrintLayer(),  # B, 32, 25, 25
         ]
         if self.Binary_z and self.binary_first_conv:
@@ -149,12 +150,13 @@ class VAE(nn.Module, ABC):
             ]
         else:
             self.encoder_struct += [
+                nn.BatchNorm2d(self.hidden_filters_1),
                 nn.ReLU(True),
             ]
         if self.two_conv_layer:
             self.encoder_struct += [
                 nn.Conv2d(self.hidden_filters_1, self.hidden_filters_2, self.kernel_size_2, stride=self.stride_size),
-                nn.BatchNorm2d(self.hidden_filters_2),
+                # nn.BatchNorm2d(self.hidden_filters_2),
                 # PrintLayer(),  # B, 32, 25, 25
             ]
         if self.Binary_z and self.two_conv_layer and self.binary_second_conv:
@@ -163,12 +165,13 @@ class VAE(nn.Module, ABC):
             ]
         elif self.two_conv_layer:
             self.encoder_struct += [
+                nn.BatchNorm2d(self.hidden_filters_2),
                 nn.ReLU(True),
             ]
         if self.three_conv_layer:
             self.encoder_struct += [
                 nn.Conv2d(self.hidden_filters_2, self.hidden_filters_3, self.kernel_size_3, stride=self.stride_size),
-                nn.BatchNorm2d(self.hidden_filters_3),
+                # nn.BatchNorm2d(self.hidden_filters_3),
                 # PrintLayer(),  # B, 32, 25, 25
             ]
         if self.Binary_z and self.three_conv_layer and self.binary_third_conv:
@@ -177,14 +180,15 @@ class VAE(nn.Module, ABC):
             ]
         elif self.three_conv_layer:
             self.encoder_struct += [
+                nn.BatchNorm2d(self.hidden_filters_3),
                 nn.ReLU(True),
             ]
 
         # ---------- GMP and final layer for classification:
         self.encoder_struct += [
             nn.AdaptiveMaxPool2d((1, 1)),  # B, z_struct_size
-            View((-1, self.z_struct_size)),  # B, z_struct_size
-            nn.Linear(self.z_struct_size, self.n_classes)  # B, nb_class
+            View((-1, self.z_struct_size))  # B, z_struct_size
+            # nn.Linear(self.z_struct_size, self.n_classes)  # B, nb_class
             # nn.Softmax()
         ]
         # -----------_________________ end encoder_struct____________________________________________------------
@@ -280,7 +284,7 @@ class VAE(nn.Module, ABC):
         if self.other_architecture:
             self.decoder = [
                 # PrintLayer(),
-                nn.Linear(self.z_var_size, np.product(self.var_reshape)),
+                nn.Linear(self.z_size, np.product(self.var_reshape)),
                 nn.ReLU(True),
                 # PrintLayer(),
                 View((-1, *self.var_reshape)),
@@ -316,7 +320,7 @@ class VAE(nn.Module, ABC):
         else:
             self.decoder = [
                 # PrintLayer(),
-                nn.Linear(self.z_var_size, np.product(self.var_reshape)),
+                nn.Linear(self.z_size, np.product(self.var_reshape)),
                 nn.ReLU(True),
                 # PrintLayer(),
                 View((-1, *self.var_reshape)),
@@ -405,17 +409,16 @@ class VAE(nn.Module, ABC):
         latent_dist = {}
 
         mu = z[:, :z_size]
-        logvar = z[:, z_size:]
+        log_var = z[:, z_size:]
 
         latent_dist['mu'] = mu
-        latent_dist['logvar'] = logvar
+        latent_dist['log_var'] = log_var
 
         return latent_dist
 
     def reparametrize(self, latent_dist):
         """
         Samples from a normal distribution using the reparameterization trick.
-        :param latent_dist:
         :param mu: torch.Tensor
                 Mean of the normal distribution. Shape (batch_size, latent_dim)
         :param logvar: torch.Tensor
@@ -425,11 +428,11 @@ class VAE(nn.Module, ABC):
         """
 
         mu = latent_dist['mu']
-        logvar = latent_dist['logvar']
+        log_var = latent_dist['log_var']
 
-        std = torch.exp(0.5 * logvar)
+        std = torch.exp(0.5 * log_var)
         eps = torch.randn_like(std)
 
-        sample = mu + std * eps
+        sample = mu + (std * eps)
 
         return sample
