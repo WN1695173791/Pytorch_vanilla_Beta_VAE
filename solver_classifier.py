@@ -395,7 +395,8 @@ class SolverClassifier(object):
 
         # get layer num to extract z_struct:
         self.z_struct_out = True
-        self.z_struct_layer_num = get_layer_zstruct_num(net)
+        if self.is_encoder_struct:
+            self.z_struct_layer_num = get_layer_zstruct_num(net)
 
         # experience name:
         self.checkpoint_dir = os.path.join(args.ckpt_dir, args.exp_name)
