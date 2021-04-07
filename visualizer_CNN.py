@@ -1723,7 +1723,7 @@ def distance_matrix(net, exp_name, train_test=None, plot_fig=False):
 
 def plot_resume(net, exp_name, is_ratio, is_distance_loss, loss_distance_mean, loader, loader_train, device, cat=None,
                 train_test=None, path_scores=None, save=True, diff_var=False, contrastive_loss=False,
-                encoder_struct=False, Hmg_dst=False):
+                encoder_struct=False, Hmg_dst=False, z_struct_size=None):
     """
     plot interesting values to resume experiementation behavior: distance matrix, loss, acc, ratio, var intra, var inter
     :param net:
@@ -1806,6 +1806,7 @@ def plot_resume(net, exp_name, is_ratio, is_distance_loss, loss_distance_mean, l
 
     axs[0, 0].legend(loc=1)
 
+    """
     # 2d projection:____________________________________________________________________________________________________
     z_struct_representation, label_list, _ = load_z_struct_representation(exp_name, train_test=train_test)
 
@@ -1816,8 +1817,8 @@ def plot_resume(net, exp_name, is_ratio, is_distance_loss, loss_distance_mean, l
     lim_min = np.min(t)
     lim_max = np.max(t)
 
-    axs[1, 0].set(xlabel='nb_iter', ylabel='loss', title='PCA of z_struct for each images')
-    axs[1, 0].set(xlim=(lim_min, lim_max), ylim=(lim_min, lim_max))
+    axs[1, 1].set(xlabel='nb_iter', ylabel='loss', title='PCA of z_struct for each images')
+    axs[1, 1].set(xlim=(lim_min, lim_max), ylim=(lim_min, lim_max))
 
     x = np.arange(nb_class)
     ys = [i + x + (i * x) ** 2 for i in range(10)]
@@ -1826,9 +1827,9 @@ def plot_resume(net, exp_name, is_ratio, is_distance_loss, loss_distance_mean, l
     for c, color in zip(range(nb_class), colors):
         x = np.array(t[0])[np.concatenate(np.argwhere(np.array(label_list) == c)).ravel()]
         y = np.array(t[1])[np.concatenate(np.argwhere(np.array(label_list) == c)).ravel()]
-        axs[1, 0].scatter(x, y, alpha=0.6, color=color, label='class ' + str(c))
-    axs[1, 0].legend(loc=1)
-
+        axs[1, 1].scatter(x, y, alpha=0.6, color=color, label='class ' + str(c))
+    axs[1, 1].legend(loc=1)
+    """
     # distance matrix: _________________________________________________________________________________________________
     distance_inter_class = distance_matrix(net, exp_name, train_test=train_test, plot_fig=False)
     distance_classes_triu = np.triu(distance_inter_class, k=1)
@@ -1856,7 +1857,15 @@ def plot_resume(net, exp_name, is_ratio, is_distance_loss, loss_distance_mean, l
         avg_hmg_dst = np.mean(Hmg_dst)
         avg_perc_uniq_code = np.mean(percentage_uniq_code)
 
-    axs[1, 1].set(title='Statistics')
+        sc = score_with_best_code_uniq(net, exp_name, train_test, loader, z_struct_size, len(loader.dataset))
+        if sc == 100.:
+            perfect_score = 'True'
+        else:
+            perfect_score = 'False'
+
+        percent_max = histo_count_uniq_code(exp_name, train_test, plot_histo=False, return_percent=True)
+
+    axs[1, 0].set(title='Statistics')
 
     text_titles = ["Ratio: ",
                    "Variance intra class mean: ",
@@ -1866,7 +1875,9 @@ def plot_resume(net, exp_name, is_ratio, is_distance_loss, loss_distance_mean, l
                    "Accuracy test: "]
     if encoder_struct:
         text_titles += ['Average Hamming distance in classes: ',
-                        'Average uniq code percentage per classes: ']
+                        'Average uniq code percentage per classes: ',
+                        'Percent majority binary code per class: ',
+                        'If replace each class by uniq maj binary code, perfect score: ']
 
     n_lines = len(text_titles)
 
@@ -1879,10 +1890,12 @@ def plot_resume(net, exp_name, is_ratio, is_distance_loss, loss_distance_mean, l
 
     if encoder_struct:
         text_values += [avg_hmg_dst,
-                        avg_perc_uniq_code]
+                        avg_perc_uniq_code,
+                        percent_max,
+                        perfect_score]
 
     for y in range(n_lines):
-        axs[1, 1].text(.1,
+        axs[1, 0].text(.1,
                        1 - (y + 0.4) / n_lines,
                        text_titles[y] + str(text_values[y]),
                        size=20,
@@ -2521,7 +2534,18 @@ def manifold_digit(net, model_name, device, size=(20, 20), component_var=0, comp
 
 
 def same_binary_code(net, model_name, loader, nb_class, train_test=None, save=True, Hmg_dist=True):
-
+    """
+    Compute, save and return uniqs code use for each classes, their percentage.
+    If Hmg dst compute, save and return Hmg distance for each class.
+    :param net:
+    :param model_name:
+    :param loader:
+    :param nb_class:
+    :param train_test:
+    :param save:
+    :param Hmg_dist:
+    :return:
+    """
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     z_struct_layer_num = get_layer_zstruct_num(net)
 
@@ -2648,6 +2672,12 @@ def same_binary_code(net, model_name, loader, nb_class, train_test=None, save=Tr
 
 
 def get_receptive_field_size(net, images):
+    """
+    compute receptive field of each component for each conv layer.
+    :param net:
+    :param images:
+    :return:
+    """
 
     image = images[0].unsqueeze(dim=0)
     # get activations:
@@ -2682,7 +2712,16 @@ def get_receptive_field_size(net, images):
     return receptive_field_size
 
 
-def z_struct_code_classes(net, model_name, nb_class, train_test=None):
+def z_struct_code_classes(model_name, nb_class, train_test=None):
+    """
+    Save embedding class for each class.
+    From embedding struct, uniq code and label list for a specific model, compute number of each uniq code used in each
+    class and save it.
+    :param model_name:
+    :param nb_class:
+    :param train_test:
+    :return:
+    """
 
     path_model_uniq_code = 'binary_encoder_struct_results/uniq_code/' + model_name + '_' + train_test + '.npy'
     path_model_encoder_struct_embedding = 'binary_encoder_struct_results/encoder_struct_embedding/' + model_name +\
@@ -2724,6 +2763,16 @@ def z_struct_code_classes(net, model_name, nb_class, train_test=None):
 
 
 def score_with_best_code_uniq(net, model_name, train_test, loader, z_struct_size, loader_size):
+    """
+    Use majoritary uniq binary code for each class and compute classification score with this uniq code for each class.
+    :param net:
+    :param model_name:
+    :param train_test:
+    :param loader:
+    :param z_struct_size:
+    :param loader_size:
+    :return:
+    """
 
     global_count = np.load('binary_encoder_struct_results/uniq_code/global_count_' + model_name + '_'
                            + train_test + '.npy', allow_pickle=True)
@@ -2782,7 +2831,79 @@ def score_with_best_code_uniq(net, model_name, train_test, loader, z_struct_size
     return scores
 
 
+def histo_count_uniq_code(model_name, train_test, plot_histo=True, return_percent=False):
+    """
+    plot histogram of utilization of each uniq code for each class.
+    :param net:
+    :param model:
+    :param name:
+    :param loader:
+    :return:
+    """
+    global_count = np.load('binary_encoder_struct_results/uniq_code/global_count_' + model_name + '_'
+                           + train_test + '.npy', allow_pickle=True)
+
+    path_global_count_each_code = 'binary_encoder_struct_results/uniq_code/global_count_each_class' + model_name + '_' \
+                                  + train_test + '.npy'
+
+    if os.path.exists(path_global_count_each_code):
+        code_class_global = np.array(np.load(path_global_count_each_code, allow_pickle=True))
+    else:
+        code_class_global = []
+        for i in range(len(global_count)):
+            code_class_iter = []
+            for index in range(len(global_count[i])):
+                nb_code = global_count[i][index]
+                code_class_iter.append(nb_code)
+            code_class_global.append(code_class_iter)
+        np.save(path_global_count_each_code, code_class_global)
+
+    # compute percent:
+    embedding_class = np.load('binary_encoder_struct_results/uniq_code/embedding_class_' + model_name + '_'
+                              + train_test + '.npy', allow_pickle=True)
+    uniq_code = np.load('binary_encoder_struct_results/uniq_code/' + model_name + '_' + train_test + '.npy',
+                        allow_pickle=True)
+
+    percent_max = []
+    for i in range(len(global_count)):
+        index_max = np.argmax(global_count[i])
+        nb_code = global_count[i][index_max]
+        percent_code = np.round(nb_code / len(embedding_class[i]) * 100, 3)
+        percent_max.append(percent_code)
+
+    # histo:
+    if plot_histo:
+        # plot histos:
+        nrows = 4
+        ncols = 3
+        fig, axs = plt.subplots(nrows=nrows, ncols=ncols, figsize=(20, 15), facecolor='w', edgecolor='k')
+        fig.suptitle("Histograms uniq binary code each class: {}".format(model_name), fontsize=16)
+        for i in range(len(code_class_global)):
+            row = i // ncols
+            col = i % ncols
+            axs[row, col].hist(code_class_global[i], bins=100, alpha=0.75, label="class "+str(i))
+            axs[row, col].set_title("Class: {}: [{} %] ".format(i, percent_max[i]), fontsize=12)
+            axs[row, col].axvline(5, color='k', linestyle='solid')
+        plt.show()
+
+    if return_percent:
+        return percent_max
+    else:
+        return
+
+
 def score_uniq_code(net, loader, device, z_struct_layer_num, nb_class, z_struct_size, loader_size):
+    """
+    Function used in solver to get score classification with majoritary uniq binary code and uniq code for each class.
+    :param net:
+    :param loader:
+    :param device:
+    :param z_struct_layer_num:
+    :param nb_class:
+    :param z_struct_size:
+    :param loader_size:
+    :return:
+    """
 
     # get z_struct binary code:
     net.eval()
