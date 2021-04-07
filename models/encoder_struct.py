@@ -306,7 +306,7 @@ class Encoder_struct(nn.Module, ABC):
         :param z_struct:
         :return:
         """
-
+        z_struct_size = batch_z_struct[0].shape[0]
         global_first = True
         for class_id in range(nb_class):
             first = True
@@ -317,7 +317,9 @@ class Encoder_struct(nn.Module, ABC):
                     if i == j:
                         pass
                     else:
-                        Hmg_dist = hamming_distance(z_struct_class_iter[i], target_code[class_id])
+                        z1 = z_struct_class_iter[i].reshape(1, z_struct_size)
+                        z2 = target_code[class_id].reshape(1, z_struct_size)
+                        Hmg_dist = hamming_distance(z1, z2)
                         Hmg_dist = torch.unsqueeze(Hmg_dist, 0)
                         if first:
                             avg_dst_class_id = Hmg_dist

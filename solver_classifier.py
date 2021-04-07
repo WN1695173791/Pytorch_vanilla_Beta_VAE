@@ -15,7 +15,6 @@ from solver import gpu_config
 from visualizer_CNN import get_layer_zstruct_num, score_uniq_code
 from dataset.sampler import BalancedBatchSampler
 import random
-from models.Encoder_decoder import Encoder_decoder
 from models.VAE import VAE
 import torch.nn as nn
 
@@ -51,7 +50,7 @@ def seed_worker(worker_id):
     random.seed(worker_seed)
 
 
-def get_lambda_uniq_code_dst(epoch, nb_epoch):
+def get_lambda_uniq_code_dst(epoch, nb_epoch, lambda_loss):
     """
     get lambda value dependent of epoch number.
     nb_epoch is the epoch number from which we stop arise lambda value
@@ -64,7 +63,7 @@ def get_lambda_uniq_code_dst(epoch, nb_epoch):
         x = float(nb_epoch)
     else:
         x = float(epoch)
-    return torch.exp(torch.tensor(x)) / torch.exp(nb_epoch-1)
+    return (torch.exp(torch.tensor(x)) / torch.exp(torch.tensor(nb_epoch-1))) * lambda_loss
 
 
 def compute_scores_and_loss(net, train_loader, test_loader, device, train_loader_size, test_loader_size, nb_class,
@@ -460,8 +459,8 @@ class SolverClassifier(object):
 
         if self.Hmg_dst_loss or self.uniq_code_dst_loss:
             self.net, self.device = gpu_config(net)
-            print('USe encoder struct with Hamming distance with pre trained encoder, load it !')
-            self.checkpoint_dir = os.path.join(args.ckpt_dir, args.exp_name.split('_Hamming')[0])
+            print('USe encoder struct with pre trained weighs encoder, load it !')
+            self.checkpoint_dir = os.path.join(args.ckpt_dir, args.exp_name.split('_PT')[0])
             self.load_checkpoint('last')
             self.checkpoint_dir = os.path.join(args.ckpt_dir, args.exp_name)
         else:
@@ -565,7 +564,7 @@ class SolverClassifier(object):
         self.target_code = None
 
         # init lambda uniq code target:
-        self.lambda_uniq_code_dst = 0
+        self.lambda_uc = 0
 
     def train(self):
         self.net_mode(train=True)
@@ -709,10 +708,8 @@ class SolverClassifier(object):
                         loss += global_avg_Hmg_dst * self.lambda_hmg_dst
 
                     if self.uniq_code_dst_loss and self.use_uniq_bin_code_target:
-                        dst_target_loss = uniq_target_dist_loss * self.lambda_uniq_code_dst
+                        dst_target_loss = uniq_target_dist_loss * self.lambda_uc
                         loss += dst_target_loss
-
-                        print(loss, dst_target_loss, self.lambda_uniq_code_dst)
 
                 # freeze encoder_struct if train decoder:
                 if (self.use_decoder or self.use_VAE) and self.freeze_Encoder and self.use_structural_encoder \
@@ -741,6 +738,7 @@ class SolverClassifier(object):
 
             if self.uniq_code_dst_loss:
                 print(self.epochs, " Compute uniq code target:")
+                self.use_uniq_bin_code_target = True
                 # test if we can use uniq code for target latent code:
                 score, self.target_code = score_uniq_code(self.net,
                                                           self.test_loader,
@@ -751,10 +749,12 @@ class SolverClassifier(object):
                                                           self.test_loader_size)
                 # updte lambda value:
                 print(self.max_epoch_use_uniq_code_target)
-                self.lambda_uniq_code_dst = get_lambda_uniq_code_dst(self.epochs, self.max_epoch_use_uniq_code_target)
+                self.lambda_uc = get_lambda_uniq_code_dst(self.epochs,
+                                                          self.max_epoch_use_uniq_code_target,
+                                                          self.lambda_uniq_code_dst)
                 # if score == 100.:
                 #     self.use_uniq_bin_code_target = True
-                print('Uniq code computing: lambda: {}, score: {}, uniq codes: {}'.format(self.lambda_uniq_code_dst,
+                print('Uniq code computing: lambda: {}, score: {}, uniq codes: {}'.format(self.lambda_uc,
                                                                                           score,
                                                                                           self.target_code))
 

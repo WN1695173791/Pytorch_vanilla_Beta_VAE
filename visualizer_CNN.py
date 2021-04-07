@@ -2618,6 +2618,7 @@ def same_binary_code(net, model_name, loader, nb_class, train_test=None, save=Tr
 
         # compute hamming distance: differentiable hamming loss distance.
         if Hmg_dist:
+            hamming_distance = nn.PairwiseDistance(p=0, eps=0.0)
             Hmg_dst = []
             for class_id in range(nb_class):
                 nb_vector = len(embedding_class[class_id])
@@ -2629,8 +2630,10 @@ def same_binary_code(net, model_name, loader, nb_class, train_test=None, save=Tr
                             pass
                         else:
                             nb_distance += 1
-                            distance_hamming_class = torch.mean((torch.tensor(embedding_class[class_id][i]) !=
-                                                                 torch.tensor(embedding_class[class_id][j])).double())
+                            distance_hamming_class = hamming_distance(torch.tensor(embedding_class[class_id][i]),
+                                                                      torch.tensor(embedding_class[class_id][j]))
+                            # distance_hamming_class = torch.mean((torch.tensor(embedding_class[class_id][i]) !=
+                            #                                      torch.tensor(embedding_class[class_id][j])).double())
                             dist += distance_hamming_class
                 Hmg_dst.append((dist/nb_distance))
                 print('class {}: Average distance Hamming: {}'.format(class_id, Hmg_dst[class_id]))

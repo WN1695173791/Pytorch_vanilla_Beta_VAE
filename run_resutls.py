@@ -448,7 +448,7 @@ def run_viz_expes(model_name, net, is_ratio, is_distance_loss, loss_distance_mea
     get_average_z_struct_per_classes(exp_name=model_name, train_test=train_test)
     plot_resume(net, model_name, is_ratio, is_distance_loss, loss_distance_mean, loader, train_loader,
                 device, cat=cat, train_test=train_test, path_scores=path_scores, diff_var=diff_var_loss,
-                contrastive_loss=contrastive_loss, encoder_struct=True, Hmg_dst=False)
+                contrastive_loss=contrastive_loss, encoder_struct=True, Hmg_dst=True)
 
 
     # receptive_field = get_receptive_field_size(net, batch_test)
@@ -533,11 +533,11 @@ if os.path.exists(path_select_model_analyse_50):
 
 if __name__ == '__main__':
 
-    list_encoder_struct = ['mnist_struct_baseline_scheduler_binary_1_3',
-                           'mnist_struct_baseline_scheduler_binary_1_6',
-                           'mnist_struct_baseline_scheduler_binary_1_8',
-                           'mnist_struct_baseline_scheduler_binary_1_10',
-                           'mnist_struct_baseline_scheduler_binary_1_12']
+    list_encoder_struct = ['mnist_struct_baseline_scheduler_binary_10',
+                           'mnist_struct_baseline_scheduler_binary_15',
+                           'mnist_struct_baseline_scheduler_binary_20',
+                           'mnist_struct_baseline_scheduler_binary_25',
+                           'mnist_struct_baseline_scheduler_binary_30']
 
     list_encoder_struct_norm_dst = ['mnist_struct_baseline_scheduler_binary_1_3_norm_dst_1',
                                     'mnist_struct_baseline_scheduler_binary_1_6_norm_dst_1',
@@ -629,7 +629,7 @@ if __name__ == '__main__':
 
     parameters_mnist_classifier_BK_ratio = "parameters_combinations/mnist_classifier_ratio.txt"
 
-    run_exp_extraction_and_visualization_custom_BK(list_encoder_struct_norm_dst,
+    run_exp_extraction_and_visualization_custom_BK(list_encoder_struct,
                                                    is_ratio=False,
                                                    is_decoder=False,
                                                    is_VAE=False,
