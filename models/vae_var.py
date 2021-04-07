@@ -157,12 +157,13 @@ class VAE_var(nn.Module, ABC):
                     nn.Conv2d(in_channels=64, out_channels=128, kernel_size=4, stride=1),
                     nn.ReLU(True),
                     nn.BatchNorm2d(128),
+                    nn.Dropout(0.4),
                     # PrintLayer(),
                 ]
 
             self.encoder_var += [
                 View((-1, np.product(self.var_reshape))),
-                nn.Dropout(0.4),
+                # nn.Dropout(0.4),
                 # PrintLayer(),
                 nn.Linear(np.product(self.var_reshape), self.z_var_size * 2),
                 # PrintLayer(),

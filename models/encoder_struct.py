@@ -80,7 +80,7 @@ class Encoder_struct(nn.Module, ABC):
         # _________________________---------------- define encoder_struct: ------------_____________________________
         self.encoder_struct = [
             nn.Conv2d(self.nc, self.hidden_filters_1, self.kernel_size_1, stride=self.stride_size),
-            nn.BatchNorm2d(self.hidden_filters_1),
+            # nn.BatchNorm2d(self.hidden_filters_1),
             # PrintLayer(),  # B, 32, 25, 25
         ]
         if self.Binary_z and self.binary_first_conv:
@@ -89,12 +89,13 @@ class Encoder_struct(nn.Module, ABC):
             ]
         else:
             self.encoder_struct += [
+                nn.BatchNorm2d(self.hidden_filters_1),
                 nn.ReLU(True),
             ]
         if self.two_conv_layer:
             self.encoder_struct += [
                 nn.Conv2d(self.hidden_filters_1, self.hidden_filters_2, self.kernel_size_2, stride=self.stride_size),
-                nn.BatchNorm2d(self.hidden_filters_2),
+                # nn.BatchNorm2d(self.hidden_filters_2),
                 # PrintLayer(),  # B, 32, 25, 25
             ]
         if self.Binary_z and self.two_conv_layer and self.binary_second_conv:
@@ -103,12 +104,13 @@ class Encoder_struct(nn.Module, ABC):
             ]
         elif self.two_conv_layer:
             self.encoder_struct += [
+                nn.BatchNorm2d(self.hidden_filters_2),
                 nn.ReLU(True),
             ]
         if self.three_conv_layer:
             self.encoder_struct += [
                 nn.Conv2d(self.hidden_filters_2, self.hidden_filters_3, self.kernel_size_3, stride=self.stride_size),
-                nn.BatchNorm2d(self.hidden_filters_3),
+                # nn.BatchNorm2d(self.hidden_filters_3),
                 # PrintLayer(),  # B, 32, 25, 25
             ]
         if self.Binary_z and self.three_conv_layer and self.binary_third_conv:
@@ -117,6 +119,7 @@ class Encoder_struct(nn.Module, ABC):
             ]
         elif self.three_conv_layer:
             self.encoder_struct += [
+                nn.BatchNorm2d(self.hidden_filters_3),
                 nn.ReLU(True),
             ]
 

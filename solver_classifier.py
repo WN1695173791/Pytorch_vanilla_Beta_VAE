@@ -284,17 +284,6 @@ class SolverClassifier(object):
 
         self.contrastive_criterion = False
 
-        # pre trained parameters:
-        if 'Hamming' in args.exp_name:
-            self.pre_trained_encoder_struct = True
-        else:
-            self.pre_trained_encoder_struct = False
-
-        if self.pre_trained_encoder_struct:
-            self.n_epoch_before_uniq_loss = 5.
-        else:
-            self.n_epoch_before_uniq_loss = 20.
-
         # For reproducibility:
         if self.randomness:
             seed_all(self.random_seed)
@@ -402,6 +391,8 @@ class SolverClassifier(object):
                       binary_second_conv=self.binary_second_conv,
                       binary_third_conv=self.binary_third_conv)
 
+        print('load VAE architecture:', net)
+
         # get layer num to extract z_struct:
         self.z_struct_out = True
         self.z_struct_layer_num = get_layer_zstruct_num(net)
@@ -467,6 +458,7 @@ class SolverClassifier(object):
             self.load_checkpoint('last')
 
         if self.is_VAE:
+            print("i'm in VAE parameters....")
             z_struct_layer_num_struct = get_layer_zstruct_num(net.encoder_var)
             z_struct_layer_num_var = get_layer_zstruct_num(net.encoder_struct)
             pre_trained_struct_model = nn.Sequential(
@@ -480,7 +472,6 @@ class SolverClassifier(object):
 
             self.checkpoint_dir = os.path.join(args.ckpt_dir, args.exp_name)
             file_path = os.path.join(self.checkpoint_dir, 'last')
-
             if os.path.isfile(file_path):
                 print("VAE already exist load it !")
                 # config gpu:
@@ -492,7 +483,7 @@ class SolverClassifier(object):
                 self.checkpoint_dir_encoder_struct = os.path.join(args.ckpt_dir, self.encoder_struct_name)
                 file_path_encoder_struct = os.path.join(self.checkpoint_dir_encoder_struct, 'last')
                 if os.path.isfile(file_path_encoder_var):
-                    print("VAE doesn't exist but encoder var yes ! load var encoder weigh !")
+                    print("VAE doesn't exist but encoder var yes ! load var encoder weighs !")
                     pretrained_dict = pre_trained_var_model.state_dict()
                     model_dict = net.encoder_var.state_dict()
                     pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict}
@@ -501,7 +492,7 @@ class SolverClassifier(object):
                     self.net, self.device = gpu_config(net)
                     print("Weighs loaded for var encoder !")
                 if os.path.isfile(file_path_encoder_struct):
-                    print("VAE doesn't exist but encoder struct yes ! load struct encoder weigh !")
+                    print("VAE doesn't exist but encoder struct yes ! load struct encoder weighs !")
                     pretrained_dict = pre_trained_struct_model.state_dict()
                     model_dict = net.encoder_struct.state_dict()
                     pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict}
