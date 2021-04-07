@@ -124,7 +124,7 @@ class Encoder_struct(nn.Module, ABC):
             ]
 
         # ---------- GMP and final layer for classification:
-        self.encoder_struct += [
+i        self.encoder_struct += [
             nn.AdaptiveMaxPool2d((1, 1)),  # B, z_struct_size
             View((-1, self.z_struct_size)),  # B, z_struct_size
             nn.Linear(self.z_struct_size, self.n_classes)  # B, nb_class
