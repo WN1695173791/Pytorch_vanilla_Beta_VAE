@@ -292,6 +292,7 @@ if __name__ == "__main__":
                         help='encoder_var_name')
     parser.add_argument('--encoder_struct_name', default='mnist_struct_baseline_scheduler_binary_1_3',
                         type=str, help='encoder_struct_name')
+    parser.add_argument('--use_small_lr_encoder_var', default=False, type=str2bool, help="use_small_lr_encoder_var")
 
     args = parser.parse_args()
 

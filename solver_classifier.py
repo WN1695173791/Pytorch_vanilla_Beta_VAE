@@ -63,7 +63,7 @@ def get_lambda_uniq_code_dst(epoch, nb_epoch, lambda_loss):
         x = float(nb_epoch)
     else:
         x = float(epoch)
-    return (torch.exp(torch.tensor(x)) / torch.exp(torch.tensor(nb_epoch-1))) * lambda_loss
+    return (torch.exp(torch.tensor(x)) / torch.exp(torch.tensor(nb_epoch-2))) * lambda_loss
 
 
 def compute_scores_and_loss(net, train_loader, test_loader, device, train_loader_size, test_loader_size, nb_class,
@@ -279,6 +279,7 @@ class SolverClassifier(object):
         self.beta = args.beta
         self.encoder_var_name = args.encoder_var_name
         self.encoder_struct_name = args.encoder_struct_name
+        self.use_small_lr_encoder_var = args.use_small_lr_encoder_var
 
         self.contrastive_criterion = False
         if self.is_encoder_struct:
@@ -514,7 +515,13 @@ class SolverClassifier(object):
             self.net = self.net
 
         # TODO: add optimizer choice
-        self.optimizer = optimizer.Adam(self.net.parameters(), lr=self.lr)
+        if self.use_small_lr_encoder_var:
+            print('use smaller lr for encoder var !')
+            self.optimizer = optimizer.Adam([{'params': self.net.decoder.parameters()},
+                                            {'params': self.net.encoder_var.parameters(), 'lr': 1e-5}
+                                             ], lr=self.lr)
+        else:
+            self.optimizer = optimizer.Adam(self.net.parameters(), lr=self.lr)
 
         # Decays the learning rate of each parameter group by gamma every step_size epochs.
         # Notice that such decay can happen simultaneously with other changes to the learning rate
