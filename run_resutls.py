@@ -321,21 +321,21 @@ def run_VAE(model_name, net, lambda_BCE, beta, z_struct_size, z_var_size, VAE_st
     #                                      batch=batch)
 
     # Image reconstruction with real distribution: mu_var, sigma_var, mu_struct, sigma_struct
-    mu_var, sigma_var, mu_struct, sigma_struct = real_distribution_model(net,
-                                                                         model_name,
-                                                                         z_struct_size,
-                                                                         z_var_size,
-                                                                         loader,
-                                                                         'test',
-                                                                         plot_gaussian=True,
-                                                                         save=True,
-                                                                         VAE_struct=VAE_struct,
-                                                                         is_vae_var=is_vae_var)
-    viz_reconstruction_VAE(net, loader, model_name, z_var_size, z_struct_size, nb_img=10,
-                           nb_class=nb_class, save=True, z_reconstruction=True,
-                           z_struct_reconstruction=False, z_var_reconstruction=False,
-                           return_scores=False, real_distribution=True, mu_var=mu_var, std_var=sigma_var,
-                           mu_struct=mu_struct, std_struct=sigma_struct, is_vae_var=is_vae_var)
+    # mu_var, sigma_var, mu_struct, sigma_struct = real_distribution_model(net,
+    #                                                                      model_name,
+    #                                                                      z_struct_size,
+    #                                                                      z_var_size,
+    #                                                                      loader,
+    #                                                                      'test',
+    #                                                                      plot_gaussian=True,
+    #                                                                      save=True,
+    #                                                                      VAE_struct=VAE_struct,
+    #                                                                      is_vae_var=is_vae_var)
+    # viz_reconstruction_VAE(net, loader, model_name, z_var_size, z_struct_size, nb_img=10,
+    #                        nb_class=nb_class, save=True, z_reconstruction=True,
+    #                        z_struct_reconstruction=False, z_var_reconstruction=False,
+    #                        return_scores=False, real_distribution=True, mu_var=mu_var, std_var=sigma_var,
+    #                        mu_struct=mu_struct, std_struct=sigma_struct, is_vae_var=is_vae_var)
 
     # viz switch image:
     # switch_img(net, model_name, loader, z_var_size)
@@ -443,12 +443,12 @@ def run_viz_expes(model_name, net, is_ratio, is_distance_loss, loss_distance_mea
     # _ = distance_matrix(net, model_name, train_test=train_test, plot_fig=True)
 
     # Plot resume:
-    compute_z_struct(net, model_name, loader, train_test=train_test, net_type=net_type)
-    get_z_struct_per_class(model_name, train_test=train_test, nb_class=nb_class)
-    get_average_z_struct_per_classes(exp_name=model_name, train_test=train_test)
-    plot_resume(net, model_name, is_ratio, is_distance_loss, loss_distance_mean, loader, train_loader,
-                device, cat=cat, train_test=train_test, path_scores=path_scores, diff_var=diff_var_loss,
-                contrastive_loss=contrastive_loss, encoder_struct=True, Hmg_dst=False)
+    # compute_z_struct(net, model_name, loader, train_test=train_test, net_type=net_type)
+    # get_z_struct_per_class(model_name, train_test=train_test, nb_class=nb_class)
+    # get_average_z_struct_per_classes(exp_name=model_name, train_test=train_test)
+    # plot_resume(net, model_name, is_ratio, is_distance_loss, loss_distance_mean, loader, train_loader,
+    #             device, cat=cat, train_test=train_test, path_scores=path_scores, diff_var=diff_var_loss,
+    #             contrastive_loss=contrastive_loss, encoder_struct=True, Hmg_dst=False)
 
 
     # receptive_field = get_receptive_field_size(net, batch_test)
@@ -533,11 +533,11 @@ if os.path.exists(path_select_model_analyse_50):
 
 if __name__ == '__main__':
 
-    list_encoder_struct = ['mnist_struct_baseline_scheduler_binary_10',
-                           'mnist_struct_baseline_scheduler_binary_15',
-                           'mnist_struct_baseline_scheduler_binary_20',
-                           'mnist_struct_baseline_scheduler_binary_25',
-                           'mnist_struct_baseline_scheduler_binary_30']
+    list_encoder_struct = ['mnist_binary_encoder_struct_10',
+                           'mnist_binary_encoder_struct_15',
+                           'mnist_binary_encoder_struct_20',
+                           'mnist_binary_encoder_struct_25',
+                           'mnist_binary_encoder_struct_30']
 
     list_encoder_struct_Hmg = ['mnist_struct_baseline_scheduler_binary_10_Hmg_dst_1',
                                'mnist_struct_baseline_scheduler_binary_15_Hmg_dst_1',
@@ -600,17 +600,29 @@ if __name__ == '__main__':
                                'mnist_struct_baseline_scheduler_binary_25_PT_target_uc_3',
                                'mnist_struct_baseline_scheduler_binary_30_PT_target_uc_3']
 
-    list_exp_VAE_var = ['mnist_vae_var_deeper_2cb_1_1',
-                        'mnist_vae_var_deeper_2cb_1_2',
-                        'mnist_vae_var_deeper_2cb_1_3',
-                        'mnist_vae_var_deeper_2cb_1_4',
-                        'mnist_vae_var_deeper_2cb_1_5',
-                        'mnist_vae_var_deeper_2cb_1_6']
+    list_exp_VAE_var = ['mnist_vae_var_2cb_5',
+                        'mnist_vae_var_2cb_10',
+                        'mnist_vae_var_2cb_15',
+                        'mnist_vae_var_2cb_20',
+                        'mnist_vae_var_2cb_25',
+                        'mnist_vae_var_2cb_30']
 
     parameters_mnist_classifier_BK_ratio = "parameters_combinations/mnist_classifier_ratio.txt"
+
+    run_exp_extraction_and_visualization_custom_BK(list_encoder_struct,
+                                                   is_ratio=False,
+                                                   is_decoder=False,
+                                                   is_VAE=False,
+                                                   is_encoder_struct=True)
 
     run_exp_extraction_and_visualization_custom_BK(list_encoder_struct_Hmg,
                                                    is_ratio=False,
                                                    is_decoder=False,
                                                    is_VAE=False,
                                                    is_encoder_struct=True)
+
+    run_exp_extraction_and_visualization_custom_BK(list_exp_VAE_var,
+                                                   is_ratio=False,
+                                                   is_decoder=False,
+                                                   is_VAE=True,
+                                                   is_encoder_struct=False)
