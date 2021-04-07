@@ -51,6 +51,22 @@ def seed_worker(worker_id):
     random.seed(worker_seed)
 
 
+def get_lambda_uniq_code_dst(epoch, nb_epoch):
+    """
+    get lambda value dependent of epoch number.
+    nb_epoch is the epoch number from which we stop arise lambda value
+    :param epoch:
+    :param nb_epoch:
+    :param n:
+    :return:
+    """
+    if epoch > nb_epoch:
+        x = float(nb_epoch)
+    else:
+        x = float(epoch)
+    return torch.exp(torch.tensor(x)) / torch.exp(nb_epoch-1)
+
+
 def compute_scores_and_loss(net, train_loader, test_loader, device, train_loader_size, test_loader_size, nb_class,
                             ratio_reg, other_ratio, loss_min_distance_cl, z_struct_layer_num, contrastive_criterion,
                             without_acc, lambda_classification,
@@ -252,6 +268,7 @@ class SolverClassifier(object):
         self.lambda_hmg_dst = args.lambda_hmg_dst
         self.uniq_code_dst_loss = args.uniq_code_dst_loss
         self.lambda_uniq_code_dst = args.lambda_uniq_code_dst
+        self.max_epoch_use_uniq_code_target = args.max_epoch_use_uniq_code_target
         # VAE var:
         self.is_VAE_var = args.is_VAE_var
         self.var_second_cnn_block = args.var_second_cnn_block
@@ -442,6 +459,7 @@ class SolverClassifier(object):
                 torch.save(self.checkpoint_scores, f)
 
         if self.Hmg_dst_loss or self.uniq_code_dst_loss:
+            self.net, self.device = gpu_config(net)
             print('USe encoder struct with Hamming distance with pre trained encoder, load it !')
             self.checkpoint_dir = os.path.join(args.ckpt_dir, args.exp_name.split('_Hamming')[0])
             self.load_checkpoint('last')
@@ -543,8 +561,11 @@ class SolverClassifier(object):
         self.losses_list = []
         self.best_recall = [0]
         self.best_epoch = 0
-        self.use_uniq_bin_code_target = False
+        self.use_uniq_bin_code_target = True
         self.target_code = None
+
+        # init lambda uniq code target:
+        self.lambda_uniq_code_dst = 0
 
     def train(self):
         self.net_mode(train=True)
@@ -692,6 +713,8 @@ class SolverClassifier(object):
                         dst_target_loss = uniq_target_dist_loss * self.lambda_uniq_code_dst
                         loss += dst_target_loss
 
+                        print(loss, dst_target_loss, self.lambda_uniq_code_dst)
+
                 # freeze encoder_struct if train decoder:
                 if (self.use_decoder or self.use_VAE) and self.freeze_Encoder and self.use_structural_encoder \
                         and not self.is_VAE_var:
@@ -717,19 +740,24 @@ class SolverClassifier(object):
                 # print(self.net.encoder_struct[0].weight[0][0])
                 # print(self.net.encoder_var[0].weight[0][0])
 
-            if self.uniq_code_dst_loss and self.epochs > self.n_epoch_before_uniq_loss:
-                print("test uniq code target loss:")
+            if self.uniq_code_dst_loss:
+                print(self.epochs, " Compute uniq code target:")
                 # test if we can use uniq code for target latent code:
                 score, self.target_code = score_uniq_code(self.net,
-                                                           self.test_loader,
-                                                           self.device,
-                                                           self.z_struct_layer_num,
-                                                           self.nb_class,
-                                                           self.z_struct_size,
-                                                           self.test_loader_size)
-                if score == 100.:
-                    self.use_uniq_bin_code_target = True
-                print(score,  self.use_uniq_bin_code_target, self.target_code)
+                                                          self.test_loader,
+                                                          self.device,
+                                                          self.z_struct_layer_num,
+                                                          self.nb_class,
+                                                          self.z_struct_size,
+                                                          self.test_loader_size)
+                # updte lambda value:
+                print(self.max_epoch_use_uniq_code_target)
+                self.lambda_uniq_code_dst = get_lambda_uniq_code_dst(self.epochs, self.max_epoch_use_uniq_code_target)
+                # if score == 100.:
+                #     self.use_uniq_bin_code_target = True
+                print('Uniq code computing: lambda: {}, score: {}, uniq codes: {}'.format(self.lambda_uniq_code_dst,
+                                                                                          score,
+                                                                                          self.target_code))
 
             # backpropagation loss
             if self.use_scheduler:

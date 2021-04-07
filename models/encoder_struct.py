@@ -4,7 +4,10 @@ from custom_Layer import View, PrintLayer, kaiming_init
 from binary_tools.activations import DeterministicBinaryActivation
 import torch
 import torch.nn.functional as F
+# from torchmetrics import HammingDistance
 
+# hamming_distance = HammingDistance()
+hamming_distance = nn.PairwiseDistance(p=0, eps=0.0)
 EPS = 1e-12
 
 
@@ -268,6 +271,7 @@ class Encoder_struct(nn.Module, ABC):
         assert batch_z_struct is not None, "z_struct mustn't be None to compute Hamming distance"
         assert labels_batch is not None, "labels_batch mustn't be None to compute Hamming distance"
 
+        z_struct_size = batch_z_struct[0].shape[0]
         global_first = True
         for class_id in range(nb_class):
             first = True
@@ -278,8 +282,9 @@ class Encoder_struct(nn.Module, ABC):
                     if i == j:
                         pass
                     else:
-                        # Hmg_dist = torch.mean(torch.Tensor.float(z_struct_class_iter[i] != z_struct_class_iter[j]))
-                        Hmg_dist = torch.norm(z_struct_class_iter[i] - z_struct_class_iter[j])
+                        z1 = z_struct_class_iter[i].reshape(1, z_struct_size)
+                        z2 = z_struct_class_iter[j].reshape(1, z_struct_size)
+                        Hmg_dist = hamming_distance(z1, z2)
                         Hmg_dist = torch.unsqueeze(Hmg_dist, 0)
                         if first:
                             avg_dst_class_id = Hmg_dist
@@ -312,14 +317,13 @@ class Encoder_struct(nn.Module, ABC):
                     if i == j:
                         pass
                     else:
-                        # Hmg_dist = torch.mean(torch.Tensor.float(z_struct_class_iter[i] != z_struct_class_iter[j]))
-                        dst_target = torch.norm(z_struct_class_iter[i] - target_code[class_id])
-                        dst_target = torch.unsqueeze(dst_target, 0)
+                        Hmg_dist = hamming_distance(z_struct_class_iter[i], target_code[class_id])
+                        Hmg_dist = torch.unsqueeze(Hmg_dist, 0)
                         if first:
-                            avg_dst_class_id = dst_target
+                            avg_dst_class_id = Hmg_dist
                             first = False
                         else:
-                            avg_dst_class_id = torch.cat((avg_dst_class_id, dst_target), dim=0)
+                            avg_dst_class_id = torch.cat((avg_dst_class_id, Hmg_dist), dim=0)
             if global_first:
                 avg_dst_classes = torch.mean(avg_dst_class_id)
             else:

@@ -279,6 +279,8 @@ if __name__ == "__main__":
     parser.add_argument('--lambda_hmg_dst', type=float, default=1, help="lambda_hmg_dst")
     parser.add_argument('--uniq_code_dst_loss', default=False, type=str2bool, help="uniq_code_dst_loss")
     parser.add_argument('--lambda_uniq_code_dst', type=float, default=1, help="lambda_uniq_code_dst")
+    parser.add_argument('--max_epoch_use_uniq_code_target', type=float, default=5,
+                        help="max_epoch_use_uniq_code_target")
     # VAE var:
     parser.add_argument('--is_VAE_var', default=False, type=str2bool, help="is_VAE_var")
     parser.add_argument('--var_second_cnn_block', default=False, type=str2bool, help="var_second_cnn_block")
@@ -288,7 +290,7 @@ if __name__ == "__main__":
     parser.add_argument('--is_VAE', default=False, type=str2bool, help="is_VAE")
     parser.add_argument('--encoder_var_name', default='mnist_vae_var_deeper_2cb_1_1', type=str,
                         help='encoder_var_name')
-    parser.add_argument('--exp_name', default='mnist_struct_baseline_scheduler_binary_1_3',
+    parser.add_argument('--encoder_struct_name', default='mnist_struct_baseline_scheduler_binary_1_3',
                         type=str, help='encoder_struct_name')
 
     args = parser.parse_args()
