@@ -2029,7 +2029,7 @@ def viz_reconstruction_VAE(net, loader, exp_name, z_var_size, z_struct_size, nb_
 
     # z reconstruction:
     if is_vae_var:
-        x_recon, _, _ = net(input_data)
+        x_recon, _ = net(input_data)
     else:
         x_recon, z_struct, z_var, z_var_sample, _, _, _, _ = net(input_data)
 

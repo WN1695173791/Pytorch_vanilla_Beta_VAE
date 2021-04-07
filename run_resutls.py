@@ -321,21 +321,21 @@ def run_VAE(model_name, net, lambda_BCE, beta, z_struct_size, z_var_size, VAE_st
     #                                      batch=batch)
 
     # Image reconstruction with real distribution: mu_var, sigma_var, mu_struct, sigma_struct
-    # mu_var, sigma_var, mu_struct, sigma_struct = real_distribution_model(net,
-    #                                                                      model_name,
-    #                                                                      z_struct_size,
-    #                                                                      z_var_size,
-    #                                                                      loader,
-    #                                                                      'test',
-    #                                                                      plot_gaussian=True,
-    #                                                                      save=True,
-    #                                                                      VAE_struct=VAE_struct,
-    #                                                                      is_vae_var=is_vae_var)
-    # viz_reconstruction_VAE(net, loader, model_name, z_var_size, z_struct_size, nb_img=10,
-    #                        nb_class=nb_class, save=True, z_reconstruction=True,
-    #                        z_struct_reconstruction=False, z_var_reconstruction=False,
-    #                        return_scores=False, real_distribution=True, mu_var=mu_var, std_var=sigma_var,
-    #                        mu_struct=mu_struct, std_struct=sigma_struct, is_vae_var=is_vae_var)
+    mu_var, sigma_var, mu_struct, sigma_struct = real_distribution_model(net,
+                                                                         model_name,
+                                                                         z_struct_size,
+                                                                         z_var_size,
+                                                                         loader,
+                                                                         'test',
+                                                                         plot_gaussian=True,
+                                                                         save=True,
+                                                                         VAE_struct=VAE_struct,
+                                                                         is_vae_var=is_vae_var)
+    viz_reconstruction_VAE(net, loader, model_name, z_var_size, z_struct_size, nb_img=10,
+                           nb_class=nb_class, save=True, z_reconstruction=True,
+                           z_struct_reconstruction=False, z_var_reconstruction=False,
+                           return_scores=False, real_distribution=True, mu_var=mu_var, std_var=sigma_var,
+                           mu_struct=mu_struct, std_struct=sigma_struct, is_vae_var=is_vae_var)
 
     # viz switch image:
     # switch_img(net, model_name, loader, z_var_size)
@@ -600,10 +600,10 @@ if __name__ == '__main__':
                                'mnist_struct_baseline_scheduler_binary_25_PT_target_uc_3',
                                'mnist_struct_baseline_scheduler_binary_30_PT_target_uc_3']
 
-    list_exp_VAE_var = ['mnist_vae_var_2cb_5',
+    list_exp_VAE_var = [# 'mnist_vae_var_2cb_5',
                         'mnist_vae_var_2cb_10',
                         'mnist_vae_var_2cb_15',
-                        'mnist_vae_var_2cb_20',
+                        # 'mnist_vae_var_2cb_20',
                         'mnist_vae_var_2cb_25',
                         'mnist_vae_var_2cb_30']
 
@@ -615,14 +615,14 @@ if __name__ == '__main__':
     #                                                is_VAE=False,
     #                                                is_encoder_struct=True)
 
-    run_exp_extraction_and_visualization_custom_BK(list_encoder_struct_Hmg,
-                                                   is_ratio=False,
-                                                   is_decoder=False,
-                                                   is_VAE=False,
-                                                   is_encoder_struct=True)
-
-    # run_exp_extraction_and_visualization_custom_BK(list_exp_VAE_var,
+    # run_exp_extraction_and_visualization_custom_BK(list_encoder_struct_Hmg,
     #                                                is_ratio=False,
     #                                                is_decoder=False,
-    #                                                is_VAE=True,
-    #                                                is_encoder_struct=False)
+    #                                                is_VAE=False,
+    #                                                is_encoder_struct=True)
+
+    run_exp_extraction_and_visualization_custom_BK(list_exp_VAE_var,
+                                                   is_ratio=False,
+                                                   is_decoder=False,
+                                                   is_VAE=True,
+                                                   is_encoder_struct=False)

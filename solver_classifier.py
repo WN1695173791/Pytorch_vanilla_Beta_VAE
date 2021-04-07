@@ -586,8 +586,6 @@ class SolverClassifier(object):
                     KLD_loss = -0.5 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
 
                     loss = (self.lambda_BCE * BCE_loss) + (self.beta * KLD_loss)
-
-                    print('loss:', loss, BCE_loss, KLD_loss)
                 else:
                     self.mse_loss = 0
                     loss = 0
