@@ -448,7 +448,7 @@ def run_viz_expes(model_name, net, is_ratio, is_distance_loss, loss_distance_mea
     get_average_z_struct_per_classes(exp_name=model_name, train_test=train_test)
     plot_resume(net, model_name, is_ratio, is_distance_loss, loss_distance_mean, loader, train_loader,
                 device, cat=cat, train_test=train_test, path_scores=path_scores, diff_var=diff_var_loss,
-                contrastive_loss=contrastive_loss, encoder_struct=True, Hmg_dst=True)
+                contrastive_loss=contrastive_loss, encoder_struct=True, Hmg_dst=False)
 
 
     # receptive_field = get_receptive_field_size(net, batch_test)

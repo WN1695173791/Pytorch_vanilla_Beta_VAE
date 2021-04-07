@@ -2630,8 +2630,8 @@ def same_binary_code(net, model_name, loader, nb_class, train_test=None, save=Tr
                             pass
                         else:
                             nb_distance += 1
-                            distance_hamming_class = hamming_distance(torch.tensor(embedding_class[class_id][i]),
-                                                                      torch.tensor(embedding_class[class_id][j]))
+                            distance_hamming_class = hamming_distance(torch.tensor(embedding_class[class_id][i]).unsqueeze(0),
+                                                                      torch.tensor(embedding_class[class_id][j]).unsqueeze(0))
                             # distance_hamming_class = torch.mean((torch.tensor(embedding_class[class_id][i]) !=
                             #                                      torch.tensor(embedding_class[class_id][j])).double())
                             dist += distance_hamming_class
