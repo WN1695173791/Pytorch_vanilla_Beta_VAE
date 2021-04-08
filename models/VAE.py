@@ -380,11 +380,11 @@ class VAE(nn.Module, ABC):
         """
 
         # z_struct:
-        out = self.encoder_struct(x)
-        if self.Binary_z:
-            z_struct = F.log_softmax(out, dim=1)
-        else:
-            z_struct = F.softmax(out, dim=1)
+        z_struct = self.encoder_struct(x)
+        # if self.Binary_z:
+        #     z_struct = F.log_softmax(out, dim=1)
+        # else:
+        #     z_struct = F.softmax(out, dim=1)
 
         # z_var:
         z_var = self.encoder_var(x)

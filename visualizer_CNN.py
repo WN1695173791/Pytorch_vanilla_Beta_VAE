@@ -2019,7 +2019,7 @@ def viz_reconstruction_VAE(net, loader, exp_name, z_var_size, z_struct_size, nb_
     :return:
     """
 
-    net.eval()
+    # net.eval()
     size = (nb_img, nb_class * 2)
 
     # get n data per classes:
@@ -2035,16 +2035,17 @@ def viz_reconstruction_VAE(net, loader, exp_name, z_var_size, z_struct_size, nb_
                 batch = torch.cat((batch, batch_lab), dim=0)
 
     # get reconstruction
-    with torch.no_grad():
-        input_data = batch
-    if torch.cuda.is_available():
-        input_data = input_data.cuda()
+    input_data = batch
+    # with torch.no_grad():
+    #     input_data = batch
+    # if torch.cuda.is_available():
+    #     input_data = input_data.cuda()
 
     # z reconstruction:
     if is_vae_var:
         x_recon, _ = net(input_data)
     else:
-        x_recon, z_struct, z_var, z_var_sample, _, _ = net(input_data)
+        x_recon, z_struct, z_var, z_var_sample, _, z = net(input_data)
 
     if z_struct_reconstruction:
         # z_struct reconstruction:

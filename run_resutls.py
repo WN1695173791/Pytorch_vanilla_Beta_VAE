@@ -124,45 +124,7 @@ def run_exp_extraction_and_visualization_custom_BK(list_model, is_ratio=False, i
         else:
             other_architecture = False
 
-        # print(binary_chain, Binary_z)
-        if is_decoder:
-            net = Encoder_decoder(z_struct_size=z_struct_size,
-                                  big_kernel_size=big_kernel_size,
-                                  stride_size=stride_size,
-                                  classif_layer_size=classif_layer_size,
-                                  add_classification_layer=add_classification_layer,
-                                  hidden_filters_1=hidden_filters_1,
-                                  hidden_filters_2=hidden_filters_2,
-                                  hidden_filters_3=hidden_filters_3,
-                                  BK_in_first_layer=BK_in_first_layer,
-                                  two_conv_layer=two_conv_layer,
-                                  three_conv_layer=three_conv_layer,
-                                  BK_in_second_layer=BK_in_second_layer,
-                                  BK_in_third_layer=BK_in_third_layer,
-                                  Binary_z=Binary_z,
-                                  other_architecture=other_architecture,
-                                  add_linear_after_GMP=add_linear_after_GMP,
-                                  decoder_first_dense=decoder_first_dense,
-                                  decoder_n_filter_1=decoder_n_filter_1,
-                                  decoder_n_filter_2=decoder_n_filter_2,
-                                  decoder_kernel_size_1=decoder_kernel_size_1,
-                                  decoder_kernel_size_2=decoder_kernel_size_2,
-                                  decoder_kernel_size_3=decoder_kernel_size_3,
-                                  decoder_stride_1=decoder_stride_1,
-                                  decoder_stride_2=decoder_stride_2,
-                                  decoder_stride_3=decoder_stride_3,
-                                  struct_hidden_filters_1=var_hidden_filters_1,
-                                  struct_hidden_filters_2=var_hidden_filters_2,
-                                  struct_hidden_filters_3=var_hidden_filters_3,
-                                  struct_kernel_size_1=var_kernel_size_1,
-                                  struct_kernel_size_2=var_kernel_size_2,
-                                  struct_kernel_size_3=var_kernel_size_3,
-                                  struct_stride_size_1=var_stride_size_1,
-                                  struct_stride_size_2=var_stride_size_2,
-                                  struct_stride_size_3=var_stride_size_3,
-                                  struct_hidden_dim=var_hidden_dim,
-                                  struct_three_conv_layer=var_three_conv_layer)
-        elif is_VAE and not is_VAE_var:
+        if is_VAE:
             net = VAE(z_var_size=z_var_size,
                       var_second_cnn_block=var_second_cnn_block,
                       var_third_cnn_block=var_third_cnn_block,
@@ -185,24 +147,6 @@ def run_exp_extraction_and_visualization_custom_BK(list_model, is_ratio=False, i
                       binary_first_conv=binary_first_conv,
                       binary_second_conv=binary_second_conv,
                       binary_third_conv=binary_third_conv)
-        elif is_custom:
-            net_type = 'Custom_CNN_BK'
-            net = Custom_CNN_BK(z_struct_size=z_struct_size,
-                                big_kernel_size=big_kernel_size,
-                                stride_size=stride_size,
-                                classif_layer_size=classif_layer_size,
-                                add_classification_layer=add_classification_layer,
-                                hidden_filters_1=hidden_filters_1,
-                                hidden_filters_2=hidden_filters_2,
-                                hidden_filters_3=hidden_filters_3,
-                                BK_in_first_layer=BK_in_first_layer,
-                                two_conv_layer=two_conv_layer,
-                                three_conv_layer=three_conv_layer,
-                                BK_in_second_layer=BK_in_second_layer,
-                                BK_in_third_layer=BK_in_third_layer,
-                                Binary_z=Binary_z,
-                                binary_chain=binary_chain,
-                                add_linear_after_GMP=add_linear_after_GMP)
         elif is_encoder_struct:
             net_type = 'Encoder_struct'
             net = Encoder_struct(z_struct_size=z_struct_size,
@@ -326,7 +270,7 @@ def run_VAE(model_name, net, lambda_BCE, beta, z_struct_size, z_var_size, VAE_st
                                                                          z_var_size,
                                                                          loader,
                                                                          'test',
-                                                                         plot_gaussian=True,
+                                                                         plot_gaussian=False,
                                                                          save=True,
                                                                          VAE_struct=VAE_struct,
                                                                          is_vae_var=is_vae_var)
@@ -759,6 +703,37 @@ if __name__ == '__main__':
                     # 'mnist_VAE_s25_v30_FS',
                     # 'mnist_VAE_s30_v30_FS']
 
+    list_exp_VAE_2 = ['mnist_VAE_s10_v5_BF']
+                      # 'mnist_VAE_s15_v5_BF',
+                      # 'mnist_VAE_s20_v5_BF',
+                      # 'mnist_VAE_s25_v5_BF',
+                      # 'mnist_VAE_s30_v5_BF',
+                      # 'mnist_VAE_s10_v10_BF',
+                      # 'mnist_VAE_s15_v10_BF',
+                      # 'mnist_VAE_s20_v10_BF',
+                      # 'mnist_VAE_s25_v10_BF',
+                      # 'mnist_VAE_s30_v10_BF',
+                      # 'mnist_VAE_s10_v15_BF',
+                      # 'mnist_VAE_s15_v15_BF',
+                      # 'mnist_VAE_s20_v15_BF',
+                      # 'mnist_VAE_s25_v15_BF',
+                      # 'mnist_VAE_s30_v15_BF',
+                      # 'mnist_VAE_s10_v20_BF',
+                      # 'mnist_VAE_s15_v20_BF',
+                      # 'mnist_VAE_s20_v20_BF',
+                      # 'mnist_VAE_s25_v20_BF',
+                      # 'mnist_VAE_s30_v20_BF',
+                      # 'mnist_VAE_s10_v25_BF',
+                      # 'mnist_VAE_s15_v25_BF',
+                      # 'mnist_VAE_s20_v25_BF',
+                      # 'mnist_VAE_s25_v25_BF',
+                      # 'mnist_VAE_s30_v25_BF',
+                      # 'mnist_VAE_s10_v30_BF',
+                      # 'mnist_VAE_s15_v30_BF',
+                      # 'mnist_VAE_s20_v30_BF',
+                      # 'mnist_VAE_s25_v30_BF',
+                      # 'mnist_VAE_s30_v30_BF']
+
     parameters_mnist_classifier_BK_ratio = "parameters_combinations/mnist_classifier_ratio.txt"
 
     # run_exp_extraction_and_visualization_custom_BK(list_encoder_struct_Hmg_2,
@@ -785,7 +760,7 @@ if __name__ == '__main__':
     #                                                is_VAE=True,
     #                                                is_encoder_struct=False)
 
-    run_exp_extraction_and_visualization_custom_BK(list_exp_VAE,
+    run_exp_extraction_and_visualization_custom_BK(list_exp_VAE_2,
                                                    is_ratio=False,
                                                    is_decoder=False,
                                                    is_VAE=True,

@@ -447,8 +447,8 @@ class SolverClassifier(object):
             with open(self.file_path_checkpoint_scores, mode='wb+') as f:
                 torch.save(self.checkpoint_scores, f)
 
+        self.net, self.device = gpu_config(net)
         if self.Hmg_dst_loss or self.uniq_code_dst_loss:
-            self.net, self.device = gpu_config(net)
             print('USe encoder struct with pre trained weighs encoder, load it !')
             self.checkpoint_dir = os.path.join(args.ckpt_dir, args.exp_name.split('_PT')[0])
             self.load_checkpoint('last')
