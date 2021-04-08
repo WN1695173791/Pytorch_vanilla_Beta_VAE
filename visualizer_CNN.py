@@ -2044,7 +2044,7 @@ def viz_reconstruction_VAE(net, loader, exp_name, z_var_size, z_struct_size, nb_
     if is_vae_var:
         x_recon, _ = net(input_data)
     else:
-        x_recon, z_struct, z_var, z_var_sample, _, _, _, _ = net(input_data)
+        x_recon, z_struct, z_var, z_var_sample, _, _ = net(input_data)
 
     if z_struct_reconstruction:
         # z_struct reconstruction:
@@ -2242,7 +2242,7 @@ def real_distribution_model(net, expe_name, z_struct_size, z_var_size, loader, t
                     mu_var_iter = latent_representation['mu']
                     sigma_var_iter = latent_representation['log_var']
                 else:
-                    _, z_struct, z_var, z_var_sample, latent_representation, z_latent, _, _ = net(data)
+                    _, z_struct, z_var, z_var_sample, latent_representation, z = net(data)
 
                     z_struct_distribution_iter = z_struct
                     mu_var_iter = z_var[:, :z_var_size]

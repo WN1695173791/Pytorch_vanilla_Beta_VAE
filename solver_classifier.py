@@ -280,6 +280,7 @@ class SolverClassifier(object):
         self.encoder_var_name = args.encoder_var_name
         self.encoder_struct_name = args.encoder_struct_name
         self.use_small_lr_encoder_var = args.use_small_lr_encoder_var
+        self.both_decoders_freeze = args.both_decoders_freeze
 
         self.contrastive_criterion = False
         if self.is_encoder_struct:
@@ -656,6 +657,9 @@ class SolverClassifier(object):
 
                 # freeze encoder_struct if train decoder:
                 if self.is_VAE and self.freeze_Encoder:
+                    if self.both_decoders_freeze:
+                        for params in self.net.encoder_var.parameters():
+                            params.requires_grad = False
                     for params in self.net.encoder_struct.parameters():
                         params.requires_grad = False
 
@@ -670,8 +674,11 @@ class SolverClassifier(object):
 
                 # unfreeze encoder_struct if train decoder:
                 if self.is_VAE and self.freeze_Encoder:
+                    if self.both_decoders_freeze:
+                        for params in self.net.encoder_var.parameters():
+                            params.requires_grad = False
                     for params in self.net.encoder_struct.parameters():
-                        params.requires_grad = True
+                        params.requires_grad = False
 
                 # print('-----------::::::::::::After:::::::-----------------:')
                 # print(self.net.encoder_struct[0].weight[0][0])
