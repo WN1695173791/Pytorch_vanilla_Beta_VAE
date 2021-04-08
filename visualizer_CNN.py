@@ -2558,7 +2558,12 @@ def same_binary_code(net, model_name, loader, nb_class, train_test=None, save=Tr
     path_model_list_labels_encoder_struct_embedding = 'binary_encoder_struct_results/encoder_struct_embedding' \
                                                       '/labels_list_' + model_name + '_' + train_test + '.npy'
 
-    if os.path.exists(path_model_encoder_struct_embedding):
+    if os.path.exists(path_model_uniq_code) and \
+       os.path.exists(path_model_uniq_code_percent) and \
+       os.path.exists(path_model_Hmg_dst) and \
+       os.path.exists(path_model_encoder_struct_embedding) and \
+       os.path.exists(path_model_list_labels_encoder_struct_embedding):
+
         print('Load all binary encoder struct values:')
         uniq_code = np.load(path_model_uniq_code, allow_pickle=True)
         Hmg_dst = np.load(path_model_Hmg_dst, allow_pickle=True)
