@@ -283,7 +283,7 @@ if __name__ == "__main__":
                         help="max_epoch_use_uniq_code_target")
     # VAE var:
     parser.add_argument('--is_VAE_var', default=False, type=str2bool, help="is_VAE_var")
-    parser.add_argument('--var_second_cnn_block', default=False, type=str2bool, help="var_second_cnn_block")
+    parser.add_argument('--var_second_cnn_block', default=True, type=str2bool, help="var_second_cnn_block")
     parser.add_argument('--var_third_cnn_block', default=False, type=str2bool, help="var_third_cnn_block")
     parser.add_argument('--other_architecture', default=False, type=str2bool, help="other_architecture")
     # VAE:
