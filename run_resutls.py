@@ -264,22 +264,21 @@ def run_VAE(model_name, net, lambda_BCE, beta, z_struct_size, z_var_size, VAE_st
     #                                      batch=batch)
 
     # Image reconstruction with real distribution: mu_var, sigma_var, mu_struct, sigma_struct
-    # mu_var, sigma_var, mu_struct, sigma_struct = real_distribution_model(net,
-    #                                                                      model_name,
-    #                                                                      z_struct_size,
-    #                                                                      z_var_size,
-    #                                                                      loader,
-    #                                                                      'test',
-    #                                                                      plot_gaussian=False,
-    #                                                                      save=True,
-    #                                                                      VAE_struct=VAE_struct,
-    #                                                                      is_vae_var=is_vae_var)
-    mu_var, sigma_var, mu_struct, sigma_struct = 0, 0, 0, 0
-    # viz_reconstruction_VAE(net, loader, model_name, z_var_size, z_struct_size, nb_img=10,
-    #                        nb_class=nb_class, save=True, z_reconstruction=True,
-    #                        z_struct_reconstruction=False, z_var_reconstruction=False,
-    #                        return_scores=False, real_distribution=True, mu_var=mu_var, std_var=sigma_var,
-    #                        mu_struct=mu_struct, std_struct=sigma_struct, is_vae_var=is_vae_var)
+    mu_var, sigma_var, mu_struct, sigma_struct = real_distribution_model(net,
+                                                                         model_name,
+                                                                         z_struct_size,
+                                                                         z_var_size,
+                                                                         loader,
+                                                                         'test',
+                                                                         plot_gaussian=False,
+                                                                         save=True,
+                                                                         VAE_struct=VAE_struct,
+                                                                         is_vae_var=is_vae_var)
+    viz_reconstruction_VAE(net, loader, model_name, z_var_size, z_struct_size, nb_img=10,
+                           nb_class=nb_class, save=True, z_reconstruction=True,
+                           z_struct_reconstruction=True, z_var_reconstruction=True,
+                           return_scores=False, real_distribution=True, mu_var=mu_var, std_var=sigma_var,
+                           mu_struct=mu_struct, std_struct=sigma_struct, is_vae_var=is_vae_var)
 
     # viz switch image:
     # switch_img(net, model_name, loader, z_var_size)
@@ -623,11 +622,11 @@ if __name__ == '__main__':
 
     parameters_mnist_classifier_BK_ratio = "parameters_combinations/mnist_classifier_ratio.txt"
 
-    run_exp_extraction_and_visualization_custom_BK(list_encoder_struct,
-                                                   is_ratio=False,
-                                                   is_decoder=False,
-                                                   is_VAE=False,
-                                                   is_encoder_struct=True)
+    # run_exp_extraction_and_visualization_custom_BK(list_encoder_struct,
+    #                                                is_ratio=False,
+    #                                                is_decoder=False,
+    #                                                is_VAE=False,
+    #                                                is_encoder_struct=True)
 
     # run_exp_extraction_and_visualization_custom_BK(list_encoder_struct_Hmg,
     #                                                is_ratio=False,
@@ -635,11 +634,11 @@ if __name__ == '__main__':
     #                                                is_VAE=False,
     #                                                is_encoder_struct=True)
 
-    run_exp_extraction_and_visualization_custom_BK(list_exp_VAE_var,
-                                                   is_ratio=False,
-                                                   is_decoder=False,
-                                                   is_VAE=False,
-                                                   is_encoder_struct=False)
+    # run_exp_extraction_and_visualization_custom_BK(list_exp_VAE_var,
+    #                                                is_ratio=False,
+    #                                                is_decoder=False,
+    #                                                is_VAE=False,
+    #                                                is_encoder_struct=False)
 
     run_exp_extraction_and_visualization_custom_BK(list_exp_VAE_test,
                                                    is_ratio=False,

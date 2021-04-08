@@ -2080,10 +2080,6 @@ def viz_reconstruction_VAE(net, loader, exp_name, z_var_size, z_struct_size, nb_
     else:
         x_recon, z_struct, z_var, z_var_sample, _, z = net(input_data)
 
-    print(x_recon.shape, x_recon[0].min(), x_recon[0].max())
-    print(z.shape, z[0])
-    print(wait)
-
     if z_struct_reconstruction:
         # z_struct reconstruction:
         if real_distribution:
