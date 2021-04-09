@@ -1750,7 +1750,7 @@ def plot_resume(net, exp_name, is_ratio, is_distance_loss, loss_distance_mean, l
     # print('var inter mean', variance_inter_class_mean)
 
     # define figure:____________________________________________________________________________________________________
-    fig, axs = plt.subplots(nrows=2, ncols=2, gridspec_kw={'width_ratios': [2, 1.5], 'height_ratios': [1, 1]},
+    fig, axs = plt.subplots(nrows=2, ncols=2, gridspec_kw={'width_ratios': [2, 1], 'height_ratios': [1, 1]},
                             figsize=(30, 20), facecolor='w', edgecolor='k')
     fig.suptitle('Resume results for model: {}'.format(exp_name), fontsize=16)
 
@@ -1854,8 +1854,10 @@ def plot_resume(net, exp_name, is_ratio, is_distance_loss, loss_distance_mean, l
                                                                     train_test=train_test,
                                                                     save=False,
                                                                     Hmg_dist=Hmg_dst)
-        avg_hmg_dst = np.mean(Hmg_dst)
-        avg_perc_uniq_code = np.mean(percentage_uniq_code)
+        Hmg_dst = np.round(Hmg_dst, 2)
+        avg_hmg_dst = round(np.mean(Hmg_dst), 2)
+        percentage_uniq_code = np.round(percentage_uniq_code*100., 2)
+        avg_perc_uniq_code = round(np.mean(percentage_uniq_code), 2)
 
         sc = score_with_best_code_uniq(net, exp_name, train_test, loader, z_struct_size, len(loader.dataset))
         if sc == 100.:
@@ -1871,13 +1873,16 @@ def plot_resume(net, exp_name, is_ratio, is_distance_loss, loss_distance_mean, l
                    "Variance intra class mean: ",
                    "Variance inter class mean: ",
                    "Std distances between classes: ",
-                   # "Accuracy train: ",
-                   "Accuracy test: "]
+                   "Accuracy test (%): "]
     if encoder_struct:
-        text_titles += ['Average Hamming distance in classes: ',
-                        'Average uniq code percentage per classes: ',
-                        'Percent majority binary code per class: ',
+        text_titles += ['Avg Hmg dst each class (%): ',
+                        'Global avg Hamming distance (%): ',
+                        'Avg uc per class (%): ',
+                        'Global avg uniq code (%): ',
+                        'Maj uc proportion per class (%): ',
+                        'Average Maj uc proportion per class (%): ',
                         'If replace each class by uniq maj binary code, perfect score: ']
+
 
     n_lines = len(text_titles)
 
@@ -1885,13 +1890,15 @@ def plot_resume(net, exp_name, is_ratio, is_distance_loss, loss_distance_mean, l
                    variance_intra_class_mean,
                    variance_inter_class_mean,
                    std_distances,
-                   # score_train,
                    score_test]
 
     if encoder_struct:
-        text_values += [avg_hmg_dst,
+        text_values += [Hmg_dst,
+                        avg_hmg_dst,
+                        percentage_uniq_code,
                         avg_perc_uniq_code,
                         percent_max,
+                        round(np.mean(percent_max), 2),
                         perfect_score]
 
     for y in range(n_lines):
@@ -2007,7 +2014,6 @@ def reconstruction_local(nb_class, nb_img, input_data, x_recon, exp_name, size, 
     return
 
 
-
 def viz_reconstruction_VAE(net, loader, exp_name, z_var_size, z_struct_size, nb_img=8, nb_class=10, save=True,
                            z_reconstruction=True, z_struct_reconstruction=False, z_var_reconstruction=False,
                            return_scores=False, real_distribution=True, mu_var=None, std_var=None, mu_struct=None,
@@ -2020,7 +2026,7 @@ def viz_reconstruction_VAE(net, loader, exp_name, z_var_size, z_struct_size, nb_
     :return:
     """
 
-    # net.eval()
+    net.eval()
     size = (nb_img, nb_class * 2)
 
     # get n data per classes:
@@ -2036,11 +2042,10 @@ def viz_reconstruction_VAE(net, loader, exp_name, z_var_size, z_struct_size, nb_
                 batch = torch.cat((batch, batch_lab), dim=0)
 
     # get reconstruction
-    input_data = batch
-    # with torch.no_grad():
-    #     input_data = batch
-    # if torch.cuda.is_available():
-    #     input_data = input_data.cuda()
+    with torch.no_grad():
+        input_data = batch
+    if torch.cuda.is_available():
+        input_data = input_data.cuda()
 
     # z reconstruction:
     if is_vae_var:
