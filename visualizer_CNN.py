@@ -2007,38 +2007,6 @@ def reconstruction_local(nb_class, nb_img, input_data, x_recon, exp_name, size, 
     return
 
 
-def debug_struct(net, loader):
-
-    """"""
-    z_struct_layer_num = get_layer_zstruct_num(net)
-
-    # get n data per classes:
-    first = True
-    for data, label in loader:
-        # print('loader ', len(label))
-        for lab in range(10):
-            batch_lab = data[torch.where(label == lab)[0][:10]]
-            if first:
-                batch = batch_lab
-                first = False
-            else:
-                batch = torch.cat((batch, batch_lab), dim=0)
-
-    # get reconstruction
-    input_data = batch
-    # with torch.no_grad():
-    #     input_data = batch
-    # if torch.cuda.is_available():
-    #     input_data = input_data.cuda()
-
-    # z reconstruction:
-    prediction, z_struct, _, _, _, _, _, _, _, _ = net(input_data, z_struct_out=True, z_struct_layer_num=z_struct_layer_num)
-
-    print(prediction.shape, prediction[0])
-    print(z_struct.shape, z_struct[0])
-
-    return
-
 
 def viz_reconstruction_VAE(net, loader, exp_name, z_var_size, z_struct_size, nb_img=8, nb_class=10, save=True,
                            z_reconstruction=True, z_struct_reconstruction=False, z_var_reconstruction=False,
