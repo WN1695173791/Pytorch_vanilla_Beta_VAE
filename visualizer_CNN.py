@@ -2536,7 +2536,7 @@ def manifold_digit(net, model_name, device, size=(20, 20), component_var=0, comp
     return
 
 
-def same_binary_code(net, model_name, loader, nb_class, train_test=None, save=True, Hmg_dist=True):
+def same_binary_code(net, model_name, loader, nb_class, train_test=None, save=True, Hmg_dist=True, is_VAE=False):
     """
     Compute, save and return uniqs code use for each classes, their percentage.
     If Hmg dst compute, save and return Hmg distance for each class.
@@ -2604,7 +2604,10 @@ def same_binary_code(net, model_name, loader, nb_class, train_test=None, save=Tr
             label = label.to(device)
 
             # compute loss:
-            _, embedding, _, _, _, _, _, _, _, _ = net(data, z_struct_out=True, z_struct_layer_num=z_struct_layer_num)
+            if is_VAE:
+                _, embedding, _, _, _, z = net(data)
+            else:
+                _, embedding, _, _, _, _, _, _, _, _ = net(data, z_struct_out=True, z_struct_layer_num=z_struct_layer_num)
 
             if first:
                 labels_list = label.detach()
@@ -2615,8 +2618,10 @@ def same_binary_code(net, model_name, loader, nb_class, train_test=None, save=Tr
                 labels_list = torch.cat((labels_list, label.detach()), 0)
 
         net.train()
-
-        embedding_struct = embedding_struct.cpu().numpy()[:, :, 0, 0]
+        if is_VAE:
+            embedding_struct = embedding_struct.cpu().numpy()
+        else:
+            embedding_struct = embedding_struct.cpu().numpy()[:, :, 0, 0]
         labels_list = labels_list.cpu().numpy()
 
         if save:
@@ -2664,8 +2669,6 @@ def same_binary_code(net, model_name, loader, nb_class, train_test=None, save=Tr
                             nb_distance += 1
                             distance_hamming_class = hamming_distance(torch.tensor(embedding_class[class_id][i]).unsqueeze(0),
                                                                       torch.tensor(embedding_class[class_id][j]).unsqueeze(0))
-                            # distance_hamming_class = torch.mean((torch.tensor(embedding_class[class_id][i]) !=
-                            #                                      torch.tensor(embedding_class[class_id][j])).double())
                             dist += distance_hamming_class
                 Hmg_dst.append((dist/nb_distance))
                 print('class {}: Average distance Hamming: {}'.format(class_id, Hmg_dst[class_id]))
@@ -2853,6 +2856,8 @@ def histo_count_uniq_code(model_name, train_test, plot_histo=True, return_percen
 
     path_global_count_each_code = 'binary_encoder_struct_results/uniq_code/global_count_each_class' + model_name + '_' \
                                   + train_test + '.npy'
+    path_code_maj_each_class = 'binary_encoder_struct_results/uniq_code/uc_maj_class_' + model_name + '_' \
+                               + train_test + '.npy'
 
     if os.path.exists(path_global_count_each_code):
         code_class_global = np.array(np.load(path_global_count_each_code, allow_pickle=True))
@@ -2873,11 +2878,17 @@ def histo_count_uniq_code(model_name, train_test, plot_histo=True, return_percen
                         allow_pickle=True)
 
     percent_max = []
+    code_maj_each_class = []
     for i in range(len(global_count)):
         index_max = np.argmax(global_count[i])
         nb_code = global_count[i][index_max]
         percent_code = np.round(nb_code / len(embedding_class[i]) * 100, 3)
         percent_max.append(percent_code)
+        code_maj = uniq_code[i][index_max]
+        code_maj_each_class.append(code_maj)
+
+    code_maj_each_class = np.array(code_maj_each_class)
+    np.save(path_code_maj_each_class, code_maj_each_class)
 
     # histo:
     if plot_histo:

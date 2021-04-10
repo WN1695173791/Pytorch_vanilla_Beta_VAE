@@ -1545,7 +1545,11 @@ def plot_var_fixe_and_z_struct_moove(average_representation_z_struct_class, trai
     z_var_zeros = torch.zeros((1, nb_class, z_var_size))  # shape: (nb_examples, nb_class, z_var_size)
     z_var_zeros = z_var_zeros.to(device)
 
-    z_struct_rand = std_struct * torch.randn((1, nb_examples, z_struct_size)) + mu_struct
+    # we use binary encoder struct so we sample from binary distributin:
+    mu_struct = torch.tensor(1 - (mu_struct / 100))
+    proba_struct = mu_struct.repeat(nb_examples, 1)
+    z_struct_rand = torch.Tensor.float(torch.bernoulli(proba_struct))
+    z_struct_rand = np.expand_dims(z_struct_rand, axis=0)
     z_struct_rand = torch.tensor(np.repeat(z_struct_rand, nb_class, axis=0))  # shape: (nb_class, nb_examples, z_struct_size)
     z_struct_rand = z_struct_rand.permute(1, 0, 2)  # shape: (nb_examples, nb_class, var_dim)
     z_struct_rand = z_struct_rand.to(device)

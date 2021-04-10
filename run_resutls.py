@@ -251,8 +251,10 @@ def run_VAE(model_name, net, lambda_BCE, beta, z_struct_size, z_var_size, VAE_st
     train_test = 'test'
     batch = batch_test
     embedding_size = z_struct_size + z_var_size
+    net.eval()
 
-    # net.eval()
+    """
+    # _________------------------TEst VAE-----------------_______________________
     z_struct_layer_num = get_layer_zstruct_num(net) + 1
 
     print(net.encoder_struct[6].weight[8][12])
@@ -274,8 +276,11 @@ def run_VAE(model_name, net, lambda_BCE, beta, z_struct_size, z_var_size, VAE_st
         break
     print(z_struct.shape)
     print(z_struct[:20])
-
-    print(wait)
+    z_struct_distribution = z_struct.detach().numpy()
+    zeros_proportion = (np.count_nonzero(z_struct_distribution == 0, axis=0) * 100.) / len(z_struct_distribution)
+    print(zeros_proportion)
+    # _________------------------End TEst VAE-----------------_______________________
+    """
 
     # losses:
     # plot_loss_results_VAE(path_scores, model_name, beta, lambda_BCE, save=True)
@@ -296,19 +301,29 @@ def run_VAE(model_name, net, lambda_BCE, beta, z_struct_size, z_var_size, VAE_st
                                                                          z_var_size,
                                                                          loader,
                                                                          'test',
-                                                                         plot_gaussian=True,
+                                                                         plot_gaussian=False,
                                                                          save=True,
                                                                          VAE_struct=VAE_struct,
                                                                          is_vae_var=is_vae_var)
 
-    print(encoder_struct_zeros_proportion)
-
+    # print(encoder_struct_zeros_proportion)
     viz_reconstruction_VAE(net, loader, model_name, z_var_size, z_struct_size, nb_img=10,
                            nb_class=nb_class, save=True, z_reconstruction=True,
                            z_struct_reconstruction=True, z_var_reconstruction=True,
                            return_scores=False, real_distribution=True, mu_var=mu_var, std_var=sigma_var,
                            mu_struct=encoder_struct_zeros_proportion, is_vae_var=is_vae_var)
-    """
+
+    # save code majoritaire with thier percent:
+    same_binary_code(net, model_name, loader, nb_class, train_test=train_test, save=True, Hmg_dist=False, is_VAE=True)
+    z_struct_code_classes(model_name, nb_class, train_test=train_test)
+
+    # Uc bin maj:
+    percent_max = histo_count_uniq_code(model_name, train_test, plot_histo=False, return_percent=True)
+    maj_uc = np.load('binary_encoder_struct_results/uniq_code/uc_maj_class_' + model_name + '_' \
+                               + train_test + '.npy', allow_pickle=True)
+    # print(percent_max)
+    # print(maj_uc)
+
     # viz switch image:
     switch_img(net, model_name, loader, z_var_size)
 
@@ -317,6 +332,7 @@ def run_VAE(model_name, net, lambda_BCE, beta, z_struct_size, z_var_size, VAE_st
     compute_z_struct_mean_VAE(net, model_name, loader, train_test='test', return_results=False)
 
     # second: get average z_struct per classe:
+
     _, average_z_struct_class = get_z_struct_per_class_VAE(model_name, train_test='test', nb_class=nb_class)
 
     # third: plot:
@@ -325,12 +341,13 @@ def run_VAE(model_name, net, lambda_BCE, beta, z_struct_size, z_var_size, VAE_st
     plot_struct_fixe_and_z_var_moove(average_z_struct_class, train_test, net,
                                      device, nb_class, None, model_name, z_var_size=z_var_size,
                                      embedding_size=embedding_size, save=save, mu_var=mu_var, std_var=sigma_var)
+
     plot_var_fixe_and_z_struct_moove(average_z_struct_class, train_test, net,
                                      device, nb_class, None, model_name, z_struct_size=z_struct_size,
                                      z_var_size=z_var_size,
-                                     embedding_size=embedding_size, save=save, mu_struct=mu_struct,
-                                    std_struct=sigma_struct, traversal_latent=False)
-    """
+                                     embedding_size=embedding_size, save=save,
+                                     mu_struct=encoder_struct_zeros_proportion, traversal_latent=False)
+
     # score sample:
     # images_generation(net, model_name, batch, size=(8, 8), mu_var=mu_var, mu_struct=mu_struct, std_var=sigma_var,
     #                   std_struct=sigma_struct, z_var_size=z_var_size, z_struct_size=z_struct_size, FID=True, IS=True,
@@ -359,7 +376,10 @@ def run_viz_expes(model_name, net, is_ratio, is_distance_loss, loss_distance_mea
     loader = test_loader
     loader_size = len(loader.dataset)
 
-    z_struct_layer_num = get_layer_zstruct_num(net)+1
+    """
+    # _________------------------TEst VAE-----------------_______________________
+    # test to debug: TODO: remove test.
+    z_struct_layer_num = get_layer_zstruct_num(net) + 1
 
     print(net.encoder_struct[6].weight[8][12])
 
@@ -376,11 +396,16 @@ def run_viz_expes(model_name, net, is_ratio, is_distance_loss, loss_distance_mea
             input_data = input_data.cuda()
 
         _, z_struct, _, _, _, _, _, _, _, _ = net(input_data, z_struct_out=True,
-                                                          z_struct_layer_num=z_struct_layer_num)
+                                                  z_struct_layer_num=z_struct_layer_num)
 
         break
     print(z_struct.shape)
     print(z_struct[:20])
+    z_struct_distribution = z_struct.detach().numpy()
+    zeros_proportion = (np.count_nonzero(z_struct_distribution == 0, axis=0) * 100.) / len(z_struct_distribution)
+    print(zeros_proportion)
+    # _________------------------End TEst VAE-----------------_______________________
+    """
 
     # scores and losses:
     # plot_scores_and_loss_CNN(net, model_name, path_scores, is_ratio=ratio_reg, save=True,
@@ -573,7 +598,10 @@ if __name__ == '__main__':
                         # 'mnist_vae_var_2cb_25',
                         # 'mnist_vae_var_2cb_30']
 
-    list_exp_VAE = ['mnist_VAE_s10_v5_BF']
+    list_exp_VAE = ['mnist_VAE_s10_v5_BF_2']
+                    # 'mnist_VAE_s10_v5_PT_2',
+                    # 'mnist_VAE_s10_v5_SE_2',
+                    # 'mnist_VAE_s10_v5_FS_2']
                     # 'mnist_VAE_s15_v5_BF',
                     # 'mnist_VAE_s20_v5_BF',
                     # 'mnist_VAE_s25_v5_BF',
@@ -696,11 +724,11 @@ if __name__ == '__main__':
 
     parameters_mnist_classifier_BK_ratio = "parameters_combinations/mnist_classifier_ratio.txt"
 
-    run_exp_extraction_and_visualization_custom_BK(list_encoder_struct,
-                                                   is_ratio=False,
-                                                   is_decoder=False,
-                                                   is_VAE=False,
-                                                   is_encoder_struct=True)
+    # run_exp_extraction_and_visualization_custom_BK(list_encoder_struct,
+    #                                                is_ratio=False,
+    #                                                is_decoder=False,
+    #                                                is_VAE=False,
+    #                                                is_encoder_struct=True)
 
     # run_exp_extraction_and_visualization_custom_BK(list_encoder_struct_Hmg,
     #                                                is_ratio=False,
