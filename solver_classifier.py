@@ -652,6 +652,7 @@ class SolverClassifier(object):
                                                                       Hmg_dst_loss=self.Hmg_dst_loss,
                                                                       uniq_bin_code_target=self.use_uniq_bin_code_target,
                                                                       target_code=self.target_code)
+
                     # compute losses:
                     if not self.without_acc:
                         # averaged over each loss element in the batch

@@ -163,7 +163,6 @@ class VAE_var(nn.Module, ABC):
 
             self.encoder_var += [
                 View((-1, np.product(self.var_reshape))),
-                # nn.Dropout(0.4),
                 # PrintLayer(),
                 nn.Linear(np.product(self.var_reshape), self.z_var_size * 2),
                 # PrintLayer(),

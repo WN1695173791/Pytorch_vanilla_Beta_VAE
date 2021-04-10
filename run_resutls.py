@@ -252,6 +252,31 @@ def run_VAE(model_name, net, lambda_BCE, beta, z_struct_size, z_var_size, VAE_st
     batch = batch_test
     embedding_size = z_struct_size + z_var_size
 
+    # net.eval()
+    z_struct_layer_num = get_layer_zstruct_num(net) + 1
+
+    print(net.encoder_struct[6].weight[8][12])
+
+    print(z_struct_layer_num)
+    print(net.encoder_struct[:z_struct_layer_num])
+
+    # test to debug: TODO: remove test.
+    for data, labels in loader:
+        # evaluation mode:
+
+        with torch.no_grad():
+            input_data = data
+        if torch.cuda.is_available():
+            input_data = input_data.cuda()
+
+        x_recon, z_struct, z_var, z_var_sample, _, z = net(input_data)
+
+        break
+    print(z_struct.shape)
+    print(z_struct[:20])
+
+    print(wait)
+
     # losses:
     # plot_loss_results_VAE(path_scores, model_name, beta, lambda_BCE, save=True)
 
@@ -265,7 +290,7 @@ def run_VAE(model_name, net, lambda_BCE, beta, z_struct_size, z_var_size, VAE_st
     #                                      batch=batch)
 
     # Image reconstruction with real distribution: mu_var, sigma_var, mu_struct, sigma_struct
-    mu_var, sigma_var, mu_struct, sigma_struct = real_distribution_model(net,
+    mu_var, sigma_var, encoder_struct_zeros_proportion = real_distribution_model(net,
                                                                          model_name,
                                                                          z_struct_size,
                                                                          z_var_size,
@@ -275,34 +300,37 @@ def run_VAE(model_name, net, lambda_BCE, beta, z_struct_size, z_var_size, VAE_st
                                                                          save=True,
                                                                          VAE_struct=VAE_struct,
                                                                          is_vae_var=is_vae_var)
+
+    print(encoder_struct_zeros_proportion)
+
     viz_reconstruction_VAE(net, loader, model_name, z_var_size, z_struct_size, nb_img=10,
                            nb_class=nb_class, save=True, z_reconstruction=True,
                            z_struct_reconstruction=True, z_var_reconstruction=True,
                            return_scores=False, real_distribution=True, mu_var=mu_var, std_var=sigma_var,
-                           mu_struct=mu_struct, std_struct=sigma_struct, is_vae_var=is_vae_var)
-
+                           mu_struct=encoder_struct_zeros_proportion, is_vae_var=is_vae_var)
+    """
     # viz switch image:
-    # switch_img(net, model_name, loader, z_var_size)
+    switch_img(net, model_name, loader, z_var_size)
 
     # viz multi sample with same z_var or z_struct:
     # first: compute z_struct mean per class:
-    # compute_z_struct_mean_VAE(net, model_name, loader, train_test='test', return_results=False)
+    compute_z_struct_mean_VAE(net, model_name, loader, train_test='test', return_results=False)
 
     # second: get average z_struct per classe:
-    # _, average_z_struct_class = get_z_struct_per_class_VAE(model_name, train_test='test', nb_class=nb_class)
+    _, average_z_struct_class = get_z_struct_per_class_VAE(model_name, train_test='test', nb_class=nb_class)
 
     # third: plot:
-    # plot_prototyoe_z_struct_per_class(1, average_z_struct_class, train_test, model_name,
-    #                                   nb_class, None, device, net, z_var_size=z_var_size, save=save)
-    # plot_struct_fixe_and_z_var_moove(average_z_struct_class, train_test, net,
-    #                                  device, nb_class, None, model_name, z_var_size=z_var_size,
-    #                                  embedding_size=embedding_size, save=save, mu_var=mu_var, std_var=sigma_var)
-    # plot_var_fixe_and_z_struct_moove(average_z_struct_class, train_test, net,
-    #                                  device, nb_class, None, model_name, z_struct_size=z_struct_size,
-    #                                  z_var_size=z_var_size,
-    #                                  embedding_size=embedding_size, save=save, mu_struct=mu_struct,
-    #                                 std_struct=sigma_struct, traversal_latent=False)
-
+    plot_prototyoe_z_struct_per_class(1, average_z_struct_class, train_test, model_name,
+                                      nb_class, None, device, net, z_var_size=z_var_size, save=save)
+    plot_struct_fixe_and_z_var_moove(average_z_struct_class, train_test, net,
+                                     device, nb_class, None, model_name, z_var_size=z_var_size,
+                                     embedding_size=embedding_size, save=save, mu_var=mu_var, std_var=sigma_var)
+    plot_var_fixe_and_z_struct_moove(average_z_struct_class, train_test, net,
+                                     device, nb_class, None, model_name, z_struct_size=z_struct_size,
+                                     z_var_size=z_var_size,
+                                     embedding_size=embedding_size, save=save, mu_struct=mu_struct,
+                                    std_struct=sigma_struct, traversal_latent=False)
+    """
     # score sample:
     # images_generation(net, model_name, batch, size=(8, 8), mu_var=mu_var, mu_struct=mu_struct, std_var=sigma_var,
     #                   std_struct=sigma_struct, z_var_size=z_var_size, z_struct_size=z_struct_size, FID=True, IS=True,
@@ -331,6 +359,29 @@ def run_viz_expes(model_name, net, is_ratio, is_distance_loss, loss_distance_mea
     loader = test_loader
     loader_size = len(loader.dataset)
 
+    z_struct_layer_num = get_layer_zstruct_num(net)+1
+
+    print(net.encoder_struct[6].weight[8][12])
+
+    print(z_struct_layer_num)
+    print(net.encoder_struct[:z_struct_layer_num])
+
+    # test to debug: TODO: remove test.
+    for data, labels in loader:
+        # evaluation mode:
+
+        with torch.no_grad():
+            input_data = data
+        if torch.cuda.is_available():
+            input_data = input_data.cuda()
+
+        _, z_struct, _, _, _, _, _, _, _, _ = net(input_data, z_struct_out=True,
+                                                          z_struct_layer_num=z_struct_layer_num)
+
+        break
+    print(z_struct.shape)
+    print(z_struct[:20])
+
     # scores and losses:
     # plot_scores_and_loss_CNN(net, model_name, path_scores, is_ratio=ratio_reg, save=True,
     #                          is_distance_loss=is_distance_loss, loss_distance_mean=loss_distance_mean,
@@ -338,7 +389,7 @@ def run_viz_expes(model_name, net, is_ratio, is_distance_loss, loss_distance_mea
     # score_test, _, _, _, _, _, _, \
     # _, _, _, _ = compute_scores(net, loader, device, loader_size, False, False,
     #                             False, False, False, False, False, False, False, False,
-    #                             False, False, False, False, False, False)
+    #                             False, False, False, False, False, False, False, False)
     # score_train, _, _, _, _, _, _, \
     # _, _, _, _ = compute_scores(net, train_loader, device, len(train_loader.dataset), False, False,
     #                             False, False, False, False, False, False, False, False,
@@ -387,14 +438,14 @@ def run_viz_expes(model_name, net, is_ratio, is_distance_loss, loss_distance_mea
     # _ = distance_matrix(net, model_name, train_test=train_test, plot_fig=True)
 
     # Plot resume:
-    same_binary_code(net, model_name, loader, nb_class, train_test=train_test, save=True, Hmg_dist=True)
-    z_struct_code_classes(model_name, nb_class, train_test=train_test)
-    compute_z_struct(net, model_name, loader, train_test=train_test, net_type=net_type)
-    get_z_struct_per_class(model_name, train_test=train_test, nb_class=nb_class)
-    get_average_z_struct_per_classes(exp_name=model_name, train_test=train_test)
-    plot_resume(net, model_name, is_ratio, is_distance_loss, loss_distance_mean, loader, train_loader,
-                device, cat=cat, train_test=train_test, path_scores=path_scores, diff_var=diff_var_loss,
-                contrastive_loss=contrastive_loss, encoder_struct=True, Hmg_dst=True, z_struct_size=z_struct_size)
+    # same_binary_code(net, model_name, loader, nb_class, train_test=train_test, save=True, Hmg_dist=True)
+    # z_struct_code_classes(model_name, nb_class, train_test=train_test)
+    # compute_z_struct(net, model_name, loader, train_test=train_test, net_type=net_type)
+    # get_z_struct_per_class(model_name, train_test=train_test, nb_class=nb_class)
+    # get_average_z_struct_per_classes(exp_name=model_name, train_test=train_test)
+    # plot_resume(net, model_name, is_ratio, is_distance_loss, loss_distance_mean, loader, train_loader,
+    #             device, cat=cat, train_test=train_test, path_scores=path_scores, diff_var=diff_var_loss,
+    #             contrastive_loss=contrastive_loss, encoder_struct=True, Hmg_dst=True, z_struct_size=z_struct_size)
 
     # receptive_field = get_receptive_field_size(net, batch_test)
     # _ = score_with_best_code_uniq(net, model_name, train_test, loader, z_struct_size, loader_size)
@@ -478,11 +529,11 @@ if os.path.exists(path_select_model_analyse_50):
 
 if __name__ == '__main__':
 
-    list_encoder_struct = ['mnist_struct_baseline_scheduler_binary_10',
-                           'mnist_struct_baseline_scheduler_binary_15',
-                           'mnist_struct_baseline_scheduler_binary_20',
-                           'mnist_struct_baseline_scheduler_binary_25',
-                           'mnist_struct_baseline_scheduler_binary_30']
+    list_encoder_struct = ['mnist_struct_baseline_scheduler_binary_10']
+                           # 'mnist_struct_baseline_scheduler_binary_15',
+                           # 'mnist_struct_baseline_scheduler_binary_20',
+                           # 'mnist_struct_baseline_scheduler_binary_25',
+                           # 'mnist_struct_baseline_scheduler_binary_30']
 
     list_encoder_struct_Hmg = ['mnist_struct_baseline_scheduler_binary_10_Hmg_dst_1',
                                'mnist_struct_baseline_scheduler_binary_15_Hmg_dst_1',
@@ -515,12 +566,12 @@ if __name__ == '__main__':
                                'mnist_struct_baseline_scheduler_binary_25_target_uc_3',
                                'mnist_struct_baseline_scheduler_binary_30_target_uc_3']
 
-    list_exp_VAE_var = ['mnist_vae_var_2cb_5',
-                        'mnist_vae_var_2cb_10',
-                        'mnist_vae_var_2cb_15',
-                        'mnist_vae_var_2cb_20',
-                        'mnist_vae_var_2cb_25',
-                        'mnist_vae_var_2cb_30']
+    list_exp_VAE_var = ['mnist_vae_var_2cb_5']
+                        # 'mnist_vae_var_2cb_10',
+                        # 'mnist_vae_var_2cb_15',
+                        # 'mnist_vae_var_2cb_20',
+                        # 'mnist_vae_var_2cb_25',
+                        # 'mnist_vae_var_2cb_30']
 
     list_exp_VAE = ['mnist_VAE_s10_v5_BF']
                     # 'mnist_VAE_s15_v5_BF',
@@ -651,20 +702,22 @@ if __name__ == '__main__':
                                                    is_VAE=False,
                                                    is_encoder_struct=True)
 
-    run_exp_extraction_and_visualization_custom_BK(list_encoder_struct_Hmg,
-                                                   is_ratio=False,
-                                                   is_decoder=False,
-                                                   is_VAE=False,
-                                                   is_encoder_struct=True)
-
-    # run_exp_extraction_and_visualization_custom_BK(list_exp_VAE,
+    # run_exp_extraction_and_visualization_custom_BK(list_encoder_struct_Hmg,
     #                                                is_ratio=False,
     #                                                is_decoder=False,
-    #                                                is_VAE=True,
-    #                                                is_encoder_struct=False)
+    #                                                is_VAE=False,
+    #                                                is_encoder_struct=True)
 
     # run_exp_extraction_and_visualization_custom_BK(list_exp_VAE_var,
     #                                                is_ratio=False,
     #                                                is_decoder=False,
     #                                                is_VAE=False,
     #                                                is_encoder_struct=False)
+
+    run_exp_extraction_and_visualization_custom_BK(list_exp_VAE,
+                                                   is_ratio=False,
+                                                   is_decoder=False,
+                                                   is_VAE=True,
+                                                   is_encoder_struct=False)
+
+
