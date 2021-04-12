@@ -12,13 +12,12 @@ from models.encoder_struct import Encoder_struct
 from pytorchtools import EarlyStopping
 from scores_classifier import compute_scores, compute_scores_VAE
 from solver import gpu_config
-from visualizer_CNN import get_layer_zstruct_num, score_uniq_code
+from viz.visualizer_CNN import get_layer_zstruct_num, score_uniq_code
 from dataset.sampler import BalancedBatchSampler
 import random
 from models.VAE import VAE
-import torch.nn as nn
 
-from visualizer import *
+from viz.visualizer import *
 
 EPS = 1e-12
 worker_id = 0

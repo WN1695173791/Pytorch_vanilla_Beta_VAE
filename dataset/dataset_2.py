@@ -411,13 +411,13 @@ def preprocess(root, size=(64, 64), img_format='JPEG', center_crop=None):
 
 
 def get_mnist_dataset(batch_size=64, return_Dataloader=True):
-    mnist_trainset = datasets.MNIST(root='data/mnist/',
+    mnist_trainset = datasets.MNIST(root='../data/mnist/',
                                     train=True,
                                     download=False,
                                     transform=transforms.Compose([transforms.Resize(32),
                                                                   transforms.ToTensor(),
                                                                   transforms.Normalize((0.1307,), (0.3081,))]))
-    mnist_testset = datasets.MNIST(root='data/mnist/',
+    mnist_testset = datasets.MNIST(root='../data/mnist/',
                                    train=False,
                                    download=False,
                                    transform=transforms.Compose([transforms.Resize(32),

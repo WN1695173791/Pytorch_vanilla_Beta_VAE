@@ -1,0 +1,161 @@
+import torch
+from dataset.dataset_2 import get_mnist_dataset
+from viz.VAE_experimentation import experimentation_VAE
+
+
+# parameters:
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+batch_test = torch.load('../data/batch_mnist.pt')
+model_path = '../checkpoints_CNN/'
+batch_size = 128  # 10.000 to run regions visualization (we must have only one so all data set test in one batch)
+train_loader, test_loader = get_mnist_dataset(batch_size=batch_size)
+img_size = (1, 32, 32)
+nb_class = 10
+nc = 1
+
+parameters_mnist_classifier_BK_ratio = "parameters_combinations/mnist_classifier_ratio.txt"
+
+# VAE vae list experimentation:
+list_exp_VAE_var = ['mnist_vae_var_2cb_5']
+                    # 'mnist_vae_var_2cb_10',
+                    # 'mnist_vae_var_2cb_15',
+                    # 'mnist_vae_var_2cb_20',
+                    # 'mnist_vae_var_2cb_25',
+                    # 'mnist_vae_var_2cb_30']
+
+# VAE list experimentation:
+list_exp_VAE = ['mnist_VAE_s10_v5_BF']
+                # 'mnist_VAE_s10_v5_PT',
+                # 'mnist_VAE_s10_v5_SE',
+                # 'mnist_VAE_s10_v5_FS',
+                # 'mnist_VAE_s15_v5_BF',
+                # 'mnist_VAE_s20_v5_BF',
+                # 'mnist_VAE_s25_v5_BF',
+                # 'mnist_VAE_s30_v5_BF',
+                # 'mnist_VAE_s10_v10_BF',
+                # 'mnist_VAE_s15_v10_BF',
+                # 'mnist_VAE_s20_v10_BF',
+                # 'mnist_VAE_s25_v10_BF',
+                # 'mnist_VAE_s30_v10_BF',
+                # 'mnist_VAE_s10_v15_BF',
+                # 'mnist_VAE_s15_v15_BF',
+                # 'mnist_VAE_s20_v15_BF',
+                # 'mnist_VAE_s25_v15_BF',
+                # 'mnist_VAE_s30_v15_BF',
+                # 'mnist_VAE_s10_v20_BF',
+                # 'mnist_VAE_s15_v20_BF',
+                # 'mnist_VAE_s20_v20_BF',
+                # 'mnist_VAE_s25_v20_BF',
+                # 'mnist_VAE_s30_v20_BF',
+                # 'mnist_VAE_s10_v25_BF',
+                # 'mnist_VAE_s15_v25_BF',
+                # 'mnist_VAE_s20_v25_BF',
+                # 'mnist_VAE_s25_v25_BF',
+                # 'mnist_VAE_s30_v25_BF',
+                # 'mnist_VAE_s10_v30_BF',
+                # 'mnist_VAE_s15_v30_BF',
+                # 'mnist_VAE_s20_v30_BF',
+                # 'mnist_VAE_s25_v30_BF',
+                # 'mnist_VAE_s30_v30_BF',
+                # 'mnist_VAE_s10_v5_PT',
+                # 'mnist_VAE_s15_v5_PT',
+                # 'mnist_VAE_s20_v5_PT',
+                # 'mnist_VAE_s25_v5_PT',
+                # 'mnist_VAE_s30_v5_PT',
+                # 'mnist_VAE_s10_v10_PT',
+                # 'mnist_VAE_s15_v10_PT',
+                # 'mnist_VAE_s20_v10_PT',
+                # 'mnist_VAE_s25_v10_PT',
+                # 'mnist_VAE_s30_v10_PT',
+                # 'mnist_VAE_s10_v15_PT',
+                # 'mnist_VAE_s15_v15_PT',
+                # 'mnist_VAE_s20_v15_PT',
+                # 'mnist_VAE_s25_v15_PT',
+                # 'mnist_VAE_s30_v15_PT',
+                # 'mnist_VAE_s10_v20_PT',
+                # 'mnist_VAE_s15_v20_PT',
+                # 'mnist_VAE_s20_v20_PT',
+                # 'mnist_VAE_s25_v20_PT',
+                # 'mnist_VAE_s30_v20_PT',
+                # 'mnist_VAE_s10_v25_PT',
+                # 'mnist_VAE_s15_v25_PT',
+                # 'mnist_VAE_s20_v25_PT',
+                # 'mnist_VAE_s25_v25_PT',
+                # 'mnist_VAE_s30_v25_PT',
+                # 'mnist_VAE_s10_v30_PT',
+                # 'mnist_VAE_s15_v30_PT',
+                # 'mnist_VAE_s20_v30_PT',
+                # 'mnist_VAE_s25_v30_PT',
+                # 'mnist_VAE_s30_v30_PT',
+                # 'mnist_VAE_s10_v5_SE',
+                # 'mnist_VAE_s15_v5_SE',
+                # 'mnist_VAE_s20_v5_SE',
+                # 'mnist_VAE_s25_v5_SE',
+                # 'mnist_VAE_s30_v5_SE',
+                # 'mnist_VAE_s10_v10_SE',
+                # 'mnist_VAE_s15_v10_SE',
+                # 'mnist_VAE_s20_v10_SE',
+                # 'mnist_VAE_s25_v10_SE',
+                # 'mnist_VAE_s30_v10_SE',
+                # 'mnist_VAE_s10_v15_SE',
+                # 'mnist_VAE_s15_v15_SE',
+                # 'mnist_VAE_s20_v15_SE',
+                # 'mnist_VAE_s25_v15_SE',
+                # 'mnist_VAE_s30_v15_SE',
+                # 'mnist_VAE_s10_v20_SE',
+                # 'mnist_VAE_s15_v20_SE',
+                # 'mnist_VAE_s20_v20_SE',
+                # 'mnist_VAE_s25_v20_SE',
+                # 'mnist_VAE_s30_v20_SE',
+                # 'mnist_VAE_s10_v25_SE',
+                # 'mnist_VAE_s15_v25_SE',
+                # 'mnist_VAE_s20_v25_SE',
+                # 'mnist_VAE_s25_v25_SE',
+                # 'mnist_VAE_s30_v25_SE',
+                # 'mnist_VAE_s10_v30_SE',
+                # 'mnist_VAE_s15_v30_SE',
+                # 'mnist_VAE_s20_v30_SE',
+                # 'mnist_VAE_s25_v30_SE',
+                # 'mnist_VAE_s30_v30_SE',
+                # 'mnist_VAE_s10_v5_FS',
+                # 'mnist_VAE_s15_v5_FS',
+                # 'mnist_VAE_s20_v5_FS',
+                # 'mnist_VAE_s25_v5_FS',
+                # 'mnist_VAE_s30_v5_FS',
+                # 'mnist_VAE_s10_v10_FS',
+                # 'mnist_VAE_s15_v10_FS',
+                # 'mnist_VAE_s20_v10_FS',
+                # 'mnist_VAE_s25_v10_FS',
+                # 'mnist_VAE_s30_v10_FS',
+                # 'mnist_VAE_s10_v15_FS',
+                # 'mnist_VAE_s15_v15_FS',
+                # 'mnist_VAE_s20_v15_FS',
+                # 'mnist_VAE_s25_v15_FS',
+                # 'mnist_VAE_s30_v15_FS',
+                # 'mnist_VAE_s10_v20_FS',
+                # 'mnist_VAE_s15_v20_FS',
+                # 'mnist_VAE_s20_v20_FS',
+                # 'mnist_VAE_s25_v20_FS',
+                # 'mnist_VAE_s30_v20_FS',
+                # 'mnist_VAE_s10_v25_FS',
+                # 'mnist_VAE_s15_v25_FS',
+                # 'mnist_VAE_s20_v25_FS',
+                # 'mnist_VAE_s25_v25_FS',
+                # 'mnist_VAE_s30_v25_FS',
+                # 'mnist_VAE_s10_v30_FS',
+                # 'mnist_VAE_s15_v30_FS',
+                # 'mnist_VAE_s20_v30_FS',
+                # 'mnist_VAE_s25_v30_FS',
+                # 'mnist_VAE_s30_v30_FS']
+
+
+if __name__ == '__main__':
+
+    # load model from experimentation list:
+    for model_name in list_exp_VAE:
+        experimentation_VAE(model_name,
+                            test_loader,
+                            model_path=model_path,
+                            device=device,
+                            verbose=True,
+                            plot_losses=True)

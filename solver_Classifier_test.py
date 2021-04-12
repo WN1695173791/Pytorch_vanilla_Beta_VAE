@@ -18,7 +18,7 @@ from models.default_CNN import DefaultCNN
 from pytorchtools import EarlyStopping
 from scores_classifier import compute_scores
 from solver import gpu_config
-from visualizer_CNN import get_layer_zstruct_num, compute_z_struct
+from viz.visualizer_CNN import get_layer_zstruct_num, compute_z_struct
 import numpy as np
 
 

@@ -21,16 +21,7 @@ def psnr_metric(mse):
     return 20 * torch.log10(1.0 / torch.sqrt(mse))
 
 
-def get_checkpoints(net, path, expe_name):
-    file_path = os.path.join(path, expe_name, 'last')
-    # print(file_path)
-    checkpoint = torch.load(file_path, map_location=torch.device(device))
-    net.load_state_dict(checkpoint['net'])
-    nb_iter = checkpoint['iter']
-    # nb_epochs = checkpoint['epochs']
-    nb_epochs = nb_iter
 
-    return net, nb_iter, nb_epochs
 
 
 def get_checkpoints_scores_VAE(path_scores, expe_name):
