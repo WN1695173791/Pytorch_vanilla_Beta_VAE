@@ -2005,7 +2005,6 @@ def reconstruction_local(nb_class, nb_img, input_data, x_recon, exp_name, size, 
     ax.set(title=('model: {}, BCE score: {}'.format(exp_name, score)))
 
     ax.imshow(recon_grid.numpy())
-    # ax.axhline(y=size[0] // 2, linewidth=4, color='r')
     plt.show()
 
     if save:
@@ -2053,6 +2052,80 @@ def viz_reconstruction_VAE(net, loader, exp_name, z_var_size, z_struct_size, nb_
     else:
         x_recon, z_struct, z_var, z_var_sample, _, z = net(input_data)
 
+    plt.imshow(x_recon[0].detach().numpy().reshape((32, 32)))
+    plt.show()
+
+    ori = torch.cat((z_struct[0].detach().unsqueeze(dim=0), z_var_sample[0].detach().unsqueeze(dim=0)), dim=1)
+    rec = net.decoder(ori).detach().numpy().reshape((32, 32))
+    plt.imshow(rec)
+    plt.show()
+
+    s0 = torch.tensor([1., 1., 1., 1., 0., 1., 1., 1., 0., 1.]).unsqueeze(dim=0)
+    s1 = torch.tensor([1., 1., 1., 1., 0., 0., 1., 1., 1., 0.]).unsqueeze(dim=0)
+    s2 = torch.tensor([0., 0., 0., 1., 1., 0., 1., 0., 1., 1.]).unsqueeze(dim=0)
+    s3 = torch.tensor([1., 1., 0., 1., 1., 0., 0., 0., 1., 1.]).unsqueeze(dim=0)
+    s4 = torch.tensor([1., 1., 1., 1., 1., 1., 1., 0., 0., 1.]).unsqueeze(dim=0)
+    s5 = torch.tensor([1., 1., 0., 0., 1., 1., 1., 1., 1., 0.]).unsqueeze(dim=0)
+    s6 = torch.tensor([1., 1., 1., 0., 0., 0., 1., 0., 0., 1.]).unsqueeze(dim=0)
+    s7 = torch.tensor([0., 1., 1., 1., 1., 1., 1., 1., 1., 1.]).unsqueeze(dim=0)
+    s8 = torch.tensor([1., 1., 0., 1., 1., 1., 1., 1., 0., 0.]).unsqueeze(dim=0)
+    s9 = torch.tensor([0., 1., 0., 0., 1., 1., 1., 1., 0., 1.]).unsqueeze(dim=0)
+
+    v1 = z_var_sample[0].unsqueeze(dim=0)
+    print('s1: ', s1)
+    print('v1: ', v1)
+    z_1_recon = torch.cat((s0, v1), dim=1)
+    rec = net.decoder(z_1_recon).detach().numpy().reshape((32, 32))
+    plt.imshow(rec)
+    plt.show()
+
+    z_1_recon = torch.cat((s1, v1), dim=1)
+    rec = net.decoder(z_1_recon).detach().numpy().reshape((32, 32))
+    plt.imshow(rec)
+    plt.show()
+
+    z_1_recon = torch.cat((s2, v1), dim=1)
+    rec = net.decoder(z_1_recon).detach().numpy().reshape((32, 32))
+    plt.imshow(rec)
+    plt.show()
+
+    z_1_recon = torch.cat((s3, v1), dim=1)
+    rec = net.decoder(z_1_recon).detach().numpy().reshape((32, 32))
+    plt.imshow(rec)
+    plt.show()
+
+    z_1_recon = torch.cat((s4, v1), dim=1)
+    rec = net.decoder(z_1_recon).detach().numpy().reshape((32, 32))
+    plt.imshow(rec)
+    plt.show()
+
+    z_1_recon = torch.cat((s5, v1), dim=1)
+    rec = net.decoder(z_1_recon).detach().numpy().reshape((32, 32))
+    plt.imshow(rec)
+    plt.show()
+
+    z_1_recon = torch.cat((s6, v1), dim=1)
+    rec = net.decoder(z_1_recon).detach().numpy().reshape((32, 32))
+    plt.imshow(rec)
+    plt.show()
+
+    z_1_recon = torch.cat((s7, v1), dim=1)
+    rec = net.decoder(z_1_recon).detach().numpy().reshape((32, 32))
+    plt.imshow(rec)
+    plt.show()
+
+    z_1_recon = torch.cat((s8, v1), dim=1)
+    rec = net.decoder(z_1_recon).detach().numpy().reshape((32, 32))
+    plt.imshow(rec)
+    plt.show()
+
+    z_1_recon = torch.cat((s9, v1), dim=1)
+    rec = net.decoder(z_1_recon).detach().numpy().reshape((32, 32))
+    plt.imshow(rec)
+    plt.show()
+
+    print(wait)
+
     if z_struct_reconstruction:
         # z_struct reconstruction:
         if real_distribution:
@@ -2074,11 +2147,9 @@ def viz_reconstruction_VAE(net, loader, exp_name, z_var_size, z_struct_size, nb_
         x_recon_var = net.decoder(z_var_random)
 
     # compute score reconstruction on dataset test:
-    score_reconstruction = 0
-    score_reconstruction_zvar = 0
-    score_reconstruction_zstruct = 0
-
     score_reconstruction = F.mse_loss(x_recon, input_data)
+    score_reconstruction_zvar = F.mse_loss(x_recon_var, input_data)
+    score_reconstruction_zstruct = F.mse_loss(x_recon_struct, input_data)
 
     """
     for i, (_data_, _label_) in enumerate(loader):
@@ -2112,16 +2183,16 @@ def viz_reconstruction_VAE(net, loader, exp_name, z_var_size, z_struct_size, nb_
             _x_recon_struct_, _ = net.decoder(_z_struct_random_)
             score_reconstruction_zstruct_iter = F.mse_loss(_x_recon_struct_, _input_data_)
             score_reconstruction_zstruct += score_reconstruction_zstruct_iter.detach().numpy()
-    """
-    net.train()
-
+    
     score_reconstruction /= len(loader)
     score_reconstruction_zvar /= len(loader)
     score_reconstruction_zstruct /= len(loader)
+    """
+    net.train()
 
     score_reconstruction = np.around(score_reconstruction.detach().numpy(), 3)
-    score_reconstruction_zvar = np.around(score_reconstruction_zvar, 3)
-    score_reconstruction_zstruct = np.around(score_reconstruction_zstruct, 3)
+    score_reconstruction_zvar = np.around(score_reconstruction_zvar.detach().numpy(), 3)
+    score_reconstruction_zstruct = np.around(score_reconstruction_zstruct.detach().numpy(), 3)
 
     print('reconstructions scores on dataset test: z: {}, z_struct: {}, z_var: {}'.format(score_reconstruction,
                                                                                           score_reconstruction_zstruct,

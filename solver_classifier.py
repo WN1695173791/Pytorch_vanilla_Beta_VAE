@@ -144,21 +144,23 @@ def compute_scores_and_loss(net, train_loader, test_loader, device, train_loader
 
 
 def compute_scores_and_loss_VAE(net, train_loader, test_loader, train_loader_size, test_loader_size, device,
-                                lambda_BCE, beta, is_vae_var):
+                                lambda_BCE, beta, is_vae_var, ES_reconstruction):
     Total_loss_train, BCE_train, KLD_train = compute_scores_VAE(net,
                                                                 train_loader,
                                                                 train_loader_size,
                                                                 device,
                                                                 lambda_BCE,
                                                                 beta,
-                                                                is_vae_var)
+                                                                is_vae_var,
+                                                                ES_reconstruction)
     Total_loss_test, BCE_test, KLD_test = compute_scores_VAE(net,
                                                              test_loader,
                                                              test_loader_size,
                                                              device,
                                                              lambda_BCE,
                                                              beta,
-                                                             is_vae_var)
+                                                             is_vae_var,
+                                                             ES_reconstruction)
     losses = {'Total_loss_train': Total_loss_train,
               'BCE_train': BCE_train,
               'KLD_train': KLD_train,
@@ -281,6 +283,7 @@ class SolverClassifier(object):
         self.encoder_struct_name = args.encoder_struct_name
         self.use_small_lr_encoder_var = args.use_small_lr_encoder_var
         self.both_decoders_freeze = args.both_decoders_freeze
+        self.ES_reconstruction = args.ES_reconstruction
 
         self.contrastive_criterion = False
         if self.is_encoder_struct:
@@ -393,7 +396,8 @@ class SolverClassifier(object):
                       Binary_z=self.binary_z,
                       binary_first_conv=self.binary_first_conv,
                       binary_second_conv=self.binary_second_conv,
-                      binary_third_conv=self.binary_third_conv)
+                      binary_third_conv=self.binary_third_conv,
+                      ES_reconstruction=self.ES_reconstruction)
 
         # get layer num to extract z_struct:
         self.z_struct_out = True
@@ -624,17 +628,21 @@ class SolverClassifier(object):
                     else:
                         x_recons, latent_representation = self.net(data)
 
-                    mu = latent_representation['mu']
-                    log_var = latent_representation['log_var']
+                    if self.ES_reconstruction:
+                        BCE_loss = F.mse_loss(x_recons, data, size_average=False)
+                        loss = BCE_loss
+                    else:
+                        mu = latent_representation['mu']
+                        log_var = latent_representation['log_var']
 
-                    # BCE tries to make our reconstruction as accurate as possible:
-                    # BCE_loss = F.binary_cross_entropy(x_recons, data, size_average=False)
-                    BCE_loss = F.mse_loss(x_recons, data, size_average=False)
+                        # BCE tries to make our reconstruction as accurate as possible:
+                        # BCE_loss = F.binary_cross_entropy(x_recons, data, size_average=False)
+                        BCE_loss = F.mse_loss(x_recons, data, size_average=False)
 
-                    # KLD tries to push the distributions as close as possible to unit Gaussian:
-                    KLD_loss = -0.5 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
+                        # KLD tries to push the distributions as close as possible to unit Gaussian:
+                        KLD_loss = -0.5 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
 
-                    loss = (self.lambda_BCE * BCE_loss) + (self.beta * KLD_loss)
+                        loss = (self.lambda_BCE * BCE_loss) + (self.beta * KLD_loss)
                 else:
                     self.mse_loss = 0
                     loss = 0
@@ -764,7 +772,8 @@ class SolverClassifier(object):
                                                           self.device,
                                                           self.lambda_BCE,
                                                           self.beta,
-                                                          self.is_VAE_var)
+                                                          self.is_VAE_var,
+                                                          self.ES_reconstruction)
             elif self.is_encoder_struct:
                 self.scores, self.losses = compute_scores_and_loss(self.net,
                                                                    self.train_loader,

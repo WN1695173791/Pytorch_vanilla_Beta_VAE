@@ -33,7 +33,8 @@ class VAE(nn.Module, ABC):
                  Binary_z=False,
                  binary_first_conv=False,
                  binary_second_conv=False,
-                 binary_third_conv=False):
+                 binary_third_conv=False,
+                 ES_reconstruction=False):
         """
         Class which defines model and forward pass.
         """
@@ -41,7 +42,11 @@ class VAE(nn.Module, ABC):
 
         # parameters:
         self.nc = 1  # number of channels
-        self.z_size = z_var_size + z_struct_size
+        self.ES_reconstruction = ES_reconstruction  # if ES_reconstruction model is only encoder struct + decoder
+        if self.ES_reconstruction:
+            self.z_size = z_struct_size
+        else:
+            self.z_size = z_var_size + z_struct_size
 
         # encoder var parameters:
         self.z_var_size = z_var_size
@@ -191,89 +196,90 @@ class VAE(nn.Module, ABC):
         # -----------_________________ end encoder_struct____________________________________________------------
 
         # -----------_________________ define model: encoder_var____________________________________________--------
-        if self.other_architecture:
-            self.encoder_var = [
-                nn.Conv2d(in_channels=self.nc, out_channels=32, kernel_size=3, stride=2, padding=self.padding_size),
-                nn.ReLU(True),
-                nn.BatchNorm2d(32),
-                # PrintLayer(),
-            ]
-
-            if self.var_second_cnn_block:
-                self.encoder_var += [
-                    nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3, stride=2, padding=self.padding_size),
+        if not self.ES_reconstruction:
+            if self.other_architecture:
+                self.encoder_var = [
+                    nn.Conv2d(in_channels=self.nc, out_channels=32, kernel_size=3, stride=2, padding=self.padding_size),
                     nn.ReLU(True),
-                    nn.BatchNorm2d(64),
+                    nn.BatchNorm2d(32),
                     # PrintLayer(),
                 ]
 
-            if self.var_third_cnn_block:
+                if self.var_second_cnn_block:
+                    self.encoder_var += [
+                        nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3, stride=2, padding=self.padding_size),
+                        nn.ReLU(True),
+                        nn.BatchNorm2d(64),
+                        # PrintLayer(),
+                    ]
+
+                if self.var_third_cnn_block:
+                    self.encoder_var += [
+                        nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3, stride=1, padding=self.padding_size),
+                        nn.ReLU(True),
+                        nn.BatchNorm2d(64),
+                        # PrintLayer(),
+                    ]
+
                 self.encoder_var += [
-                    nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3, stride=1, padding=self.padding_size),
+                    View((-1, np.product(self.var_reshape))),
+                    nn.Dropout(0.4),
+                    # PrintLayer(),
+                    nn.Linear(np.product(self.var_reshape), 128),
                     nn.ReLU(True),
-                    nn.BatchNorm2d(64),
+                    # PrintLayer(),
+                    nn.Linear(128, self.z_var_size * 2),
                     # PrintLayer(),
                 ]
-
-            self.encoder_var += [
-                View((-1, np.product(self.var_reshape))),
-                nn.Dropout(0.4),
-                # PrintLayer(),
-                nn.Linear(np.product(self.var_reshape), 128),
-                nn.ReLU(True),
-                # PrintLayer(),
-                nn.Linear(128, self.z_var_size * 2),
-                # PrintLayer(),
-            ]
-        else:
-            self.encoder_var = [
-                nn.Conv2d(in_channels=self.nc, out_channels=32, kernel_size=3, stride=1),
-                nn.ReLU(True),
-                nn.BatchNorm2d(32),
-                # PrintLayer(),
-                nn.Conv2d(in_channels=32, out_channels=32, kernel_size=3, stride=1),
-                nn.ReLU(True),
-                nn.BatchNorm2d(32),
-                # PrintLayer(),
-                nn.Conv2d(in_channels=32, out_channels=32, kernel_size=5, stride=2, padding=self.padding_size),
-                nn.ReLU(True),
-                nn.BatchNorm2d(32),
-                nn.Dropout(0.4),
-                # PrintLayer(),
-            ]
-
-            if self.var_second_cnn_block:
-                self.encoder_var += [
-                    nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3, stride=1),
+            else:
+                self.encoder_var = [
+                    nn.Conv2d(in_channels=self.nc, out_channels=32, kernel_size=3, stride=1),
                     nn.ReLU(True),
-                    nn.BatchNorm2d(64),
+                    nn.BatchNorm2d(32),
                     # PrintLayer(),
-                    nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3, stride=1),
+                    nn.Conv2d(in_channels=32, out_channels=32, kernel_size=3, stride=1),
                     nn.ReLU(True),
-                    nn.BatchNorm2d(64),
+                    nn.BatchNorm2d(32),
                     # PrintLayer(),
-                    nn.Conv2d(in_channels=64, out_channels=64, kernel_size=5, stride=2, padding=self.padding_size),
+                    nn.Conv2d(in_channels=32, out_channels=32, kernel_size=5, stride=2, padding=self.padding_size),
                     nn.ReLU(True),
-                    nn.BatchNorm2d(64),
+                    nn.BatchNorm2d(32),
                     nn.Dropout(0.4),
                     # PrintLayer(),
                 ]
 
-            if self.var_third_cnn_block:
+                if self.var_second_cnn_block:
+                    self.encoder_var += [
+                        nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3, stride=1),
+                        nn.ReLU(True),
+                        nn.BatchNorm2d(64),
+                        # PrintLayer(),
+                        nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3, stride=1),
+                        nn.ReLU(True),
+                        nn.BatchNorm2d(64),
+                        # PrintLayer(),
+                        nn.Conv2d(in_channels=64, out_channels=64, kernel_size=5, stride=2, padding=self.padding_size),
+                        nn.ReLU(True),
+                        nn.BatchNorm2d(64),
+                        nn.Dropout(0.4),
+                        # PrintLayer(),
+                    ]
+
+                if self.var_third_cnn_block:
+                    self.encoder_var += [
+                        nn.Conv2d(in_channels=64, out_channels=128, kernel_size=4, stride=1),
+                        nn.ReLU(True),
+                        nn.BatchNorm2d(128),
+                        nn.Dropout(0.4),
+                        # PrintLayer(),
+                    ]
+
                 self.encoder_var += [
-                    nn.Conv2d(in_channels=64, out_channels=128, kernel_size=4, stride=1),
-                    nn.ReLU(True),
-                    nn.BatchNorm2d(128),
-                    nn.Dropout(0.4),
+                    View((-1, np.product(self.var_reshape))),
+                    # PrintLayer(),
+                    nn.Linear(np.product(self.var_reshape), self.z_var_size * 2),
                     # PrintLayer(),
                 ]
-
-            self.encoder_var += [
-                View((-1, np.product(self.var_reshape))),
-                # PrintLayer(),
-                nn.Linear(np.product(self.var_reshape), self.z_var_size * 2),
-                # PrintLayer(),
-            ]
         # --------------------------------------- end encoder_var____________________________________________ ----
 
         # -----------_________________ define model: decoder ____________________________________________--------
@@ -359,7 +365,8 @@ class VAE(nn.Module, ABC):
         # --------------------------------------- end decoder ____________________________________________ ----
 
         self.encoder_struct = nn.Sequential(*self.encoder_struct)
-        self.encoder_var = nn.Sequential(*self.encoder_var)
+        if not self.ES_reconstruction:
+            self.encoder_var = nn.Sequential(*self.encoder_var)
         self.decoder = nn.Sequential(*self.decoder)
 
         self.weight_init()
@@ -377,17 +384,19 @@ class VAE(nn.Module, ABC):
 
         # z_struct:
         z_struct = self.encoder_struct(x)
-        # if self.Binary_z:
-        #     z_struct = F.log_softmax(out, dim=1)
-        # else:
-        #     z_struct = F.softmax(out, dim=1)
 
-        # z_var:
-        z_var = self.encoder_var(x)
-        latent_representation = self._encode(z_var, self.z_var_size)
-        z_var_sample = self.reparametrize(latent_representation)
+        if not self.ES_reconstruction:
+            # z_var:
+            z_var = self.encoder_var(x)
+            latent_representation = self._encode(z_var, self.z_var_size)
+            z_var_sample = self.reparametrize(latent_representation)
 
-        z = torch.cat((z_var_sample, z_struct), dim=1)
+            z = torch.cat((z_var_sample, z_struct), dim=1)
+        else:
+            z_var = None
+            z_var_sample = None
+            latent_representation = None
+            z = z_struct
 
         # reconstruction:
         x_recons = self.decoder(z)

@@ -294,6 +294,7 @@ if __name__ == "__main__":
                         type=str, help='encoder_struct_name')
     parser.add_argument('--use_small_lr_encoder_var', default=False, type=str2bool, help="use_small_lr_encoder_var")
     parser.add_argument('--both_decoders_freeze', default=False, type=str2bool, help="both_decoders_freeze")
+    parser.add_argument('--ES_reconstruction', default=False, type=str2bool, help="ES_reconstruction")
 
     args = parser.parse_args()
 
