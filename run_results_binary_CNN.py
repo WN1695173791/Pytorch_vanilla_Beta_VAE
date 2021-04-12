@@ -1,4 +1,4 @@
-from viz.visualizer import *
+from visualizer import *
 from models.custom_CNN_BK import Custom_CNN_BK
 
 
