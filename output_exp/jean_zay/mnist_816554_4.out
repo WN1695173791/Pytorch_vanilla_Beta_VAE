@@ -1,0 +1,389 @@
+4
+--gpu_devices 0 --max_iter 100 --batch_size 250 --use_scheduler True --lr 1e-3 --GMP True --z_struct_size 15 --is_VAE True --lambda_BCE 1 --beta 1 --big_kernel_size 8 --two_conv_layer True --three_conv_layer True --kernel_size_1 4 --kernel_size_2 4 --kernel_size_3 4 --BK_in_first_layer True --BK_in_second_layer False --BK_in_third_layer False --stride_size 1 --hidden_filters_layer1 64 --hidden_filters_layer2 64 --hidden_filters_layer3 64 --dataset_balanced True --binary_z True --binary_first_conv False --binary_second_conv False --binary_third_conv True --encoder_struct_name mnist_struct_baseline_scheduler_binary_15 --freeze_Encoder True --ES_reconstruction True --exp_name mnist_encoder_struct_reconstruction_s15_PT_2
+Namespace(BK_in_first_layer=True, BK_in_second_layer=False, BK_in_third_layer=False, BN=False, C_max=25, C_stop_iter=100000.0, E1_AE=False, E1_VAE=False, E1_conv=False, E1_dense=False, E1_second_conv=False, E1_second_conv_adapt=False, ES_reconstruction=True, GMP=True, Hmg_dst_loss=False, IPC=False, L1_norm_act=False, L1_norm_weights=False, L3_without_random=False, LOG_DIR='logs', adapt_lr=False, add_classification_layer=True, add_linear_after_GMP=True, add_z_struct_bottleneck=False, alpha=32, batch_size=250, beta=1.0, beta1=0.9, beta2=0.999, big_kernel=False, big_kernel_size=8, binary_chain=False, binary_first_conv=False, binary_second_conv=False, binary_third_conv=True, binary_z=True, both_decoders_freeze=False, ckpt_dir='checkpoints_CNN', ckpt_dir_scores='checkpoint_scores_CNN', classif_layer_size=30, contrastive_loss=False, cuda=True, dataset='mnist', dataset_balanced=True, decoder_first_dense=36, decoder_kernel_size_1=4, decoder_kernel_size_2=3, decoder_kernel_size_3=4, decoder_n_filter_1=64, decoder_n_filter_2=64, decoder_n_filter_3=64, decoder_stride_1=2, decoder_stride_2=2, decoder_stride_3=1, diff_var=False, display_step=10000, dset_dir='data', encoder_struct_name='mnist_struct_baseline_scheduler_binary_15', encoder_var_name='mnist_vae_var_deeper_2cb_1_1', exp_name='mnist_encoder_struct_reconstruction_s15_PT_2', freeze_Encoder=True, gamma=1000, gpu_devices=[0], hidden_filters_layer1=64, hidden_filters_layer2=64, hidden_filters_layer3=64, image_size=64, intra_class_variance_loss=False, is_C=True, is_E1=False, is_VAE=True, is_VAE_var=False, is_binary_structural_latent=False, is_custom_model=False, is_custom_model_BK=False, is_default_model=False, is_encoder_struct=False, is_noise_stats=False, is_partial_rand_class=False, is_perturbed_score=False, is_zvar_sim_loss=False, just_train=False, kernel_size=4, kernel_size_1=4, kernel_size_2=4, kernel_size_3=4, lambda_BCE=1.0, lambda_Kl_struct=1, lambda_Kl_var=1, lambda_L1=0.01, lambda_VAE=1, lambda_class=1, lambda_contrastive_loss=1, lambda_distance_mean=1, lambda_hmg_dst=1, lambda_intra_class_var=1, lambda_partial_class=1, lambda_ratio_reg=1, lambda_recon_wt_rand=1, lambda_recons=1, lambda_uniq_code_dst=1, lambda_var_distance=1, lambda_var_inter=1, lambda_var_intra=1, lambda_zvar_sim=1, latent_spec_cont=None, latent_spec_cont_class=None, latent_spec_cont_var=None, latent_spec_disc=None, latent_spec_disc_class=None, latent_spec_disc_var=None, log_level='info', loss='Proxy_Anchor', loss_distance_mean=False, loss_min_distance_cl=False, lr=0.001, max_epoch_use_uniq_code_target=5, max_iter=100.0, model='CNN', mrg=0.1, nb_epochs_train_only_zvar=0, num_workers=2, old_weighted=False, optimizer='adamw', other_architecture=False, other_ratio=False, random_percentage=0.2, random_seed=10, randomness=True, ratio_reg=False, remark='', save_step=10000, second_layer_C=False, seed=1, stride_size=1, sz_embedding=5, three_conv_layer=True, train=True, train_var_struct_alternatively=False, two_conv_layer=True, two_encoder=False, uniq_code_dst_loss=False, use_VAE=False, use_decoder=False, use_early_stopping=True, use_scheduler=True, use_small_lr_encoder_var=False, use_structural_encoder=False, value_target_distance_mean=1, var_hidden_dim=256, var_hidden_filters_1=32, var_hidden_filters_2=32, var_hidden_filters_3=32, var_kernel_size_1=3, var_kernel_size_2=3, var_kernel_size_3=3, var_second_cnn_block=True, var_stride_size_1=1, var_stride_size_2=1, var_stride_size_3=1, var_third_cnn_block=False, var_three_conv_layer=False, warm=1, without_acc=False, z_struct_size=15, z_var_size=5, zeros_W_Classif=False, zvar_sim_change_zvar=False, zvar_sim_loss_for_all_model=False, zvar_sim_loss_only_for_encoder=False, zvar_sim_normal=False, zvar_sim_var_rand=False)
+CUDA Visible devices !
+[Using Seed: 10]
+Balanced dataset loaded
+VAE doesn't exist but encoder struct yes ! load struct encoder weighs !
+=> loaded checkpoint 'checkpoints_CNN/mnist_struct_baseline_scheduler_binary_15/last (iter 23220)'
+Weighs loaded for struct encoder !
+use 1 gpu who named: Tesla V100-SXM2-32GB
+VAE(
+  (encoder_struct): Sequential(
+    (0): Conv2d(1, 64, kernel_size=(8, 8), stride=(1, 1))
+    (1): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (2): ReLU(inplace=True)
+    (3): Conv2d(64, 64, kernel_size=(4, 4), stride=(1, 1))
+    (4): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (5): ReLU(inplace=True)
+    (6): Conv2d(64, 15, kernel_size=(4, 4), stride=(1, 1))
+    (7): BatchNorm2d(15, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (8): DeterministicBinaryActivation(
+      (act): Hardsigmoid(
+        (act): Hardtanh(min_val=-1.0, max_val=1.0)
+      )
+    )
+    (9): AdaptiveMaxPool2d(output_size=(1, 1))
+    (10): View()
+  )
+  (decoder): Sequential(
+    (0): Linear(in_features=15, out_features=1600, bias=True)
+    (1): ReLU(inplace=True)
+    (2): View()
+    (3): ConvTranspose2d(64, 64, kernel_size=(4, 4), stride=(2, 2), padding=(1, 1))
+    (4): ReLU(inplace=True)
+    (5): ConvTranspose2d(64, 64, kernel_size=(3, 3), stride=(1, 1))
+    (6): ReLU(inplace=True)
+    (7): ConvTranspose2d(64, 32, kernel_size=(3, 3), stride=(1, 1))
+    (8): ReLU(inplace=True)
+    (9): ConvTranspose2d(32, 32, kernel_size=(4, 4), stride=(2, 2), padding=(1, 1))
+    (10): ReLU(inplace=True)
+    (11): ConvTranspose2d(32, 32, kernel_size=(3, 3), stride=(1, 1))
+    (12): ReLU(inplace=True)
+    (13): ConvTranspose2d(32, 1, kernel_size=(3, 3), stride=(1, 1))
+    (14): Sigmoid()
+  )
+)
+The number of parameters of model is 257966
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 270, epoch 1.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 270, epoch 1.0)
+[Save Checkpoint] epoch: [1.0], Train: total:-1590.34570, BCE:-11.74309, KLD:0.00000,Test: total:-65.74624, BCE:-11.91518, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 540, epoch 2.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 540, epoch 2.0)
+[Save Checkpoint] epoch: [2.0], Train: total:-1348.32849, BCE:-9.95212, KLD:0.00000,Test: total:-55.25184, BCE:-10.06069, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 810, epoch 3.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 810, epoch 3.0)
+[Save Checkpoint] epoch: [3.0], Train: total:-1308.62988, BCE:-9.65817, KLD:0.00000,Test: total:-53.47851, BCE:-9.75469, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 1080, epoch 4.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 1080, epoch 4.0)
+[Save Checkpoint] epoch: [4.0], Train: total:-1326.31177, BCE:-9.78900, KLD:0.00000,Test: total:-54.12121, BCE:-9.88114, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 1350, epoch 5.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 1350, epoch 5.0)
+[Save Checkpoint] epoch: [5.0], Train: total:-1350.15649, BCE:-9.96575, KLD:0.00000,Test: total:-55.05491, BCE:-10.05482, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 1620, epoch 6.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 1620, epoch 6.0)
+[Save Checkpoint] epoch: [6.0], Train: total:-1366.24255, BCE:-10.08443, KLD:0.00000,Test: total:-55.61909, BCE:-10.16834, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 1890, epoch 7.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 1890, epoch 7.0)
+[Save Checkpoint] epoch: [7.0], Train: total:-1210.65442, BCE:-8.93552, KLD:0.00000,Test: total:-49.03759, BCE:-9.00103, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 2160, epoch 8.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 2160, epoch 8.0)
+[Save Checkpoint] epoch: [8.0], Train: total:-1384.07483, BCE:-10.21628, KLD:0.00000,Test: total:-55.99820, BCE:-10.28842, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 2430, epoch 9.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 2430, epoch 9.0)
+[Save Checkpoint] epoch: [9.0], Train: total:-1553.09216, BCE:-11.46283, KLD:0.00000,Test: total:-62.67418, BCE:-11.54115, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 2700, epoch 10.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 2700, epoch 10.0)
+[Save Checkpoint] epoch: [10.0], Train: total:-1647.71497, BCE:-12.15980, KLD:0.00000,Test: total:-66.38446, BCE:-12.25119, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 2970, epoch 11.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 2970, epoch 11.0)
+[Save Checkpoint] epoch: [11.0], Train: total:-1635.04895, BCE:-12.06319, KLD:0.00000,Test: total:-65.64613, BCE:-12.16026, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 3240, epoch 12.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 3240, epoch 12.0)
+[Save Checkpoint] epoch: [12.0], Train: total:-1688.00562, BCE:-12.45341, KLD:0.00000,Test: total:-67.68004, BCE:-12.56310, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 3510, epoch 13.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 3510, epoch 13.0)
+[Save Checkpoint] epoch: [13.0], Train: total:-1780.76123, BCE:-13.13871, KLD:0.00000,Test: total:-71.41214, BCE:-13.25238, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 3780, epoch 14.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 3780, epoch 14.0)
+[Save Checkpoint] epoch: [14.0], Train: total:-1813.20972, BCE:-13.37971, KLD:0.00000,Test: total:-72.78298, BCE:-13.49229, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 4050, epoch 15.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 4050, epoch 15.0)
+[Save Checkpoint] epoch: [15.0], Train: total:-1932.99158, BCE:-14.26446, KLD:0.00000,Test: total:-77.65575, BCE:-14.38303, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 4320, epoch 16.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 4320, epoch 16.0)
+[Save Checkpoint] epoch: [16.0], Train: total:-1964.16736, BCE:-14.49465, KLD:0.00000,Test: total:-78.87486, BCE:-14.61596, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 4590, epoch 17.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 4590, epoch 17.0)
+[Save Checkpoint] epoch: [17.0], Train: total:-1949.02429, BCE:-14.38367, KLD:0.00000,Test: total:-78.17779, BCE:-14.50704, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 4860, epoch 18.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 4860, epoch 18.0)
+[Save Checkpoint] epoch: [18.0], Train: total:-2013.18140, BCE:-14.85755, KLD:0.00000,Test: total:-80.71471, BCE:-14.98076, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 5130, epoch 19.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 5130, epoch 19.0)
+[Save Checkpoint] epoch: [19.0], Train: total:-2020.82153, BCE:-14.91345, KLD:0.00000,Test: total:-80.95886, BCE:-15.03835, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 5400, epoch 20.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 5400, epoch 20.0)
+[Save Checkpoint] epoch: [20.0], Train: total:-2049.55127, BCE:-15.12494, KLD:0.00000,Test: total:-82.00189, BCE:-15.24972, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 5670, epoch 21.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 5670, epoch 21.0)
+[Save Checkpoint] epoch: [21.0], Train: total:-2036.70789, BCE:-15.03061, KLD:0.00000,Test: total:-81.50265, BCE:-15.15571, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 5940, epoch 22.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 5940, epoch 22.0)
+EarlyStopping counter: 1 out of 25
+[Save Checkpoint] epoch: [22.0], Train: total:-2056.19873, BCE:-15.17529, KLD:0.00000,Test: total:-82.32232, BCE:-15.29877, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 6210, epoch 23.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 6210, epoch 23.0)
+[Save Checkpoint] epoch: [23.0], Train: total:-2070.84033, BCE:-15.28438, KLD:0.00000,Test: total:-82.90517, BCE:-15.40985, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 6480, epoch 24.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 6480, epoch 24.0)
+[Save Checkpoint] epoch: [24.0], Train: total:-2062.83594, BCE:-15.22532, KLD:0.00000,Test: total:-82.52731, BCE:-15.35427, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 6750, epoch 25.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 6750, epoch 25.0)
+[Save Checkpoint] epoch: [25.0], Train: total:-2050.38721, BCE:-15.13302, KLD:0.00000,Test: total:-81.98204, BCE:-15.26275, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 7020, epoch 26.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 7020, epoch 26.0)
+[Save Checkpoint] epoch: [26.0], Train: total:-2029.61414, BCE:-14.97989, KLD:0.00000,Test: total:-81.07696, BCE:-15.10723, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 7290, epoch 27.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 7290, epoch 27.0)
+[Save Checkpoint] epoch: [27.0], Train: total:-2037.24768, BCE:-15.03653, KLD:0.00000,Test: total:-81.33862, BCE:-15.16134, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 7560, epoch 28.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 7560, epoch 28.0)
+[Save Checkpoint] epoch: [28.0], Train: total:-2020.91919, BCE:-14.91552, KLD:0.00000,Test: total:-80.56846, BCE:-15.04117, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 7830, epoch 29.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 7830, epoch 29.0)
+[Save Checkpoint] epoch: [29.0], Train: total:-2024.03491, BCE:-14.93938, KLD:0.00000,Test: total:-80.64417, BCE:-15.06229, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 8100, epoch 30.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 8100, epoch 30.0)
+[Save Checkpoint] epoch: [30.0], Train: total:-1987.61755, BCE:-14.67180, KLD:0.00000,Test: total:-79.15042, BCE:-14.78288, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 8370, epoch 31.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 8370, epoch 31.0)
+[Save Checkpoint] epoch: [31.0], Train: total:-2003.14771, BCE:-14.78647, KLD:0.00000,Test: total:-79.72291, BCE:-14.89633, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 8640, epoch 32.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 8640, epoch 32.0)
+EarlyStopping counter: 1 out of 25
+[Save Checkpoint] epoch: [32.0], Train: total:-1913.41895, BCE:-14.12348, KLD:0.00000,Test: total:-75.83501, BCE:-14.23378, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 8910, epoch 33.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 8910, epoch 33.0)
+EarlyStopping counter: 2 out of 25
+[Save Checkpoint] epoch: [33.0], Train: total:-1909.42957, BCE:-14.09200, KLD:0.00000,Test: total:-75.47389, BCE:-14.21380, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 9180, epoch 34.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 9180, epoch 34.0)
+[Save Checkpoint] epoch: [34.0], Train: total:-1876.21887, BCE:-13.84729, KLD:0.00000,Test: total:-74.18960, BCE:-13.96594, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 9450, epoch 35.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 9450, epoch 35.0)
+[Save Checkpoint] epoch: [35.0], Train: total:-1881.90381, BCE:-13.89075, KLD:0.00000,Test: total:-74.41860, BCE:-14.00138, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 9720, epoch 36.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 9720, epoch 36.0)
+[Save Checkpoint] epoch: [36.0], Train: total:-1910.01245, BCE:-14.09814, KLD:0.00000,Test: total:-75.45504, BCE:-14.20502, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 9990, epoch 37.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 9990, epoch 37.0)
+[Save Checkpoint] epoch: [37.0], Train: total:-1868.19470, BCE:-13.79077, KLD:0.00000,Test: total:-73.74723, BCE:-13.89126, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 10260, epoch 38.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 10260, epoch 38.0)
+EarlyStopping counter: 1 out of 25
+[Save Checkpoint] epoch: [38.0], Train: total:-1870.39014, BCE:-13.80596, KLD:0.00000,Test: total:-73.71089, BCE:-13.90998, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 10530, epoch 39.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 10530, epoch 39.0)
+EarlyStopping counter: 2 out of 25
+[Save Checkpoint] epoch: [39.0], Train: total:-1886.13220, BCE:-13.92225, KLD:0.00000,Test: total:-74.30875, BCE:-14.01752, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 10800, epoch 40.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 10800, epoch 40.0)
+EarlyStopping counter: 3 out of 25
+[Save Checkpoint] epoch: [40.0], Train: total:-1865.13574, BCE:-13.76952, KLD:0.00000,Test: total:-73.43606, BCE:-13.84800, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 11070, epoch 41.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 11070, epoch 41.0)
+EarlyStopping counter: 4 out of 25
+[Save Checkpoint] epoch: [41.0], Train: total:-1868.70996, BCE:-13.79785, KLD:0.00000,Test: total:-73.63377, BCE:-13.87762, KLD:0.00000
+Epoch    42: reducing learning rate of group 0 to 2.0000e-04.
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 11340, epoch 42.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 11340, epoch 42.0)
+EarlyStopping counter: 5 out of 25
+[Save Checkpoint] epoch: [42.0], Train: total:-1863.83862, BCE:-13.76435, KLD:0.00000,Test: total:-73.46931, BCE:-13.83921, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 11610, epoch 43.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 11610, epoch 43.0)
+[Save Checkpoint] epoch: [43.0], Train: total:-1879.01282, BCE:-13.87621, KLD:0.00000,Test: total:-74.19665, BCE:-13.96014, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 11880, epoch 44.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 11880, epoch 44.0)
+[Save Checkpoint] epoch: [44.0], Train: total:-1897.10388, BCE:-14.00964, KLD:0.00000,Test: total:-74.90941, BCE:-14.09036, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 12150, epoch 45.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 12150, epoch 45.0)
+[Save Checkpoint] epoch: [45.0], Train: total:-1906.84338, BCE:-14.08151, KLD:0.00000,Test: total:-75.29629, BCE:-14.16100, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 12420, epoch 46.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 12420, epoch 46.0)
+[Save Checkpoint] epoch: [46.0], Train: total:-1916.45996, BCE:-14.15207, KLD:0.00000,Test: total:-75.66543, BCE:-14.23001, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 12690, epoch 47.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 12690, epoch 47.0)
+[Save Checkpoint] epoch: [47.0], Train: total:-1921.86658, BCE:-14.19183, KLD:0.00000,Test: total:-75.87975, BCE:-14.26936, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 12960, epoch 48.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 12960, epoch 48.0)
+[Save Checkpoint] epoch: [48.0], Train: total:-1926.26636, BCE:-14.22440, KLD:0.00000,Test: total:-76.06059, BCE:-14.30318, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 13230, epoch 49.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 13230, epoch 49.0)
+[Save Checkpoint] epoch: [49.0], Train: total:-1933.11804, BCE:-14.27517, KLD:0.00000,Test: total:-76.32320, BCE:-14.35207, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 13500, epoch 50.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 13500, epoch 50.0)
+[Save Checkpoint] epoch: [50.0], Train: total:-1935.96045, BCE:-14.29641, KLD:0.00000,Test: total:-76.42635, BCE:-14.37146, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 13770, epoch 51.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 13770, epoch 51.0)
+[Save Checkpoint] epoch: [51.0], Train: total:-1942.14441, BCE:-14.34190, KLD:0.00000,Test: total:-76.66869, BCE:-14.41785, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 14040, epoch 52.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 14040, epoch 52.0)
+[Save Checkpoint] epoch: [52.0], Train: total:-1943.56641, BCE:-14.35221, KLD:0.00000,Test: total:-76.71801, BCE:-14.42725, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 14310, epoch 53.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 14310, epoch 53.0)
+[Save Checkpoint] epoch: [53.0], Train: total:-1946.71265, BCE:-14.37526, KLD:0.00000,Test: total:-76.84132, BCE:-14.44967, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 14580, epoch 54.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 14580, epoch 54.0)
+[Save Checkpoint] epoch: [54.0], Train: total:-1953.40735, BCE:-14.42471, KLD:0.00000,Test: total:-77.09523, BCE:-14.49845, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 14850, epoch 55.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 14850, epoch 55.0)
+[Save Checkpoint] epoch: [55.0], Train: total:-1955.19861, BCE:-14.43786, KLD:0.00000,Test: total:-77.16811, BCE:-14.51053, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 15120, epoch 56.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 15120, epoch 56.0)
+[Save Checkpoint] epoch: [56.0], Train: total:-1957.10901, BCE:-14.45200, KLD:0.00000,Test: total:-77.23183, BCE:-14.52384, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 15390, epoch 57.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 15390, epoch 57.0)
+[Save Checkpoint] epoch: [57.0], Train: total:-1959.68750, BCE:-14.47070, KLD:0.00000,Test: total:-77.31905, BCE:-14.54299, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 15660, epoch 58.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 15660, epoch 58.0)
+[Save Checkpoint] epoch: [58.0], Train: total:-1956.42725, BCE:-14.44664, KLD:0.00000,Test: total:-77.17810, BCE:-14.51546, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 15930, epoch 59.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 15930, epoch 59.0)
+[Save Checkpoint] epoch: [59.0], Train: total:-1954.24414, BCE:-14.43048, KLD:0.00000,Test: total:-77.09878, BCE:-14.50024, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 16200, epoch 60.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 16200, epoch 60.0)
+[Save Checkpoint] epoch: [60.0], Train: total:-1957.77051, BCE:-14.45670, KLD:0.00000,Test: total:-77.23780, BCE:-14.52629, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 16470, epoch 61.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 16470, epoch 61.0)
+[Save Checkpoint] epoch: [61.0], Train: total:-1955.59326, BCE:-14.44075, KLD:0.00000,Test: total:-77.14086, BCE:-14.50711, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 16740, epoch 62.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 16740, epoch 62.0)
+[Save Checkpoint] epoch: [62.0], Train: total:-1957.28699, BCE:-14.45300, KLD:0.00000,Test: total:-77.20099, BCE:-14.51794, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 17010, epoch 63.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 17010, epoch 63.0)
+[Save Checkpoint] epoch: [63.0], Train: total:-1959.76917, BCE:-14.47152, KLD:0.00000,Test: total:-77.30318, BCE:-14.53622, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 17280, epoch 64.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 17280, epoch 64.0)
+[Save Checkpoint] epoch: [64.0], Train: total:-1960.36853, BCE:-14.47611, KLD:0.00000,Test: total:-77.32638, BCE:-14.53987, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 17550, epoch 65.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 17550, epoch 65.0)
+[Save Checkpoint] epoch: [65.0], Train: total:-1964.90271, BCE:-14.50943, KLD:0.00000,Test: total:-77.50344, BCE:-14.57406, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 17820, epoch 66.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 17820, epoch 66.0)
+EarlyStopping counter: 1 out of 25
+[Save Checkpoint] epoch: [66.0], Train: total:-1961.67590, BCE:-14.48561, KLD:0.00000,Test: total:-77.37550, BCE:-14.55041, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 18090, epoch 67.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 18090, epoch 67.0)
+EarlyStopping counter: 2 out of 25
+[Save Checkpoint] epoch: [67.0], Train: total:-1965.23474, BCE:-14.51200, KLD:0.00000,Test: total:-77.52122, BCE:-14.57860, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 18360, epoch 68.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 18360, epoch 68.0)
+[Save Checkpoint] epoch: [68.0], Train: total:-1962.99097, BCE:-14.49572, KLD:0.00000,Test: total:-77.42550, BCE:-14.55949, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 18630, epoch 69.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 18630, epoch 69.0)
+[Save Checkpoint] epoch: [69.0], Train: total:-1962.21643, BCE:-14.49015, KLD:0.00000,Test: total:-77.39791, BCE:-14.55490, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 18900, epoch 70.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 18900, epoch 70.0)
+[Save Checkpoint] epoch: [70.0], Train: total:-1962.37939, BCE:-14.49164, KLD:0.00000,Test: total:-77.41796, BCE:-14.55544, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 19170, epoch 71.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 19170, epoch 71.0)
+EarlyStopping counter: 1 out of 25
+[Save Checkpoint] epoch: [71.0], Train: total:-1960.97400, BCE:-14.48177, KLD:0.00000,Test: total:-77.36196, BCE:-14.54179, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 19440, epoch 72.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 19440, epoch 72.0)
+EarlyStopping counter: 2 out of 25
+[Save Checkpoint] epoch: [72.0], Train: total:-1962.04443, BCE:-14.48981, KLD:0.00000,Test: total:-77.39572, BCE:-14.54751, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 19710, epoch 73.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 19710, epoch 73.0)
+[Save Checkpoint] epoch: [73.0], Train: total:-1962.20044, BCE:-14.49141, KLD:0.00000,Test: total:-77.40456, BCE:-14.54921, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 19980, epoch 74.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 19980, epoch 74.0)
+[Save Checkpoint] epoch: [74.0], Train: total:-1963.90454, BCE:-14.50398, KLD:0.00000,Test: total:-77.48872, BCE:-14.56114, KLD:0.00000
+Epoch    75: reducing learning rate of group 0 to 4.0000e-05.
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 20250, epoch 75.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 20250, epoch 75.0)
+EarlyStopping counter: 1 out of 25
+[Save Checkpoint] epoch: [75.0], Train: total:-1967.40601, BCE:-14.52986, KLD:0.00000,Test: total:-77.62633, BCE:-14.58520, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 20520, epoch 76.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 20520, epoch 76.0)
+EarlyStopping counter: 2 out of 25
+[Save Checkpoint] epoch: [76.0], Train: total:-1985.92383, BCE:-14.66423, KLD:0.00000,Test: total:-78.29720, BCE:-14.72491, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 20790, epoch 77.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 20790, epoch 77.0)
+EarlyStopping counter: 3 out of 25
+[Save Checkpoint] epoch: [77.0], Train: total:-1990.26990, BCE:-14.69585, KLD:0.00000,Test: total:-78.47172, BCE:-14.75684, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 21060, epoch 78.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 21060, epoch 78.0)
+EarlyStopping counter: 4 out of 25
+[Save Checkpoint] epoch: [78.0], Train: total:-1990.69604, BCE:-14.69891, KLD:0.00000,Test: total:-78.48199, BCE:-14.75955, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 21330, epoch 79.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 21330, epoch 79.0)
+EarlyStopping counter: 5 out of 25
+[Save Checkpoint] epoch: [79.0], Train: total:-1989.99536, BCE:-14.69351, KLD:0.00000,Test: total:-78.43778, BCE:-14.75162, KLD:0.00000
+Epoch    80: reducing learning rate of group 0 to 8.0000e-06.
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 21600, epoch 80.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 21600, epoch 80.0)
+EarlyStopping counter: 6 out of 25
+[Save Checkpoint] epoch: [80.0], Train: total:-1988.06921, BCE:-14.67916, KLD:0.00000,Test: total:-78.35729, BCE:-14.73666, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 21870, epoch 81.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 21870, epoch 81.0)
+EarlyStopping counter: 7 out of 25
+[Save Checkpoint] epoch: [81.0], Train: total:-1976.55554, BCE:-14.59213, KLD:0.00000,Test: total:-77.81266, BCE:-14.64885, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 22140, epoch 82.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 22140, epoch 82.0)
+EarlyStopping counter: 8 out of 25
+[Save Checkpoint] epoch: [82.0], Train: total:-1974.27612, BCE:-14.57523, KLD:0.00000,Test: total:-77.72796, BCE:-14.63156, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 22410, epoch 83.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 22410, epoch 83.0)
+EarlyStopping counter: 9 out of 25
+[Save Checkpoint] epoch: [83.0], Train: total:-1973.92383, BCE:-14.57224, KLD:0.00000,Test: total:-77.71645, BCE:-14.62883, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 22680, epoch 84.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 22680, epoch 84.0)
+EarlyStopping counter: 10 out of 25
+[Save Checkpoint] epoch: [84.0], Train: total:-1973.86658, BCE:-14.57172, KLD:0.00000,Test: total:-77.71328, BCE:-14.62804, KLD:0.00000
+Epoch    85: reducing learning rate of group 0 to 1.6000e-06.
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 22950, epoch 85.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 22950, epoch 85.0)
+EarlyStopping counter: 11 out of 25
+[Save Checkpoint] epoch: [85.0], Train: total:-1974.26196, BCE:-14.57464, KLD:0.00000,Test: total:-77.72708, BCE:-14.63056, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 23220, epoch 86.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 23220, epoch 86.0)
+EarlyStopping counter: 12 out of 25
+[Save Checkpoint] epoch: [86.0], Train: total:-1973.67383, BCE:-14.57009, KLD:0.00000,Test: total:-77.69662, BCE:-14.62634, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 23490, epoch 87.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 23490, epoch 87.0)
+EarlyStopping counter: 13 out of 25
+[Save Checkpoint] epoch: [87.0], Train: total:-1973.06738, BCE:-14.56540, KLD:0.00000,Test: total:-77.66986, BCE:-14.62226, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 23760, epoch 88.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 23760, epoch 88.0)
+EarlyStopping counter: 14 out of 25
+[Save Checkpoint] epoch: [88.0], Train: total:-1972.83997, BCE:-14.56371, KLD:0.00000,Test: total:-77.66262, BCE:-14.62115, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 24030, epoch 89.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 24030, epoch 89.0)
+EarlyStopping counter: 15 out of 25
+[Save Checkpoint] epoch: [89.0], Train: total:-1972.68884, BCE:-14.56254, KLD:0.00000,Test: total:-77.65549, BCE:-14.62008, KLD:0.00000
+Epoch    90: reducing learning rate of group 0 to 1.0000e-06.
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 24300, epoch 90.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 24300, epoch 90.0)
+EarlyStopping counter: 16 out of 25
+[Save Checkpoint] epoch: [90.0], Train: total:-1972.61548, BCE:-14.56198, KLD:0.00000,Test: total:-77.65335, BCE:-14.61965, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 24570, epoch 91.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 24570, epoch 91.0)
+EarlyStopping counter: 17 out of 25
+[Save Checkpoint] epoch: [91.0], Train: total:-1972.54297, BCE:-14.56137, KLD:0.00000,Test: total:-77.64736, BCE:-14.61860, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 24840, epoch 92.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 24840, epoch 92.0)
+EarlyStopping counter: 18 out of 25
+[Save Checkpoint] epoch: [92.0], Train: total:-1972.44446, BCE:-14.56066, KLD:0.00000,Test: total:-77.64330, BCE:-14.61783, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 25110, epoch 93.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 25110, epoch 93.0)
+EarlyStopping counter: 19 out of 25
+[Save Checkpoint] epoch: [93.0], Train: total:-1972.44373, BCE:-14.56067, KLD:0.00000,Test: total:-77.64314, BCE:-14.61786, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 25380, epoch 94.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 25380, epoch 94.0)
+EarlyStopping counter: 20 out of 25
+[Save Checkpoint] epoch: [94.0], Train: total:-1972.35876, BCE:-14.56004, KLD:0.00000,Test: total:-77.64000, BCE:-14.61718, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 25650, epoch 95.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 25650, epoch 95.0)
+EarlyStopping counter: 21 out of 25
+[Save Checkpoint] epoch: [95.0], Train: total:-1972.38904, BCE:-14.56024, KLD:0.00000,Test: total:-77.64085, BCE:-14.61734, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 25920, epoch 96.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 25920, epoch 96.0)
+EarlyStopping counter: 22 out of 25
+[Save Checkpoint] epoch: [96.0], Train: total:-1972.36426, BCE:-14.56005, KLD:0.00000,Test: total:-77.64075, BCE:-14.61740, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 26190, epoch 97.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 26190, epoch 97.0)
+EarlyStopping counter: 23 out of 25
+[Save Checkpoint] epoch: [97.0], Train: total:-1972.36133, BCE:-14.56004, KLD:0.00000,Test: total:-77.63968, BCE:-14.61724, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 26460, epoch 98.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 26460, epoch 98.0)
+EarlyStopping counter: 24 out of 25
+[Save Checkpoint] epoch: [98.0], Train: total:-1972.34973, BCE:-14.55998, KLD:0.00000,Test: total:-77.63872, BCE:-14.61704, KLD:0.00000
+=> saved checkpoint 'checkpoints_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 26730, epoch 99.0)
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_encoder_struct_reconstruction_s15_PT_2/last' (iter 26730, epoch 99.0)
+EarlyStopping counter: 25 out of 25
+[Save Checkpoint] epoch: [99.0], Train: total:-1972.34277, BCE:-14.55990, KLD:0.00000,Test: total:-77.63842, BCE:-14.61687, KLD:0.00000
+Early stopping
+[Training Finished]
+All done !
