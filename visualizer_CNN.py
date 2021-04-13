@@ -1919,6 +1919,341 @@ def plot_resume(net, exp_name, is_ratio, is_distance_loss, loss_distance_mean, l
     return
 
 
+def plot_VAE_resume(net, model_name, z_struct_size, z_var_size, loader, VAE_struct, is_vae_var, train_test, save=True,
+                    nb_class=10, nb_img=8, std_var=None, mu_var=None, mu_struct=None, index=0):
+    """
+    plot interesting values to resume experiementation behavior for VAE.
+    :param net:
+    :param exp_name:
+    :param train_test:
+    :return:
+    """
+
+    # define figure:____________________________________________________________________________________________________
+    fig, axs = plt.subplots(nrows=4, ncols=3, gridspec_kw={'width_ratios': [1, 1, 1],
+                                                           'height_ratios': [1, 2, 1.5, 1.5]},
+                            figsize=(30, 40), facecolor='w', edgecolor='k')
+    fig.suptitle('Resume VAE for model: {}'.format(model_name), fontsize=16)
+    plt.axis('off')
+
+    # Real distribution:________________________________________________________________________________________________
+    mu_var, sigma_var, encoder_struct_zeros_proportion = real_distribution_model(net,
+                                                                                 model_name,
+                                                                                 z_struct_size,
+                                                                                 z_var_size,
+                                                                                 loader,
+                                                                                 'test',
+                                                                                 plot_gaussian=False,
+                                                                                 save=True,
+                                                                                 VAE_struct=VAE_struct,
+                                                                                 is_vae_var=is_vae_var)
+    if VAE_struct:
+        axs[0, 1].set(title=('Proportion of zeros: ' + model_name + "_" + train_test))
+        axs[0, 1].bar(np.arange(len(encoder_struct_zeros_proportion)), encoder_struct_zeros_proportion,
+                label='Proportion of zeros for each encoder struct component',
+                color='blue')
+
+    mu = 0
+    variance = 1
+    sigma = math.sqrt(variance)
+    x = np.linspace(mu - 3 * sigma, mu + 3 * sigma, 100)
+
+    # plot figure:
+    axs[0, 0].set(title=('Gaussian: ' + model_name + "_" + train_test))
+    axs[0, 0].plot(x, stats.norm.pdf(x, mu, sigma), label='Gaussian (0, I)', color='red')
+
+    for i in range(len(mu_var)):
+        mu_var_iter = mu_var[i]
+        variance_var_iter = np.abs(sigma_var[i])
+        sigma_var_iter = math.sqrt(variance_var_iter)
+        x_var = np.linspace(mu_var_iter - 3 * sigma_var_iter, mu_var_iter + 3 * sigma_var_iter, 100)
+        axs[0, 0].plot(x_var, stats.norm.pdf(x_var, mu_var_iter, sigma_var_iter), label='real data gaussian ' + str(i),
+                  color='blue')
+
+    axs[0, 0].legend(loc=1)
+
+    # Reconstructions:________________________________________________________________________________________________
+    size = (nb_img, nb_class * 2)
+
+    # get n data per classes:
+    first = True
+    for data, label in loader:
+        # print('loader ', len(label))
+        for lab in range(nb_class):
+            batch_lab = data[torch.where(label == lab)[0][:nb_img]]
+            if first:
+                batch = batch_lab
+                first = False
+            else:
+                batch = torch.cat((batch, batch_lab), dim=0)
+
+    # get reconstruction
+    with torch.no_grad():
+        input_data = batch
+    if torch.cuda.is_available():
+        input_data = input_data.cuda()
+
+    # z reconstruction:
+    if is_vae_var:
+        x_recon, _ = net(input_data)
+    else:
+        x_recon, z_struct, z_var, z_var_sample, _, z = net(input_data)
+
+    # compute score reconstruction on dataset test:
+    score_reconstruction = F.mse_loss(x_recon, input_data)
+    score_reconstruction = np.around(score_reconstruction.detach().numpy(), 3)
+
+    first = True
+    for class_id in range(nb_class):
+        start_cl_id = class_id * nb_img
+        end_cl_id = start_cl_id + nb_img
+        original_batch = input_data[start_cl_id:end_cl_id].cpu()
+        reconstruction_batch = x_recon[start_cl_id:end_cl_id].cpu()
+        comparaison_batch = torch.cat([original_batch, reconstruction_batch])
+        if first:
+            comparison = comparaison_batch
+            first = False
+        else:
+            comparison = torch.cat((comparison, comparaison_batch), dim=0)
+    reconstructions = make_grid(comparison.data, nrow=size[0])
+    recon_grid = reconstructions.permute(1, 2, 0)
+
+    # z_struct reconstruction:
+    random_var = std_var * torch.randn(x_recon.shape[0], z_var_size) + mu_var
+    z_struct_random = torch.cat((random_var, z_struct), dim=1)
+    x_recon_struct = net.decoder(z_struct_random)
+    score_reconstruction_zstruct = F.mse_loss(x_recon_struct, input_data)
+    score_reconstruction_zstruct = np.around(score_reconstruction_zstruct.detach().numpy(), 3)
+
+    first = True
+    for class_id in range(nb_class):
+        start_cl_id = class_id * nb_img
+        end_cl_id = start_cl_id + nb_img
+        original_batch = input_data[start_cl_id:end_cl_id].cpu()
+        reconstruction_batch = x_recon_struct[start_cl_id:end_cl_id].cpu()
+        comparaison_batch = torch.cat([original_batch, reconstruction_batch])
+        if first:
+            comparison = comparaison_batch
+            first = False
+        else:
+            comparison = torch.cat((comparison, comparaison_batch), dim=0)
+    reconstructions_struct = make_grid(comparison.data, nrow=size[0])
+    recon_grid_struct = reconstructions_struct.permute(1, 2, 0)
+
+    # z_var reconstruction:
+    mu_struct = torch.tensor(1 - (mu_struct / 100))
+    proba_struct = mu_struct.repeat(x_recon.shape[0], 1)
+    random_struct = torch.Tensor.float(torch.bernoulli(proba_struct))
+    z_var_random = torch.cat((z_var_sample, random_struct), dim=1)
+    x_recon_var = net.decoder(z_var_random)
+    score_reconstruction_zvar = F.mse_loss(x_recon_var, input_data)
+    score_reconstruction_zvar = np.around(score_reconstruction_zvar.detach().numpy(), 3)
+
+    first = True
+    for class_id in range(nb_class):
+        start_cl_id = class_id * nb_img
+        end_cl_id = start_cl_id + nb_img
+        original_batch = input_data[start_cl_id:end_cl_id].cpu()
+        reconstruction_batch = x_recon_var[start_cl_id:end_cl_id].cpu()
+        comparaison_batch = torch.cat([original_batch, reconstruction_batch])
+        if first:
+            comparison = comparaison_batch
+            first = False
+        else:
+            comparison = torch.cat((comparison, comparaison_batch), dim=0)
+    reconstructions_var = make_grid(comparison.data, nrow=size[0])
+    recon_grid_var = reconstructions_var.permute(1, 2, 0)
+
+    # plot:
+    axs[1, 0].set(title=('Z reconstruction: BCE score: {}'.format(score_reconstruction)))
+    axs[1, 0].imshow(recon_grid.numpy())
+
+    axs[1, 1].set(title=('Z_struct reconstruction: BCE score: {}'.format(score_reconstruction_zstruct)))
+    axs[1, 1].imshow(recon_grid_struct.numpy())
+
+    axs[1, 2].set(title=('Z_var reconstruction: BCE score: {}'.format(score_reconstruction_zvar)))
+    axs[1, 2].imshow(recon_grid_var.numpy())
+
+    # Traversal:________________________________________________________________________________________________
+    # load both prototype:
+    traversal_size = 8
+    maj_uc_base = torch.tensor(np.load('binary_encoder_struct_results/uniq_code/uc_maj_class_' + model_name + '_' \
+                                       + train_test + '.npy', allow_pickle=True)).unsqueeze(dim=0)
+    maj_uc = torch.repeat_interleave(maj_uc_base, traversal_size, dim=0)
+    z_var_zeros = torch.zeros((traversal_size, nb_class, z_var_size))
+    maj_uc_proto = torch.cat((z_var_zeros, maj_uc), dim=2)  # shape: size, nb_class, embedding_size
+
+    base_prototype_maj_uc = torch.cat((torch.zeros(1, nb_class, z_var_size), maj_uc_base), dim=2)
+
+    if index is not None:
+        # Sweep over linearly spaced coordinates transformed through the
+        # inverse CDF (ppf) of a gaussian since the prior of the latent
+        # space is gaussian
+        # cdf_traversal = np.linspace(0.05, 0.95, traversal_size)
+        # cont_traversal = stats.norm.ppf(cdf_traversal)
+        max_value = np.abs(sigma_var.mean())
+        cont_traversal = np.linspace(-max_value, max_value, traversal_size)
+        for class_id in range(nb_class):
+            for column in range(traversal_size):
+                maj_uc_proto[column][class_id][index] = cont_traversal[column]
+
+    maj_uc_proto = torch.cat((base_prototype_maj_uc, maj_uc_proto), dim=0)
+    maj_uc_proto = maj_uc_proto.permute(1, 0, 2)
+    latent_samples = maj_uc_proto
+    # Map samples through decoder
+    generated_maj_uc = net.decoder(latent_samples)
+    traversals_maj_uc = make_grid(generated_maj_uc.data, nrow=traversal_size + 1)
+    traversals_maj_uc = traversals_maj_uc.permute(1, 2, 0)
+
+    _, avg_z_struct_base = get_z_struct_per_class_VAE(model_name, train_test='test', nb_class=nb_class)
+    avg_z_struct_base = torch.tensor(avg_z_struct_base).unsqueeze(dim=0)
+    avg_z_struct = torch.repeat_interleave(avg_z_struct_base, traversal_size, dim=0)
+    z_var_zeros = torch.zeros((traversal_size, nb_class, z_var_size))
+    avg_struct_proto = torch.cat((z_var_zeros, avg_z_struct), dim=2)  # shape: traversal_size, nb_class, embedding_size
+
+    base_prototype_avg_struct = torch.cat((torch.zeros(1, nb_class, z_var_size), avg_z_struct_base), dim=2)
+
+    if index is not None:
+        # Sweep over linearly spaced coordinates transformed through the
+        # inverse CDF (ppf) of a gaussian since the prior of the latent
+        # space is gaussian
+        # cdf_traversal = np.linspace(0.05, 0.95, traversal_size)
+        # cont_traversal = stats.norm.ppf(cdf_traversal)
+        max_value = np.abs(sigma_var.mean())
+        cont_traversal = np.linspace(-max_value, max_value, traversal_size)
+        for class_id in range(nb_class):
+            for column in range(traversal_size):
+                avg_struct_proto[column][class_id][index] = cont_traversal[column]
+
+    avg_struct_proto = torch.cat((base_prototype_avg_struct, avg_struct_proto), dim=0)
+    avg_struct_proto = avg_struct_proto.permute(1, 0, 2)
+    latent_samples = avg_struct_proto
+    # Map samples through decoder
+    generated_avg_struct = net.decoder(latent_samples)
+    traversals_avg_struct = make_grid(generated_avg_struct.data, nrow=traversal_size + 1)
+    traversals_avg_struct = traversals_avg_struct.permute(1, 2, 0)
+
+    # figure:
+    axs[3, 0].set(title=('Latent traversal with z_struct maj uc prototype: {}'.format(model_name)))
+    axs[3, 0].imshow(traversals_maj_uc.numpy())
+    axs[3, 0].axvline(32, linewidth=5, color='orange')
+
+    axs[3, 1].set(title=('Latent traversal with avg z_struct prototype: {}'.format(model_name)))
+    axs[3, 1].imshow(traversals_avg_struct.numpy())
+    axs[3, 1].axvline(32, linewidth=5, color='orange')
+
+    # Generation random:________________________________________________________________________________________________
+    # generate random sample from real distribution:
+    generation_size = (8, 8)
+    nb_samples = generation_size[0] * generation_size[1]
+
+    # maj uc:
+    maj_uc = torch.tensor(np.load('binary_encoder_struct_results/uniq_code/uc_maj_class_' + model_name + '_' \
+                                  + train_test + '.npy', allow_pickle=True))
+
+    # z_var random sample:
+    sample_var = std_var * torch.randn(nb_samples, z_var_size) + mu_var
+
+    # z_struct random maj uc:
+    sample_struct_maj_uc = torch.zeros(nb_samples, z_struct_size)
+    for i in range(len(sample_struct_maj_uc)):
+        sample_struct_maj_uc[i] = maj_uc[np.random.randint(len(maj_uc))]
+    # z random:
+    sample_maj_uc = torch.cat((sample_var, sample_struct_maj_uc), dim=1)
+
+    # z_struct random:
+    mu_struct = torch.tensor(1 - (mu_struct / 100))
+    proba_struct = mu_struct.repeat(nb_samples, 1)
+    sample_struct_avg_struct = torch.Tensor.float(torch.bernoulli(proba_struct))
+    # z random:
+    sample = torch.cat((sample_var, sample_struct_avg_struct), dim=1)
+
+    # generate:
+    generated_maj_uc = net.decoder(sample_maj_uc)
+    grid_generation_maj_uc = make_grid(generated_maj_uc.data, nrow=generation_size[1])
+
+    generated_avg_struct = net.decoder(sample_maj_uc)
+    grid_generation_avg_struct = make_grid(generated_avg_struct.data, nrow=generation_size[1])
+
+    # compute scores:
+    FID_score_maj_uc = 0
+    FID_score_avg_struct = 0
+    IS_score_maj_uc = 0
+    IS_score_avg_struct = 0
+    LPIPS_score_alex_maj_uc = 0
+    LPIPS_score_vgg_maj_uc = 0
+    LPIPS_score_alex_avg_struct = 0
+    LPIPS_score_vgg_avg_struct = 0
+
+    generation_batch_maj_uc = generated_maj_uc[:nb_samples]
+    generation_batch_avg_struct = generated_avg_struct[:nb_samples]
+
+    # FID scores:
+    FID_score_maj_uc = calculate_fid_given_paths(original_batch,
+                                                 generation_batch_maj_uc,
+                                                 batch_size=32,
+                                                 cuda='',
+                                                 dims=2048)
+    FID_score_avg_struct = calculate_fid_given_paths(original_batch,
+                                                     generation_batch_avg_struct,
+                                                     batch_size=32,
+                                                     cuda='',
+                                                     dims=2048)
+    FID_score_maj_uc = np.around(FID_score_maj_uc, 3)
+    FID_score_avg_struct = np.around(FID_score_avg_struct, 3)
+
+    # IS scores:
+    IS_score_maj_uc = inception_score(generation_batch_maj_uc,
+                                      batch_size=32,
+                                      resize=True)
+    IS_score_avg_struct = inception_score(generation_batch_avg_struct,
+                                          batch_size=32,
+                                          resize=True)
+    IS_score_maj_uc = np.around(IS_score_maj_uc[0], 3)
+    IS_score_avg_struct = np.around(IS_score_avg_struct[0], 3)
+
+    # LPIPS scores:
+    loss_fn_alex = lpips.LPIPS(net='alex')  # best forward scores
+    loss_fn_vgg = lpips.LPIPS(net='vgg')  # closer to "traditional" perceptual loss, when used for optimization
+
+    # image should be RGB, IMPORTANT: normalized to [-1,1]
+    LPIPS_score_alex_maj_uc = torch.mean(loss_fn_alex(original_batch, generation_batch_maj_uc)).item()
+    LPIPS_score_vgg_maj_uc = torch.mean(loss_fn_vgg(original_batch, generation_batch_maj_uc)).item()
+    LPIPS_score_alex_maj_uc = np.around(LPIPS_score_alex_maj_uc, 3)
+    LPIPS_score_vgg_maj_uc = np.around(LPIPS_score_vgg_maj_uc, 3)
+
+    LPIPS_score_alex_avg_struct = torch.mean(loss_fn_alex(original_batch, generation_batch_avg_struct)).item()
+    LPIPS_score_vgg_avg_struct = torch.mean(loss_fn_vgg(original_batch, generation_batch_avg_struct)).item()
+    LPIPS_score_alex_avg_struct = np.around(LPIPS_score_alex_avg_struct, 3)
+    LPIPS_score_vgg_avg_struct = np.around(LPIPS_score_vgg_avg_struct, 3)
+
+    # plot:
+    samples_maj_uc = grid_generation_maj_uc.permute(1, 2, 0)
+    samples_avg_struct = grid_generation_avg_struct.permute(1, 2, 0)
+
+    axs[2, 0].set(title=('Maj uc random. Scores: FID(\u2193): {}, IS(\u2191): {},'
+                  ' LPIPS (alex) (\u2191): {}, LPIPS (vgg) (\u2191): {}'.format(FID_score_maj_uc,
+                                                                                IS_score_maj_uc,
+                                                                                LPIPS_score_alex_maj_uc,
+                                                                                LPIPS_score_vgg_maj_uc)))
+    axs[2, 1].set(title=('Avg struct random. Scores: FID(\u2193): {}, IS(\u2191): {},'
+                         ' LPIPS (alex) (\u2191): {}, LPIPS (vgg) (\u2191): {}'.format(FID_score_avg_struct,
+                                                                                       IS_score_avg_struct,
+                                                                                       LPIPS_score_alex_avg_struct,
+                                                                                       LPIPS_score_vgg_avg_struct)))
+    axs[2, 0].imshow(samples_maj_uc.numpy())
+    axs[2, 1].imshow(samples_avg_struct.numpy())
+    # End plot:________________________________________________________________________________________________
+
+    plt.show()
+
+    path_save = 'fig_results/resume/plot_resume_VAE_' + model_name + '_' + train_test + '.png'
+    if save:
+        fig.savefig(path_save)
+
+    return
+
+
 def viz_decoder_multi_label(net, loader, exp_name, nb_img=8, nb_class=10, save=True):
     """
     plot multi data for the same label for each line.
@@ -2024,8 +2359,6 @@ def viz_reconstruction_VAE(net, loader, exp_name, z_var_size, z_struct_size, nb_
     :param net:
     :return:
     """
-
-    net.eval()
     size = (nb_img, nb_class * 2)
 
     # get n data per classes:
@@ -2052,6 +2385,7 @@ def viz_reconstruction_VAE(net, loader, exp_name, z_var_size, z_struct_size, nb_
     else:
         x_recon, z_struct, z_var, z_var_sample, _, z = net(input_data)
 
+    """
     plt.imshow(x_recon[0].detach().numpy().reshape((32, 32)))
     plt.show()
 
@@ -2125,15 +2459,25 @@ def viz_reconstruction_VAE(net, loader, exp_name, z_var_size, z_struct_size, nb_
     plt.show()
 
     print(wait)
+    """
 
+    # compute score reconstruction on dataset test:
+    score_reconstruction = F.mse_loss(x_recon, input_data)
+    score_reconstruction = np.around(score_reconstruction.detach().numpy(), 3)
+
+    score_reconstruction_zstruct = 0
+    score_reconstruction_zvar = 0
     if z_struct_reconstruction:
         # z_struct reconstruction:
         if real_distribution:
             random_var = std_var * torch.randn(x_recon.shape[0], z_var_size) + mu_var
+            # random_var = torch.zeros((x_recon.shape[0], z_var_size))
         else:
             random_var = torch.randn((x_recon.shape[0], z_var_size))
         z_struct_random = torch.cat((random_var, z_struct), dim=1)
         x_recon_struct = net.decoder(z_struct_random)
+        score_reconstruction_zstruct = F.mse_loss(x_recon_struct, input_data)
+        score_reconstruction_zstruct = np.around(score_reconstruction_zstruct.detach().numpy(), 3)
 
     if z_var_reconstruction:
         # z_var reconstruction:
@@ -2141,15 +2485,13 @@ def viz_reconstruction_VAE(net, loader, exp_name, z_var_size, z_struct_size, nb_
             mu_struct = torch.tensor(1-(mu_struct/100))
             proba_struct = mu_struct.repeat(x_recon.shape[0], 1)
             random_struct = torch.Tensor.float(torch.bernoulli(proba_struct))
+            # random_struct = torch.zeros((x_recon.shape[0], z_var_size))
         else:
             random_struct = torch.randn((x_recon.shape[0], z_struct_size))
         z_var_random = torch.cat((z_var_sample, random_struct), dim=1)
         x_recon_var = net.decoder(z_var_random)
-
-    # compute score reconstruction on dataset test:
-    score_reconstruction = F.mse_loss(x_recon, input_data)
-    score_reconstruction_zvar = F.mse_loss(x_recon_var, input_data)
-    score_reconstruction_zstruct = F.mse_loss(x_recon_struct, input_data)
+        score_reconstruction_zvar = F.mse_loss(x_recon_var, input_data)
+        score_reconstruction_zvar = np.around(score_reconstruction_zvar.detach().numpy(), 3)
 
     """
     for i, (_data_, _label_) in enumerate(loader):
@@ -2188,11 +2530,6 @@ def viz_reconstruction_VAE(net, loader, exp_name, z_var_size, z_struct_size, nb_
     score_reconstruction_zvar /= len(loader)
     score_reconstruction_zstruct /= len(loader)
     """
-    net.train()
-
-    score_reconstruction = np.around(score_reconstruction.detach().numpy(), 3)
-    score_reconstruction_zvar = np.around(score_reconstruction_zvar.detach().numpy(), 3)
-    score_reconstruction_zstruct = np.around(score_reconstruction_zstruct.detach().numpy(), 3)
 
     print('reconstructions scores on dataset test: z: {}, z_struct: {}, z_var: {}'.format(score_reconstruction,
                                                                                           score_reconstruction_zstruct,
@@ -2222,80 +2559,90 @@ def traversal_values_min_max(min, max, size):
     return np.linspace(min, max, size)
 
 
-def viz_latent_prediction_reconstruction(net, exp_name, embedding_size, z_struct_size, z_var_size, size=8,
-                                         random=False, batch=None):
+def traversal_latent_prototype(net, model_name, train_test, device, z_var_size, sigma_var=None, nb_class=10, size=8,
+                               avg_prototype=True, maj_uc_prototype=True, random=False, batch=None, index=None,
+                               save=True):
+
     """
-    Visualize reconstruction with predict label.
+    Plot traversal latent z_var for one index with z_struct prototype: either with mean prototype or with maj uc.
     :param net:
-    :param exp_name:
+    :param model_name:
     :return:
     """
-    nb_samples = 1
-    idx = 0
+    # load both prototype:
+    if maj_uc_prototype:
+        maj_uc_base = torch.tensor(np.load('binary_encoder_struct_results/uniq_code/uc_maj_class_' + model_name + '_' \
+                                           + train_test + '.npy', allow_pickle=True)).unsqueeze(dim=0)
+        maj_uc = torch.repeat_interleave(maj_uc_base, size, dim=0)
+        z_var_zeros = torch.zeros((size, nb_class, z_var_size))
+        maj_uc_proto = torch.cat((z_var_zeros, maj_uc), dim=2)  # shape: size, nb_class, embedding_size
 
-    # Grid traversal:
-    size_grid = (embedding_size, size)
-    samples_grid = []
+        base_prototype_maj_uc = torch.cat((torch.zeros(1, nb_class, z_var_size), maj_uc_base), dim=2)
 
-    if not random:
-        net.eval()
-        # Pass data through VAE to obtain reconstruction
-        with torch.no_grad():
-            input_data = batch
-        if torch.cuda.is_available():
-            input_data = input_data.cuda()
+        if index is not None:
+            # Sweep over linearly spaced coordinates transformed through the
+            # inverse CDF (ppf) of a gaussian since the prior of the latent
+            # space is gaussian
+            # cdf_traversal = np.linspace(0.05, 0.95, size)
+            # cont_traversal = stats.norm.ppf(cdf_traversal)
+            max_value = np.abs(sigma_var.mean())
+            cont_traversal = np.linspace(-max_value, max_value, size)
+            for class_id in range(nb_class):
+                for column in range(size):
+                    maj_uc_proto[column][class_id][index] = cont_traversal[column]
 
-        x_recons, z_struct, z_var, z_var_sample, latent_representation, z = net(input_data)
-        net.train()
+        maj_uc_proto = torch.cat((base_prototype_maj_uc, maj_uc_proto), dim=0)
+        maj_uc_proto = maj_uc_proto.permute(1, 0, 2)
+        latent_samples = maj_uc_proto
+        # Map samples through decoder
+        generated_maj_uc = net.decoder(latent_samples)
+        traversals_maj_uc = make_grid(generated_maj_uc.data, nrow=size+1)
+        traversals_maj_uc = traversals_maj_uc.permute(1, 2, 0)
 
-        img_latent = z[:nb_samples, :]
-    else:
-        img_latent = None
+    if avg_prototype:
+        _, avg_z_struct_base = get_z_struct_per_class_VAE(model_name, train_test='test', nb_class=nb_class)
+        avg_z_struct_base = torch.tensor(avg_z_struct_base).unsqueeze(dim=0)
+        avg_z_struct = torch.repeat_interleave(avg_z_struct_base, size, dim=0)
+        z_var_zeros = torch.zeros((size, nb_class, z_var_size))
+        avg_struct_proto = torch.cat((z_var_zeros, avg_z_struct), dim=2)    # shape: size, nb_class, embedding_size
 
-    num_samples = size_grid[0] * size_grid[1]
+        base_prototype_avg_struct = torch.cat((torch.zeros(1, nb_class, z_var_size), avg_z_struct_base), dim=2)
 
-    # not random img:
-    if img_latent is not None:
-        samples = np.repeat(img_latent.detach().numpy(), num_samples, axis=0).reshape(
-            (num_samples, embedding_size))
-    else:
-        samples = np.random.normal(size=(num_samples, embedding_size))
+        if index is not None:
+            # Sweep over linearly spaced coordinates transformed through the
+            # inverse CDF (ppf) of a gaussian since the prior of the latent
+            # space is gaussian
+            # cdf_traversal = np.linspace(0.05, 0.95, size)
+            # cont_traversal = stats.norm.ppf(cdf_traversal)
+            max_value = np.abs(sigma_var.mean())
+            cont_traversal = np.linspace(-max_value, max_value, size)
+            for class_id in range(nb_class):
+                for column in range(size):
+                    avg_struct_proto[column][class_id][index] = cont_traversal[column]
 
-    if idx is not None:
-        # Sweep over linearly spaced coordinates transformed through the
-        # inverse CDF (ppf) of a gaussian since the prior of the latent
-        # space is gaussian
-        cdf_traversal = np.linspace(0.05, 0.95, size_grid[0])
-        cont_traversal = stats.norm.ppf(cdf_traversal)
-        for i in range(size_grid[0]):
-            for j in range(size_grid[1]):
-                samples[i * size_grid[1] + j, idx] = cont_traversal[i]
-                # samples[i * size_grid[1] + j, idx] = cont_traversal[j]
-
-    samples_grid.append(torch.Tensor(samples))
-    latent_samples = torch.cat(samples_grid, dim=1)
-
-    # Map samples through decoder
-    generated = net.decoder(latent_samples)
-
-    traversals = make_grid(generated.data, nrow=size_grid[1])
+        avg_struct_proto = torch.cat((base_prototype_avg_struct, avg_struct_proto), dim=0)
+        avg_struct_proto = avg_struct_proto.permute(1, 0, 2)
+        latent_samples = avg_struct_proto
+        # Map samples through decoder
+        generated_avg_struct = net.decoder(latent_samples)
+        traversals_avg_struct = make_grid(generated_avg_struct.data, nrow=size+1)
+        traversals_avg_struct = traversals_avg_struct.permute(1, 2, 0)
 
     # figure:
-    fig, ax = plt.subplots(figsize=(15, 10), facecolor='w', edgecolor='k')
-    traversals = traversals.permute(1, 2, 0)
-    ax.set(title=('latent traversal: {}'.format(exp_name)))
+    fig, axs = plt.subplots(1, 2, figsize=(30, 15), facecolor='w', edgecolor='k')
 
-    fig_size = traversals.shape
+    axs[0].set(title=('Latent traversal with z_struct maj uc prototype: {}'.format(model_name)))
+    axs[0].imshow(traversals_maj_uc.numpy())
+    axs[0].axvline(32, linewidth=5, color='orange')
 
-    plt.imshow(traversals.numpy())
+    axs[1].set(title=('Latent traversal with avg z_struct prototype: {}'.format(model_name)))
+    axs[1].imshow(traversals_avg_struct.numpy())
+    axs[1].axvline(32, linewidth=5, color='orange')
 
-    ax.axhline(y=(fig_size[0] * (z_var_size / (z_var_size + z_struct_size))), linewidth=4, color='g')
-    # ax.axvline(x=(fig_size[1] // size) * indx_same_composante, linewidth=3, color='orange')
-    # ax.axvline(x=(fig_size[1] // size) * (indx_same_composante + 1), linewidth=3, color='orange')
     plt.show()
 
-    # if save:
-    #     fig.savefig("fig_results/traversal_latent/fig_traversal_latent_" + "_" + expe_name + ".png")
+    if save:
+        fig.savefig("fig_results/traversal_latent/fig_traversal_latent_" + "_" + model_name + ".png")
 
     return
 
@@ -2431,45 +2778,48 @@ def switch_img(net, exp_name, loader, z_var_size):
     assert ind_1 != ind_2, "not lucky ! two random int are same, try again !"
 
     # original data:
-    plt.imshow(data[ind_1].squeeze(dim=0), cmap='gray')
-    plt.show()
-    plt.imshow(data[ind_2].squeeze(dim=0), cmap='gray')
-    plt.show()
+    fig, ax = plt.subplots(3, 2, figsize=(10, 10))
+    fig.suptitle('Switch images:')
+    ax[0, 0].set_title('Original image 1)')
+    ax[0, 0].imshow(data[ind_1].squeeze(dim=0), cmap='gray')
+    ax[0, 1].set_title('Original image 2)')
+    ax[0, 1].imshow(data[ind_2].squeeze(dim=0), cmap='gray')
 
     # switch_data:
     z_var_1 = z_var[ind_1]
     z_var_2 = z_var[ind_2]
-
     z_struct_1 = z_struct[ind_1]
     z_struct_2 = z_struct[ind_2]
 
     img_switch_1 = torch.cat((z_var_1, z_struct_2))
-    img_switch_1 = net.decoder(img_switch_1)
-    plt.imshow(img_switch_1.detach().numpy().squeeze().squeeze(), cmap='gray')
-    plt.show()
-
+    img_switch_1 = net.decoder(img_switch_1).detach().numpy().squeeze().squeeze()
     img_switch_2 = torch.cat((z_var_2, z_struct_1))
-    img_switch_2 = net.decoder(img_switch_2)
-    plt.imshow(img_switch_2.detach().numpy().squeeze().squeeze(), cmap='gray')
-    plt.show()
+    img_switch_2 = net.decoder(img_switch_2).detach().numpy().squeeze().squeeze()
+
+    ax[1, 0].imshow(img_switch_1, cmap='gray')
+    ax[1, 0].set_title('Swith: var1 + struct2')
+    ax[1, 1].imshow(img_switch_2, cmap='gray')
+    ax[1, 1].set_title('Swith: var2 + struct1')
 
     # test if original data:
     img_ori_1 = torch.cat((z_var_1, z_struct_1))
-    img_ori_1 = net.decoder(img_ori_1)
-    plt.imshow(img_ori_1.detach().numpy().squeeze().squeeze(), cmap='gray')
-    plt.show()
-
+    img_ori_1 = net.decoder(img_ori_1).detach().numpy().squeeze().squeeze()
     img_ori_2 = torch.cat((z_var_2, z_struct_2))
-    img_ori_2 = net.decoder(img_ori_2)
-    plt.imshow(img_ori_2.detach().numpy().squeeze().squeeze(), cmap='gray')
+    img_ori_2 = net.decoder(img_ori_2).detach().numpy().squeeze().squeeze()
+
+    ax[2, 0].set_title('Reconstruction: var1 + struct1')
+    ax[2, 0].imshow(img_ori_1, cmap='gray')
+    ax[2, 1].set_title('Reconstruction: var2 + struct2')
+    ax[2, 1].imshow(img_ori_2, cmap='gray')
+
     plt.show()
 
     return
 
 
-def images_generation(net, model_name, batch, size=(8, 8), mu_var=None, mu_struct=None, std_var=None, std_struct=None,
+def images_generation(net, model_name, batch, train_test, size=(8, 8), mu_var=None, es_distribution=None, std_var=None,
                       z_var_size=None, z_struct_size=None, FID=False, IS=False, LPIPS=False, real_distribution=True,
-                      save=True):
+                      save=True, use_maj_uc=False):
     """
     plot image generation and compute three popular scores.
     :param net:
@@ -2479,9 +2829,24 @@ def images_generation(net, model_name, batch, size=(8, 8), mu_var=None, mu_struc
     :param LPIPS:
     :return:
     """
+    nb_samples = size[0] * size[1]
+
     if real_distribution:
-        sample_var = std_var * torch.randn((size[0] * size[1]), z_var_size) + mu_var
-        sample_struct = std_struct * torch.randn((size[0] * size[1]), z_struct_size) + mu_struct
+        # z_var random sample:
+        sample_var = std_var * torch.randn(nb_samples, z_var_size) + mu_var
+        if use_maj_uc:
+            maj_uc = torch.tensor(np.load('binary_encoder_struct_results/uniq_code/uc_maj_class_' + model_name + '_' \
+                              + train_test + '.npy', allow_pickle=True))
+            # z_struct random:
+            sample_struct = torch.zeros(nb_samples, z_struct_size)
+            for i in range(len(sample_struct)):
+                sample_struct[i] = maj_uc[np.random.randint(len(maj_uc))]
+        else:
+            # z_struct random:
+            mu_struct = torch.tensor(1 - (es_distribution / 100))
+            proba_struct = mu_struct.repeat(nb_samples, 1)
+            sample_struct = torch.Tensor.float(torch.bernoulli(proba_struct))
+        # z random:
         sample = torch.cat((sample_var, sample_struct), dim=1)
     else:
         embedding_size = z_var_size + z_struct_size
@@ -2489,7 +2854,6 @@ def images_generation(net, model_name, batch, size=(8, 8), mu_var=None, mu_struc
 
     # generate:
     generated = net.decoder(sample)
-
     grid_generation = make_grid(generated.data, nrow=size[1])
 
     # compute scores:
@@ -2529,21 +2893,22 @@ def images_generation(net, model_name, batch, size=(8, 8), mu_var=None, mu_struc
         LPIPS_score_alex = np.around(LPIPS_score_alex, 3)
         LPIPS_score_vgg = np.around(LPIPS_score_vgg, 3)
         print('LPIPS score: alex: {}, vgg: {}'.format(LPIPS_score_alex, LPIPS_score_vgg))
+
     # plot:
     fig, ax = plt.subplots(figsize=(10, 10), facecolor='w', edgecolor='k')
 
     samples = grid_generation.permute(1, 2, 0)
-    ax.set(title=('Images generation: {}. Scores: FID(\u2193): {}, IS(\u2191): {}, LPIPS (alex) (\u2191): {}'
-                  ', LPIPS (vgg) (\u2191): {}'.format(model_name.split('1_2_1_1_')[-1],
-                                                      FID_score,
-                                                      IS_score,
-                                                      LPIPS_score_alex,
-                                                      LPIPS_score_vgg)))
+    ax.set(title=('Random Images generation from real distribution: {}. Scores: FID(\u2193): {}, IS(\u2191): {},'
+                  ' LPIPS (alex) (\u2191): {}, LPIPS (vgg) (\u2191): {}'.format(model_name.split('1_2_1_1_')[-1],
+                                                                                FID_score,
+                                                                                IS_score,
+                                                                                LPIPS_score_alex,
+                                                                                LPIPS_score_vgg)))
     ax.imshow(samples.numpy())
     plt.show()
 
     if save:
-        fig.savefig("fig_results/sample/fig_sample_" + model_name + ".png")
+        fig.savefig("fig_results/sample/random_sample_" + model_name + ".png")
 
     return
 
@@ -2665,11 +3030,9 @@ def same_binary_code(net, model_name, loader, nb_class, train_test=None, save=Tr
         print('average distance: {}'.format(torch.mean(torch.tensor(Hmg_dst))))
 
     else:
-        net.eval()
         print('Compute all binary encoder struct values:')
         first = True
         for x, label in loader:
-
             data = x
             data = data.to(device)  # Variable(data.to(device))
             label = label.to(device)
@@ -2688,7 +3051,6 @@ def same_binary_code(net, model_name, loader, nb_class, train_test=None, save=Tr
                 embedding_struct = torch.cat((embedding_struct, embedding.detach()), 0)
                 labels_list = torch.cat((labels_list, label.detach()), 0)
 
-        net.train()
         if is_VAE:
             embedding_struct = embedding_struct.cpu().numpy()
         else:
@@ -3092,3 +3454,80 @@ def score_uniq_code(net, loader, device, z_struct_layer_num, nb_class, z_struct_
     net.train()
 
     return scores, more_represented_class_code
+
+
+def maj_uc_prototype(net, model_name, train_test, z_var_size=None, ES_reconstruction=False):
+
+    maj_uc = np.load('binary_encoder_struct_results/uniq_code/uc_maj_class_' + model_name + '_' \
+                     + train_test + '.npy', allow_pickle=True)
+    nb_class = 10
+    if ES_reconstruction:
+        z = torch.tensor(maj_uc)
+        x_recon_prototype = net.decoder(z).detach().numpy()
+    else:
+        zeros_zvar = torch.zeros((nb_class, z_var_size))
+        z = torch.cat((zeros_zvar, torch.tensor(maj_uc)), dim=1)
+        x_recon_prototype = net.decoder(z).detach().numpy()
+
+    fig = plt.figure(figsize=(10, 5))
+    plt.title('Prototype ES (z_var=0) with maj uc: {}'.format(model_name))
+    plt.axis('off')
+
+    for k in range(nb_class):
+        ax = fig.add_subplot(2, 5, k + 1, xticks=[], yticks=[])
+        ax.imshow(x_recon_prototype[k][0], cmap='gray')
+        ax.set_title("({})".format(str(k)))
+    plt.show()
+
+    return
+
+
+def plot_prototype(net, model_name, train_test, z_var_size, nb_class=None, avg_zstruct=True, maj_uc_prototype=True,
+                   save=True):
+
+    # load both prototype:
+    if maj_uc_prototype:
+        maj_uc = torch.tensor(np.load('binary_encoder_struct_results/uniq_code/uc_maj_class_' + model_name + '_' \
+                         + train_test + '.npy', allow_pickle=True))
+        z_var_zeros = torch.zeros((nb_class, z_var_size))
+        maj_uc_proto = torch.cat((z_var_zeros, maj_uc), dim=1)
+        recons_maj_uc_proto = net.decoder(maj_uc_proto).detach().numpy()
+
+        # figure:
+        fig = plt.figure(figsize=(20, 10))
+        plt.title('Prototype maj uc z_struct, model: {}'.format(model_name))
+        plt.axis('off')
+
+        for k in range(nb_class):
+            ax = fig.add_subplot(2, 5, k + 1, xticks=[], yticks=[])
+            ax.imshow(recons_maj_uc_proto[k][0], cmap='gray')
+            ax.set_title(str(k))
+        plt.show()
+
+        if save:
+            fig.savefig(
+                "fig_results/prototype_z_struct_class/maj_uc_proto_struct_" + model_name + train_test + ".png")
+
+    if avg_zstruct:
+        _, avg_z_struct = get_z_struct_per_class_VAE(model_name, train_test='test', nb_class=nb_class)
+        avg_z_struct = torch.tensor(avg_z_struct)
+        z_var_zeros = torch.zeros((nb_class, z_var_size))
+        avg_struct_proto = torch.cat((z_var_zeros, avg_z_struct), dim=1)
+        recons_avg_struct_proto = net.decoder(avg_struct_proto).detach().numpy()
+
+        # figure:
+        fig = plt.figure(figsize=(20, 10))
+        plt.title('Prototype avg z_struct, model: {}'.format(model_name))
+        plt.axis('off')
+
+        for k in range(nb_class):
+            ax = fig.add_subplot(2, 5, k + 1, xticks=[], yticks=[])
+            ax.imshow(recons_avg_struct_proto[k][0], cmap='gray')
+            ax.set_title(str(k))
+        plt.show()
+
+        if save:
+            fig.savefig(
+                "fig_results/prototype_z_struct_class/avg_proto_struct_" + model_name + train_test + ".png")
+
+    return

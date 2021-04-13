@@ -37,8 +37,6 @@ def run_exp_extraction_and_visualization_custom_BK(list_model, is_ratio=False, i
 
         # model:
         model_name = parameters_dict['exp_name']
-        Binary_z = str2bool(parameters_dict['binary_z'])
-        binary_chain = str2bool(parameters_dict['binary_chain'])
 
         # Parameters:
         stride_size = int(parameters_dict['stride_size'])
@@ -61,6 +59,14 @@ def run_exp_extraction_and_visualization_custom_BK(list_model, is_ratio=False, i
         decoder_stride_1 = int(parameters_dict['decoder_stride_1'])
         decoder_stride_2 = int(parameters_dict['decoder_stride_2'])
         decoder_stride_3 = int(parameters_dict['decoder_stride_3'])
+        hidden_filters_1 = int(parameters_dict['hidden_filters_layer1'])
+        hidden_filters_2 = int(parameters_dict['hidden_filters_layer2'])
+        hidden_filters_3 = int(parameters_dict['hidden_filters_layer3'])
+        is_VAE = str2bool(parameters_dict['is_VAE'])
+        if 'ES_reconstruction' in parameters_dict.keys():
+            ES_reconstruction = str2bool(parameters_dict['ES_reconstruction'])
+        else:
+            ES_reconstruction = False
 
         # Encoder struct parameters:
         big_kernel_size = int(parameters_dict['big_kernel_size'])
@@ -87,8 +93,10 @@ def run_exp_extraction_and_visualization_custom_BK(list_model, is_ratio=False, i
         var_stride_size_3 = int(parameters_dict['var_stride_size_3'])
         var_hidden_dim = int(parameters_dict['var_hidden_dim'])
         var_three_conv_layer = str2bool(parameters_dict['var_three_conv_layer'])
-
         use_structural_encoder = str2bool(parameters_dict['use_structural_encoder'])
+        is_VAE_var = str2bool(parameters_dict['is_VAE_var'])
+        var_second_cnn_block = str2bool(parameters_dict['var_second_cnn_block'])
+        var_third_cnn_block = str2bool(parameters_dict['var_third_cnn_block'])
 
         # encoder struct:
         kernel_size_1 = int(parameters_dict['kernel_size_1'])
@@ -98,31 +106,6 @@ def run_exp_extraction_and_visualization_custom_BK(list_model, is_ratio=False, i
         binary_first_conv = str2bool(parameters_dict['binary_first_conv'])
         binary_second_conv = str2bool(parameters_dict['binary_second_conv'])
         binary_third_conv = str2bool(parameters_dict['binary_third_conv'])
-        if 'Hamming' not in exp_name:
-            pass
-        else:
-            Hmg_dst_loss = str2bool(parameters_dict['Hmg_dst_loss'])
-            lambda_hmg_dst = float(parameters_dict['lambda_hmg_dst'])
-
-        # other default parameters:
-        hidden_filters_1 = int(parameters_dict['hidden_filters_layer1'])
-        hidden_filters_2 = int(parameters_dict['hidden_filters_layer2'])
-        hidden_filters_3 = int(parameters_dict['hidden_filters_layer3'])
-
-        # vae var:
-        if is_encoder_struct:
-            is_VAE_var = False
-            var_second_cnn_block = False
-            var_third_cnn_block = False
-        else:
-            is_VAE_var = str2bool(parameters_dict['is_VAE_var'])
-            var_second_cnn_block = str2bool(parameters_dict['var_second_cnn_block'])
-            var_third_cnn_block = str2bool(parameters_dict['var_third_cnn_block'])
-
-        if 'other_architecture' in parameters_dict.keys():
-            other_architecture = str2bool(parameters_dict['other_architecture'])
-        else:
-            other_architecture = False
 
         if is_VAE:
             use_structural_encoder = True
@@ -147,7 +130,8 @@ def run_exp_extraction_and_visualization_custom_BK(list_model, is_ratio=False, i
                       Binary_z=binary_z,
                       binary_first_conv=binary_first_conv,
                       binary_second_conv=binary_second_conv,
-                      binary_third_conv=binary_third_conv)
+                      binary_third_conv=binary_third_conv,
+                      ES_reconstruction=ES_reconstruction)
         elif is_encoder_struct:
             net_type = 'Encoder_struct'
             net = Encoder_struct(z_struct_size=z_struct_size,
@@ -177,7 +161,8 @@ def run_exp_extraction_and_visualization_custom_BK(list_model, is_ratio=False, i
         if is_decoder:
             run_decoder(model_name, net)
         elif is_VAE or is_VAE_var:
-            run_VAE(model_name, net, lambda_BCE, beta, z_struct_size, z_var_size, use_structural_encoder, is_VAE_var)
+            run_VAE(model_name, net, lambda_BCE, beta, z_struct_size, z_var_size, use_structural_encoder, is_VAE_var,
+                    ES_reconstruction)
         else:
             run_viz_expes(model_name, net, is_ratio, loss_min_distance_cl, loss_distance_mean, cat='Encoder_struct',
                           net_type=net_type, diff_var_loss=diff_var, z_struct_size=z_struct_size)
@@ -239,14 +224,14 @@ def run_decoder(exp_name, net, multi_label=True):
     return
 
 
-def run_VAE(model_name, net, lambda_BCE, beta, z_struct_size, z_var_size, VAE_struct, is_vae_var):
+def run_VAE(model_name, net, lambda_BCE, beta, z_struct_size, z_var_size, VAE_struct, is_vae_var, ES_reconstruction):
 
     path = 'checkpoints_CNN/'
     path_scores = 'checkpoint_scores_CNN'
     net, _, _ = get_checkpoints(net, path, model_name)
     net, device = gpu_config(net)
     print('VAE: _____________------------------{}-----------------_____________________'.format(model_name))
-    print(net)
+    # print(net)
 
     loader = test_loader
     train_test = 'test'
@@ -283,20 +268,28 @@ def run_VAE(model_name, net, lambda_BCE, beta, z_struct_size, z_var_size, VAE_st
     # _________------------------End TEst VAE-----------------_______________________
     """
 
+    # __________-----------Values computing----------_____________
+    # save code majoritaire with their percent:
+    same_binary_code(net, model_name, loader, nb_class, train_test=train_test, save=True, Hmg_dist=False, is_VAE=True)
+    z_struct_code_classes(model_name, nb_class, train_test=train_test)
+
+    # Uc bin maj:
+    percent_max = histo_count_uniq_code(model_name, train_test, plot_histo=False, return_percent=True)
+    maj_uc = np.load('binary_encoder_struct_results/uniq_code/uc_maj_class_' + model_name + '_' \
+                               + train_test + '.npy', allow_pickle=True)
+
+    # first: compute z_struct mean per class:
+    compute_z_struct_mean_VAE(net, model_name, loader, train_test='test', return_results=False)
+
+    # second: get average z_struct per classe:
+    _, average_z_struct_class = get_z_struct_per_class_VAE(model_name, train_test='test', nb_class=nb_class)
+
+
+    # __________--------------PLOT------------_________________
     # losses:
     # plot_loss_results_VAE(path_scores, model_name, beta, lambda_BCE, save=True)
 
-    # viz_latent_prediction_reconstruction(net,
-    #                                      model_name,
-    #                                      embedding_size,
-    #                                      z_struct_size,
-    #                                      z_var_size,
-    #                                      size=8,
-    #                                      random=False,
-    #                                      batch=batch)
-
-    # Image reconstruction with real distribution: mu_var, sigma_var, mu_struct, sigma_struct
-
+    # compute and plot real distribution:
     mu_var, sigma_var, encoder_struct_zeros_proportion = real_distribution_model(net,
                                                                          model_name,
                                                                          z_struct_size,
@@ -308,56 +301,61 @@ def run_VAE(model_name, net, lambda_BCE, beta, z_struct_size, z_var_size, VAE_st
                                                                          VAE_struct=VAE_struct,
                                                                          is_vae_var=is_vae_var)
 
-    # print(encoder_struct_zeros_proportion)
-    viz_reconstruction_VAE(net, loader, model_name, z_var_size, z_struct_size, nb_img=10,
-                           nb_class=nb_class, save=True, z_reconstruction=True,
-                           z_struct_reconstruction=True, z_var_reconstruction=True,
-                           return_scores=False, real_distribution=True, mu_var=mu_var, std_var=sigma_var,
-                           mu_struct=encoder_struct_zeros_proportion, is_vae_var=is_vae_var)
+    # plot reconstruciton with real distribution sample:
+    # viz_reconstruction_VAE(net, loader, model_name, z_var_size, z_struct_size, nb_img=10,
+    #                        nb_class=nb_class, save=True, z_reconstruction=True,
+    #                        z_struct_reconstruction=True, z_var_reconstruction=True,
+    #                        return_scores=False, real_distribution=True, mu_var=mu_var, std_var=sigma_var,
+    #                        mu_struct=encoder_struct_zeros_proportion, is_vae_var=is_vae_var)
 
-    # save code majoritaire with thier percent:
-    # same_binary_code(net, model_name, loader, nb_class, train_test=train_test, save=True, Hmg_dist=False, is_VAE=True)
-    # z_struct_code_classes(model_name, nb_class, train_test=train_test)
+    # samples with compute scores:
+    # images_generation(net,
+    #                   model_name,
+    #                   batch,
+    #                   train_test,
+    #                   size=(8, 8),
+    #                   mu_var=mu_var,
+    #                   es_distribution=encoder_struct_zeros_proportion,
+    #                   std_var=sigma_var,
+    #                   z_var_size=z_var_size,
+    #                   z_struct_size=z_struct_size,
+    #                   FID=True,
+    #                   IS=True,
+    #                   LPIPS=True,
+    #                   real_distribution=True,
+    #                   save=True,
+    #                   use_maj_uc=True)
 
-    # Uc bin maj:
-    percent_max = histo_count_uniq_code(model_name, train_test, plot_histo=False, return_percent=True)
-    maj_uc = np.load('binary_encoder_struct_results/uniq_code/uc_maj_class_' + model_name + '_' \
-                               + train_test + '.npy', allow_pickle=True)
-    print(percent_max)
-    print(maj_uc)
+    # prototype z_struct with z_var traversale latent:
+    # for index in range(nb_class):
+    # index = 0
+    # traversal_latent_prototype(net,
+    #                            model_name,
+    #                            train_test,
+    #                            device,
+    #                            z_var_size,
+    #                            sigma_var=sigma_var,
+    #                            nb_class=nb_class,
+    #                            size=8,
+    #                            avg_prototype=True,
+    #                            maj_uc_prototype=True,
+    #                            batch=batch,
+    #                            index=index,
+    #                            save=True)
 
     # viz switch image:
     # switch_img(net, model_name, loader, z_var_size)
 
-    # viz multi sample with same z_var or z_struct:
-    # first: compute z_struct mean per class:
-     # compute_z_struct_mean_VAE(net, model_name, loader, train_test='test', return_results=False)
+    # Plot prototype:
+    # plot_prototype(net, model_name, train_test, z_var_size, nb_class=nb_class, avg_zstruct=True, maj_uc_prototype=True,
+    #                save=True)
 
-    # second: get average z_struct per classe:
-    # _, average_z_struct_class = get_z_struct_per_class_VAE(model_name, train_test='test', nb_class=nb_class)
+    # plot resume VAE:
+    plot_VAE_resume(net, model_name, z_struct_size, z_var_size, loader, VAE_struct, is_vae_var, train_test, save=True,
+                    nb_class=nb_class, nb_img=8, std_var=sigma_var, mu_var=mu_var,
+                    mu_struct=encoder_struct_zeros_proportion, index=0)
 
-    # third: plot:
-    # plot_prototyoe_z_struct_per_class(1, average_z_struct_class, train_test, model_name,
-    #                                   nb_class, None, device, net, z_var_size=z_var_size, save=save)
-    # plot_struct_fixe_and_z_var_moove(average_z_struct_class, train_test, net,
-    #                                  device, nb_class, None, model_name, z_var_size=z_var_size,
-    #                                  embedding_size=embedding_size, save=save, mu_var=mu_var, std_var=sigma_var)
-    # plot_var_fixe_and_z_struct_moove(average_z_struct_class, train_test, net,
-    #                                  device, nb_class, None, model_name, z_struct_size=z_struct_size,
-    #                                  z_var_size=z_var_size,
-    #                                  embedding_size=embedding_size, save=save,
-    #                                  mu_struct=encoder_struct_zeros_proportion, traversal_latent=False)
-
-    # score sample:
-    # images_generation(net, model_name, batch, size=(8, 8), mu_var=mu_var, mu_struct=mu_struct, std_var=sigma_var,
-    #                   std_struct=sigma_struct, z_var_size=z_var_size, z_struct_size=z_struct_size, FID=True, IS=True,
-    #                   LPIPS=True, real_distribution=True, save=True)
-
-    # Display a 2D manifold of the digits:
-    # manifold_digit(net, model_name, device, size=(20, 20), component_var=0, component_struct=0, random=False,
-    #                loader=loader, mu_var=mu_var, std_var=sigma_var, mu_struct=mu_struct, std_struct=sigma_struct,
-    #                z_var_size=z_var_size, z_struct_size=z_struct_size, img_choice=None)
-
+    net.train()
     return
 
 
@@ -598,129 +596,140 @@ if __name__ == '__main__':
                         # 'mnist_vae_var_2cb_25',
                         # 'mnist_vae_var_2cb_30']
 
-    list_exp_VAE = [# 'mnist_VAE_s10_v5_BF',
-                    # 'mnist_VAE_s10_v5_PT',
-                    # 'mnist_VAE_s10_v5_SE',
-                    # 'mnist_VAE_s10_v5_FS',
-                    # 'mnist_VAE_s15_v5_BF',
-                    # 'mnist_VAE_s20_v5_BF',
-                    # 'mnist_VAE_s25_v5_BF',
-                    # 'mnist_VAE_s30_v5_BF',
-                    'mnist_VAE_s10_v10_BF']
-                    # 'mnist_VAE_s15_v10_BF',
-                    # 'mnist_VAE_s20_v10_BF',
-                    # 'mnist_VAE_s25_v10_BF',
-                    # 'mnist_VAE_s30_v10_BF',
-                    # 'mnist_VAE_s10_v15_BF',
-                    # 'mnist_VAE_s15_v15_BF',
-                    # 'mnist_VAE_s20_v15_BF',
-                    # 'mnist_VAE_s25_v15_BF',
-                    # 'mnist_VAE_s30_v15_BF',
-                    # 'mnist_VAE_s10_v20_BF',
-                    # 'mnist_VAE_s15_v20_BF',
-                    # 'mnist_VAE_s20_v20_BF',
-                    # 'mnist_VAE_s25_v20_BF',
-                    # 'mnist_VAE_s30_v20_BF',
-                    # 'mnist_VAE_s10_v25_BF',
-                    # 'mnist_VAE_s15_v25_BF',
-                    # 'mnist_VAE_s20_v25_BF',
-                    # 'mnist_VAE_s25_v25_BF',
-                    # 'mnist_VAE_s30_v25_BF',
-                    # 'mnist_VAE_s10_v30_BF',
-                    # 'mnist_VAE_s15_v30_BF',
-                    # 'mnist_VAE_s20_v30_BF',
-                    # 'mnist_VAE_s25_v30_BF',
-                    # 'mnist_VAE_s30_v30_BF',
-                    # 'mnist_VAE_s10_v5_PT',
-                    # 'mnist_VAE_s15_v5_PT',
-                    # 'mnist_VAE_s20_v5_PT',
-                    # 'mnist_VAE_s25_v5_PT',
-                    # 'mnist_VAE_s30_v5_PT',
-                    # 'mnist_VAE_s10_v10_PT',
-                    # 'mnist_VAE_s15_v10_PT',
-                    # 'mnist_VAE_s20_v10_PT',
-                    # 'mnist_VAE_s25_v10_PT',
-                    # 'mnist_VAE_s30_v10_PT',
-                    # 'mnist_VAE_s10_v15_PT',
-                    # 'mnist_VAE_s15_v15_PT',
-                    # 'mnist_VAE_s20_v15_PT',
-                    # 'mnist_VAE_s25_v15_PT',
-                    # 'mnist_VAE_s30_v15_PT',
-                    # 'mnist_VAE_s10_v20_PT',
-                    # 'mnist_VAE_s15_v20_PT',
-                    # 'mnist_VAE_s20_v20_PT',
-                    # 'mnist_VAE_s25_v20_PT',
-                    # 'mnist_VAE_s30_v20_PT',
-                    # 'mnist_VAE_s10_v25_PT',
-                    # 'mnist_VAE_s15_v25_PT',
-                    # 'mnist_VAE_s20_v25_PT',
-                    # 'mnist_VAE_s25_v25_PT',
-                    # 'mnist_VAE_s30_v25_PT',
-                    # 'mnist_VAE_s10_v30_PT',
-                    # 'mnist_VAE_s15_v30_PT',
-                    # 'mnist_VAE_s20_v30_PT',
-                    # 'mnist_VAE_s25_v30_PT',
-                    # 'mnist_VAE_s30_v30_PT',
-                    # 'mnist_VAE_s10_v5_SE',
-                    # 'mnist_VAE_s15_v5_SE',
-                    # 'mnist_VAE_s20_v5_SE',
-                    # 'mnist_VAE_s25_v5_SE',
-                    # 'mnist_VAE_s30_v5_SE',
-                    # 'mnist_VAE_s10_v10_SE',
-                    # 'mnist_VAE_s15_v10_SE',
-                    # 'mnist_VAE_s20_v10_SE',
-                    # 'mnist_VAE_s25_v10_SE',
-                    # 'mnist_VAE_s30_v10_SE',
-                    # 'mnist_VAE_s10_v15_SE',
-                    # 'mnist_VAE_s15_v15_SE',
-                    # 'mnist_VAE_s20_v15_SE',
-                    # 'mnist_VAE_s25_v15_SE',
-                    # 'mnist_VAE_s30_v15_SE',
-                    # 'mnist_VAE_s10_v20_SE',
-                    # 'mnist_VAE_s15_v20_SE',
-                    # 'mnist_VAE_s20_v20_SE',
-                    # 'mnist_VAE_s25_v20_SE',
-                    # 'mnist_VAE_s30_v20_SE',
-                    # 'mnist_VAE_s10_v25_SE',
-                    # 'mnist_VAE_s15_v25_SE',
-                    # 'mnist_VAE_s20_v25_SE',
-                    # 'mnist_VAE_s25_v25_SE',
-                    # 'mnist_VAE_s30_v25_SE',
-                    # 'mnist_VAE_s10_v30_SE',
-                    # 'mnist_VAE_s15_v30_SE',
-                    # 'mnist_VAE_s20_v30_SE',
-                    # 'mnist_VAE_s25_v30_SE',
-                    # 'mnist_VAE_s30_v30_SE',
-                    # 'mnist_VAE_s10_v5_FS',
-                    # 'mnist_VAE_s15_v5_FS',
-                    # 'mnist_VAE_s20_v5_FS',
-                    # 'mnist_VAE_s25_v5_FS',
-                    # 'mnist_VAE_s30_v5_FS',
-                    # 'mnist_VAE_s10_v10_FS',
-                    # 'mnist_VAE_s15_v10_FS',
-                    # 'mnist_VAE_s20_v10_FS',
-                    # 'mnist_VAE_s25_v10_FS',
-                    # 'mnist_VAE_s30_v10_FS',
-                    # 'mnist_VAE_s10_v15_FS',
-                    # 'mnist_VAE_s15_v15_FS',
-                    # 'mnist_VAE_s20_v15_FS',
-                    # 'mnist_VAE_s25_v15_FS',
-                    # 'mnist_VAE_s30_v15_FS',
-                    # 'mnist_VAE_s10_v20_FS',
-                    # 'mnist_VAE_s15_v20_FS',
-                    # 'mnist_VAE_s20_v20_FS',
-                    # 'mnist_VAE_s25_v20_FS',
-                    # 'mnist_VAE_s30_v20_FS',
-                    # 'mnist_VAE_s10_v25_FS',
-                    # 'mnist_VAE_s15_v25_FS',
-                    # 'mnist_VAE_s20_v25_FS',
-                    # 'mnist_VAE_s25_v25_FS',
-                    # 'mnist_VAE_s30_v25_FS',
-                    # 'mnist_VAE_s10_v30_FS',
-                    # 'mnist_VAE_s15_v30_FS',
-                    # 'mnist_VAE_s20_v30_FS',
-                    # 'mnist_VAE_s25_v30_FS',
-                    # 'mnist_VAE_s30_v30_FS']
+    list_exp_VAE = ['mnist_VAE_s10_v5_BF',
+                    'mnist_VAE_s10_v5_PT',
+                    'mnist_VAE_s10_v5_SE',
+                    'mnist_VAE_s10_v5_FS',
+                    'mnist_VAE_s15_v5_BF',
+                    'mnist_VAE_s20_v5_BF',
+                    'mnist_VAE_s25_v5_BF',
+                    'mnist_VAE_s30_v5_BF',
+                    'mnist_VAE_s10_v10_BF',
+                    'mnist_VAE_s15_v10_BF',
+                    'mnist_VAE_s20_v10_BF',
+                    'mnist_VAE_s25_v10_BF',
+                    'mnist_VAE_s30_v10_BF',
+                    'mnist_VAE_s10_v15_BF',
+                    'mnist_VAE_s15_v15_BF',
+                    'mnist_VAE_s20_v15_BF',
+                    'mnist_VAE_s25_v15_BF',
+                    'mnist_VAE_s30_v15_BF',
+                    'mnist_VAE_s10_v20_BF',
+                    'mnist_VAE_s15_v20_BF',
+                    'mnist_VAE_s20_v20_BF',
+                    'mnist_VAE_s25_v20_BF',
+                    'mnist_VAE_s30_v20_BF',
+                    'mnist_VAE_s10_v25_BF',
+                    'mnist_VAE_s15_v25_BF',
+                    'mnist_VAE_s20_v25_BF',
+                    'mnist_VAE_s25_v25_BF',
+                    'mnist_VAE_s30_v25_BF',
+                    'mnist_VAE_s10_v30_BF',
+                    'mnist_VAE_s15_v30_BF',
+                    'mnist_VAE_s20_v30_BF',
+                    'mnist_VAE_s25_v30_BF',
+                    'mnist_VAE_s30_v30_BF',
+                    'mnist_VAE_s10_v5_PT',
+                    'mnist_VAE_s15_v5_PT',
+                    'mnist_VAE_s20_v5_PT',
+                    'mnist_VAE_s25_v5_PT',
+                    'mnist_VAE_s30_v5_PT',
+                    'mnist_VAE_s10_v10_PT',
+                    'mnist_VAE_s15_v10_PT',
+                    'mnist_VAE_s20_v10_PT',
+                    'mnist_VAE_s25_v10_PT',
+                    'mnist_VAE_s30_v10_PT',
+                    'mnist_VAE_s10_v15_PT',
+                    'mnist_VAE_s15_v15_PT',
+                    'mnist_VAE_s20_v15_PT',
+                    'mnist_VAE_s25_v15_PT',
+                    'mnist_VAE_s30_v15_PT',
+                    'mnist_VAE_s10_v20_PT',
+                    'mnist_VAE_s15_v20_PT',
+                    'mnist_VAE_s20_v20_PT',
+                    'mnist_VAE_s25_v20_PT',
+                    'mnist_VAE_s30_v20_PT',
+                    'mnist_VAE_s10_v25_PT',
+                    'mnist_VAE_s15_v25_PT',
+                    'mnist_VAE_s20_v25_PT',
+                    'mnist_VAE_s25_v25_PT',
+                    'mnist_VAE_s30_v25_PT',
+                    'mnist_VAE_s10_v30_PT',
+                    'mnist_VAE_s15_v30_PT',
+                    'mnist_VAE_s20_v30_PT',
+                    'mnist_VAE_s25_v30_PT',
+                    'mnist_VAE_s30_v30_PT',
+                    'mnist_VAE_s10_v5_SE',
+                    'mnist_VAE_s15_v5_SE',
+                    'mnist_VAE_s20_v5_SE',
+                    'mnist_VAE_s25_v5_SE',
+                    'mnist_VAE_s30_v5_SE',
+                    'mnist_VAE_s10_v10_SE',
+                    'mnist_VAE_s15_v10_SE',
+                    'mnist_VAE_s20_v10_SE',
+                    'mnist_VAE_s25_v10_SE',
+                    'mnist_VAE_s30_v10_SE',
+                    'mnist_VAE_s10_v15_SE',
+                    'mnist_VAE_s15_v15_SE',
+                    'mnist_VAE_s20_v15_SE',
+                    'mnist_VAE_s25_v15_SE',
+                    'mnist_VAE_s30_v15_SE',
+                    'mnist_VAE_s10_v20_SE',
+                    'mnist_VAE_s15_v20_SE',
+                    'mnist_VAE_s20_v20_SE',
+                    'mnist_VAE_s25_v20_SE',
+                    'mnist_VAE_s30_v20_SE',
+                    'mnist_VAE_s10_v25_SE',
+                    'mnist_VAE_s15_v25_SE',
+                    'mnist_VAE_s20_v25_SE',
+                    'mnist_VAE_s25_v25_SE',
+                    'mnist_VAE_s30_v25_SE',
+                    'mnist_VAE_s10_v30_SE',
+                    'mnist_VAE_s15_v30_SE',
+                    'mnist_VAE_s20_v30_SE',
+                    'mnist_VAE_s25_v30_SE',
+                    'mnist_VAE_s30_v30_SE',
+                    'mnist_VAE_s10_v5_FS',
+                    'mnist_VAE_s15_v5_FS',
+                    'mnist_VAE_s20_v5_FS',
+                    'mnist_VAE_s25_v5_FS',
+                    'mnist_VAE_s30_v5_FS',
+                    'mnist_VAE_s10_v10_FS',
+                    'mnist_VAE_s15_v10_FS',
+                    'mnist_VAE_s20_v10_FS',
+                    'mnist_VAE_s25_v10_FS',
+                    'mnist_VAE_s30_v10_FS',
+                    'mnist_VAE_s10_v15_FS',
+                    'mnist_VAE_s15_v15_FS',
+                    'mnist_VAE_s20_v15_FS',
+                    'mnist_VAE_s25_v15_FS',
+                    'mnist_VAE_s30_v15_FS',
+                    'mnist_VAE_s10_v20_FS',
+                    'mnist_VAE_s15_v20_FS',
+                    'mnist_VAE_s20_v20_FS',
+                    'mnist_VAE_s25_v20_FS',
+                    'mnist_VAE_s30_v20_FS',
+                    'mnist_VAE_s10_v25_FS',
+                    'mnist_VAE_s15_v25_FS',
+                    'mnist_VAE_s20_v25_FS',
+                    'mnist_VAE_s25_v25_FS',
+                    'mnist_VAE_s30_v25_FS',
+                    'mnist_VAE_s10_v30_FS',
+                    'mnist_VAE_s15_v30_FS',
+                    'mnist_VAE_s20_v30_FS',
+                    'mnist_VAE_s25_v30_FS',
+                    'mnist_VAE_s30_v30_FS']
+
+    list_ES_reconstruction = ['mnist_encoder_struct_reconstruction_s10_PT_2',
+                              'mnist_encoder_struct_reconstruction_s10_FS_2',
+                              'mnist_encoder_struct_reconstruction_s15_PT_2',
+                              'mnist_encoder_struct_reconstruction_s15_FS_2',
+                              'mnist_encoder_struct_reconstruction_s20_PT_2',
+                              'mnist_encoder_struct_reconstruction_s20_FS_2',
+                              'mnist_encoder_struct_reconstruction_s25_PT_2',
+                              'mnist_encoder_struct_reconstruction_s25_FS_2',
+                              'mnist_encoder_struct_reconstruction_s30_PT_2',
+                              'mnist_encoder_struct_reconstruction_s30_FS_2']
 
     parameters_mnist_classifier_BK_ratio = "parameters_combinations/mnist_classifier_ratio.txt"
 
@@ -747,5 +756,11 @@ if __name__ == '__main__':
                                                    is_decoder=False,
                                                    is_VAE=True,
                                                    is_encoder_struct=False)
+
+    # run_exp_extraction_and_visualization_custom_BK(list_ES_reconstruction,
+    #                                                is_ratio=False,
+    #                                                is_decoder=False,
+    #                                                is_VAE=True,
+    #                                                is_encoder_struct=False)
 
 

@@ -34,7 +34,6 @@ def get_checkpoints(net, path, expe_name):
 
 
 def get_checkpoints_scores_VAE(path_scores, expe_name):
-
     file_path = os.path.join(path_scores, expe_name, 'last')
     checkpoints_scores = torch.load(file_path, map_location=torch.device(device))
 
@@ -51,7 +50,6 @@ def get_checkpoints_scores_VAE(path_scores, expe_name):
 
 
 def plot_loss_results_VAE(path_scores, expe_name, beta, lambda_BCE, save=True):
-
     global_iter, epochs, train_score, test_score, BCE_train, BCE_test, KLD_train, \
     KLD_test = get_checkpoints_scores_VAE(path_scores, expe_name)
 
@@ -500,7 +498,6 @@ def plot_loss_results_CNN(epochs, total_train, total_test, ratio_train_loss, rat
                           inter_var_test, diff_var_train, diff_var_test, contrastive_train, contrastive_test,
                           classification_test, classification_train, expe_name, save, is_ratio=False,
                           is_distance_loss=False, loss_distance_mean=False, diff_var=False, contrastive_loss=False):
-
     fig, ax = plt.subplots(figsize=(15, 10), facecolor='w', edgecolor='k')
 
     ax.set(xlabel='nb_iter', ylabel='loss',
@@ -1377,7 +1374,7 @@ def plot_prototyoe_z_struct_per_class(nb_examples, average_representation_z_stru
 
     if save:
         fig.savefig(
-            "fig_results/protype_z_struct_class/fig_z_struct_prototype_per_classes_" + expe_name + train_test + ".png")
+            "fig_results/prototype_z_struct_class/fig_z_struct_prototype_per_classes_" + expe_name + train_test + ".png")
 
     return
 
@@ -1473,7 +1470,8 @@ def plot_struct_fixe_and_z_var_moove(average_representation_z_struct_class, trai
     if latent_spec is None:
         z_var_rand = std_var * torch.randn((1, nb_examples, z_var_size)) + mu_var
     else:
-        z_var_rand = std_var * torch.randn((1, nb_examples, latent_spec['cont_var'])) + mu_var  # shape: (nb_examples, var_dim)
+        z_var_rand = std_var * torch.randn(
+            (1, nb_examples, latent_spec['cont_var'])) + mu_var  # shape: (nb_examples, var_dim)
     z_var_rand = torch.tensor(np.repeat(z_var_rand, nb_class, axis=0))  # shape: (nb_class, nb_examples, var_dim)
     z_var_rand = z_var_rand.permute(1, 0, 2)  # shape: (nb_examples, nb_class, var_dim)
     z_var_rand = z_var_rand.to(device)
@@ -1527,7 +1525,7 @@ def traversal_values_min_max(min, max, size):
 def plot_var_fixe_and_z_struct_moove(average_representation_z_struct_class, train_test, net_trained,
                                      device, nb_class, latent_spec, expe_name, z_struct_size=None, z_var_size=None,
                                      embedding_size=None, save=True, mu_struct=None, std_struct=None,
-                                     traversal_latent=False):
+                                     traversal_latent=False, random_maj_uc=False):
     """
     Here we see traversal reconstruction of z_struct prototype over z_struct with z_var fixed.
     We should observed always the same variability along the generated data but with a class who slightly change
@@ -1539,18 +1537,37 @@ def plot_var_fixe_and_z_struct_moove(average_representation_z_struct_class, trai
     all_latent = []
     samples = []
 
-    z_struct_prototype = torch.tensor(average_representation_z_struct_class).to(device)  # shape: (nb_class, struct_dim)
-    z_struct_prototype = torch.tensor(np.expand_dims(z_struct_prototype, axis=0))  # shape: (1, nb_class, struct_dim)
+    if random_maj_uc:
+        z_struct_prototype = np.load('binary_encoder_struct_results/uniq_code/uc_maj_class_' + expe_name + '_' \
+                                     + train_test + '.npy', allow_pickle=True)
+        z_struct_prototype = torch.tensor(
+            np.expand_dims(z_struct_prototype, axis=0))  # shape: (1, nb_class, struct_dim)
+    else:
+        z_struct_prototype = torch.tensor(average_representation_z_struct_class).to(
+            device)  # shape: (nb_class, struct_dim)
+        z_struct_prototype = torch.tensor(
+            np.expand_dims(z_struct_prototype, axis=0))  # shape: (1, nb_class, struct_dim)
 
     z_var_zeros = torch.zeros((1, nb_class, z_var_size))  # shape: (nb_examples, nb_class, z_var_size)
     z_var_zeros = z_var_zeros.to(device)
 
     # we use binary encoder struct so we sample from binary distributin:
-    mu_struct = torch.tensor(1 - (mu_struct / 100))
-    proba_struct = mu_struct.repeat(nb_examples, 1)
-    z_struct_rand = torch.Tensor.float(torch.bernoulli(proba_struct))
-    z_struct_rand = np.expand_dims(z_struct_rand, axis=0)
-    z_struct_rand = torch.tensor(np.repeat(z_struct_rand, nb_class, axis=0))  # shape: (nb_class, nb_examples, z_struct_size)
+    if random_maj_uc:
+        maj_uc = np.load('binary_encoder_struct_results/uniq_code/uc_maj_class_' + expe_name + '_' \
+                         + train_test + '.npy', allow_pickle=True)
+        z = []
+        for i in range(nb_examples):
+            z.append(maj_uc[i % nb_class])
+        z_struct_rand = torch.tensor(z)
+        z_struct_rand = np.expand_dims(z_struct_rand, axis=0)
+    else:
+        mu_struct = torch.tensor(1 - (mu_struct / 100))
+        proba_struct = mu_struct.repeat(nb_examples, 1)
+        z_struct_rand = torch.Tensor.float(torch.bernoulli(proba_struct))
+        z_struct_rand = np.expand_dims(z_struct_rand, axis=0)
+
+    z_struct_rand = torch.tensor(
+        np.repeat(z_struct_rand, nb_class, axis=0))  # shape: (nb_class, nb_examples, z_struct_size)
     z_struct_rand = z_struct_rand.permute(1, 0, 2)  # shape: (nb_examples, nb_class, var_dim)
     z_struct_rand = z_struct_rand.to(device)
 
@@ -1561,9 +1578,10 @@ def plot_var_fixe_and_z_struct_moove(average_representation_z_struct_class, trai
     all_latent.append(torch.tensor(latent_zeros))  # we add the first column: original z_struct with zeros z_var
 
     if traversal_latent:
-        cont_traversal = traversal_values_min_max(np.min(average_representation_z_struct_class) - np.abs(np.min(average_representation_z_struct_class)),
-                                                  np.max(average_representation_z_struct_class) + np.abs(np.max(average_representation_z_struct_class)),
-                                                  nb_examples)  # shape: size
+        cont_traversal = traversal_values_min_max(
+            np.min(average_representation_z_struct_class) - np.abs(np.min(average_representation_z_struct_class)),
+            np.max(average_representation_z_struct_class) + np.abs(np.max(average_representation_z_struct_class)),
+            nb_examples)  # shape: size
     else:
         for i in range(nb_examples):
             latent_rand = []
