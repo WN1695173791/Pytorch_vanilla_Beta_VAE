@@ -2001,7 +2001,7 @@ def plot_VAE_resume(net, model_name, z_struct_size, z_var_size, loader, VAE_stru
 
     # compute score reconstruction on dataset test:
     score_reconstruction = F.mse_loss(x_recon, input_data)
-    score_reconstruction = np.around(score_reconstruction.detach().numpy(), 3)
+    score_reconstruction = np.around(score_reconstruction.detach().cpu().numpy(), 3)
 
     first = True
     for class_id in range(nb_class):
@@ -2020,10 +2020,10 @@ def plot_VAE_resume(net, model_name, z_struct_size, z_var_size, loader, VAE_stru
 
     # z_struct reconstruction:
     random_var = std_var * torch.randn(x_recon.shape[0], z_var_size) + mu_var
-    z_struct_random = torch.cat((random_var, z_struct), dim=1)
+    z_struct_random = torch.cat((random_var.to('cuda'), z_struct), dim=1)
     x_recon_struct = net.decoder(z_struct_random)
     score_reconstruction_zstruct = F.mse_loss(x_recon_struct, input_data)
-    score_reconstruction_zstruct = np.around(score_reconstruction_zstruct.detach().numpy(), 3)
+    score_reconstruction_zstruct = np.around(score_reconstruction_zstruct.detach().cpu().numpy(), 3)
 
     first = True
     for class_id in range(nb_class):
@@ -2044,10 +2044,10 @@ def plot_VAE_resume(net, model_name, z_struct_size, z_var_size, loader, VAE_stru
     mu_struct = torch.tensor(1 - (mu_struct / 100))
     proba_struct = mu_struct.repeat(x_recon.shape[0], 1)
     random_struct = torch.Tensor.float(torch.bernoulli(proba_struct))
-    z_var_random = torch.cat((z_var_sample, random_struct), dim=1)
+    z_var_random = torch.cat((z_var_sample, random_struct.to('cuda')), dim=1)
     x_recon_var = net.decoder(z_var_random)
     score_reconstruction_zvar = F.mse_loss(x_recon_var, input_data)
-    score_reconstruction_zvar = np.around(score_reconstruction_zvar.detach().numpy(), 3)
+    score_reconstruction_zvar = np.around(score_reconstruction_zvar.detach().cpu().numpy(), 3)
 
     first = True
     for class_id in range(nb_class):
@@ -2101,7 +2101,7 @@ def plot_VAE_resume(net, model_name, z_struct_size, z_var_size, loader, VAE_stru
     maj_uc_proto = maj_uc_proto.permute(1, 0, 2)
     latent_samples = maj_uc_proto
     # Map samples through decoder
-    generated_maj_uc = net.decoder(latent_samples)
+    generated_maj_uc = net.decoder(latent_samples.to('cuda'))
     traversals_maj_uc = make_grid(generated_maj_uc.data, nrow=traversal_size + 1)
     traversals_maj_uc = traversals_maj_uc.permute(1, 2, 0)
 
@@ -2129,17 +2129,17 @@ def plot_VAE_resume(net, model_name, z_struct_size, z_var_size, loader, VAE_stru
     avg_struct_proto = avg_struct_proto.permute(1, 0, 2)
     latent_samples = avg_struct_proto
     # Map samples through decoder
-    generated_avg_struct = net.decoder(latent_samples)
+    generated_avg_struct = net.decoder(latent_samples.to('cuda'))
     traversals_avg_struct = make_grid(generated_avg_struct.data, nrow=traversal_size + 1)
     traversals_avg_struct = traversals_avg_struct.permute(1, 2, 0)
 
     # figure:
     axs[3, 0].set(title=('Latent traversal with z_struct maj uc prototype: {}'.format(model_name)))
-    axs[3, 0].imshow(traversals_maj_uc.numpy())
+    axs[3, 0].imshow(traversals_maj_uc.cpu().numpy())
     axs[3, 0].axvline(32, linewidth=5, color='orange')
 
     axs[3, 1].set(title=('Latent traversal with avg z_struct prototype: {}'.format(model_name)))
-    axs[3, 1].imshow(traversals_avg_struct.numpy())
+    axs[3, 1].imshow(traversals_avg_struct.cpu().numpy())
     axs[3, 1].axvline(32, linewidth=5, color='orange')
 
     # Generation random:________________________________________________________________________________________________
@@ -2694,7 +2694,7 @@ def real_distribution_model(net, expe_name, z_struct_size, z_var_size, loader, t
         sigma_var = torch.mean(sigma_var, axis=0)
 
         if VAE_struct:
-            zeros_proportion = (np.count_nonzero(z_struct_distribution == 0, axis=0) * 100.) / len(z_struct_distribution)
+            zeros_proportion = (np.count_nonzero(z_struct_distribution.detach().cpu() == 0, axis=0) * 100.) / len(z_struct_distribution)
             # mu_struct = torch.mean(z_struct_distribution, axis=0)
             # sigma_struct = torch.std(z_struct_distribution, axis=0)
         else:
@@ -2702,9 +2702,9 @@ def real_distribution_model(net, expe_name, z_struct_size, z_var_size, loader, t
             sigma_struct = 0
 
         np.save('Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test +
-                '_mu_var.npy', mu_var)
+                '_mu_var.npy', mu_var.detach().cpu())
         np.save('Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test +
-                'sigma_var.npy', sigma_var)
+                'sigma_var.npy', sigma_var.detach().cpu())
         np.save('Other_results/real_distribution/binary_zeros_proportion_' + expe_name + '_' + train_test +
                 'sigma_var.npy', zeros_proportion)
         # np.save('Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test +
