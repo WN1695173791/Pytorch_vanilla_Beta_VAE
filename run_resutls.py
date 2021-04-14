@@ -439,8 +439,6 @@ def run_viz_expes(model_name, net, is_ratio, is_distance_loss, loss_distance_mea
                 device, cat=cat, train_test=train_test, path_scores=path_scores, diff_var=diff_var_loss,
                 contrastive_loss=contrastive_loss, encoder_struct=True, Hmg_dst=True, z_struct_size=z_struct_size)
 
-    print(wait)
-
     # receptive_field = get_receptive_field_size(net, batch_test)
     # _ = score_with_best_code_uniq(net, model_name, train_test, loader, z_struct_size, loader_size)
 
@@ -529,17 +527,17 @@ if __name__ == '__main__':
                            # 'mnist_struct_baseline_scheduler_binary_25',
                            # 'mnist_struct_baseline_scheduler_binary_30']
 
-    list_encoder_struct_Hmg = ['mnist_struct_baseline_scheduler_binary_10_Hmg_dst_1',
-                               'mnist_struct_baseline_scheduler_binary_15_Hmg_dst_1',
-                               'mnist_struct_baseline_scheduler_binary_20_Hmg_dst_1',
-                               'mnist_struct_baseline_scheduler_binary_25_Hmg_dst_1',
-                               'mnist_struct_baseline_scheduler_binary_30_Hmg_dst_1',
-                               'mnist_struct_baseline_scheduler_binary_10_target_uc_1',
-                               'mnist_struct_baseline_scheduler_binary_15_target_uc_1',
-                               'mnist_struct_baseline_scheduler_binary_20_target_uc_1',
-                               'mnist_struct_baseline_scheduler_binary_25_target_uc_1',
-                               'mnist_struct_baseline_scheduler_binary_30_target_uc_1',
-                               'mnist_struct_baseline_scheduler_binary_10_Hmg_dst_2',
+    list_encoder_struct_Hmg = [# 'mnist_struct_baseline_scheduler_binary_10_Hmg_dst_1',
+                               # 'mnist_struct_baseline_scheduler_binary_15_Hmg_dst_1',
+                               # 'mnist_struct_baseline_scheduler_binary_20_Hmg_dst_1',
+                               # 'mnist_struct_baseline_scheduler_binary_25_Hmg_dst_1',
+                               # 'mnist_struct_baseline_scheduler_binary_30_Hmg_dst_1',
+                               # 'mnist_struct_baseline_scheduler_binary_10_target_uc_1',
+                               # 'mnist_struct_baseline_scheduler_binary_15_target_uc_1',
+                               # 'mnist_struct_baseline_scheduler_binary_20_target_uc_1',
+                               # 'mnist_struct_baseline_scheduler_binary_25_target_uc_1',
+                               # 'mnist_struct_baseline_scheduler_binary_30_target_uc_1',
+                               # 'mnist_struct_baseline_scheduler_binary_10_Hmg_dst_2',
                                'mnist_struct_baseline_scheduler_binary_15_Hmg_dst_2',
                                'mnist_struct_baseline_scheduler_binary_20_Hmg_dst_2',
                                'mnist_struct_baseline_scheduler_binary_25_Hmg_dst_2',
