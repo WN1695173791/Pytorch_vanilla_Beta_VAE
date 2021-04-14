@@ -144,7 +144,7 @@ def compute_scores_and_loss(net, train_loader, test_loader, device, train_loader
 
 
 def compute_scores_and_loss_VAE(net, train_loader, test_loader, train_loader_size, test_loader_size, device,
-                                lambda_BCE, beta, is_vae_var, ES_reconstruction):
+                                lambda_BCE, beta, is_vae_var, ES_reconstruction, EV_classifier):
     Total_loss_train, BCE_train, KLD_train = compute_scores_VAE(net,
                                                                 train_loader,
                                                                 train_loader_size,
@@ -152,7 +152,8 @@ def compute_scores_and_loss_VAE(net, train_loader, test_loader, train_loader_siz
                                                                 lambda_BCE,
                                                                 beta,
                                                                 is_vae_var,
-                                                                ES_reconstruction)
+                                                                ES_reconstruction,
+                                                                EV_classifier)
     Total_loss_test, BCE_test, KLD_test = compute_scores_VAE(net,
                                                              test_loader,
                                                              test_loader_size,
@@ -160,7 +161,8 @@ def compute_scores_and_loss_VAE(net, train_loader, test_loader, train_loader_siz
                                                              lambda_BCE,
                                                              beta,
                                                              is_vae_var,
-                                                             ES_reconstruction)
+                                                             ES_reconstruction,
+                                                             EV_classifier)
     losses = {'Total_loss_train': Total_loss_train,
               'BCE_train': BCE_train,
               'KLD_train': KLD_train,
@@ -807,7 +809,8 @@ class SolverClassifier(object):
                                                           self.lambda_BCE,
                                                           self.beta,
                                                           self.is_VAE_var,
-                                                          self.ES_reconstruction)
+                                                          self.ES_reconstruction,
+                                                          self.EV_classifier)
             elif self.is_encoder_struct:
                 self.scores, self.losses = compute_scores_and_loss(self.net,
                                                                    self.train_loader,
