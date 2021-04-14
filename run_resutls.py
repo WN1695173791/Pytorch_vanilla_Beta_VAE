@@ -239,50 +239,21 @@ def run_VAE(model_name, net, lambda_BCE, beta, z_struct_size, z_var_size, VAE_st
     embedding_size = z_struct_size + z_var_size
     net.eval()
 
-    """
-    # _________------------------TEst VAE-----------------_______________________
-    z_struct_layer_num = get_layer_zstruct_num(net) + 1
-
-    print(net.encoder_struct[6].weight[8][12])
-
-    print(z_struct_layer_num)
-    print(net.encoder_struct[:z_struct_layer_num])
-
-    # test to debug: TODO: remove test.
-    for data, labels in loader:
-        # evaluation mode:
-
-        with torch.no_grad():
-            input_data = data
-        if torch.cuda.is_available():
-            input_data = input_data.cuda()
-
-        x_recon, z_struct, z_var, z_var_sample, _, z = net(input_data)
-
-        break
-    print(z_struct.shape)
-    print(z_struct[:20])
-    z_struct_distribution = z_struct.detach().numpy()
-    zeros_proportion = (np.count_nonzero(z_struct_distribution == 0, axis=0) * 100.) / len(z_struct_distribution)
-    print(zeros_proportion)
-    # _________------------------End TEst VAE-----------------_______________________
-    """
-
     # __________-----------Values computing----------_____________
     # save code majoritaire with their percent:
-    same_binary_code(net, model_name, loader, nb_class, train_test=train_test, save=True, Hmg_dist=False, is_VAE=True)
-    z_struct_code_classes(model_name, nb_class, train_test=train_test)
+    # same_binary_code(net, model_name, loader, nb_class, train_test=train_test, save=True, Hmg_dist=False, is_VAE=True)
+    # z_struct_code_classes(model_name, nb_class, train_test=train_test)
 
     # Uc bin maj:
-    percent_max = histo_count_uniq_code(model_name, train_test, plot_histo=False, return_percent=True)
-    maj_uc = np.load('binary_encoder_struct_results/uniq_code/uc_maj_class_' + model_name + '_' \
-                               + train_test + '.npy', allow_pickle=True)
+    # percent_max = histo_count_uniq_code(model_name, train_test, plot_histo=False, return_percent=True)
+    # maj_uc = np.load('binary_encoder_struct_results/uniq_code/uc_maj_class_' + model_name + '_' \
+    #                            + train_test + '.npy', allow_pickle=True)
 
     # first: compute z_struct mean per class:
-    compute_z_struct_mean_VAE(net, model_name, loader, train_test='test', return_results=False)
+    # compute_z_struct_mean_VAE(net, model_name, loader, train_test='test', return_results=False)
 
     # second: get average z_struct per classe:
-    _, average_z_struct_class = get_z_struct_per_class_VAE(model_name, train_test='test', nb_class=nb_class)
+    # _, average_z_struct_class = get_z_struct_per_class_VAE(model_name, train_test='test', nb_class=nb_class)
 
 
     # __________--------------PLOT------------_________________
@@ -290,21 +261,22 @@ def run_VAE(model_name, net, lambda_BCE, beta, z_struct_size, z_var_size, VAE_st
     # plot_loss_results_VAE(path_scores, model_name, beta, lambda_BCE, save=True)
 
     # compute and plot real distribution:
-    mu_var, sigma_var, encoder_struct_zeros_proportion = real_distribution_model(net,
-                                                                         model_name,
-                                                                         z_struct_size,
-                                                                         z_var_size,
-                                                                         loader,
-                                                                         'test',
-                                                                         plot_gaussian=False,
-                                                                         save=True,
-                                                                         VAE_struct=VAE_struct,
-                                                                         is_vae_var=is_vae_var)
+    # mu_var, sigma_var, encoder_struct_zeros_proportion = real_distribution_model(net,
+    #                                                                      model_name,
+    #                                                                      z_struct_size,
+    #                                                                      z_var_size,
+    #                                                                      loader,
+    #                                                                      'test',
+    #                                                                      plot_gaussian=False,
+    #                                                                      save=True,
+    #                                                                      VAE_struct=VAE_struct,
+    #                                                                      is_vae_var=is_vae_var)
 
+    # mu_var, sigma_var, encoder_struct_zeros_proportion = 0, 0, 0
     # plot reconstruciton with real distribution sample:
     # viz_reconstruction_VAE(net, loader, model_name, z_var_size, z_struct_size, nb_img=10,
     #                        nb_class=nb_class, save=True, z_reconstruction=True,
-    #                        z_struct_reconstruction=True, z_var_reconstruction=True,
+    #                        z_struct_reconstruction=False, z_var_reconstruction=False,
     #                        return_scores=False, real_distribution=True, mu_var=mu_var, std_var=sigma_var,
     #                        mu_struct=encoder_struct_zeros_proportion, is_vae_var=is_vae_var)
 
@@ -351,9 +323,9 @@ def run_VAE(model_name, net, lambda_BCE, beta, z_struct_size, z_var_size, VAE_st
     #                save=True)
 
     # plot resume VAE:
-    plot_VAE_resume(net, model_name, z_struct_size, z_var_size, loader, VAE_struct, is_vae_var, train_test, save=True,
-                    nb_class=nb_class, nb_img=8, std_var=sigma_var, mu_var=mu_var,
-                    mu_struct=encoder_struct_zeros_proportion, index=0)
+    # plot_VAE_resume(net, model_name, z_struct_size, z_var_size, loader, VAE_struct, is_vae_var, train_test, save=True,
+    #                 nb_class=nb_class, nb_img=8, std_var=sigma_var, mu_var=mu_var,
+    #                 mu_struct=encoder_struct_zeros_proportion, index=0)
 
     net.train()
     return
@@ -690,16 +662,31 @@ if __name__ == '__main__':
                     # 'mnist_VAE_s25_v30_FS',
                     # 'mnist_VAE_s30_v30_FS']
 
-    list_ES_reconstruction = ['mnist_encoder_struct_reconstruction_s10_PT_2',
-                              'mnist_encoder_struct_reconstruction_s10_FS_2',
-                              'mnist_encoder_struct_reconstruction_s15_PT_2',
-                              'mnist_encoder_struct_reconstruction_s15_FS_2',
-                              'mnist_encoder_struct_reconstruction_s20_PT_2',
-                              'mnist_encoder_struct_reconstruction_s20_FS_2',
-                              'mnist_encoder_struct_reconstruction_s25_PT_2',
-                              'mnist_encoder_struct_reconstruction_s25_FS_2',
-                              'mnist_encoder_struct_reconstruction_s30_PT_2',
-                              'mnist_encoder_struct_reconstruction_s30_FS_2']
+    list_ES_reconstruction = [# 'mnist_encoder_struct_reconstruction_s10_PT_2',
+                              # 'mnist_encoder_struct_reconstruction_s10_FS_2',
+                              # 'mnist_encoder_struct_reconstruction_s15_PT_2',
+                              # 'mnist_encoder_struct_reconstruction_s15_FS_2',
+                              # 'mnist_encoder_struct_reconstruction_s20_PT_2',
+                              # 'mnist_encoder_struct_reconstruction_s20_FS_2',
+                              # 'mnist_encoder_struct_reconstruction_s25_PT_2',
+                              # 'mnist_encoder_struct_reconstruction_s25_FS_2',
+                              # 'mnist_encoder_struct_reconstruction_s30_PT_2',
+                              # 'mnist_encoder_struct_reconstruction_s30_FS_2',
+                              'mnist_encoder_struct_reconstruction_s10_Hmg_dst_1_PT',
+                              'mnist_encoder_struct_reconstruction_s10_Hmg_dst_2_PT',
+                              'mnist_encoder_struct_reconstruction_s10_Hmg_dst_3_PT',
+                              'mnist_encoder_struct_reconstruction_s15_Hmg_dst_1_PT',
+                              'mnist_encoder_struct_reconstruction_s15_Hmg_dst_2_PT',
+                              'mnist_encoder_struct_reconstruction_s15_Hmg_dst_3_PT',
+                              'mnist_encoder_struct_reconstruction_s20_Hmg_dst_1_PT',
+                              'mnist_encoder_struct_reconstruction_s20_Hmg_dst_2_PT',
+                              'mnist_encoder_struct_reconstruction_s20_Hmg_dst_3_PT',
+                              'mnist_encoder_struct_reconstruction_s25_Hmg_dst_1_PT',
+                              'mnist_encoder_struct_reconstruction_s25_Hmg_dst_2_PT',
+                              'mnist_encoder_struct_reconstruction_s25_Hmg_dst_3_PT',
+                              'mnist_encoder_struct_reconstruction_s30_Hmg_dst_1_PT',
+                              'mnist_encoder_struct_reconstruction_s30_Hmg_dst_2_PT',
+                              'mnist_encoder_struct_reconstruction_s30_Hmg_dst_3_PT']
 
     parameters_mnist_classifier_BK_ratio = "parameters_combinations/mnist_classifier_ratio.txt"
 
@@ -709,11 +696,11 @@ if __name__ == '__main__':
     #                                                is_VAE=False,
     #                                                is_encoder_struct=True)
 
-    run_exp_extraction_and_visualization_custom_BK(list_encoder_struct_Hmg,
-                                                   is_ratio=False,
-                                                   is_decoder=False,
-                                                   is_VAE=False,
-                                                   is_encoder_struct=True)
+    # run_exp_extraction_and_visualization_custom_BK(list_encoder_struct_Hmg,
+    #                                                is_ratio=False,
+    #                                                is_decoder=False,
+    #                                                is_VAE=False,
+    #                                                is_encoder_struct=True)
 
     # run_exp_extraction_and_visualization_custom_BK(list_exp_VAE_var,
     #                                                is_ratio=False,
@@ -727,10 +714,10 @@ if __name__ == '__main__':
     #                                                is_VAE=True,
     #                                                is_encoder_struct=False)
 
-    # run_exp_extraction_and_visualization_custom_BK(list_ES_reconstruction,
-    #                                                is_ratio=False,
-    #                                                is_decoder=False,
-    #                                                is_VAE=True,
-    #                                                is_encoder_struct=False)
+    run_exp_extraction_and_visualization_custom_BK(list_ES_reconstruction,
+                                                   is_ratio=False,
+                                                   is_decoder=False,
+                                                   is_VAE=True,
+                                                   is_encoder_struct=False)
 
 
