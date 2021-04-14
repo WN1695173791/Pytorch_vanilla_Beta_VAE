@@ -1,0 +1,648 @@
+39
+--gpu_devices 0 --max_iter 100 --batch_size 250 --use_scheduler True --lr 1e-3 --GMP True --z_struct_size 10 --is_VAE True --is_encoder_struct False --lambda_BCE 1 --beta 3 --big_kernel_size 8 --two_conv_layer True --three_conv_layer True --kernel_size_1 4 --kernel_size_2 4 --kernel_size_3 4 --BK_in_first_layer True --BK_in_second_layer False --BK_in_third_layer False --stride_size 1 --hidden_filters_layer1 64 --hidden_filters_layer2 64 --hidden_filters_layer3 64 --dataset_balanced True --binary_z True --binary_first_conv False --binary_second_conv False --binary_third_conv True --z_var_size 30 --z_struct_size 30 --use_small_lr_encoder_var False --encoder_var_name None --encoder_struct_name mnist_struct_baseline_scheduler_binary_30 --freeze_Encoder True --exp_name mnist_VAE_s30_v30_SE_beta_3
+Namespace(BK_in_first_layer=True, BK_in_second_layer=False, BK_in_third_layer=False, BN=False, C_max=25, C_stop_iter=100000.0, E1_AE=False, E1_VAE=False, E1_conv=False, E1_dense=False, E1_second_conv=False, E1_second_conv_adapt=False, ES_reconstruction=False, EV_classifier=False, GMP=True, Hmg_dst_loss=False, IPC=False, L1_norm_act=False, L1_norm_weights=False, L3_without_random=False, LOG_DIR='logs', adapt_lr=False, add_classification_layer=True, add_linear_after_GMP=True, add_z_struct_bottleneck=False, alpha=32, batch_size=250, beta=3.0, beta1=0.9, beta2=0.999, big_kernel=False, big_kernel_size=8, binary_chain=False, binary_first_conv=False, binary_second_conv=False, binary_third_conv=True, binary_z=True, both_decoders_freeze=False, ckpt_dir='checkpoints_CNN', ckpt_dir_scores='checkpoint_scores_CNN', classif_layer_size=30, contrastive_loss=False, cuda=True, dataset='mnist', dataset_balanced=True, decoder_first_dense=36, decoder_kernel_size_1=4, decoder_kernel_size_2=3, decoder_kernel_size_3=4, decoder_n_filter_1=64, decoder_n_filter_2=64, decoder_n_filter_3=64, decoder_stride_1=2, decoder_stride_2=2, decoder_stride_3=1, diff_var=False, display_step=10000, dset_dir='data', encoder_struct_name='mnist_struct_baseline_scheduler_binary_30', encoder_var_name='None', exp_name='mnist_VAE_s30_v30_SE_beta_3', freeze_Encoder=True, gamma=1000, gpu_devices=[0], hidden_filters_layer1=64, hidden_filters_layer2=64, hidden_filters_layer3=64, image_size=64, intra_class_variance_loss=False, is_C=True, is_E1=False, is_VAE=True, is_VAE_var=False, is_binary_structural_latent=False, is_custom_model=False, is_custom_model_BK=False, is_default_model=False, is_encoder_struct=False, is_noise_stats=False, is_partial_rand_class=False, is_perturbed_score=False, is_zvar_sim_loss=False, just_train=False, kernel_size=4, kernel_size_1=4, kernel_size_2=4, kernel_size_3=4, lambda_BCE=1.0, lambda_Kl_struct=1, lambda_Kl_var=1, lambda_L1=0.01, lambda_VAE=1, lambda_class=1, lambda_contrastive_loss=1, lambda_distance_mean=1, lambda_hmg_dst=1, lambda_intra_class_var=1, lambda_partial_class=1, lambda_ratio_reg=1, lambda_recon_wt_rand=1, lambda_recons=1, lambda_uniq_code_dst=1, lambda_var_distance=1, lambda_var_inter=1, lambda_var_intra=1, lambda_zvar_sim=1, latent_spec_cont=None, latent_spec_cont_class=None, latent_spec_cont_var=None, latent_spec_disc=None, latent_spec_disc_class=None, latent_spec_disc_var=None, log_level='info', loss='Proxy_Anchor', loss_distance_mean=False, loss_min_distance_cl=False, lr=0.001, max_epoch_use_uniq_code_target=5, max_iter=100.0, model='CNN', mrg=0.1, nb_epochs_train_only_zvar=0, num_workers=2, old_weighted=False, optimizer='adamw', other_architecture=False, other_ratio=False, random_percentage=0.2, random_seed=10, randomness=True, ratio_reg=False, remark='', save_step=10000, second_layer_C=False, seed=1, stride_size=1, sz_embedding=5, three_conv_layer=True, train=True, train_var_struct_alternatively=False, two_conv_layer=True, two_encoder=False, uniq_code_dst_loss=False, use_VAE=False, use_decoder=False, use_early_stopping=True, use_scheduler=True, use_small_lr_encoder_var=False, use_structural_encoder=False, value_target_distance_mean=1, var_hidden_dim=256, var_hidden_filters_1=32, var_hidden_filters_2=32, var_hidden_filters_3=32, var_kernel_size_1=3, var_kernel_size_2=3, var_kernel_size_3=3, var_second_cnn_block=True, var_stride_size_1=1, var_stride_size_2=1, var_stride_size_3=1, var_third_cnn_block=False, var_three_conv_layer=False, warm=1, without_acc=False, z_struct_size=30, z_var_size=30, zeros_W_Classif=False, zvar_sim_change_zvar=False, zvar_sim_loss_for_all_model=False, zvar_sim_loss_only_for_encoder=False, zvar_sim_normal=False, zvar_sim_var_rand=False)
+CUDA Visible devices !
+[Using Seed: 10]
+Balanced dataset loaded
+VAE doesn't exist but encoder struct yes ! load struct encoder weighs !
+=> loaded checkpoint 'checkpoints_CNN/mnist_struct_baseline_scheduler_binary_30/last (iter 22680)'
+Weighs loaded for struct encoder !
+use 1 gpu who named: Tesla V100-SXM2-32GB
+VAE(
+  (encoder_struct): Sequential(
+    (0): Conv2d(1, 64, kernel_size=(8, 8), stride=(1, 1))
+    (1): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (2): ReLU(inplace=True)
+    (3): Conv2d(64, 64, kernel_size=(4, 4), stride=(1, 1))
+    (4): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (5): ReLU(inplace=True)
+    (6): Conv2d(64, 30, kernel_size=(4, 4), stride=(1, 1))
+    (7): BatchNorm2d(30, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (8): DeterministicBinaryActivation(
+      (act): Hardsigmoid(
+        (act): Hardtanh(min_val=-1.0, max_val=1.0)
+      )
+    )
+    (9): AdaptiveMaxPool2d(output_size=(1, 1))
+    (10): View()
+  )
+  (encoder_var): Sequential(
+    (0): Conv2d(1, 32, kernel_size=(3, 3), stride=(1, 1))
+    (1): ReLU(inplace=True)
+    (2): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (3): Conv2d(32, 32, kernel_size=(3, 3), stride=(1, 1))
+    (4): ReLU(inplace=True)
+    (5): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (6): Conv2d(32, 32, kernel_size=(5, 5), stride=(2, 2), padding=(2, 2))
+    (7): ReLU(inplace=True)
+    (8): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (9): Dropout(p=0.4, inplace=False)
+    (10): Conv2d(32, 64, kernel_size=(3, 3), stride=(1, 1))
+    (11): ReLU(inplace=True)
+    (12): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (13): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1))
+    (14): ReLU(inplace=True)
+    (15): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (16): Conv2d(64, 64, kernel_size=(5, 5), stride=(2, 2), padding=(2, 2))
+    (17): ReLU(inplace=True)
+    (18): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (19): Dropout(p=0.4, inplace=False)
+    (20): View()
+    (21): Linear(in_features=1600, out_features=60, bias=True)
+  )
+  (decoder): Sequential(
+    (0): Linear(in_features=60, out_features=1600, bias=True)
+    (1): ReLU(inplace=True)
+    (2): View()
+    (3): ConvTranspose2d(64, 64, kernel_size=(4, 4), stride=(2, 2), padding=(1, 1))
+    (4): ReLU(inplace=True)
+    (5): ConvTranspose2d(64, 64, kernel_size=(3, 3), stride=(1, 1))
+    (6): ReLU(inplace=True)
+    (7): ConvTranspose2d(64, 32, kernel_size=(3, 3), stride=(1, 1))
+    (8): ReLU(inplace=True)
+    (9): ConvTranspose2d(32, 32, kernel_size=(4, 4), stride=(2, 2), padding=(1, 1))
+    (10): ReLU(inplace=True)
+    (11): ConvTranspose2d(32, 32, kernel_size=(3, 3), stride=(1, 1))
+    (12): ReLU(inplace=True)
+    (13): ConvTranspose2d(32, 1, kernel_size=(3, 3), stride=(1, 1))
+    (14): Sigmoid()
+  )
+)
+The number of parameters of model is 635095
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 270, epoch 1.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 270, epoch 1.0)
+[Save Checkpoint] epoch: [1.0], Train: total:9476.23828, BCE:-12.70194, KLD:3162.97900,Test: total:37899.63672, BCE:-12.78079, KLD:12637.47168
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 540, epoch 2.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 540, epoch 2.0)
+[Save Checkpoint] epoch: [2.0], Train: total:9780.85742, BCE:-13.48634, KLD:3264.78174,Test: total:38963.30859, BCE:-13.56748, KLD:12992.29199
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 810, epoch 3.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 810, epoch 3.0)
+[Save Checkpoint] epoch: [3.0], Train: total:9836.43457, BCE:-13.11684, KLD:3283.18481,Test: total:39187.32422, BCE:-13.21808, KLD:13066.84668
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 1080, epoch 4.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 1080, epoch 4.0)
+[Save Checkpoint] epoch: [4.0], Train: total:9910.48828, BCE:-12.51007, KLD:3307.66504,Test: total:39494.44922, BCE:-12.62490, KLD:13169.02539
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 1350, epoch 5.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 1350, epoch 5.0)
+[Save Checkpoint] epoch: [5.0], Train: total:10517.70898, BCE:-13.40036, KLD:3510.36938,Test: total:41866.21484, BCE:-13.51846, KLD:13959.91113
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 1620, epoch 6.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 1620, epoch 6.0)
+[Save Checkpoint] epoch: [6.0], Train: total:10384.08301, BCE:-13.18831, KLD:3465.75879,Test: total:41294.85938, BCE:-13.38472, KLD:13769.41406
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 1890, epoch 7.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 1890, epoch 7.0)
+[Save Checkpoint] epoch: [7.0], Train: total:10316.89941, BCE:-14.37291, KLD:3443.75562,Test: total:40929.31641, BCE:-14.56794, KLD:13647.96094
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 2160, epoch 8.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 2160, epoch 8.0)
+[Save Checkpoint] epoch: [8.0], Train: total:10227.52637, BCE:-14.91907, KLD:3414.14746,Test: total:40570.12500, BCE:-15.10302, KLD:13528.40918
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 2430, epoch 9.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 2430, epoch 9.0)
+EarlyStopping counter: 1 out of 25
+[Save Checkpoint] epoch: [9.0], Train: total:10260.21484, BCE:-15.14513, KLD:3425.11963,Test: total:40666.13672, BCE:-15.34843, KLD:13560.49707
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 2700, epoch 10.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 2700, epoch 10.0)
+[Save Checkpoint] epoch: [10.0], Train: total:10170.59766, BCE:-16.33148, KLD:3395.64160,Test: total:40349.27734, BCE:-16.57633, KLD:13455.28613
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 2970, epoch 11.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 2970, epoch 11.0)
+[Save Checkpoint] epoch: [11.0], Train: total:9811.72949, BCE:-16.75210, KLD:3276.16138,Test: total:38874.82422, BCE:-16.97343, KLD:12963.93262
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 3240, epoch 12.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 3240, epoch 12.0)
+[Save Checkpoint] epoch: [12.0], Train: total:10007.44629, BCE:-17.03336, KLD:3341.49463,Test: total:39681.03516, BCE:-17.22480, KLD:13232.75293
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 3510, epoch 13.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 3510, epoch 13.0)
+[Save Checkpoint] epoch: [13.0], Train: total:9779.22266, BCE:-16.98519, KLD:3265.40137,Test: total:38831.82812, BCE:-17.21082, KLD:12949.67969
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 3780, epoch 14.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 3780, epoch 14.0)
+[Save Checkpoint] epoch: [14.0], Train: total:9735.57324, BCE:-16.84289, KLD:3250.80469,Test: total:38598.62109, BCE:-17.06025, KLD:12871.89355
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 4050, epoch 15.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 4050, epoch 15.0)
+[Save Checkpoint] epoch: [15.0], Train: total:9786.89258, BCE:-17.57761, KLD:3268.15503,Test: total:38747.53516, BCE:-17.78096, KLD:12921.77246
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 4320, epoch 16.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 4320, epoch 16.0)
+EarlyStopping counter: 1 out of 25
+[Save Checkpoint] epoch: [16.0], Train: total:9733.47949, BCE:-17.05744, KLD:3250.17993,Test: total:38630.35547, BCE:-17.27412, KLD:12882.54395
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 4590, epoch 17.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 4590, epoch 17.0)
+[Save Checkpoint] epoch: [17.0], Train: total:9544.33203, BCE:-17.34493, KLD:3187.22681,Test: total:37812.20703, BCE:-17.59005, KLD:12609.93262
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 4860, epoch 18.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 4860, epoch 18.0)
+[Save Checkpoint] epoch: [18.0], Train: total:9421.59570, BCE:-17.55708, KLD:3146.38354,Test: total:37346.16797, BCE:-17.79593, KLD:12454.65625
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 5130, epoch 19.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 5130, epoch 19.0)
+[Save Checkpoint] epoch: [19.0], Train: total:9558.96680, BCE:-17.83006, KLD:3192.26855,Test: total:37881.88672, BCE:-18.04740, KLD:12633.31152
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 5400, epoch 20.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 5400, epoch 20.0)
+EarlyStopping counter: 1 out of 25
+[Save Checkpoint] epoch: [20.0], Train: total:9546.63672, BCE:-18.19414, KLD:3188.27686,Test: total:37795.37891, BCE:-18.36077, KLD:12604.57812
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 5670, epoch 21.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 5670, epoch 21.0)
+EarlyStopping counter: 2 out of 25
+[Save Checkpoint] epoch: [21.0], Train: total:9516.82324, BCE:-17.59611, KLD:3178.13989,Test: total:37700.09375, BCE:-17.74237, KLD:12572.61230
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 5940, epoch 22.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 5940, epoch 22.0)
+[Save Checkpoint] epoch: [22.0], Train: total:9423.98535, BCE:-17.01535, KLD:3146.99951,Test: total:37319.26953, BCE:-17.22967, KLD:12445.50000
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 6210, epoch 23.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 6210, epoch 23.0)
+EarlyStopping counter: 1 out of 25
+[Save Checkpoint] epoch: [23.0], Train: total:9188.04688, BCE:-17.78193, KLD:3068.60864,Test: total:36408.60156, BCE:-17.95332, KLD:12142.18457
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 6480, epoch 24.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 6480, epoch 24.0)
+EarlyStopping counter: 2 out of 25
+[Save Checkpoint] epoch: [24.0], Train: total:9251.51855, BCE:-17.92255, KLD:3089.81201,Test: total:36639.53906, BCE:-18.09149, KLD:12219.21094
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 6750, epoch 25.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 6750, epoch 25.0)
+[Save Checkpoint] epoch: [25.0], Train: total:9133.52344, BCE:-16.58408, KLD:3050.03638,Test: total:36156.91406, BCE:-16.75781, KLD:12057.89062
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 7020, epoch 26.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 7020, epoch 26.0)
+[Save Checkpoint] epoch: [26.0], Train: total:9329.07227, BCE:-18.01819, KLD:3115.69678,Test: total:36904.39844, BCE:-18.20348, KLD:12307.53418
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 7290, epoch 27.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 7290, epoch 27.0)
+EarlyStopping counter: 1 out of 25
+[Save Checkpoint] epoch: [27.0], Train: total:9354.53711, BCE:-18.09356, KLD:3124.21118,Test: total:37018.22656, BCE:-18.28668, KLD:12345.50293
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 7560, epoch 28.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 7560, epoch 28.0)
+EarlyStopping counter: 2 out of 25
+[Save Checkpoint] epoch: [28.0], Train: total:9269.14160, BCE:-18.19814, KLD:3095.77832,Test: total:36654.23047, BCE:-18.38854, KLD:12224.20508
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 7830, epoch 29.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 7830, epoch 29.0)
+[Save Checkpoint] epoch: [29.0], Train: total:9281.66602, BCE:-18.05146, KLD:3099.90479,Test: total:36697.70703, BCE:-18.25304, KLD:12238.65527
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 8100, epoch 30.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 8100, epoch 30.0)
+EarlyStopping counter: 1 out of 25
+[Save Checkpoint] epoch: [30.0], Train: total:9278.63281, BCE:-18.83107, KLD:3099.15576,Test: total:36699.63281, BCE:-18.95949, KLD:12239.53125
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 8370, epoch 31.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 8370, epoch 31.0)
+EarlyStopping counter: 2 out of 25
+[Save Checkpoint] epoch: [31.0], Train: total:9247.43164, BCE:-18.87624, KLD:3088.77173,Test: total:36585.28516, BCE:-19.05853, KLD:12201.44727
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 8640, epoch 32.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 8640, epoch 32.0)
+EarlyStopping counter: 3 out of 25
+[Save Checkpoint] epoch: [32.0], Train: total:9287.43848, BCE:-19.33765, KLD:3102.25928,Test: total:36731.60547, BCE:-19.52400, KLD:12250.37500
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 8910, epoch 33.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 8910, epoch 33.0)
+EarlyStopping counter: 4 out of 25
+[Save Checkpoint] epoch: [33.0], Train: total:9300.07227, BCE:-19.24933, KLD:3106.44287,Test: total:36808.10938, BCE:-19.45640, KLD:12275.85449
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 9180, epoch 34.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 9180, epoch 34.0)
+[Save Checkpoint] epoch: [34.0], Train: total:9315.17773, BCE:-19.17559, KLD:3111.45312,Test: total:36821.31250, BCE:-19.33024, KLD:12280.21387
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 9450, epoch 35.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 9450, epoch 35.0)
+EarlyStopping counter: 1 out of 25
+[Save Checkpoint] epoch: [35.0], Train: total:9191.02344, BCE:-19.94488, KLD:3070.32007,Test: total:36363.30859, BCE:-20.11642, KLD:12127.80859
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 9720, epoch 36.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 9720, epoch 36.0)
+EarlyStopping counter: 2 out of 25
+[Save Checkpoint] epoch: [36.0], Train: total:9275.44336, BCE:-20.61061, KLD:3098.68433,Test: total:36643.59375, BCE:-20.82745, KLD:12221.47461
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 9990, epoch 37.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 9990, epoch 37.0)
+EarlyStopping counter: 3 out of 25
+[Save Checkpoint] epoch: [37.0], Train: total:9099.19336, BCE:-20.67168, KLD:3039.95361,Test: total:35975.74609, BCE:-20.84075, KLD:11998.86230
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 10260, epoch 38.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 10260, epoch 38.0)
+EarlyStopping counter: 4 out of 25
+[Save Checkpoint] epoch: [38.0], Train: total:9275.82715, BCE:-20.63191, KLD:3098.81934,Test: total:36687.05469, BCE:-20.79307, KLD:12235.94824
+Epoch    39: reducing learning rate of group 0 to 2.0000e-04.
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 10530, epoch 39.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 10530, epoch 39.0)
+EarlyStopping counter: 5 out of 25
+[Save Checkpoint] epoch: [39.0], Train: total:9139.49902, BCE:-21.30395, KLD:3053.60059,Test: total:36142.36328, BCE:-21.45483, KLD:12054.60742
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 10800, epoch 40.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 10800, epoch 40.0)
+[Save Checkpoint] epoch: [40.0], Train: total:9129.84277, BCE:-21.03315, KLD:3050.29248,Test: total:36070.83984, BCE:-21.22566, KLD:12030.68652
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 11070, epoch 41.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 11070, epoch 41.0)
+[Save Checkpoint] epoch: [41.0], Train: total:9155.73438, BCE:-21.12601, KLD:3058.95435,Test: total:36154.93359, BCE:-21.24469, KLD:12058.72656
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 11340, epoch 42.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 11340, epoch 42.0)
+[Save Checkpoint] epoch: [42.0], Train: total:9165.55176, BCE:-21.19246, KLD:3062.24756,Test: total:36218.16406, BCE:-21.34366, KLD:12079.83496
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 11610, epoch 43.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 11610, epoch 43.0)
+EarlyStopping counter: 1 out of 25
+[Save Checkpoint] epoch: [43.0], Train: total:9171.00586, BCE:-21.18131, KLD:3064.06250,Test: total:36235.60547, BCE:-21.33640, KLD:12085.64453
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 11880, epoch 44.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 11880, epoch 44.0)
+EarlyStopping counter: 2 out of 25
+[Save Checkpoint] epoch: [44.0], Train: total:9116.33789, BCE:-21.23930, KLD:3045.85815,Test: total:36034.41797, BCE:-21.38561, KLD:12018.60156
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 12150, epoch 45.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 12150, epoch 45.0)
+EarlyStopping counter: 3 out of 25
+[Save Checkpoint] epoch: [45.0], Train: total:9134.27637, BCE:-21.37670, KLD:3051.88403,Test: total:36082.90234, BCE:-21.53831, KLD:12034.81250
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 12420, epoch 46.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 12420, epoch 46.0)
+EarlyStopping counter: 4 out of 25
+[Save Checkpoint] epoch: [46.0], Train: total:9094.97363, BCE:-21.56317, KLD:3038.84473,Test: total:35922.92969, BCE:-21.70924, KLD:11981.54688
+Epoch    47: reducing learning rate of group 0 to 4.0000e-05.
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 12690, epoch 47.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 12690, epoch 47.0)
+EarlyStopping counter: 5 out of 25
+[Save Checkpoint] epoch: [47.0], Train: total:9082.22363, BCE:-21.31380, KLD:3034.51245,Test: total:35892.59375, BCE:-21.49872, KLD:11971.36621
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 12960, epoch 48.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 12960, epoch 48.0)
+EarlyStopping counter: 6 out of 25
+[Save Checkpoint] epoch: [48.0], Train: total:9112.00879, BCE:-21.46610, KLD:3044.49219,Test: total:36005.85156, BCE:-21.65971, KLD:12009.17090
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 13230, epoch 49.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 13230, epoch 49.0)
+[Save Checkpoint] epoch: [49.0], Train: total:9115.09863, BCE:-21.44626, KLD:3045.51636,Test: total:36017.62891, BCE:-21.60035, KLD:12013.07617
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 13500, epoch 50.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 13500, epoch 50.0)
+EarlyStopping counter: 1 out of 25
+[Save Checkpoint] epoch: [50.0], Train: total:9103.89258, BCE:-21.28764, KLD:3041.72583,Test: total:35967.76172, BCE:-21.45442, KLD:11996.40527
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 13770, epoch 51.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 13770, epoch 51.0)
+EarlyStopping counter: 2 out of 25
+[Save Checkpoint] epoch: [51.0], Train: total:9124.70117, BCE:-21.36547, KLD:3048.68994,Test: total:36058.32031, BCE:-21.56012, KLD:12026.62695
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 14040, epoch 52.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 14040, epoch 52.0)
+EarlyStopping counter: 3 out of 25
+[Save Checkpoint] epoch: [52.0], Train: total:9104.34863, BCE:-21.51944, KLD:3041.95630,Test: total:35979.68359, BCE:-21.70745, KLD:12000.46289
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 14310, epoch 53.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 14310, epoch 53.0)
+EarlyStopping counter: 4 out of 25
+[Save Checkpoint] epoch: [53.0], Train: total:9106.06641, BCE:-21.44513, KLD:3042.50220,Test: total:35985.73828, BCE:-21.62506, KLD:12002.45410
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 14580, epoch 54.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 14580, epoch 54.0)
+[Save Checkpoint] epoch: [54.0], Train: total:9107.34570, BCE:-21.58807, KLD:3042.97729,Test: total:35992.21875, BCE:-21.74587, KLD:12004.65527
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 14850, epoch 55.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 14850, epoch 55.0)
+EarlyStopping counter: 1 out of 25
+[Save Checkpoint] epoch: [55.0], Train: total:9119.84277, BCE:-21.49063, KLD:3047.10938,Test: total:36037.39844, BCE:-21.63619, KLD:12019.67871
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 15120, epoch 56.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 15120, epoch 56.0)
+EarlyStopping counter: 2 out of 25
+[Save Checkpoint] epoch: [56.0], Train: total:9089.19336, BCE:-21.56805, KLD:3036.92114,Test: total:35919.33984, BCE:-21.71901, KLD:11980.35352
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 15390, epoch 57.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 15390, epoch 57.0)
+EarlyStopping counter: 3 out of 25
+[Save Checkpoint] epoch: [57.0], Train: total:9091.79297, BCE:-21.62853, KLD:3037.80762,Test: total:35924.91406, BCE:-21.78477, KLD:11982.23340
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 15660, epoch 58.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 15660, epoch 58.0)
+EarlyStopping counter: 4 out of 25
+[Save Checkpoint] epoch: [58.0], Train: total:9079.63184, BCE:-21.87795, KLD:3033.83667,Test: total:35879.85938, BCE:-22.03476, KLD:11967.29883
+Epoch    59: reducing learning rate of group 0 to 8.0000e-06.
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 15930, epoch 59.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 15930, epoch 59.0)
+EarlyStopping counter: 5 out of 25
+[Save Checkpoint] epoch: [59.0], Train: total:9104.48340, BCE:-21.81921, KLD:3042.10132,Test: total:35975.32422, BCE:-22.00489, KLD:11999.10938
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 16200, epoch 60.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 16200, epoch 60.0)
+EarlyStopping counter: 6 out of 25
+[Save Checkpoint] epoch: [60.0], Train: total:9096.36816, BCE:-21.70676, KLD:3039.35840,Test: total:35941.50781, BCE:-21.85952, KLD:11987.79004
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 16470, epoch 61.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 16470, epoch 61.0)
+EarlyStopping counter: 7 out of 25
+[Save Checkpoint] epoch: [61.0], Train: total:9092.17285, BCE:-21.70566, KLD:3037.95923,Test: total:35928.14453, BCE:-21.83309, KLD:11983.32520
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 16740, epoch 62.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 16740, epoch 62.0)
+EarlyStopping counter: 8 out of 25
+[Save Checkpoint] epoch: [62.0], Train: total:9097.30762, BCE:-21.73013, KLD:3039.67920,Test: total:35947.86328, BCE:-21.86792, KLD:11989.91113
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 17010, epoch 63.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 17010, epoch 63.0)
+[Save Checkpoint] epoch: [63.0], Train: total:9101.05078, BCE:-21.71751, KLD:3040.92261,Test: total:35963.99609, BCE:-21.85160, KLD:11995.28223
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 17280, epoch 64.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 17280, epoch 64.0)
+EarlyStopping counter: 1 out of 25
+[Save Checkpoint] epoch: [64.0], Train: total:9104.85352, BCE:-21.67875, KLD:3042.17822,Test: total:35977.58203, BCE:-21.85225, KLD:11999.81152
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 17550, epoch 65.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 17550, epoch 65.0)
+EarlyStopping counter: 2 out of 25
+[Save Checkpoint] epoch: [65.0], Train: total:9102.62207, BCE:-21.72858, KLD:3041.44995,Test: total:35965.76953, BCE:-21.87502, KLD:11995.88184
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 17820, epoch 66.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 17820, epoch 66.0)
+EarlyStopping counter: 3 out of 25
+[Save Checkpoint] epoch: [66.0], Train: total:9093.68262, BCE:-21.75530, KLD:3038.47998,Test: total:35930.05078, BCE:-21.91183, KLD:11983.98730
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 18090, epoch 67.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 18090, epoch 67.0)
+EarlyStopping counter: 4 out of 25
+[Save Checkpoint] epoch: [67.0], Train: total:9086.97754, BCE:-21.75345, KLD:3036.24268,Test: total:35904.39453, BCE:-21.90442, KLD:11975.43359
+Epoch    68: reducing learning rate of group 0 to 1.6000e-06.
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 18360, epoch 68.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 18360, epoch 68.0)
+EarlyStopping counter: 5 out of 25
+[Save Checkpoint] epoch: [68.0], Train: total:9092.83008, BCE:-21.69473, KLD:3038.17334,Test: total:35927.92188, BCE:-21.84562, KLD:11983.25586
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 18630, epoch 69.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 18630, epoch 69.0)
+EarlyStopping counter: 6 out of 25
+[Save Checkpoint] epoch: [69.0], Train: total:9104.36914, BCE:-21.73763, KLD:3042.03394,Test: total:35973.01953, BCE:-21.89113, KLD:11998.30371
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 18900, epoch 70.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 18900, epoch 70.0)
+EarlyStopping counter: 7 out of 25
+[Save Checkpoint] epoch: [70.0], Train: total:9103.28320, BCE:-21.74320, KLD:3041.67480,Test: total:35971.18750, BCE:-21.92404, KLD:11997.70410
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 19170, epoch 71.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 19170, epoch 71.0)
+EarlyStopping counter: 8 out of 25
+[Save Checkpoint] epoch: [71.0], Train: total:9104.40527, BCE:-21.73657, KLD:3042.04736,Test: total:35974.87109, BCE:-21.87064, KLD:11998.91309
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 19440, epoch 72.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 19440, epoch 72.0)
+EarlyStopping counter: 9 out of 25
+[Save Checkpoint] epoch: [72.0], Train: total:9098.86621, BCE:-21.73275, KLD:3040.19873,Test: total:35952.55078, BCE:-21.90082, KLD:11991.48340
+Epoch    73: reducing learning rate of group 0 to 1.0000e-06.
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 19710, epoch 73.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 19710, epoch 73.0)
+EarlyStopping counter: 10 out of 25
+[Save Checkpoint] epoch: [73.0], Train: total:9095.12793, BCE:-21.73138, KLD:3038.95410,Test: total:35937.61719, BCE:-21.89834, KLD:11986.50391
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 19980, epoch 74.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 19980, epoch 74.0)
+EarlyStopping counter: 11 out of 25
+[Save Checkpoint] epoch: [74.0], Train: total:9102.42188, BCE:-21.75139, KLD:3041.39209,Test: total:35967.17578, BCE:-21.93502, KLD:11996.37012
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 20250, epoch 75.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 20250, epoch 75.0)
+EarlyStopping counter: 12 out of 25
+[Save Checkpoint] epoch: [75.0], Train: total:9105.75293, BCE:-21.75446, KLD:3042.50488,Test: total:35980.10156, BCE:-21.88696, KLD:12000.66309
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 20520, epoch 76.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 20520, epoch 76.0)
+EarlyStopping counter: 13 out of 25
+[Save Checkpoint] epoch: [76.0], Train: total:9100.85352, BCE:-21.77204, KLD:3040.87427,Test: total:35961.01172, BCE:-21.92230, KLD:11994.30957
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 20790, epoch 77.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 20790, epoch 77.0)
+EarlyStopping counter: 14 out of 25
+[Save Checkpoint] epoch: [77.0], Train: total:9107.79004, BCE:-21.76497, KLD:3043.18433,Test: total:35987.41406, BCE:-21.92086, KLD:12003.11426
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 21060, epoch 78.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 21060, epoch 78.0)
+EarlyStopping counter: 15 out of 25
+[Save Checkpoint] epoch: [78.0], Train: total:9106.90234, BCE:-21.75737, KLD:3042.88745,Test: total:35983.79297, BCE:-21.93446, KLD:12001.90820
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 21330, epoch 79.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 21330, epoch 79.0)
+EarlyStopping counter: 16 out of 25
+[Save Checkpoint] epoch: [79.0], Train: total:9104.12305, BCE:-21.73899, KLD:3041.95386,Test: total:35971.90234, BCE:-21.90546, KLD:11997.93359
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 21600, epoch 80.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 21600, epoch 80.0)
+[Save Checkpoint] epoch: [80.0], Train: total:9101.29297, BCE:-21.76395, KLD:3041.02026,Test: total:35960.85547, BCE:-21.91246, KLD:11994.25488
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 21870, epoch 81.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 21870, epoch 81.0)
+EarlyStopping counter: 1 out of 25
+[Save Checkpoint] epoch: [81.0], Train: total:9093.99414, BCE:-21.77823, KLD:3038.59229,Test: total:35932.58984, BCE:-21.94542, KLD:11984.84375
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 22140, epoch 82.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 22140, epoch 82.0)
+EarlyStopping counter: 2 out of 25
+[Save Checkpoint] epoch: [82.0], Train: total:9092.86426, BCE:-21.75928, KLD:3038.20874,Test: total:35928.33594, BCE:-21.93767, KLD:11983.42480
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 22410, epoch 83.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 22410, epoch 83.0)
+EarlyStopping counter: 3 out of 25
+[Save Checkpoint] epoch: [83.0], Train: total:9092.79492, BCE:-21.75183, KLD:3038.18188,Test: total:35928.32422, BCE:-21.92991, KLD:11983.41797
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 22680, epoch 84.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 22680, epoch 84.0)
+EarlyStopping counter: 4 out of 25
+[Save Checkpoint] epoch: [84.0], Train: total:9095.76562, BCE:-21.75381, KLD:3039.17261,Test: total:35940.28906, BCE:-21.88778, KLD:11987.39258
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 22950, epoch 85.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 22950, epoch 85.0)
+EarlyStopping counter: 5 out of 25
+[Save Checkpoint] epoch: [85.0], Train: total:9097.60449, BCE:-21.77481, KLD:3039.79370,Test: total:35947.01953, BCE:-21.91824, KLD:11989.64746
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 23220, epoch 86.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 23220, epoch 86.0)
+EarlyStopping counter: 6 out of 25
+[Save Checkpoint] epoch: [86.0], Train: total:9101.12012, BCE:-21.77654, KLD:3040.96436,Test: total:35960.49609, BCE:-21.90742, KLD:11994.13574
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 23490, epoch 87.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 23490, epoch 87.0)
+EarlyStopping counter: 7 out of 25
+[Save Checkpoint] epoch: [87.0], Train: total:9102.86230, BCE:-21.77236, KLD:3041.54517,Test: total:35967.88672, BCE:-21.94211, KLD:11996.60840
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 23760, epoch 88.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 23760, epoch 88.0)
+EarlyStopping counter: 8 out of 25
+[Save Checkpoint] epoch: [88.0], Train: total:9095.51855, BCE:-21.76532, KLD:3039.09497,Test: total:35938.46484, BCE:-21.91171, KLD:11986.79004
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 24030, epoch 89.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 24030, epoch 89.0)
+EarlyStopping counter: 9 out of 25
+[Save Checkpoint] epoch: [89.0], Train: total:9102.44629, BCE:-21.78227, KLD:3041.40894,Test: total:35966.60156, BCE:-21.92536, KLD:11996.17480
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 24300, epoch 90.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 24300, epoch 90.0)
+EarlyStopping counter: 10 out of 25
+[Save Checkpoint] epoch: [90.0], Train: total:9101.28320, BCE:-21.77119, KLD:3041.01807,Test: total:35962.01953, BCE:-21.92666, KLD:11994.64746
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 24570, epoch 91.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 24570, epoch 91.0)
+EarlyStopping counter: 11 out of 25
+[Save Checkpoint] epoch: [91.0], Train: total:9101.71973, BCE:-21.78354, KLD:3041.16724,Test: total:35962.73828, BCE:-21.90939, KLD:11994.88379
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 24840, epoch 92.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 24840, epoch 92.0)
+EarlyStopping counter: 12 out of 25
+[Save Checkpoint] epoch: [92.0], Train: total:9098.80273, BCE:-21.75783, KLD:3040.18823,Test: total:35951.31250, BCE:-21.90771, KLD:11991.07324
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 25110, epoch 93.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 25110, epoch 93.0)
+EarlyStopping counter: 13 out of 25
+[Save Checkpoint] epoch: [93.0], Train: total:9100.24414, BCE:-21.76733, KLD:3040.67041,Test: total:35956.36328, BCE:-21.93123, KLD:11992.76367
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 25380, epoch 94.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 25380, epoch 94.0)
+EarlyStopping counter: 14 out of 25
+[Save Checkpoint] epoch: [94.0], Train: total:9099.08691, BCE:-21.77454, KLD:3040.28687,Test: total:35952.56250, BCE:-21.92076, KLD:11991.49512
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 25650, epoch 95.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 25650, epoch 95.0)
+EarlyStopping counter: 15 out of 25
+[Save Checkpoint] epoch: [95.0], Train: total:9101.05273, BCE:-21.77888, KLD:3040.94434,Test: total:35959.94141, BCE:-21.95369, KLD:11993.96484
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 25920, epoch 96.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 25920, epoch 96.0)
+EarlyStopping counter: 16 out of 25
+[Save Checkpoint] epoch: [96.0], Train: total:9098.25195, BCE:-21.79020, KLD:3040.01367,Test: total:35949.85938, BCE:-21.93532, KLD:11990.59961
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 26190, epoch 97.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 26190, epoch 97.0)
+[Save Checkpoint] epoch: [97.0], Train: total:9095.14746, BCE:-21.78608, KLD:3038.97754,Test: total:35937.78125, BCE:-21.95064, KLD:11986.57715
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 26460, epoch 98.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 26460, epoch 98.0)
+EarlyStopping counter: 1 out of 25
+[Save Checkpoint] epoch: [98.0], Train: total:9100.33691, BCE:-21.79803, KLD:3040.71143,Test: total:35957.77344, BCE:-21.95447, KLD:11993.24121
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 26730, epoch 99.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 26730, epoch 99.0)
+EarlyStopping counter: 2 out of 25
+[Save Checkpoint] epoch: [99.0], Train: total:9101.73730, BCE:-21.76598, KLD:3041.16650,Test: total:35962.78125, BCE:-21.93104, KLD:11994.90332
+=> saved checkpoint 'checkpoints_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 27000, epoch 100.0)
+score:  0.0
+score:  0.0
+=> saved checkpoint 'checkpoint_scores_CNN/mnist_VAE_s30_v30_SE_beta_3/last' (iter 27000, epoch 100.0)
+EarlyStopping counter: 3 out of 25
+[Save Checkpoint] epoch: [100.0], Train: total:9102.17188, BCE:-21.77590, KLD:3041.31665,Test: total:35965.29297, BCE:-21.93677, KLD:11995.74219
+[Training Finished]
+All done !
