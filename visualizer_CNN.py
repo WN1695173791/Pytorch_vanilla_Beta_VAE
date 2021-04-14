@@ -2159,13 +2159,13 @@ def plot_VAE_resume(net, model_name, z_struct_size, z_var_size, loader, VAE_stru
     proba_struct = mu_struct.repeat(nb_samples, 1)
     sample_struct_avg_struct = torch.Tensor.float(torch.bernoulli(proba_struct))
     # z random:
-    sample = torch.cat((sample_var, sample_struct_avg_struct), dim=1)
+    sample_avg_struct = torch.cat((sample_var, sample_struct_avg_struct), dim=1)
 
     # generate:
     generated_maj_uc = net.decoder(sample_maj_uc)
     grid_generation_maj_uc = make_grid(generated_maj_uc.data, nrow=generation_size[1])
 
-    generated_avg_struct = net.decoder(sample_maj_uc)
+    generated_avg_struct = net.decoder(sample_avg_struct)
     grid_generation_avg_struct = make_grid(generated_avg_struct.data, nrow=generation_size[1])
 
     # compute scores:
@@ -2181,7 +2181,7 @@ def plot_VAE_resume(net, model_name, z_struct_size, z_var_size, loader, VAE_stru
     generation_batch_maj_uc = generated_maj_uc[:nb_samples]
     generation_batch_avg_struct = generated_avg_struct[:nb_samples]
 
-    """"
+    """
     # FID scores:
     FID_score_maj_uc = calculate_fid_given_paths(original_batch,
                                                  generation_batch_maj_uc,

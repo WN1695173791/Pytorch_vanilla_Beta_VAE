@@ -132,21 +132,26 @@ def compute_scores(net, loader, device, loader_size, nb_class, ratio_reg, z_stru
            variance_inter, loss_distance_cl, loss_distance_mean, total_loss
 
 
-def compute_scores_VAE(net, loader, loader_size, device, lambda_BCE, beta, is_vae_var=False, ES_reconstruction=False):
+def compute_scores_VAE(net, loader, loader_size, device, lambda_BCE, beta, is_vae_var=False, ES_reconstruction=False,
+                       is_prediction_var=False):
 
     BCE_loss = 0
     KLD_loss = 0
     total_loss = 0
+    classification_score = 0
+    nb_data = loader_size
 
     with torch.no_grad():
         for x in loader:
 
             data = x[0]
             data = data.to(device)  # Variable(data.to(device))
+            labels = x[1]
+            labels = labels.to(device)
 
             # compute loss:
             if is_vae_var:
-                x_recons, latent_representation = net(data)
+                x_recons, latent_representation, prediction_var = net(data)
             else:
                 x_recons, _, _, _, latent_representation, _ = net(data)
 
@@ -168,12 +173,21 @@ def compute_scores_VAE(net, loader, loader_size, device, lambda_BCE, beta, is_va
                 KLD_loss += KLD_loss_iter
 
                 total_loss_iter = (lambda_BCE * BCE_loss_iter) + (beta * KLD_loss_iter)
+            if is_prediction_var:
+                # classification score:
+                classification_score_iter = compute_scores_prediction(prediction_var, labels)
+                classification_score += classification_score_iter
+
             total_loss += total_loss_iter
 
     # losses:
     BCE_loss = BCE_loss / len(loader)
     KLD_loss = KLD_loss / len(loader)
     total_loss = total_loss / len(loader)
+
+    # scores:
+    score = 100. * classification_score / nb_data
+    print("score: ", score)
 
     return total_loss, BCE_loss, KLD_loss
 

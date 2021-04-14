@@ -275,6 +275,7 @@ class SolverClassifier(object):
         self.var_third_cnn_block = args.var_third_cnn_block
         self.other_architecture = args.other_architecture
         self.z_var_size = args.z_var_size
+        self.EV_classifier = args.EV_classifier
         # VAE parameters:
         self.is_VAE = args.is_VAE
         self.lambda_BCE = args.lambda_BCE
@@ -363,7 +364,9 @@ class SolverClassifier(object):
             net = VAE_var(z_var_size=self.z_var_size,
                           var_second_cnn_block=self.var_second_cnn_block,
                           var_third_cnn_block=self.var_third_cnn_block,
-                          other_architecture=self.other_architecture)
+                          other_architecture=self.other_architecture,
+                          EV_classifier=self.EV_classifier,
+                          n_classes=self.nb_class)
         elif self.is_VAE:
             self.net_type = 'VAE'
             net = VAE(z_var_size=self.z_var_size,
@@ -454,8 +457,36 @@ class SolverClassifier(object):
                 # after load weights we replace real exp name for checkpoint directory.
                 self.checkpoint_dir = os.path.join(args.ckpt_dir, args.exp_name)
             else:
-                self.net, self.device = gpu_config(net)
-                self.load_checkpoint('last')
+                if self.EV_classifier:
+                    print("Train classifier from encoder var pre-trained !")
+                    checkpoint_dir_encoder_var = os.path.join(args.ckpt_dir, self.encoder_var_name)
+                    file_path_encoder_var = os.path.join(checkpoint_dir_encoder_var, 'last')
+                    if os.path.isfile(file_path_encoder_var):
+                        print("Load encoder var weights !")
+                        # we create and load encoder struct with model name associate:
+                        pre_trained_var_model = VAE_var(z_var_size=self.z_var_size,
+                                                        var_second_cnn_block=self.var_second_cnn_block,
+                                                        var_third_cnn_block=self.var_third_cnn_block,
+                                                        other_architecture=self.other_architecture)
+                        # load weighs:
+                        pre_trained_var_model = self.load_pre_trained_checkpoint('last',
+                                                                                 checkpoint_dir_encoder_var,
+                                                                                 pre_trained_var_model)
+                        # get weighs dict of pre trained model:
+                        pretrained_dict = pre_trained_var_model.encoder_var.state_dict()
+                        # get dict of weighs for model VAE create (with init weights)
+                        model_dict = net.encoder_var.state_dict()
+                        # copy weighs pre trained in current model for same name layer:
+                        pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict}
+                        model_dict.update(pretrained_dict)
+                        # Load pre trained weighs in net model:
+                        net.encoder_var.load_state_dict(model_dict)
+                        print("Weighs loaded for var encoder !")
+                        # to device:
+                        self.net, self.device = gpu_config(net)
+                else:
+                    self.net, self.device = gpu_config(net)
+                    self.load_checkpoint('last')
         elif self.is_VAE:
                 # real checkpoint dir name:
                 self.checkpoint_dir = os.path.join(args.ckpt_dir, args.exp_name)
@@ -617,23 +648,27 @@ class SolverClassifier(object):
                     if self.is_VAE:
                         x_recons, z_struct, z_var, z_var_sample, latent_representation, z = self.net(data)
                     else:
-                        x_recons, latent_representation = self.net(data)
+                        x_recons, latent_representation, prediction_var = self.net(data)
 
-                    if self.ES_reconstruction:
-                        BCE_loss = F.mse_loss(x_recons, data, size_average=False)
-                        loss = BCE_loss
+                    if self.EV_classifier:
+                        classification_loss = F.nll_loss(prediction_var, labels)
+                        loss = classification_loss
                     else:
-                        mu = latent_representation['mu']
-                        log_var = latent_representation['log_var']
+                        if self.ES_reconstruction:
+                            BCE_loss = F.mse_loss(x_recons, data, size_average=False)
+                            loss = BCE_loss
+                        else:
+                            mu = latent_representation['mu']
+                            log_var = latent_representation['log_var']
 
-                        # BCE tries to make our reconstruction as accurate as possible:
-                        # BCE_loss = F.binary_cross_entropy(x_recons, data, size_average=False)
-                        BCE_loss = F.mse_loss(x_recons, data, size_average=False)
+                            # BCE tries to make our reconstruction as accurate as possible:
+                            # BCE_loss = F.binary_cross_entropy(x_recons, data, size_average=False)
+                            BCE_loss = F.mse_loss(x_recons, data, size_average=False)
 
-                        # KLD tries to push the distributions as close as possible to unit Gaussian:
-                        KLD_loss = -0.5 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
+                            # KLD tries to push the distributions as close as possible to unit Gaussian:
+                            KLD_loss = -0.5 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
 
-                        loss = (self.lambda_BCE * BCE_loss) + (self.beta * KLD_loss)
+                            loss = (self.lambda_BCE * BCE_loss) + (self.beta * KLD_loss)
                 else:
                     self.mse_loss = 0
                     loss = 0
@@ -696,12 +731,16 @@ class SolverClassifier(object):
                         loss += dst_target_loss
 
                 # freeze encoder_struct if train decoder:
-                if self.is_VAE and self.freeze_Encoder:
-                    if self.both_decoders_freeze:
+                if self.use_VAE and self.freeze_Encoder:
+                    if self.is_VAE_var:
                         for params in self.net.encoder_var.parameters():
                             params.requires_grad = False
-                    for params in self.net.encoder_struct.parameters():
-                        params.requires_grad = False
+                    else:
+                        if self.both_decoders_freeze:
+                            for params in self.net.encoder_var.parameters():
+                                params.requires_grad = False
+                        for params in self.net.encoder_struct.parameters():
+                            params.requires_grad = False
 
                 # print('-----------::::::::::::Before:::::::-----------------:')
                 # print(self.net.encoder_struct[3].weight[24][12])
@@ -712,12 +751,16 @@ class SolverClassifier(object):
                 self.optimizer.step()
 
                 # unfreeze encoder_struct if train decoder:
-                if self.is_VAE and self.freeze_Encoder:
-                    if self.both_decoders_freeze:
+                if self.use_VAE and self.freeze_Encoder:
+                    if self.is_VAE_var:
                         for params in self.net.encoder_var.parameters():
                             params.requires_grad = False
-                    for params in self.net.encoder_struct.parameters():
-                        params.requires_grad = False
+                    else:
+                        if self.both_decoders_freeze:
+                            for params in self.net.encoder_var.parameters():
+                                params.requires_grad = False
+                        for params in self.net.encoder_struct.parameters():
+                            params.requires_grad = False
 
                 # print('-----------::::::::::::After:::::::-----------------:')
                 # print(self.net.encoder_struct[3].weight[24][12])

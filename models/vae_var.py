@@ -14,7 +14,9 @@ class VAE_var(nn.Module, ABC):
                  z_var_size=5,
                  var_second_cnn_block=True,
                  var_third_cnn_block=False,
-                 other_architecture=False):
+                 other_architecture=False,
+                 EV_classifier=False,
+                 n_classes=10):
         """
         Class which defines model and forward pass:
         model https://www.kaggle.com/vincentman0403/vae-with-convolution-on-mnist
@@ -24,6 +26,8 @@ class VAE_var(nn.Module, ABC):
         # parameters:
         self.nc = 1
         self.z_var_size = z_var_size
+        self.EV_classifier = EV_classifier
+        self.n_classes = n_classes
 
         # number of CNN blocks:
         self.var_second_cnn_block = var_second_cnn_block
@@ -250,9 +254,18 @@ class VAE_var(nn.Module, ABC):
                 nn.Sigmoid()
             ]
         # --------------------------------------- end decoder ____________________________________________ ----
+        # --------------------------------------- Classifier ____________________________________________ ----
+        if self.EV_classifier:
+            self.var_classifier = [
+                nn.Linear(self.z_var_size, self.n_classes)  # B, nb_class
+                # nn.Softmax()
+            ]
+        # --------------------------------------- end Classifier ____________________________________________ ----
 
         self.encoder_var = nn.Sequential(*self.encoder_var)
         self.decoder_var = nn.Sequential(*self.decoder_var)
+        if self.EV_classifier:
+            self.var_classifier = nn.Sequential(*self.var_classifier)
 
         # weights initialization:
         self.weight_init()
@@ -275,7 +288,14 @@ class VAE_var(nn.Module, ABC):
         # reconstruction:
         x_recons = self.decoder_var(z_var_sample)
 
-        return x_recons, latent_representation
+        if self.EV_classifier:
+            # z_var classifier:
+            out = self.var_classifier(z_var_sample)
+            prediction_var = F.softmax(out, dim=1)
+        else:
+            prediction_var = 0
+
+        return x_recons, latent_representation, prediction_var
 
     def _encode(self, z, z_size):
         """
