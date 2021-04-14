@@ -1743,12 +1743,6 @@ def plot_resume(net, exp_name, is_ratio, is_distance_loss, loss_distance_mean, l
 
     nb_class = len(variance_intra_class)
 
-    # print('ratio:', ratio_variance_mean)
-    # print('var intra mean per class:', variance_intra_class_mean_per_class.shape)
-    # print('var intra mean', variance_intra_class_mean)
-    # print('var inter', variance_inter_class.shape)
-    # print('var inter mean', variance_inter_class_mean)
-
     # define figure:____________________________________________________________________________________________________
     fig, axs = plt.subplots(nrows=2, ncols=2, gridspec_kw={'width_ratios': [2, 1], 'height_ratios': [1, 1]},
                             figsize=(30, 20), facecolor='w', edgecolor='k')
@@ -1830,6 +1824,7 @@ def plot_resume(net, exp_name, is_ratio, is_distance_loss, loss_distance_mean, l
         axs[1, 1].scatter(x, y, alpha=0.6, color=color, label='class ' + str(c))
     axs[1, 1].legend(loc=1)
     """
+
     # distance matrix: _________________________________________________________________________________________________
     distance_inter_class = distance_matrix(net, exp_name, train_test=train_test, plot_fig=False)
     distance_classes_triu = np.triu(distance_inter_class, k=1)
@@ -1882,10 +1877,7 @@ def plot_resume(net, exp_name, is_ratio, is_distance_loss, loss_distance_mean, l
                         'Maj uc proportion per class (%): ',
                         'Average Maj uc proportion per class (%): ',
                         'If replace each class by uniq maj binary code, perfect score: ']
-
-
     n_lines = len(text_titles)
-
     text_values = [ratio_variance_mean,
                    variance_intra_class_mean,
                    variance_inter_class_mean,
@@ -1910,11 +1902,12 @@ def plot_resume(net, exp_name, is_ratio, is_distance_loss, loss_distance_mean, l
                        va="center")
 
     fig.tight_layout()
-    plt.show()
+    # plt.show()
 
     path_save = 'fig_results/resume/plot_resume_' + exp_name + '_' + train_test + '.png'
-    if save:  #  and not os.path.exists(path_save):
+    if save:
         fig.savefig(path_save)
+        print("figure saved for model {}".format(exp_name))
 
     return
 
@@ -2001,14 +1994,14 @@ def plot_VAE_resume(net, model_name, z_struct_size, z_var_size, loader, VAE_stru
 
     # compute score reconstruction on dataset test:
     score_reconstruction = F.mse_loss(x_recon, input_data)
-    score_reconstruction = np.around(score_reconstruction.detach().cpu().numpy(), 3)
+    score_reconstruction = np.around(score_reconstruction.detach().numpy(), 3)
 
     first = True
     for class_id in range(nb_class):
         start_cl_id = class_id * nb_img
         end_cl_id = start_cl_id + nb_img
-        original_batch = input_data[start_cl_id:end_cl_id].cpu()
-        reconstruction_batch = x_recon[start_cl_id:end_cl_id].cpu()
+        original_batch = input_data[start_cl_id:end_cl_id]
+        reconstruction_batch = x_recon[start_cl_id:end_cl_id]
         comparaison_batch = torch.cat([original_batch, reconstruction_batch])
         if first:
             comparison = comparaison_batch
@@ -2020,17 +2013,17 @@ def plot_VAE_resume(net, model_name, z_struct_size, z_var_size, loader, VAE_stru
 
     # z_struct reconstruction:
     random_var = std_var * torch.randn(x_recon.shape[0], z_var_size) + mu_var
-    z_struct_random = torch.cat((random_var.to('cuda'), z_struct), dim=1)
+    z_struct_random = torch.cat((random_var, z_struct), dim=1)
     x_recon_struct = net.decoder(z_struct_random)
     score_reconstruction_zstruct = F.mse_loss(x_recon_struct, input_data)
-    score_reconstruction_zstruct = np.around(score_reconstruction_zstruct.detach().cpu().numpy(), 3)
+    score_reconstruction_zstruct = np.around(score_reconstruction_zstruct.detach().numpy(), 3)
 
     first = True
     for class_id in range(nb_class):
         start_cl_id = class_id * nb_img
         end_cl_id = start_cl_id + nb_img
-        original_batch = input_data[start_cl_id:end_cl_id].cpu()
-        reconstruction_batch = x_recon_struct[start_cl_id:end_cl_id].cpu()
+        original_batch = input_data[start_cl_id:end_cl_id]
+        reconstruction_batch = x_recon_struct[start_cl_id:end_cl_id]
         comparaison_batch = torch.cat([original_batch, reconstruction_batch])
         if first:
             comparison = comparaison_batch
@@ -2044,17 +2037,17 @@ def plot_VAE_resume(net, model_name, z_struct_size, z_var_size, loader, VAE_stru
     mu_struct = torch.tensor(1 - (mu_struct / 100))
     proba_struct = mu_struct.repeat(x_recon.shape[0], 1)
     random_struct = torch.Tensor.float(torch.bernoulli(proba_struct))
-    z_var_random = torch.cat((z_var_sample, random_struct.to('cuda')), dim=1)
+    z_var_random = torch.cat((z_var_sample, random_struct), dim=1)
     x_recon_var = net.decoder(z_var_random)
     score_reconstruction_zvar = F.mse_loss(x_recon_var, input_data)
-    score_reconstruction_zvar = np.around(score_reconstruction_zvar.detach().cpu().numpy(), 3)
+    score_reconstruction_zvar = np.around(score_reconstruction_zvar.detach().numpy(), 3)
 
     first = True
     for class_id in range(nb_class):
         start_cl_id = class_id * nb_img
         end_cl_id = start_cl_id + nb_img
-        original_batch = input_data[start_cl_id:end_cl_id].cpu()
-        reconstruction_batch = x_recon_var[start_cl_id:end_cl_id].cpu()
+        original_batch = input_data[start_cl_id:end_cl_id]
+        reconstruction_batch = x_recon_var[start_cl_id:end_cl_id]
         comparaison_batch = torch.cat([original_batch, reconstruction_batch])
         if first:
             comparison = comparaison_batch
@@ -2101,7 +2094,7 @@ def plot_VAE_resume(net, model_name, z_struct_size, z_var_size, loader, VAE_stru
     maj_uc_proto = maj_uc_proto.permute(1, 0, 2)
     latent_samples = maj_uc_proto
     # Map samples through decoder
-    generated_maj_uc = net.decoder(latent_samples.to('cuda'))
+    generated_maj_uc = net.decoder(latent_samples)
     traversals_maj_uc = make_grid(generated_maj_uc.data, nrow=traversal_size + 1)
     traversals_maj_uc = traversals_maj_uc.permute(1, 2, 0)
 
@@ -2129,17 +2122,17 @@ def plot_VAE_resume(net, model_name, z_struct_size, z_var_size, loader, VAE_stru
     avg_struct_proto = avg_struct_proto.permute(1, 0, 2)
     latent_samples = avg_struct_proto
     # Map samples through decoder
-    generated_avg_struct = net.decoder(latent_samples.to('cuda'))
+    generated_avg_struct = net.decoder(latent_samples)
     traversals_avg_struct = make_grid(generated_avg_struct.data, nrow=traversal_size + 1)
     traversals_avg_struct = traversals_avg_struct.permute(1, 2, 0)
 
     # figure:
     axs[3, 0].set(title=('Latent traversal with z_struct maj uc prototype: {}'.format(model_name)))
-    axs[3, 0].imshow(traversals_maj_uc.cpu().numpy())
+    axs[3, 0].imshow(traversals_maj_uc.numpy())
     axs[3, 0].axvline(32, linewidth=5, color='orange')
 
     axs[3, 1].set(title=('Latent traversal with avg z_struct prototype: {}'.format(model_name)))
-    axs[3, 1].imshow(traversals_avg_struct.cpu().numpy())
+    axs[3, 1].imshow(traversals_avg_struct.numpy())
     axs[3, 1].axvline(32, linewidth=5, color='orange')
 
     # Generation random:________________________________________________________________________________________________
@@ -2188,6 +2181,7 @@ def plot_VAE_resume(net, model_name, z_struct_size, z_var_size, loader, VAE_stru
     generation_batch_maj_uc = generated_maj_uc[:nb_samples]
     generation_batch_avg_struct = generated_avg_struct[:nb_samples]
 
+    """"
     # FID scores:
     FID_score_maj_uc = calculate_fid_given_paths(original_batch,
                                                  generation_batch_maj_uc,
@@ -2226,6 +2220,7 @@ def plot_VAE_resume(net, model_name, z_struct_size, z_var_size, loader, VAE_stru
     LPIPS_score_vgg_avg_struct = torch.mean(loss_fn_vgg(original_batch, generation_batch_avg_struct)).item()
     LPIPS_score_alex_avg_struct = np.around(LPIPS_score_alex_avg_struct, 3)
     LPIPS_score_vgg_avg_struct = np.around(LPIPS_score_vgg_avg_struct, 3)
+    """
 
     # plot:
     samples_maj_uc = grid_generation_maj_uc.permute(1, 2, 0)
