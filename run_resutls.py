@@ -97,6 +97,10 @@ def run_exp_extraction_and_visualization_custom_BK(list_model, is_ratio=False, i
         is_VAE_var = str2bool(parameters_dict['is_VAE_var'])
         var_second_cnn_block = str2bool(parameters_dict['var_second_cnn_block'])
         var_third_cnn_block = str2bool(parameters_dict['var_third_cnn_block'])
+        if 'EV_classifier' in parameters_dict.keys():
+            EV_classifier = str2bool(parameters_dict['EV_classifier'])
+        else:
+            EV_classifier = False
 
         # encoder struct:
         kernel_size_1 = int(parameters_dict['kernel_size_1'])
@@ -157,7 +161,8 @@ def run_exp_extraction_and_visualization_custom_BK(list_model, is_ratio=False, i
             net = VAE_var(z_var_size=z_var_size,
                           var_second_cnn_block=var_second_cnn_block,
                           var_third_cnn_block=var_third_cnn_block,
-                          other_architecture=other_architecture)
+                          other_architecture=other_architecture,
+                          EV_classifier=EV_classifier)
         if is_decoder:
             run_decoder(model_name, net)
         elif is_VAE or is_VAE_var:
@@ -231,7 +236,7 @@ def run_VAE(model_name, net, lambda_BCE, beta, z_struct_size, z_var_size, VAE_st
     net, _, _ = get_checkpoints(net, path, model_name)
     net, device = gpu_config(net)
     print('VAE: _____________------------------{}-----------------_____________________'.format(model_name))
-    # print(net)
+    print(net)
 
     loader = test_loader
     train_test = 'test'
@@ -326,6 +331,23 @@ def run_VAE(model_name, net, lambda_BCE, beta, z_struct_size, z_var_size, VAE_st
     plot_VAE_resume(net, model_name, z_struct_size, z_var_size, loader, VAE_struct, is_vae_var, train_test, save=True,
                     nb_class=nb_class, nb_img=8, std_var=sigma_var, mu_var=mu_var,
                     mu_struct=encoder_struct_zeros_proportion, index=0)
+
+    # Test vae var classfiier hypothesis: ----------------------------------------------------------------------
+    # TODO: 1) Check classification accuracy on train and test set:
+
+    # TODO: 2) Plot activations histogram for one data forward classification
+
+    # TODO: 3) Determine treshold value
+
+    # TODO: 4) Desactivate activation with value smaller than treshold
+
+    # TODO: 5) Get z_var sample with desactivate activation
+
+    # TODO: 6) Plot classification prediction with this new z_var and compare with original z_var
+
+    # TODO: 7) Compare reconstruction of original z_var and new z_var
+
+    # ----------------------------------------------------------------------------------------------------------
 
     net.train()
     return
@@ -537,7 +559,37 @@ if __name__ == '__main__':
                         # 'mnist_vae_var_2cb_25',
                         # 'mnist_vae_var_2cb_30']
 
-    list_exp_VAE = [# 'mnist_VAE_s10_v5_Hmg_dst_SE',
+    list_exp_VAE = ['mnist_VAE_s10_v5_SE_beta_3',
+                    'mnist_VAE_s15_v5_SE_beta_3',
+                    'mnist_VAE_s20_v5_SE_beta_3',
+                    'mnist_VAE_s25_v5_SE_beta_3',
+                    'mnist_VAE_s30_v5_SE_beta_3',
+                    'mnist_VAE_s10_v10_SE_beta_3',
+                    'mnist_VAE_s15_v10_SE_beta_3',
+                    'mnist_VAE_s20_v10_SE_beta_3',
+                    'mnist_VAE_s25_v10_SE_beta_3',
+                    'mnist_VAE_s30_v10_SE_beta_3',
+                    'mnist_VAE_s10_v15_SE_beta_3',
+                    'mnist_VAE_s15_v15_SE_beta_3',
+                    'mnist_VAE_s20_v15_SE_beta_3',
+                    'mnist_VAE_s25_v15_SE_beta_3',
+                    'mnist_VAE_s30_v15_SE_beta_3',
+                    'mnist_VAE_s10_v20_SE_beta_3',
+                    'mnist_VAE_s15_v20_SE_beta_3',
+                    'mnist_VAE_s20_v20_SE_beta_3',
+                    'mnist_VAE_s25_v20_SE_beta_3',
+                    'mnist_VAE_s30_v20_SE_beta_3',
+                    'mnist_VAE_s10_v25_SE_beta_3',
+                    'mnist_VAE_s15_v25_SE_beta_3',
+                    'mnist_VAE_s20_v25_SE_beta_3',
+                    'mnist_VAE_s25_v25_SE_beta_3',
+                    'mnist_VAE_s30_v25_SE_beta_3',
+                    'mnist_VAE_s10_v30_SE_beta_3',
+                    'mnist_VAE_s15_v30_SE_beta_3',
+                    'mnist_VAE_s20_v30_SE_beta_3',
+                    'mnist_VAE_s25_v30_SE_beta_3',
+                    'mnist_VAE_s30_v30_SE_beta_3']
+                    # 'mnist_VAE_s10_v5_Hmg_dst_SE',
                     # 'mnist_VAE_s15_v5_Hmg_dst_SE',
                     # 'mnist_VAE_s20_v5_Hmg_dst_SE',
                     # 'mnist_VAE_s25_v5_Hmg_dst_SE',
@@ -557,16 +609,16 @@ if __name__ == '__main__':
                     # 'mnist_VAE_s20_v20_Hmg_dst_SE',
                     # 'mnist_VAE_s25_v20_Hmg_dst_SE',
                     # 'mnist_VAE_s30_v20_Hmg_dst_SE',
-                    'mnist_VAE_s10_v25_Hmg_dst_SE',
-                    'mnist_VAE_s15_v25_Hmg_dst_SE',
-                    'mnist_VAE_s20_v25_Hmg_dst_SE',
-                    'mnist_VAE_s25_v25_Hmg_dst_SE',
-                    'mnist_VAE_s30_v25_Hmg_dst_SE',
-                    'mnist_VAE_s10_v30_Hmg_dst_SE',
-                    'mnist_VAE_s15_v30_Hmg_dst_SE',
-                    'mnist_VAE_s20_v30_Hmg_dst_SE',
-                    'mnist_VAE_s25_v30_Hmg_dst_SE',
-                    'mnist_VAE_s30_v30_Hmg_dst_SE']
+                    # 'mnist_VAE_s10_v25_Hmg_dst_SE',
+                    # 'mnist_VAE_s15_v25_Hmg_dst_SE',
+                    # 'mnist_VAE_s20_v25_Hmg_dst_SE',
+                    # 'mnist_VAE_s25_v25_Hmg_dst_SE',
+                    # 'mnist_VAE_s30_v25_Hmg_dst_SE',
+                    # 'mnist_VAE_s10_v30_Hmg_dst_SE',
+                    # 'mnist_VAE_s15_v30_Hmg_dst_SE',
+                    # 'mnist_VAE_s20_v30_Hmg_dst_SE',
+                    # 'mnist_VAE_s25_v30_Hmg_dst_SE',
+                    # 'mnist_VAE_s30_v30_Hmg_dst_SE']
                     # 'mnist_VAE_s10_v5_BF',
                     # 'mnist_VAE_s10_v5_PT',
                     # 'mnist_VAE_s10_v5_SE',
@@ -717,6 +769,13 @@ if __name__ == '__main__':
                               'mnist_encoder_struct_reconstruction_s30_Hmg_dst_2_PT',
                               'mnist_encoder_struct_reconstruction_s30_Hmg_dst_3_PT']
 
+    list_VAE_var_classifier = ['mnist_vae_var_2cb_5_classifier',
+                               'mnist_vae_var_2cb_10_classifier',
+                               'mnist_vae_var_2cb_15_classifier',
+                               'mnist_vae_var_2cb_20_classifier',
+                               'mnist_vae_var_2cb_25_classifier',
+                               'mnist_vae_var_2cb_30_classifier']
+
     parameters_mnist_classifier_BK_ratio = "parameters_combinations/mnist_classifier_ratio.txt"
 
     # run_exp_extraction_and_visualization_custom_BK(list_encoder_struct,
@@ -744,6 +803,12 @@ if __name__ == '__main__':
                                                    is_encoder_struct=False)
 
     # run_exp_extraction_and_visualization_custom_BK(list_ES_reconstruction,
+    #                                                is_ratio=False,
+    #                                                is_decoder=False,
+    #                                                is_VAE=True,
+    #                                                is_encoder_struct=False)
+
+    # run_exp_extraction_and_visualization_custom_BK(list_VAE_var_classifier,
     #                                                is_ratio=False,
     #                                                is_decoder=False,
     #                                                is_VAE=True,
