@@ -278,6 +278,7 @@ class SolverClassifier(object):
         self.other_architecture = args.other_architecture
         self.z_var_size = args.z_var_size
         self.EV_classifier = args.EV_classifier
+        self.grad_inv = args.grad_inv
         # VAE parameters:
         self.is_VAE = args.is_VAE
         self.lambda_BCE = args.lambda_BCE
@@ -368,7 +369,8 @@ class SolverClassifier(object):
                           var_third_cnn_block=self.var_third_cnn_block,
                           other_architecture=self.other_architecture,
                           EV_classifier=self.EV_classifier,
-                          n_classes=self.nb_class)
+                          n_classes=self.nb_class,
+                          grad_inv=self.grad_inv)
         elif self.is_VAE:
             self.net_type = 'VAE'
             net = VAE(z_var_size=self.z_var_size,
@@ -486,6 +488,9 @@ class SolverClassifier(object):
                         print("Weighs loaded for var encoder !")
                         # to device:
                         self.net, self.device = gpu_config(net)
+                    else:
+                        self.net, self.device = gpu_config(net)
+                        self.load_checkpoint('last')
                 else:
                     self.net, self.device = gpu_config(net)
                     self.load_checkpoint('last')

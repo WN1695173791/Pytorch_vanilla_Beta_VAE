@@ -3450,3 +3450,67 @@ def plot_prototype(net, model_name, train_test, z_var_size, nb_class=None, avg_z
                 "fig_results/prototype_z_struct_class/avg_proto_struct_" + model_name + train_test + ".png")
 
     return
+
+
+# __________Test for VAE var classifier:
+def VAE_var_classifier_score(net, loader):
+
+    nb_data = len(loader.dataset)
+    classification_score = 0
+    with torch.no_grad():
+        for x in loader:
+
+            data = x[0]
+            data = data.to(device)  # Variable(data.to(device))
+            labels = x[1]
+            labels = labels.to(device)
+
+            # compute loss:
+            _, _, prediction_var = net(data)
+
+            predicted = prediction_var.argmax(dim=1, keepdim=True)
+            correct = predicted.eq(labels.view_as(predicted)).sum().item()
+            classification_score_iter = float(correct)
+            classification_score += classification_score_iter
+
+    score = 100. * classification_score / nb_data
+
+    return score
+
+
+def get_activation_values_VAE_var(net, exp_name, image):
+
+    activations_path = 'regions_of_interest/activations/activations_' + exp_name + '.npy'
+
+    if os.path.exists(activations_path):
+        print("path already exist, load it !")
+    else:
+        # a dictionary that keeps saving the activations as they come
+        activations = collections.defaultdict(list)
+
+        def save_activations_VAE_var(name, mod, inp, out):
+            activations[name].append(out.cpu())
+
+        # Registering hooks for all the Conv2d layers
+        # Note: Hooks are called EVERY TIME the module performs a forward pass. For modules that are
+        # called repeatedly at different stages of the forward pass (like RELUs), this will save different
+        # activations. Editing the forward pass code to save activations is the way to go for these cases.
+        for name, m in net.named_modules():
+            m.register_forward_hook(partial(save_activations_VAE_var, name))
+
+        out, _, _ = net(image)
+
+        # concatenate all the outputs we saved to get the the activations for each layer for the whole dataset
+        activations = {name: torch.cat(outputs, 0) for name, outputs in activations.items()}
+
+        np.save(activations_path, activations)
+
+    return
+
+
+def load_plot_histo_activations(model_name):
+
+    activations = np.load('regions_of_interest/activations/activations_' + model_name + '.npy', allow_pickle=True)
+    print(activations.shape)
+
+    return

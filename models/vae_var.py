@@ -4,6 +4,7 @@ from custom_Layer import Flatten, View, PrintLayer, kaiming_init
 import numpy as np
 import torch
 import torch.nn.functional as F
+from pytorch_revgrad import RevGrad
 
 EPS = 1e-12
 
@@ -16,9 +17,10 @@ class VAE_var(nn.Module, ABC):
                  var_third_cnn_block=False,
                  other_architecture=False,
                  EV_classifier=False,
-                 n_classes=10):
+                 n_classes=10,
+                 grad_inv=False):
         """
-        Class which defines model and forward pass:
+        Class which defines model and forward pass.
         model https://www.kaggle.com/vincentman0403/vae-with-convolution-on-mnist
         """
         super(VAE_var, self).__init__()
@@ -28,6 +30,9 @@ class VAE_var(nn.Module, ABC):
         self.z_var_size = z_var_size
         self.EV_classifier = EV_classifier
         self.n_classes = n_classes
+        self.grad_inv = grad_inv
+        if self.grad_inv:
+            assert EV_classifier, "Warning: inverse gradient it's used but you don't train a classifier !"
 
         # number of CNN blocks:
         self.var_second_cnn_block = var_second_cnn_block
@@ -261,11 +266,19 @@ class VAE_var(nn.Module, ABC):
                 # nn.Softmax()
             ]
         # --------------------------------------- end Classifier ____________________________________________ ----
-
-        self.encoder_var = nn.Sequential(*self.encoder_var)
         self.decoder_var = nn.Sequential(*self.decoder_var)
         if self.EV_classifier:
-            self.var_classifier = nn.Sequential(*self.var_classifier)
+            if self.grad_inv:
+                self.var_classifier = nn.Sequential(*self.var_classifier,
+                                                    RevGrad())
+                self.encoder_var = nn.Sequential(*self.encoder_var,
+                                                 RevGrad())
+            else:
+                self.var_classifier = nn.Sequential(*self.var_classifier)
+                self.encoder_var = nn.Sequential(*self.encoder_var)
+        else:
+            self.encoder_var = nn.Sequential(*self.encoder_var)
+
 
         # weights initialization:
         self.weight_init()

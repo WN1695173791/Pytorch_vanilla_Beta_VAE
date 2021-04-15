@@ -246,19 +246,19 @@ def run_VAE(model_name, net, lambda_BCE, beta, z_struct_size, z_var_size, VAE_st
 
     # __________-----------Values computing----------_____________
     # save code majoritaire with their percent:
-    same_binary_code(net, model_name, loader, nb_class, train_test=train_test, save=True, Hmg_dist=False, is_VAE=True)
-    z_struct_code_classes(model_name, nb_class, train_test=train_test)
+    # same_binary_code(net, model_name, loader, nb_class, train_test=train_test, save=True, Hmg_dist=False, is_VAE=True)
+    # z_struct_code_classes(model_name, nb_class, train_test=train_test)
 
     # Uc bin maj:
-    percent_max = histo_count_uniq_code(model_name, train_test, plot_histo=False, return_percent=True)
-    maj_uc = np.load('binary_encoder_struct_results/uniq_code/uc_maj_class_' + model_name + '_' \
-                               + train_test + '.npy', allow_pickle=True)
+    # percent_max = histo_count_uniq_code(model_name, train_test, plot_histo=False, return_percent=True)
+    # maj_uc = np.load('binary_encoder_struct_results/uniq_code/uc_maj_class_' + model_name + '_' \
+    #                            + train_test + '.npy', allow_pickle=True)
 
     # first: compute z_struct mean per class:
-    compute_z_struct_mean_VAE(net, model_name, loader, train_test='test', return_results=False)
+    # compute_z_struct_mean_VAE(net, model_name, loader, train_test='test', return_results=False)
 
     # second: get average z_struct per classe:
-    _, average_z_struct_class = get_z_struct_per_class_VAE(model_name, train_test='test', nb_class=nb_class)
+    # _, average_z_struct_class = get_z_struct_per_class_VAE(model_name, train_test='test', nb_class=nb_class)
 
 
     # __________--------------PLOT------------_________________
@@ -266,16 +266,16 @@ def run_VAE(model_name, net, lambda_BCE, beta, z_struct_size, z_var_size, VAE_st
     # plot_loss_results_VAE(path_scores, model_name, beta, lambda_BCE, save=True)
 
     # compute and plot real distribution:
-    mu_var, sigma_var, encoder_struct_zeros_proportion = real_distribution_model(net,
-                                                                         model_name,
-                                                                         z_struct_size,
-                                                                         z_var_size,
-                                                                         loader,
-                                                                         'test',
-                                                                         plot_gaussian=False,
-                                                                         save=True,
-                                                                         VAE_struct=VAE_struct,
-                                                                         is_vae_var=is_vae_var)
+    # mu_var, sigma_var, encoder_struct_zeros_proportion = real_distribution_model(net,
+    #                                                                      model_name,
+    #                                                                      z_struct_size,
+    #                                                                      z_var_size,
+    #                                                                      loader,
+    #                                                                      'test',
+    #                                                                      plot_gaussian=False,
+    #                                                                      save=True,
+    #                                                                      VAE_struct=VAE_struct,
+    #                                                                      is_vae_var=is_vae_var)
 
     # mu_var, sigma_var, encoder_struct_zeros_proportion = 0, 0, 0
     # plot reconstruciton with real distribution sample:
@@ -328,29 +328,34 @@ def run_VAE(model_name, net, lambda_BCE, beta, z_struct_size, z_var_size, VAE_st
     #                save=True)
 
     # plot resume VAE:
-    plot_VAE_resume(net, model_name, z_struct_size, z_var_size, loader, VAE_struct, is_vae_var, train_test, save=True,
-                    nb_class=nb_class, nb_img=8, std_var=sigma_var, mu_var=mu_var,
-                    mu_struct=encoder_struct_zeros_proportion, index=0)
+    # plot_VAE_resume(net, model_name, z_struct_size, z_var_size, loader, VAE_struct, is_vae_var, train_test, save=True,
+    #                 nb_class=nb_class, nb_img=8, std_var=sigma_var, mu_var=mu_var,
+    #                 mu_struct=encoder_struct_zeros_proportion, index=0)
 
     # Test vae var classfiier hypothesis: ----------------------------------------------------------------------
+    # replace weigths value:
+    # print(net.var_classifier[0].weight)
+    # x = net.var_classifier[0].weight
+    # y = torch.zeros(net.var_classifier[0].weight.shape)
+    # net.var_classifier[0].weight = torch.nn.Parameter(torch.where((torch.abs(net.var_classifier[0].weight) < 5.), x, y))
+    # print(net.var_classifier[0].weight)
+
     # TODO: 1) Check classification accuracy on train and test set:
+    # score_test = VAE_var_classifier_score(net, loader)
+    # print(score_test)  # 92%
 
-    # TODO: 2) Plot activations histogram for one data forward classification
-
-    # TODO: 3) Determine treshold value
-
-    # TODO: 4) Desactivate activation with value smaller than treshold
-
-    # TODO: 5) Get z_var sample with desactivate activation
-
-    # TODO: 6) Plot classification prediction with this new z_var and compare with original z_var
-
-    # TODO: 7) Compare reconstruction of original z_var and new z_var
 
     # ----------------------------------------------------------------------------------------------------------
 
     net.train()
     return
+
+
+def get_activation(name):
+    def hook(model, input, output):
+        activation[name] = output.detach()
+
+    return hook
 
 
 def run_viz_expes(model_name, net, is_ratio, is_distance_loss, loss_distance_mean, net_type=None, cat=None,
@@ -769,12 +774,12 @@ if __name__ == '__main__':
                               'mnist_encoder_struct_reconstruction_s30_Hmg_dst_2_PT',
                               'mnist_encoder_struct_reconstruction_s30_Hmg_dst_3_PT']
 
-    list_VAE_var_classifier = ['mnist_vae_var_2cb_5_classifier',
-                               'mnist_vae_var_2cb_10_classifier',
-                               'mnist_vae_var_2cb_15_classifier',
-                               'mnist_vae_var_2cb_20_classifier',
-                               'mnist_vae_var_2cb_25_classifier',
-                               'mnist_vae_var_2cb_30_classifier']
+    list_VAE_var_classifier = ['mnist_vae_var_2cb_5_classifier']
+                               # 'mnist_vae_var_2cb_10_classifier',
+                               # 'mnist_vae_var_2cb_15_classifier',
+                               # 'mnist_vae_var_2cb_20_classifier',
+                               # 'mnist_vae_var_2cb_25_classifier',
+                               # 'mnist_vae_var_2cb_30_classifier']
 
     parameters_mnist_classifier_BK_ratio = "parameters_combinations/mnist_classifier_ratio.txt"
 
@@ -796,11 +801,11 @@ if __name__ == '__main__':
     #                                                is_VAE=False,
     #                                                is_encoder_struct=False)
 
-    run_exp_extraction_and_visualization_custom_BK(list_exp_VAE,
-                                                   is_ratio=False,
-                                                   is_decoder=False,
-                                                   is_VAE=True,
-                                                   is_encoder_struct=False)
+    # run_exp_extraction_and_visualization_custom_BK(list_exp_VAE,
+    #                                                is_ratio=False,
+    #                                                is_decoder=False,
+    #                                                is_VAE=True,
+    #                                                is_encoder_struct=False)
 
     # run_exp_extraction_and_visualization_custom_BK(list_ES_reconstruction,
     #                                                is_ratio=False,
@@ -808,10 +813,10 @@ if __name__ == '__main__':
     #                                                is_VAE=True,
     #                                                is_encoder_struct=False)
 
-    # run_exp_extraction_and_visualization_custom_BK(list_VAE_var_classifier,
-    #                                                is_ratio=False,
-    #                                                is_decoder=False,
-    #                                                is_VAE=True,
-    #                                                is_encoder_struct=False)
+    run_exp_extraction_and_visualization_custom_BK(list_VAE_var_classifier,
+                                                   is_ratio=False,
+                                                   is_decoder=False,
+                                                   is_VAE=True,
+                                                   is_encoder_struct=False)
 
 
