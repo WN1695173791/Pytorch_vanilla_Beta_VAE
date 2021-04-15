@@ -134,12 +134,10 @@ class Encoder_struct(nn.Module, ABC):
             self.encoder_struct += [
                 nn.Linear(self.z_struct_size, self.hidden_dim),  # B, nb_class
                 nn.ReLU(True),
-                nn.Linear(self.hidden_dim, self.z_struct_size),  # B, nb_class
-                nn.ReLU(True),
             ]
 
         self.encoder_struct += [
-            nn.Linear(self.z_struct_size, self.n_classes)  # B, nb_class
+            nn.Linear(self.hidden_dim, self.n_classes)  # B, nb_class
             # nn.Softmax()
         ]
         # _________________________---------------- end encoder_struct: ------------_____________________________

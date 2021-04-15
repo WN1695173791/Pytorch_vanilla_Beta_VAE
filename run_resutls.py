@@ -547,10 +547,10 @@ if os.path.exists(path_select_model_analyse_50):
 
 if __name__ == '__main__':
 
-    list_encoder_struct = ['mnist_struct_baseline_scheduler_binary_15_sdl_20',
-                           'mnist_struct_baseline_scheduler_binary_15_sdl_30',
-                           'mnist_struct_baseline_scheduler_binary_15_sdl_40',
-                           'mnist_struct_baseline_scheduler_binary_15_sdl_50']
+    list_encoder_struct = ['mnist_struct_baseline_scheduler_binary_15_sdl_20_2',
+                           'mnist_struct_baseline_scheduler_binary_15_sdl_30_2',
+                           'mnist_struct_baseline_scheduler_binary_15_sdl_40_2',
+                           'mnist_struct_baseline_scheduler_binary_15_sdl_50_2']
                            # 'mnist_struct_baseline_scheduler_binary_10']
                            # 'mnist_struct_baseline_scheduler_binary_15',
                            # 'mnist_struct_baseline_scheduler_binary_20',
