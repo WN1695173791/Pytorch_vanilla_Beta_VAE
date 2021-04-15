@@ -279,6 +279,8 @@ class SolverClassifier(object):
         self.z_var_size = args.z_var_size
         self.EV_classifier = args.EV_classifier
         self.grad_inv = args.grad_inv
+        self.PT_model = args.PT_model
+        self.PT_model_EV_classifier = args.PT_model_EV_classifier
         # VAE parameters:
         self.is_VAE = args.is_VAE
         self.lambda_BCE = args.lambda_BCE
@@ -461,17 +463,22 @@ class SolverClassifier(object):
                 # after load weights we replace real exp name for checkpoint directory.
                 self.checkpoint_dir = os.path.join(args.ckpt_dir, args.exp_name)
             else:
-                if self.EV_classifier:
+                if self.EV_classifier or self.PT_model:
                     print("Train classifier from encoder var pre-trained !")
                     checkpoint_dir_encoder_var = os.path.join(args.ckpt_dir, self.encoder_var_name)
                     file_path_encoder_var = os.path.join(checkpoint_dir_encoder_var, 'last')
                     if os.path.isfile(file_path_encoder_var):
                         print("Load encoder var weights !")
                         # we create and load encoder struct with model name associate:
+                        # EV_classifier parameter for PT model:
+
                         pre_trained_var_model = VAE_var(z_var_size=self.z_var_size,
                                                         var_second_cnn_block=self.var_second_cnn_block,
                                                         var_third_cnn_block=self.var_third_cnn_block,
-                                                        other_architecture=self.other_architecture)
+                                                        other_architecture=self.other_architecture,
+                                                        EV_classifier=self.PT_model_EV_classifier,
+                                                        n_classes=self.nb_class,
+                                                        grad_inv=self.grad_inv)
                         # load weighs:
                         pre_trained_var_model = self.load_pre_trained_checkpoint('last',
                                                                                  checkpoint_dir_encoder_var,

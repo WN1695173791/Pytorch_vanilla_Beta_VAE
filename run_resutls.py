@@ -332,6 +332,7 @@ def run_VAE(model_name, net, lambda_BCE, beta, z_struct_size, z_var_size, VAE_st
     #                 nb_class=nb_class, nb_img=8, std_var=sigma_var, mu_var=mu_var,
     #                 mu_struct=encoder_struct_zeros_proportion, index=0)
 
+    # ----------------------------------------------------------------------------------------------------------
     # Test vae var classfiier hypothesis: ----------------------------------------------------------------------
     # replace weigths value:
     # print(net.var_classifier[0].weight)
@@ -341,10 +342,21 @@ def run_VAE(model_name, net, lambda_BCE, beta, z_struct_size, z_var_size, VAE_st
     # print(net.var_classifier[0].weight)
 
     # TODO: 1) Check classification accuracy on train and test set:
-    # score_test = VAE_var_classifier_score(net, loader)
-    # print(score_test)  # 92%
+    score_test = VAE_var_classifier_score(net, loader)
+    print(score_test)  # 92%
+
+    # for VAE var with decoder trained:
+    mu_var, sigma_var, encoder_struct_zeros_proportion = 0, 0, 0
+    viz_reconstruction_VAE(net, loader, model_name, z_var_size, z_struct_size, nb_img=10,
+                           nb_class=nb_class, save=True, z_reconstruction=True,
+                           z_struct_reconstruction=False, z_var_reconstruction=False,
+                           return_scores=False, real_distribution=True, mu_var=mu_var, std_var=sigma_var,
+                           mu_struct=encoder_struct_zeros_proportion, is_vae_var=is_vae_var)
 
 
+
+
+    # ----------------------------------------------------------------------------------------------------------
     # ----------------------------------------------------------------------------------------------------------
 
     net.train()
@@ -557,7 +569,9 @@ if __name__ == '__main__':
                                'mnist_struct_baseline_scheduler_binary_25_target_uc_3',
                                'mnist_struct_baseline_scheduler_binary_30_target_uc_3']
 
-    list_exp_VAE_var = ['mnist_vae_var_2cb_5']
+    list_exp_VAE_var = ['mnist_vae_var_2cb_15_grad_inv_PT',
+                        'mnist_vae_var_2cb_15_grad_inv_FS']
+                        # 'mnist_vae_var_2cb_5',
                         # 'mnist_vae_var_2cb_10',
                         # 'mnist_vae_var_2cb_15',
                         # 'mnist_vae_var_2cb_20',
@@ -774,7 +788,9 @@ if __name__ == '__main__':
                               'mnist_encoder_struct_reconstruction_s30_Hmg_dst_2_PT',
                               'mnist_encoder_struct_reconstruction_s30_Hmg_dst_3_PT']
 
-    list_VAE_var_classifier = ['mnist_vae_var_2cb_5_classifier']
+    list_VAE_var_classifier = ['mnist_vae_var_2cb_15_classifier_grad_inv_PT',
+                               'mnist_vae_var_2cb_15_classifier_grad_inv_FS']
+                               # 'mnist_vae_var_2cb_5_classifier']
                                # 'mnist_vae_var_2cb_10_classifier',
                                # 'mnist_vae_var_2cb_15_classifier',
                                # 'mnist_vae_var_2cb_20_classifier',
@@ -795,12 +811,6 @@ if __name__ == '__main__':
     #                                                is_VAE=False,
     #                                                is_encoder_struct=True)
 
-    # run_exp_extraction_and_visualization_custom_BK(list_exp_VAE_var,
-    #                                                is_ratio=False,
-    #                                                is_decoder=False,
-    #                                                is_VAE=False,
-    #                                                is_encoder_struct=False)
-
     # run_exp_extraction_and_visualization_custom_BK(list_exp_VAE,
     #                                                is_ratio=False,
     #                                                is_decoder=False,
@@ -817,6 +827,12 @@ if __name__ == '__main__':
                                                    is_ratio=False,
                                                    is_decoder=False,
                                                    is_VAE=True,
+                                                   is_encoder_struct=False)
+
+    run_exp_extraction_and_visualization_custom_BK(list_exp_VAE_var,
+                                                   is_ratio=False,
+                                                   is_decoder=False,
+                                                   is_VAE=False,
                                                    is_encoder_struct=False)
 
 
