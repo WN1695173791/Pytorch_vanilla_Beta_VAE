@@ -271,6 +271,8 @@ class SolverClassifier(object):
         self.uniq_code_dst_loss = args.uniq_code_dst_loss
         self.lambda_uniq_code_dst = args.lambda_uniq_code_dst
         self.max_epoch_use_uniq_code_target = args.max_epoch_use_uniq_code_target
+        self.add_dl_class = args.add_dl_class
+        self.hidden_dim = args.hidden_dim
         # VAE var:
         self.is_VAE_var = args.is_VAE_var
         self.var_second_cnn_block = args.var_second_cnn_block
@@ -363,7 +365,9 @@ class SolverClassifier(object):
                                  Binary_z=self.binary_z,
                                  binary_first_conv=self.binary_first_conv,
                                  binary_second_conv=self.binary_second_conv,
-                                 binary_third_conv=self.binary_third_conv)
+                                 binary_third_conv=self.binary_third_conv,
+                                 add_dl_class=self.add_dl_class,
+                                 hidden_dim=self.hidden_dim)
         elif self.is_VAE_var:
             self.net_type = 'vae_var'
             net = VAE_var(z_var_size=self.z_var_size,
@@ -779,7 +783,6 @@ class SolverClassifier(object):
                 # print('-----------::::::::::::After:::::::-----------------:')
                 # print(self.net.encoder_struct[3].weight[24][12])
                 # print(self.net.encoder_var[3].weight[24][12])
-
             if self.uniq_code_dst_loss:
                 print(self.epochs, " Compute uniq code target:")
                 self.use_uniq_bin_code_target = True

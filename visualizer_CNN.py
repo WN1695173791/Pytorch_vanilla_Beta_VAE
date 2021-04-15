@@ -2376,7 +2376,7 @@ def viz_reconstruction_VAE(net, loader, exp_name, z_var_size, z_struct_size, nb_
 
     # z reconstruction:
     if is_vae_var:
-        x_recon, _ = net(input_data)
+        x_recon, _, _ = net(input_data)
     else:
         x_recon, z_struct, z_var, z_var_sample, _, z = net(input_data)
 
@@ -2584,7 +2584,7 @@ def real_distribution_model(net, expe_name, z_struct_size, z_var_size, loader, t
 
                 # compute loss:
                 if is_vae_var:
-                    _, latent_representation = net(data)
+                    _, latent_representation, _ = net(data)
                     mu_var_iter = latent_representation['mu']
                     sigma_var_iter = latent_representation['log_var']
                 else:
@@ -2617,8 +2617,9 @@ def real_distribution_model(net, expe_name, z_struct_size, z_var_size, loader, t
             # mu_struct = torch.mean(z_struct_distribution, axis=0)
             # sigma_struct = torch.std(z_struct_distribution, axis=0)
         else:
-            mu_struct = 0
-            sigma_struct = 0
+            # mu_struct = 0
+            # sigma_struct = 0
+            zeros_proportion = 0
 
         np.save('Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test +
                 '_mu_var.npy', mu_var.detach().cpu())
@@ -3254,7 +3255,6 @@ def histo_count_uniq_code(model_name, train_test, plot_histo=True, return_percen
             col = i % ncols
             axs[row, col].hist(code_class_global[i], bins=100, alpha=0.75, label="class "+str(i))
             axs[row, col].set_title("Class: {}: [{} %] ".format(i, percent_max[i]), fontsize=12)
-            axs[row, col].axvline(5, color='k', linestyle='solid')
         plt.show()
 
     if return_percent:

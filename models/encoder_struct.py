@@ -31,7 +31,9 @@ class Encoder_struct(nn.Module, ABC):
                  Binary_z=False,
                  binary_first_conv=False,
                  binary_second_conv=False,
-                 binary_third_conv=False):
+                 binary_third_conv=False,
+                 add_dl_class=False,
+                 hidden_dim=20):
         """
         Class which defines model and forward pass.
         """
@@ -47,6 +49,8 @@ class Encoder_struct(nn.Module, ABC):
         self.kernel_size_2 = kernel_size_2
         self.kernel_size_3 = kernel_size_3
         self.n_classes = 10
+        self.add_dl_class = add_dl_class
+        self.hidden_dim = hidden_dim
 
         # custom parameters:
         self.z_struct_size = z_struct_size
@@ -124,6 +128,17 @@ class Encoder_struct(nn.Module, ABC):
         self.encoder_struct += [
             nn.AdaptiveMaxPool2d((1, 1)),  # B, z_struct_size
             View((-1, self.z_struct_size)),  # B, z_struct_size
+        ]
+
+        if self.add_dl_class:
+            self.encoder_struct += [
+                nn.Linear(self.z_struct_size, self.hidden_dim),  # B, nb_class
+                nn.ReLU(True),
+                nn.Linear(self.hidden_dim, self.z_struct_size),  # B, nb_class
+                nn.ReLU(True),
+            ]
+
+        self.encoder_struct += [
             nn.Linear(self.z_struct_size, self.n_classes)  # B, nb_class
             # nn.Softmax()
         ]
