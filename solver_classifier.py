@@ -273,6 +273,9 @@ class SolverClassifier(object):
         self.max_epoch_use_uniq_code_target = args.max_epoch_use_uniq_code_target
         self.add_dl_class = args.add_dl_class
         self.hidden_dim = args.hidden_dim
+        self.bin_after_GMP = args.bin_after_GMP
+        self.L2_dst_loss = args.L2_dst_loss
+        self.lambda_L2_dst = args.lambda_L2_dst
         # VAE var:
         self.is_VAE_var = args.is_VAE_var
         self.var_second_cnn_block = args.var_second_cnn_block
@@ -367,7 +370,8 @@ class SolverClassifier(object):
                                  binary_second_conv=self.binary_second_conv,
                                  binary_third_conv=self.binary_third_conv,
                                  add_dl_class=self.add_dl_class,
-                                 hidden_dim=self.hidden_dim)
+                                 hidden_dim=self.hidden_dim,
+                                 bin_after_GMP=self.bin_after_GMP)
         elif self.is_VAE_var:
             self.net_type = 'vae_var'
             net = VAE_var(z_var_size=self.z_var_size,
@@ -405,8 +409,18 @@ class SolverClassifier(object):
 
         # get layer num to extract z_struct:
         self.z_struct_out = True
+
         if self.is_encoder_struct:
-            self.z_struct_layer_num = get_layer_zstruct_num(net)
+            # z_struct_layer_num depend to architecture model:
+            if self.bin_after_GMP and self.L2_dst_loss:
+                # in this case we want to compute dst in continue z_struct so before binarization:
+                add_layer = 1
+            elif self.bin_after_GMP:
+                # We want use binary z_struct:
+                add_layer = 3
+            else:
+                add_layer = 1
+            self.z_struct_layer_num = get_layer_zstruct_num(net, add_layer=add_layer)
 
         # experience name:
         self.checkpoint_dir = os.path.join(args.ckpt_dir, args.exp_name)
@@ -694,16 +708,18 @@ class SolverClassifier(object):
                     variance_distance_iter_class, \
                     variance_intra, mean_distance_intra_class, \
                     variance_inter, global_avg_Hmg_dst, \
-                    avg_dst_classes, uniq_target_dist_loss = self.net(data,
-                                                                      labels=labels,
-                                                                      nb_class=self.nb_class,
-                                                                      use_ratio=self.ratio_reg,
-                                                                      z_struct_out=self.z_struct_out,
-                                                                      z_struct_layer_num=self.z_struct_layer_num,
-                                                                      loss_min_distance_cl=self.loss_min_distance_cl,
-                                                                      Hmg_dst_loss=self.Hmg_dst_loss,
-                                                                      uniq_bin_code_target=self.use_uniq_bin_code_target,
-                                                                      target_code=self.target_code)
+                    avg_dst_classes, uniq_target_dist_loss, \
+                    global_avg_L2_dst, avg_L2_dst_classes = self.net(data,
+                                                                     labels=labels,
+                                                                     nb_class=self.nb_class,
+                                                                     use_ratio=self.ratio_reg,
+                                                                     z_struct_out=self.z_struct_out,
+                                                                     z_struct_layer_num=self.z_struct_layer_num,
+                                                                     loss_min_distance_cl=self.loss_min_distance_cl,
+                                                                     Hmg_dst_loss=self.Hmg_dst_loss,
+                                                                     uniq_bin_code_target=self.use_uniq_bin_code_target,
+                                                                     target_code=self.target_code,
+                                                                     L2_dst_loss=self.L2_dst_loss)
 
                     # compute losses:
                     if not self.without_acc:
@@ -744,6 +760,12 @@ class SolverClassifier(object):
                         # global_avg_Hmg_dst.requires_grad_(True)
                         loss += global_avg_Hmg_dst * self.lambda_hmg_dst
 
+                    if self.L2_dst_loss:
+                        # Hamming distance is not differentiable
+                        # global_avg_Hmg_dst = Variable(global_avg_Hmg_dst, requires_grad=True)
+                        # global_avg_Hmg_dst.requires_grad_(True)
+                        loss += global_avg_L2_dst * self.lambda_L2_dst
+
                     if self.uniq_code_dst_loss and self.use_uniq_bin_code_target:
                         dst_target_loss = uniq_target_dist_loss * self.lambda_uc
                         loss += dst_target_loss
@@ -783,6 +805,7 @@ class SolverClassifier(object):
                 # print('-----------::::::::::::After:::::::-----------------:')
                 # print(self.net.encoder_struct[3].weight[24][12])
                 # print(self.net.encoder_var[3].weight[24][12])
+
             if self.uniq_code_dst_loss:
                 print(self.epochs, " Compute uniq code target:")
                 self.use_uniq_bin_code_target = True

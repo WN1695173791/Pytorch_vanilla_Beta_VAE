@@ -79,6 +79,10 @@ def run_exp_extraction_and_visualization_custom_BK(list_model, is_ratio=False, i
         classif_layer_size = int(parameters_dict['classif_layer_size'])
         add_classification_layer = str2bool(parameters_dict['add_classification_layer'])
         add_linear_after_GMP = str2bool(parameters_dict['add_linear_after_GMP'])
+        if 'bin_after_GMP' in parameters_dict.keys():
+            bin_after_GMP = str2bool(parameters_dict['bin_after_GMP'])
+        else:
+            bin_after_GMP = False
 
         # Encoder var parameters:
         z_var_size = int(parameters_dict['z_var_size'])
@@ -165,7 +169,8 @@ def run_exp_extraction_and_visualization_custom_BK(list_model, is_ratio=False, i
                                  binary_second_conv=binary_second_conv,
                                  binary_third_conv=binary_third_conv,
                                  add_dl_class = add_dl_class,
-                                 hidden_dim = hidden_dim)
+                                 hidden_dim = hidden_dim,
+                                 bin_after_GMP=bin_after_GMP)
         elif is_VAE_var:
             net_type = 'VAE_var'
             net = VAE_var(z_var_size=z_var_size,
@@ -818,9 +823,44 @@ if __name__ == '__main__':
                                # 'mnist_vae_var_2cb_25_classifier',
                                # 'mnist_vae_var_2cb_30_classifier']
 
+    list_encoder_struct_test = ['mnist_binary_ES_15_BAGMP',
+                                'mnist_binary_ES_15_BAGMP_sdl_30',
+                                'mnist_binary_ES_15_sdl_30_BN',
+                                'mnist_binary_ES_15_BAGMP_sdl_30_L2_dst_1',
+                                'mnist_binary_ES_15_BAGMP_sdl_30_L2_dst_2',
+                                'mnist_binary_ES_15_BAGMP_sdl_30_L2_dst_3',
+                                'mnist_binary_ES_15_BAGMP_sdl_30_L2_dst_4',
+                                'mnist_binary_ES_15_BAGMP_L2_dst_1',
+                                'mnist_binary_ES_15_BAGMP_L2_dst_2',
+                                'mnist_binary_ES_15_BAGMP_L2_dst_3',
+                                'mnist_binary_ES_15_BAGMP_L2_dst_4',
+                                'mnist_binary_ES_15_BAGMP_Hmg_dst_1',
+                                'mnist_binary_ES_15_BAGMP_Hmg_dst_2',
+                                'mnist_binary_ES_15_BAGMP_Hmg_dst_3',
+                                'mnist_binary_ES_15_BAGMP_Hmg_dst_4',
+                                'mnist_binary_ES_15_BAGMP_Hmg_dst_5',
+                                'mnist_binary_ES_15_BAGMP_sdl_30_Hmg_dst_1',
+                                'mnist_binary_ES_15_BAGMP_sdl_30_Hmg_dst_2',
+                                'mnist_binary_ES_15_BAGMP_sdl_30_Hmg_dst_3',
+                                'mnist_binary_ES_15_BAGMP_sdl_30_Hmg_dst_4',
+                                'mnist_binary_ES_15_BAGMP_sdl_30_Hmg_dst_5',
+                                'mnist_binary_ES_15_BAGMP_sdl_30_Hmg_dst_6',
+                                'mnist_binary_ES_15_sdl_30_Hmg_dst_1',
+                                'mnist_binary_ES_15_sdl_30_Hmg_dst_2',
+                                'mnist_binary_ES_15_sdl_30_Hmg_dst_3',
+                                'mnist_binary_ES_15_sdl_30_Hmg_dst_4',
+                                'mnist_binary_ES_15_sdl_30_Hmg_dst_5',
+                                'mnist_binary_ES_15_sdl_30_Hmg_dst_6',
+                                'mnist_binary_ES_15_Hmg_dst_1',
+                                'mnist_binary_ES_15_Hmg_dst_2',
+                                'mnist_binary_ES_15_Hmg_dst_3',
+                                'mnist_binary_ES_15_Hmg_dst_4',
+                                'mnist_binary_ES_15_Hmg_dst_5',
+                                'mnist_binary_ES_15_Hmg_dst_6']
+
     parameters_mnist_classifier_BK_ratio = "parameters_combinations/mnist_classifier_ratio.txt"
 
-    run_exp_extraction_and_visualization_custom_BK(list_encoder_struct,
+    run_exp_extraction_and_visualization_custom_BK(list_encoder_struct_test,
                                                    is_ratio=False,
                                                    is_decoder=False,
                                                    is_VAE=False,

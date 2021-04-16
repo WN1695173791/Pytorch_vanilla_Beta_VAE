@@ -8,6 +8,7 @@ import torch.nn.functional as F
 
 # hamming_distance = HammingDistance()
 hamming_distance = nn.PairwiseDistance(p=0, eps=0.0)
+L2_distance = nn.PairwiseDistance(p=2, eps=0.0)
 EPS = 1e-12
 
 
@@ -33,7 +34,8 @@ class Encoder_struct(nn.Module, ABC):
                  binary_second_conv=False,
                  binary_third_conv=False,
                  add_dl_class=False,
-                 hidden_dim=20):
+                 hidden_dim=20,
+                 bin_after_GMP=False):
         """
         Class which defines model and forward pass.
         """
@@ -51,6 +53,7 @@ class Encoder_struct(nn.Module, ABC):
         self.n_classes = 10
         self.add_dl_class = add_dl_class
         self.hidden_dim = hidden_dim
+        self.bin_after_GMP = bin_after_GMP
 
         # custom parameters:
         self.z_struct_size = z_struct_size
@@ -89,7 +92,7 @@ class Encoder_struct(nn.Module, ABC):
         ]
         if self.Binary_z and self.binary_first_conv:
             self.encoder_struct += [
-                DeterministicBinaryActivation(estimator='ST')
+                DeterministicBinaryActivation(estimator='ST'),
             ]
         else:
             self.encoder_struct += [
@@ -103,7 +106,7 @@ class Encoder_struct(nn.Module, ABC):
             ]
         if self.Binary_z and self.two_conv_layer and self.binary_second_conv:
             self.encoder_struct += [
-                DeterministicBinaryActivation(estimator='ST')
+                DeterministicBinaryActivation(estimator='ST'),
             ]
         elif self.two_conv_layer:
             self.encoder_struct += [
@@ -115,9 +118,9 @@ class Encoder_struct(nn.Module, ABC):
                 nn.BatchNorm2d(self.hidden_filters_3),
                 # PrintLayer(),  # B, 32, 25, 25
             ]
-        if self.Binary_z and self.three_conv_layer and self.binary_third_conv:
+        if self.Binary_z and self.three_conv_layer and self.binary_third_conv and not self.bin_after_GMP:
             self.encoder_struct += [
-                DeterministicBinaryActivation(estimator='ST')
+                DeterministicBinaryActivation(estimator='ST'),
             ]
         elif self.three_conv_layer:
             self.encoder_struct += [
@@ -125,21 +128,31 @@ class Encoder_struct(nn.Module, ABC):
             ]
 
         # ---------- GMP and final layer for classification:
-        self.encoder_struct += [
-            nn.AdaptiveMaxPool2d((1, 1)),  # B, z_struct_size
-            View((-1, self.z_struct_size)),  # B, z_struct_size
-        ]
+        if self.bin_after_GMP:
+            self.encoder_struct += [
+                nn.AdaptiveMaxPool2d((1, 1)),  # B, z_struct_size
+                View((-1, self.z_struct_size)),  # B, z_struct_size
+                DeterministicBinaryActivation(estimator='ST'),
+            ]
+        else:
+            self.encoder_struct += [
+                nn.AdaptiveMaxPool2d((1, 1)),  # B, z_struct_size
+                View((-1, self.z_struct_size)),  # B, z_struct_size
+            ]
 
         if self.add_dl_class:
             self.encoder_struct += [
                 nn.Linear(self.z_struct_size, self.hidden_dim),  # B, nb_class
+                nn.BatchNorm1d(self.hidden_dim),
                 nn.ReLU(True),
+                nn.Linear(self.hidden_dim, self.n_classes)  # B, nb_class
+                # nn.Softmax()
             ]
-
-        self.encoder_struct += [
-            nn.Linear(self.hidden_dim, self.n_classes)  # B, nb_class
-            # nn.Softmax()
-        ]
+        else:
+            self.encoder_struct += [
+                nn.Linear(self.z_struct_size, self.n_classes)  # B, nb_class
+                # nn.Softmax()
+            ]
         # _________________________---------------- end encoder_struct: ------------_____________________________
 
         self.encoder_struct = nn.Sequential(*self.encoder_struct)
@@ -153,7 +166,7 @@ class Encoder_struct(nn.Module, ABC):
 
     def forward(self, x, labels=None, nb_class=None, use_ratio=False, z_struct_out=False, z_struct_prediction=False,
                 z_struct_layer_num=None, loss_min_distance_cl=False, Hmg_dst_loss=False, uniq_bin_code_target=False,
-                target_code=None):
+                target_code=None, L2_dst_loss=False):
         """
         Forward pass of model.
         """
@@ -172,6 +185,8 @@ class Encoder_struct(nn.Module, ABC):
         global_avg_Hmg_dst = 0
         avg_dst_classes = 0
         uniq_target_dist_loss = 0
+        global_avg_L2_dst = 0
+        avg_L2_dst_classes = 0
 
         if z_struct_out:
             z_struct = self.encoder_struct[:z_struct_layer_num](x)
@@ -202,11 +217,15 @@ class Encoder_struct(nn.Module, ABC):
         if Hmg_dst_loss:
             global_avg_Hmg_dst, avg_dst_classes = self.hamming_distance_loss(z_struct, nb_class, labels)
 
+        if L2_dst_loss:
+            global_avg_L2_dst, avg_L2_dst_classes = self.inter_class_distance_loss(z_struct, nb_class, labels)
+
         if uniq_bin_code_target:
             uniq_target_dist_loss = self.distance_target_uniq_code(z_struct, nb_class, labels, target_code)
 
         return prediction, z_struct, ratio, variance_distance_iter_class, variance_intra, mean_distance_intra_class, \
-               variance_inter, global_avg_Hmg_dst, avg_dst_classes, uniq_target_dist_loss
+               variance_inter, global_avg_Hmg_dst, avg_dst_classes, uniq_target_dist_loss, global_avg_L2_dst, \
+               avg_L2_dst_classes
 
     def compute_ratio_batch(self, batch_z_struct, labels_batch, nb_class):
         """
@@ -312,6 +331,44 @@ class Encoder_struct(nn.Module, ABC):
         global_avg_Hmg_dst = torch.mean(avg_dst_classes)
 
         return global_avg_Hmg_dst, avg_dst_classes
+
+    def inter_class_distance_loss(self, batch_z_struct, nb_class, labels_batch):
+        """
+        computing L2 distance between z_struct in the same class
+        :param z_struct:
+        :return:
+        """
+        assert batch_z_struct is not None, "z_struct mustn't be None to compute distance"
+        assert labels_batch is not None, "labels_batch mustn't be None to compute distance"
+
+        z_struct_size = batch_z_struct[0].shape[0]
+        global_first = True
+        for class_id in range(nb_class):
+            first = True
+            z_struct_class_iter = batch_z_struct[torch.where(labels_batch == class_id)]
+            # computing distance:
+            for i in range(len(z_struct_class_iter)):
+                for j in range(len(z_struct_class_iter)):
+                    if i == j:
+                        pass
+                    else:
+                        z1 = z_struct_class_iter[i].reshape(1, z_struct_size)
+                        z2 = z_struct_class_iter[j].reshape(1, z_struct_size)
+                        L2_dst = L2_distance(z1, z2)
+                        L2_dst = torch.unsqueeze(L2_dst, 0)
+                        if first:
+                            avg_dst_class_id = L2_dst
+                            first = False
+                        else:
+                            avg_dst_class_id = torch.cat((avg_dst_class_id, L2_dst), dim=0)
+            if global_first:
+                avg_dst_classes = torch.mean(avg_dst_class_id)
+            else:
+                avg_dst_classes = torch.cat((avg_dst_classes, torch.mean(avg_dst_class_id)), dim=0)
+
+        global_avg_L2_dst = torch.mean(avg_dst_classes)
+
+        return global_avg_L2_dst, avg_dst_classes
 
     def distance_target_uniq_code(self, batch_z_struct, nb_class, labels_batch, target_code):
         """

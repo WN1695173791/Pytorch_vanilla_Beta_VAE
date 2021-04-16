@@ -283,6 +283,9 @@ if __name__ == "__main__":
                         help="max_epoch_use_uniq_code_target")
     parser.add_argument('--add_dl_class', default=False, type=str2bool, help="add_dl_class")
     parser.add_argument('--hidden_dim', type=int, default=20, metavar='integer value', help="hidden_dim")
+    parser.add_argument('--bin_after_GMP', default=False, type=str2bool, help="bin_after_GMP")
+    parser.add_argument('--L2_dst_loss', default=False, type=str2bool, help="L2_dst_loss")
+    parser.add_argument('--lambda_L2_dst', type=float, default=1, help="lambda_L2_dst")
     # VAE var:
     parser.add_argument('--is_VAE_var', default=False, type=str2bool, help="is_VAE_var")
     parser.add_argument('--var_second_cnn_block', default=True, type=str2bool, help="var_second_cnn_block")
