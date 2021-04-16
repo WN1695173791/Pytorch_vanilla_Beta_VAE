@@ -458,7 +458,7 @@ def run_viz_expes(model_name, net, is_ratio, is_distance_loss, loss_distance_mea
     # _ = distance_matrix(net, model_name, train_test=train_test, plot_fig=True)
 
     # Plot resume:
-    same_binary_code(net, model_name, loader, nb_class, train_test=train_test, save=True, Hmg_dist=True) 
+    same_binary_code(net, model_name, loader, nb_class, train_test=train_test, save=True, Hmg_dist=True)
     z_struct_code_classes(model_name, nb_class, train_test=train_test)
     compute_z_struct(net, model_name, loader, train_test=train_test, net_type=net_type)
     get_z_struct_per_class(model_name, train_test=train_test, nb_class=nb_class)
@@ -823,12 +823,12 @@ if __name__ == '__main__':
                                # 'mnist_vae_var_2cb_25_classifier',
                                # 'mnist_vae_var_2cb_30_classifier']
 
-    list_encoder_struct_test = ['mnist_binary_ES_15_BAGMP',
-                                'mnist_binary_ES_15_BAGMP_sdl_30',
-                                'mnist_binary_ES_15_sdl_30_BN',
-                                'mnist_binary_ES_15_BAGMP_sdl_30_L2_dst_1',
-                                'mnist_binary_ES_15_BAGMP_sdl_30_L2_dst_2',
-                                'mnist_binary_ES_15_BAGMP_sdl_30_L2_dst_3',
+    list_encoder_struct_test = [# 'mnist_binary_ES_15_BAGMP',
+                                # 'mnist_binary_ES_15_BAGMP_sdl_30',
+                                # 'mnist_binary_ES_15_sdl_30_BN',
+                                # 'mnist_binary_ES_15_BAGMP_sdl_30_L2_dst_1',
+                                # 'mnist_binary_ES_15_BAGMP_sdl_30_L2_dst_2',
+                                # 'mnist_binary_ES_15_BAGMP_sdl_30_L2_dst_3',
                                 'mnist_binary_ES_15_BAGMP_sdl_30_L2_dst_4',
                                 'mnist_binary_ES_15_BAGMP_L2_dst_1',
                                 'mnist_binary_ES_15_BAGMP_L2_dst_2',

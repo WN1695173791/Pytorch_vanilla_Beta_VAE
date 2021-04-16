@@ -343,11 +343,9 @@ class SolverClassifier(object):
         self.test_loader_size = len(self.test_loader.dataset)
 
         # ___________________________________________ end dataset:___________________________________________________
-
         logger.info("Dataset {}: train with {} samples and {} test samples".format(args.dataset,
                                                                                    self.train_loader_size,
                                                                                    self.test_loader_size))
-
         # ___________________________________________create model:_________________________________________________
         if self.is_encoder_struct:
             self.net_type = 'encoder_struct'
@@ -406,7 +404,6 @@ class SolverClassifier(object):
                       binary_second_conv=self.binary_second_conv,
                       binary_third_conv=self.binary_third_conv,
                       ES_reconstruction=self.ES_reconstruction)
-
         # get layer num to extract z_struct:
         self.z_struct_out = True
 
@@ -496,7 +493,7 @@ class SolverClassifier(object):
                                                         other_architecture=self.other_architecture,
                                                         EV_classifier=self.PT_model_EV_classifier,
                                                         n_classes=self.nb_class,
-                                                        grad_inv=self.grad_inv)
+                                                        grad_inv=False)
                         # load weighs:
                         pre_trained_var_model = self.load_pre_trained_checkpoint('last',
                                                                                  checkpoint_dir_encoder_var,

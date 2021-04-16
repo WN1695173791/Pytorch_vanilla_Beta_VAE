@@ -32,7 +32,7 @@ class VAE_var(nn.Module, ABC):
         self.n_classes = n_classes
         self.grad_inv = grad_inv
         if self.grad_inv:
-            assert EV_classifier, "Warning: inverse gradient it's used but you don't train a classifier !"
+            assert self.EV_classifier, "Warning: inverse gradient it's used but you don't train a classifier !"
 
         # number of CNN blocks:
         self.var_second_cnn_block = var_second_cnn_block
