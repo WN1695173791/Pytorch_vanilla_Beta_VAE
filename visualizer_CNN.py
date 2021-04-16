@@ -189,10 +189,10 @@ def compute_z_struct(net_trained, exp_name, loader, train_test=None, net_type=No
             if torch.cuda.is_available():
                 input_data = input_data.cuda()
 
-            _, z_struct, _, _, _, _, _, _, _, _ = net_trained(input_data,
+            _, z_struct, _, _, _, _, _, _, _, _, _, _ = net_trained(input_data,
                                                            z_struct_out=True,
                                                            z_struct_layer_num=z_struct_layer_num)
-            pred, _, _, _, _, _, _, _, _, _ = net_trained(input_data)
+            pred, _, _, _, _, _, _, _, _, _, _, _ = net_trained(input_data)
 
             # train mode:
             net_trained.eval()
@@ -2960,7 +2960,7 @@ def same_binary_code(net, model_name, loader, nb_class, train_test=None, save=Tr
             if is_VAE:
                 _, embedding, _, _, _, z = net(data)
             else:
-                _, embedding, _, _, _, _, _, _, _, _ = net(data, z_struct_out=True, z_struct_layer_num=z_struct_layer_num)
+                _, embedding, _, _, _, _, _, _, _, _, _, _ = net(data, z_struct_out=True, z_struct_layer_num=z_struct_layer_num)
 
             if first:
                 labels_list = label.detach()
