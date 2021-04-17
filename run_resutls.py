@@ -185,7 +185,8 @@ def run_exp_extraction_and_visualization_custom_BK(list_model, is_ratio=False, i
                     ES_reconstruction)
         else:
             run_viz_expes(model_name, net, is_ratio, loss_min_distance_cl, loss_distance_mean, cat='Encoder_struct',
-                          net_type=net_type, diff_var_loss=diff_var, z_struct_size=z_struct_size)
+                          net_type=net_type, diff_var_loss=diff_var, z_struct_size=z_struct_size,
+                          bin_after_GMP=bin_after_GMP)
             # visualize_regions_of_interest(model_name, net, net_type='Custom_CNN_BK')
 
 
@@ -387,7 +388,8 @@ def get_activation(name):
 
 
 def run_viz_expes(model_name, net, is_ratio, is_distance_loss, loss_distance_mean, net_type=None, cat=None,
-                  ratio_reg=False, diff_var_loss=False, contrastive_loss=False, z_struct_size=5):
+                  ratio_reg=False, diff_var_loss=False, contrastive_loss=False, z_struct_size=5,
+                  bin_after_GMP=bin_after_GMP):
 
     path = 'checkpoints_CNN/'
     path_scores = 'checkpoint_scores_CNN'
@@ -461,7 +463,7 @@ def run_viz_expes(model_name, net, is_ratio, is_distance_loss, loss_distance_mea
     same_binary_code(net, model_name, loader, nb_class, train_test=train_test, save=True, Hmg_dist=True)
     z_struct_code_classes(model_name, nb_class, train_test=train_test)
     compute_z_struct(net, model_name, loader, train_test=train_test, net_type=net_type)
-    get_z_struct_per_class(model_name, train_test=train_test, nb_class=nb_class)
+    get_z_struct_per_class(model_name, train_test=train_test, nb_class=nb_class, bin_after_GMP=bin_after_GMP)
     get_average_z_struct_per_classes(exp_name=model_name, train_test=train_test)
     plot_resume(net, model_name, is_ratio, is_distance_loss, loss_distance_mean, loader, train_loader,
                 device, cat=cat, train_test=train_test, path_scores=path_scores, diff_var=diff_var_loss,
@@ -823,21 +825,21 @@ if __name__ == '__main__':
                                # 'mnist_vae_var_2cb_25_classifier',
                                # 'mnist_vae_var_2cb_30_classifier']
 
-    list_encoder_struct_test = [# 'mnist_binary_ES_15_BAGMP',
-                                # 'mnist_binary_ES_15_BAGMP_sdl_30',
-                                # 'mnist_binary_ES_15_sdl_30_BN',
-                                # 'mnist_binary_ES_15_BAGMP_sdl_30_L2_dst_1',
-                                # 'mnist_binary_ES_15_BAGMP_sdl_30_L2_dst_2',
-                                # 'mnist_binary_ES_15_BAGMP_sdl_30_L2_dst_3',
-                                # 'mnist_binary_ES_15_BAGMP_sdl_30_L2_dst_4',
-                                # 'mnist_binary_ES_15_BAGMP_L2_dst_1',
-                                # 'mnist_binary_ES_15_BAGMP_L2_dst_2',
-                                # 'mnist_binary_ES_15_BAGMP_L2_dst_3',
-                                # 'mnist_binary_ES_15_BAGMP_L2_dst_4',
-                                # 'mnist_binary_ES_15_BAGMP_Hmg_dst_1',
-                                # 'mnist_binary_ES_15_BAGMP_Hmg_dst_2',
-                                # 'mnist_binary_ES_15_BAGMP_Hmg_dst_3',
-                                # 'mnist_binary_ES_15_BAGMP_Hmg_dst_4',
+    list_encoder_struct_test = ['mnist_binary_ES_15_BAGMP',
+                                'mnist_binary_ES_15_BAGMP_sdl_30',
+                                'mnist_binary_ES_15_sdl_30_BN',
+                                'mnist_binary_ES_15_BAGMP_sdl_30_L2_dst_1',
+                                'mnist_binary_ES_15_BAGMP_sdl_30_L2_dst_2',
+                                'mnist_binary_ES_15_BAGMP_sdl_30_L2_dst_3',
+                                'mnist_binary_ES_15_BAGMP_sdl_30_L2_dst_4',
+                                'mnist_binary_ES_15_BAGMP_L2_dst_1',
+                                'mnist_binary_ES_15_BAGMP_L2_dst_2',
+                                'mnist_binary_ES_15_BAGMP_L2_dst_3',
+                                'mnist_binary_ES_15_BAGMP_L2_dst_4',
+                                'mnist_binary_ES_15_BAGMP_Hmg_dst_1',
+                                'mnist_binary_ES_15_BAGMP_Hmg_dst_2',
+                                'mnist_binary_ES_15_BAGMP_Hmg_dst_3',
+                                'mnist_binary_ES_15_BAGMP_Hmg_dst_4',
                                 'mnist_binary_ES_15_BAGMP_Hmg_dst_5',
                                 'mnist_binary_ES_15_BAGMP_sdl_30_Hmg_dst_1',
                                 'mnist_binary_ES_15_BAGMP_sdl_30_Hmg_dst_2',

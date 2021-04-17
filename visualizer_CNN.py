@@ -155,7 +155,8 @@ def get_z_struct_per_class_VAE(exp_name, train_test=None, nb_class=10):
     return representation_z_struct_class, average_z_struct_class
 
 
-def compute_z_struct(net_trained, exp_name, loader, train_test=None, net_type=None, return_results=False):
+def compute_z_struct(net_trained, exp_name, loader, train_test=None, net_type=None, return_results=False,
+                     bin_after_GMP=False):
     """
     Extract all z_struct representation for a specific model and all images in loader and save it.
     :param net_type:
@@ -175,7 +176,11 @@ def compute_z_struct(net_trained, exp_name, loader, train_test=None, net_type=No
         return
     else:
         # get layer num for GMP:
-        z_struct_layer_num = get_layer_zstruct_num(net_trained)
+        if bin_after_GMP:
+            add_layer = 3
+        else:
+            add_layer = 1
+        z_struct_layer_num = get_layer_zstruct_num(net_trained, add_layer)
 
         labels_list = []
         z_struct_representation = []
