@@ -268,10 +268,8 @@ class VAE_var(nn.Module, ABC):
         # --------------------------------------- end Classifier ____________________________________________ ----
         self.decoder_var = nn.Sequential(*self.decoder_var)
         if self.EV_classifier:
-            self.var_classifier = nn.Sequential(*self.var_classifier,
-                                                RevGrad())
+            self.var_classifier = nn.Sequential(*self.var_classifier)
             if self.grad_inv:
-
                 self.encoder_var = nn.Sequential(*self.encoder_var,
                                                  RevGrad())
             else:

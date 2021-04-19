@@ -5,6 +5,7 @@ import numpy as np
 import torch
 from binary_tools.activations import DeterministicBinaryActivation
 import torch.nn.functional as F
+from pytorch_revgrad import RevGrad
 
 EPS = 1e-12
 
@@ -34,7 +35,9 @@ class VAE(nn.Module, ABC):
                  binary_first_conv=False,
                  binary_second_conv=False,
                  binary_third_conv=False,
-                 ES_reconstruction=False):
+                 ES_reconstruction=False,
+                 EV_classifier=False,
+                 grad_inv=False):
         """
         Class which defines model and forward pass.
         """
@@ -47,6 +50,8 @@ class VAE(nn.Module, ABC):
             self.z_size = z_struct_size
         else:
             self.z_size = z_var_size + z_struct_size
+        self.EV_classifier = EV_classifier
+        self.grad_inv = grad_inv
 
         # encoder var parameters:
         self.z_var_size = z_var_size
@@ -147,51 +152,17 @@ class VAE(nn.Module, ABC):
         self.encoder_struct = [
             nn.Conv2d(self.nc, self.hidden_filters_1, self.kernel_size_1, stride=self.stride_size),
             nn.BatchNorm2d(self.hidden_filters_1),
-            # PrintLayer(),  # B, 32, 25, 25
-        ]
-        if self.Binary_z and self.binary_first_conv:
-            self.encoder_struct += [
-                DeterministicBinaryActivation(estimator='ST')
-            ]
-        else:
-            self.encoder_struct += [
-                nn.ReLU(True),
-            ]
-        if self.two_conv_layer:
-            self.encoder_struct += [
-                nn.Conv2d(self.hidden_filters_1, self.hidden_filters_2, self.kernel_size_2, stride=self.stride_size),
-                nn.BatchNorm2d(self.hidden_filters_2),
-                # PrintLayer(),  # B, 32, 25, 25
-            ]
-        if self.Binary_z and self.two_conv_layer and self.binary_second_conv:
-            self.encoder_struct += [
-                DeterministicBinaryActivation(estimator='ST')
-            ]
-        elif self.two_conv_layer:
-            self.encoder_struct += [
-                nn.ReLU(True),
-            ]
-        if self.three_conv_layer:
-            self.encoder_struct += [
-                nn.Conv2d(self.hidden_filters_2, self.hidden_filters_3, self.kernel_size_3, stride=self.stride_size),
-                nn.BatchNorm2d(self.hidden_filters_3),
-                # PrintLayer(),  # B, 32, 25, 25
-            ]
-        if self.Binary_z and self.three_conv_layer and self.binary_third_conv:
-            self.encoder_struct += [
-                DeterministicBinaryActivation(estimator='ST')
-            ]
-        elif self.three_conv_layer:
-            self.encoder_struct += [
-                nn.ReLU(True),
-            ]
-
-        # ---------- GMP and final layer for classification:
-        self.encoder_struct += [
+            nn.ReLU(True),
+            nn.Conv2d(self.hidden_filters_1, self.hidden_filters_2, self.kernel_size_2, stride=self.stride_size),
+            nn.BatchNorm2d(self.hidden_filters_2),
+            nn.ReLU(True),
+            nn.Conv2d(self.hidden_filters_2, self.hidden_filters_3, self.kernel_size_3, stride=self.stride_size),
+            nn.BatchNorm2d(self.hidden_filters_3),
+            nn.ReLU(True),
+            # GMP and final layer for classification:
             nn.AdaptiveMaxPool2d((1, 1)),  # B, z_struct_size
-            View((-1, self.z_struct_size))  # B, z_struct_size
-            # nn.Linear(self.z_struct_size, self.n_classes)  # B, nb_class
-            # nn.Softmax()
+            View((-1, self.z_struct_size)),  # B, z_struct_size
+            DeterministicBinaryActivation(estimator='ST'),
         ]
         # -----------_________________ end encoder_struct____________________________________________------------
 
@@ -363,11 +334,26 @@ class VAE(nn.Module, ABC):
                 nn.Sigmoid()
             ]
         # --------------------------------------- end decoder ____________________________________________ ----
+        # --------------------------------------- Classifier ____________________________________________ ----
+        if self.EV_classifier:
+            self.var_classifier = [
+                nn.Linear(self.z_var_size, self.n_classes)  # B, nb_class
+                # nn.Softmax()
+            ]
+        # --------------------------------------- end Classifier ____________________________________________ ----
 
         self.encoder_struct = nn.Sequential(*self.encoder_struct)
         if not self.ES_reconstruction:
             self.encoder_var = nn.Sequential(*self.encoder_var)
         self.decoder = nn.Sequential(*self.decoder)
+
+        if self.EV_classifier:
+            self.var_classifier = nn.Sequential(*self.var_classifier)
+            if self.grad_inv:
+                self.encoder_var = nn.Sequential(*self.encoder_var,
+                                                 RevGrad())
+            else:
+                self.encoder_var = nn.Sequential(*self.encoder_var)
 
         self.weight_init()
 
@@ -401,7 +387,14 @@ class VAE(nn.Module, ABC):
         # reconstruction:
         x_recons = self.decoder(z)
 
-        return x_recons, z_struct, z_var, z_var_sample, latent_representation, z
+        if self.EV_classifier:
+            # z_var classifier:
+            out = self.var_classifier(z_var_sample)
+            prediction_var = F.softmax(out, dim=1)
+        else:
+            prediction_var = 0
+
+        return x_recons, z_struct, z_var, z_var_sample, latent_representation, z, prediction_var
 
     def _encode(self, z, z_size):
         """

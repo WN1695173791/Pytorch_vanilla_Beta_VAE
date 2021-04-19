@@ -403,7 +403,9 @@ class SolverClassifier(object):
                       binary_first_conv=self.binary_first_conv,
                       binary_second_conv=self.binary_second_conv,
                       binary_third_conv=self.binary_third_conv,
-                      ES_reconstruction=self.ES_reconstruction)
+                      ES_reconstruction=self.ES_reconstruction,
+                      EV_classifier=self.EV_classifier,
+                      grad_inv=self.grad_inv)
         # get layer num to extract z_struct:
         self.z_struct_out = True
 
@@ -569,7 +571,10 @@ class SolverClassifier(object):
                                                                   Binary_z=self.binary_z,
                                                                   binary_first_conv=self.binary_first_conv,
                                                                   binary_second_conv=self.binary_second_conv,
-                                                                  binary_third_conv=self.binary_third_conv)
+                                                                  binary_third_conv=self.binary_third_conv,
+                                                                  add_dl_class=self.add_dl_class,
+                                                                  hidden_dim=self.hidden_dim,
+                                                                  bin_after_GMP=self.bin_after_GMP)
 
                         # load weighs:
                         pre_trained_struct_model = self.load_pre_trained_checkpoint('last',
@@ -667,8 +672,10 @@ class SolverClassifier(object):
                 labels = labels.to(self.device)  # Variable(labels.to(self.device))
 
                 if self.use_VAE:
+                    loss = 0
                     if self.is_VAE:
-                        x_recons, z_struct, z_var, z_var_sample, latent_representation, z = self.net(data)
+                        x_recons, z_struct, z_var, z_var_sample, latent_representation, z, \
+                        prediction_var = self.net(data)
                     else:
                         x_recons, latent_representation, prediction_var = self.net(data)
 
@@ -679,18 +686,18 @@ class SolverClassifier(object):
                         if self.ES_reconstruction:
                             BCE_loss = F.mse_loss(x_recons, data, size_average=False)
                             loss = BCE_loss
-                        else:
-                            mu = latent_representation['mu']
-                            log_var = latent_representation['log_var']
+                    if self.is_VAE and not self.ES_reconstruction:
+                        mu = latent_representation['mu']
+                        log_var = latent_representation['log_var']
 
-                            # BCE tries to make our reconstruction as accurate as possible:
-                            # BCE_loss = F.binary_cross_entropy(x_recons, data, size_average=False)
-                            BCE_loss = F.mse_loss(x_recons, data, size_average=False)
+                        # BCE tries to make our reconstruction as accurate as possible:
+                        # BCE_loss = F.binary_cross_entropy(x_recons, data, size_average=False)
+                        BCE_loss = F.mse_loss(x_recons, data, size_average=False)
 
-                            # KLD tries to push the distributions as close as possible to unit Gaussian:
-                            KLD_loss = -0.5 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
+                        # KLD tries to push the distributions as close as possible to unit Gaussian:
+                        KLD_loss = -0.5 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
 
-                            loss = (self.lambda_BCE * BCE_loss) + (self.beta * KLD_loss)
+                        loss += (self.lambda_BCE * BCE_loss) + (self.beta * KLD_loss)
                 else:
                     self.mse_loss = 0
                     loss = 0
