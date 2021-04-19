@@ -389,7 +389,7 @@ def get_activation(name):
 
 def run_viz_expes(model_name, net, is_ratio, is_distance_loss, loss_distance_mean, net_type=None, cat=None,
                   ratio_reg=False, diff_var_loss=False, contrastive_loss=False, z_struct_size=5,
-                  bin_after_GMP=bin_after_GMP):
+                  bin_after_GMP=False):
 
     path = 'checkpoints_CNN/'
     path_scores = 'checkpoint_scores_CNN'
@@ -460,14 +460,14 @@ def run_viz_expes(model_name, net, is_ratio, is_distance_loss, loss_distance_mea
     # _ = distance_matrix(net, model_name, train_test=train_test, plot_fig=True)
 
     # Plot resume:
-    same_binary_code(net, model_name, loader, nb_class, train_test=train_test, save=True, Hmg_dist=True)
+    same_binary_code(net, model_name, loader, nb_class, train_test=train_test, save=True, Hmg_dist=False)
     z_struct_code_classes(model_name, nb_class, train_test=train_test)
     compute_z_struct(net, model_name, loader, train_test=train_test, net_type=net_type)
-    get_z_struct_per_class(model_name, train_test=train_test, nb_class=nb_class, bin_after_GMP=bin_after_GMP)
+    get_z_struct_per_class(model_name, train_test=train_test, nb_class=nb_class)
     get_average_z_struct_per_classes(exp_name=model_name, train_test=train_test)
     plot_resume(net, model_name, is_ratio, is_distance_loss, loss_distance_mean, loader, train_loader,
                 device, cat=cat, train_test=train_test, path_scores=path_scores, diff_var=diff_var_loss,
-                contrastive_loss=contrastive_loss, encoder_struct=True, Hmg_dst=True, z_struct_size=z_struct_size)
+                contrastive_loss=contrastive_loss, encoder_struct=True, Hmg_dst=False, z_struct_size=z_struct_size)
 
     # receptive_field = get_receptive_field_size(net, batch_test)
     # _ = score_with_best_code_uniq(net, model_name, train_test, loader, z_struct_size, loader_size)
@@ -825,26 +825,26 @@ if __name__ == '__main__':
                                # 'mnist_vae_var_2cb_25_classifier',
                                # 'mnist_vae_var_2cb_30_classifier']
 
-    list_encoder_struct_test = ['mnist_binary_ES_15_BAGMP',
-                                'mnist_binary_ES_15_BAGMP_sdl_30',
-                                'mnist_binary_ES_15_sdl_30_BN',
-                                'mnist_binary_ES_15_BAGMP_sdl_30_L2_dst_1',
-                                'mnist_binary_ES_15_BAGMP_sdl_30_L2_dst_2',
-                                'mnist_binary_ES_15_BAGMP_sdl_30_L2_dst_3',
-                                'mnist_binary_ES_15_BAGMP_sdl_30_L2_dst_4',
-                                'mnist_binary_ES_15_BAGMP_L2_dst_1',
-                                'mnist_binary_ES_15_BAGMP_L2_dst_2',
-                                'mnist_binary_ES_15_BAGMP_L2_dst_3',
-                                'mnist_binary_ES_15_BAGMP_L2_dst_4',
-                                'mnist_binary_ES_15_BAGMP_Hmg_dst_1',
-                                'mnist_binary_ES_15_BAGMP_Hmg_dst_2',
-                                'mnist_binary_ES_15_BAGMP_Hmg_dst_3',
-                                'mnist_binary_ES_15_BAGMP_Hmg_dst_4',
-                                'mnist_binary_ES_15_BAGMP_Hmg_dst_5',
-                                'mnist_binary_ES_15_BAGMP_sdl_30_Hmg_dst_1',
-                                'mnist_binary_ES_15_BAGMP_sdl_30_Hmg_dst_2',
-                                'mnist_binary_ES_15_BAGMP_sdl_30_Hmg_dst_3',
-                                'mnist_binary_ES_15_BAGMP_sdl_30_Hmg_dst_4',
+    list_encoder_struct_test = [# 'mnist_binary_ES_15_BAGMP',
+                                # 'mnist_binary_ES_15_BAGMP_sdl_30',
+                                # 'mnist_binary_ES_15_sdl_30_BN',
+                                # 'mnist_binary_ES_15_BAGMP_sdl_30_L2_dst_1',
+                                # 'mnist_binary_ES_15_BAGMP_sdl_30_L2_dst_2',
+                                # 'mnist_binary_ES_15_BAGMP_sdl_30_L2_dst_3',
+                                # 'mnist_binary_ES_15_BAGMP_sdl_30_L2_dst_4',
+                                # 'mnist_binary_ES_15_BAGMP_L2_dst_1',
+                                # 'mnist_binary_ES_15_BAGMP_L2_dst_2',
+                                # 'mnist_binary_ES_15_BAGMP_L2_dst_3',
+                                # 'mnist_binary_ES_15_BAGMP_L2_dst_4',
+                                # 'mnist_binary_ES_15_BAGMP_Hmg_dst_1',
+                                # 'mnist_binary_ES_15_BAGMP_Hmg_dst_2',
+                                # 'mnist_binary_ES_15_BAGMP_Hmg_dst_3',
+                                # 'mnist_binary_ES_15_BAGMP_Hmg_dst_4',
+                                # 'mnist_binary_ES_15_BAGMP_Hmg_dst_5',
+                                # 'mnist_binary_ES_15_BAGMP_sdl_30_Hmg_dst_1',
+                                # 'mnist_binary_ES_15_BAGMP_sdl_30_Hmg_dst_2',
+                                # 'mnist_binary_ES_15_BAGMP_sdl_30_Hmg_dst_3',
+                                # 'mnist_binary_ES_15_BAGMP_sdl_30_Hmg_dst_4',
                                 'mnist_binary_ES_15_BAGMP_sdl_30_Hmg_dst_5',
                                 'mnist_binary_ES_15_BAGMP_sdl_30_Hmg_dst_6',
                                 'mnist_binary_ES_15_sdl_30_Hmg_dst_1',
