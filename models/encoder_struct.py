@@ -57,6 +57,7 @@ class Encoder_struct(nn.Module, ABC):
 
         # custom parameters:
         self.z_struct_size = z_struct_size
+        self.class_dense_size = self.z_struct_size
         self.big_kernel_size = big_kernel_size
         self.stride_size = stride_size
         self.BK_in_first_layer = BK_in_first_layer
@@ -88,71 +89,32 @@ class Encoder_struct(nn.Module, ABC):
         self.encoder_struct = [
             nn.Conv2d(self.nc, self.hidden_filters_1, self.kernel_size_1, stride=self.stride_size),
             nn.BatchNorm2d(self.hidden_filters_1),
-            # PrintLayer(),  # B, 32, 25, 25
+            nn.ReLU(True),
+            nn.Conv2d(self.hidden_filters_1, self.hidden_filters_2, self.kernel_size_2, stride=self.stride_size),
+            nn.BatchNorm2d(self.hidden_filters_2),
+            nn.ReLU(True),
+            nn.Conv2d(self.hidden_filters_2, self.hidden_filters_3, self.kernel_size_3, stride=self.stride_size),
+            nn.BatchNorm2d(self.hidden_filters_3),
+            nn.ReLU(True),
+            # GMP and final layer for classification:
+            nn.AdaptiveMaxPool2d((1, 1)),  # B, z_struct_size
+            View((-1, self.z_struct_size)),  # B, z_struct_size
+            DeterministicBinaryActivation(estimator='ST'),
         ]
-        if self.Binary_z and self.binary_first_conv:
-            self.encoder_struct += [
-                DeterministicBinaryActivation(estimator='ST'),
-            ]
-        else:
-            self.encoder_struct += [
-                nn.ReLU(True),
-            ]
-        if self.two_conv_layer:
-            self.encoder_struct += [
-                nn.Conv2d(self.hidden_filters_1, self.hidden_filters_2, self.kernel_size_2, stride=self.stride_size),
-                nn.BatchNorm2d(self.hidden_filters_2),
-                # PrintLayer(),  # B, 32, 25, 25
-            ]
-        if self.Binary_z and self.two_conv_layer and self.binary_second_conv:
-            self.encoder_struct += [
-                DeterministicBinaryActivation(estimator='ST'),
-            ]
-        elif self.two_conv_layer:
-            self.encoder_struct += [
-                nn.ReLU(True),
-            ]
-        if self.three_conv_layer:
-            self.encoder_struct += [
-                nn.Conv2d(self.hidden_filters_2, self.hidden_filters_3, self.kernel_size_3, stride=self.stride_size),
-                nn.BatchNorm2d(self.hidden_filters_3),
-                # PrintLayer(),  # B, 32, 25, 25
-            ]
-        if self.Binary_z and self.three_conv_layer and self.binary_third_conv and not self.bin_after_GMP:
-            self.encoder_struct += [
-                DeterministicBinaryActivation(estimator='ST'),
-            ]
-        elif self.three_conv_layer:
-            self.encoder_struct += [
-                nn.ReLU(True),
-            ]
 
-        # ---------- GMP and final layer for classification:
-        if self.bin_after_GMP and not self.add_dl_class:
-            self.encoder_struct += [
-                nn.AdaptiveMaxPool2d((1, 1)),  # B, z_struct_size
-                View((-1, self.z_struct_size)),  # B, z_struct_size
-                DeterministicBinaryActivation(estimator='ST'),
-            ]
-        else:
-            self.encoder_struct += [
-                nn.AdaptiveMaxPool2d((1, 1)),  # B, z_struct_size
-                View((-1, self.z_struct_size)),  # B, z_struct_size
-            ]
-
-        if self.bin_after_GMP and self.add_dl_class:
+        if self.add_dl_class:
+            self.class_dense_size = self.hidden_dim
             self.encoder_struct += [
                 nn.Linear(self.z_struct_size, self.hidden_dim),  # B, nb_class
                 nn.BatchNorm1d(self.hidden_dim),
-                DeterministicBinaryActivation(estimator='ST'),
-                nn.Linear(self.hidden_dim, self.n_classes)  # B, nb_class
-                # nn.Softmax()
+                nn.ReLU(True),
             ]
-        else:
-            self.encoder_struct += [
-                nn.Linear(self.z_struct_size, self.n_classes)  # B, nb_class
-                # nn.Softmax()
-            ]
+
+        # Classification layer:
+        self.encoder_struct += [
+            nn.Linear(self.class_dense_size, self.n_classes)  # B, nb_class
+            # nn.Softmax()
+        ]
         # _________________________---------------- end encoder_struct: ------------_____________________________
 
         self.encoder_struct = nn.Sequential(*self.encoder_struct)
@@ -218,7 +180,8 @@ class Encoder_struct(nn.Module, ABC):
             global_avg_Hmg_dst, avg_dst_classes = self.hamming_distance_loss(z_struct, nb_class, labels)
 
         if L2_dst_loss:
-            global_avg_L2_dst, avg_L2_dst_classes = self.inter_class_distance_loss(z_struct, nb_class, labels)
+            z_struct_cont = self.encoder_struct[:(z_struct_layer_num-1)](x)
+            global_avg_L2_dst, avg_L2_dst_classes = self.inter_class_distance_loss(z_struct_cont, nb_class, labels)
 
         if uniq_bin_code_target:
             uniq_target_dist_loss = self.distance_target_uniq_code(z_struct, nb_class, labels, target_code)

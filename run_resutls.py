@@ -460,7 +460,7 @@ def run_viz_expes(model_name, net, is_ratio, is_distance_loss, loss_distance_mea
     # _ = distance_matrix(net, model_name, train_test=train_test, plot_fig=True)
 
     # Plot resume:
-    same_binary_code(net, model_name, loader, nb_class, train_test=train_test, save=True, Hmg_dist=False,
+    same_binary_code(net, model_name, loader, nb_class, train_test=train_test, save=True, Hmg_dist=True,
                      bin_after_GMP=bin_after_GMP)
     z_struct_code_classes(model_name, nb_class, train_test=train_test)
     compute_z_struct(net, model_name, loader, train_test=train_test, net_type=net_type)
@@ -468,7 +468,7 @@ def run_viz_expes(model_name, net, is_ratio, is_distance_loss, loss_distance_mea
     get_average_z_struct_per_classes(exp_name=model_name, train_test=train_test)
     plot_resume(net, model_name, is_ratio, is_distance_loss, loss_distance_mean, loader, train_loader,
                 device, cat=cat, train_test=train_test, path_scores=path_scores, diff_var=diff_var_loss,
-                contrastive_loss=contrastive_loss, encoder_struct=True, Hmg_dst=False, z_struct_size=z_struct_size)
+                contrastive_loss=contrastive_loss, encoder_struct=True, Hmg_dst=True, z_struct_size=z_struct_size)
 
     # receptive_field = get_receptive_field_size(net, batch_test)
     # _ = score_with_best_code_uniq(net, model_name, train_test, loader, z_struct_size, loader_size,
@@ -703,19 +703,36 @@ if __name__ == '__main__':
                                'mnist_vae_var_2cb_15_classifier_grad_inv_PT_freeze_EV',
                                'mnist_vae_var_2cb_15_classifier_grad_inv_FS_freeze_EV']
 
-    list_encoder_struct_test =  ['mnist_binary_ES_15_BAGMP',
-                                 'mnist_binary_ES_15_BAGMP_sdl_30',
-                                 'mnist_binary_ES_15_BAGMP_Hmg_dst_1',
-                                 'mnist_binary_ES_15_BAGMP_Hmg_dst_2',
-                                 'mnist_binary_ES_15_BAGMP_Hmg_dst_3',
-                                 'mnist_binary_ES_15_BAGMP_Hmg_dst_4',
-                                 'mnist_binary_ES_15_BAGMP_Hmg_dst_5',
-                                 'mnist_binary_ES_15_BAGMP_sdl_30_Hmg_dst_1',
-                                 'mnist_binary_ES_15_BAGMP_sdl_30_Hmg_dst_2',
-                                 'mnist_binary_ES_15_BAGMP_sdl_30_Hmg_dst_3',
-                                 'mnist_binary_ES_15_BAGMP_sdl_30_Hmg_dst_4',
-                                 'mnist_binary_ES_15_BAGMP_sdl_30_Hmg_dst_5',
-                                 'mnist_binary_ES_15_BAGMP_sdl_30_Hmg_dst_6']
+    list_encoder_struct_test =  ['mnist_ES_binary_10',
+                                 'mnist_ES_binary_15',
+                                 'mnist_ES_binary_20',
+                                 'mnist_ES_binary_25',
+                                 'mnist_ES_binary_30',
+                                 'mnist_ES_binary_SDL_10',
+                                 'mnist_ES_binary_SDL_15',
+                                 'mnist_ES_binary_SDL_20',
+                                 'mnist_ES_binary_SDL_25',
+                                 'mnist_ES_binary_SDL_30',
+                                 'mnist_ES_binary_15_Hmg_dst_1',
+                                 'mnist_ES_binary_15_Hmg_dst_2',
+                                 'mnist_ES_binary_15_Hmg_dst_3',
+                                 'mnist_ES_binary_15_Hmg_dst_4',
+                                 'mnist_ES_binary_15_Hmg_dst_5',
+                                 'mnist_ES_binary_SDL_15_Hmg_dst_1',
+                                 'mnist_ES_binary_SDL_15_Hmg_dst_2',
+                                 'mnist_ES_binary_SDL_15_Hmg_dst_3',
+                                 'mnist_ES_binary_SDL_15_Hmg_dst_4',
+                                 'mnist_ES_binary_SDL_15_Hmg_dst_5',
+                                 'mnist_ES_binary_15_L2_dst_1',
+                                 'mnist_ES_binary_15_L2_dst_2',
+                                 'mnist_ES_binary_15_L2_dst_3',
+                                 'mnist_ES_binary_15_L2_dst_4',
+                                 'mnist_ES_binary_15_L2_dst_5',
+                                 'mnist_ES_binary_SDL_15_L2_dst_1',
+                                 'mnist_ES_binary_SDL_15_L2_dst_2',
+                                 'mnist_ES_binary_SDL_15_L2_dst_3',
+                                 'mnist_ES_binary_SDL_15_L2_dst_4',
+                                 'mnist_ES_binary_SDL_15_L2_dst_5']
 
     parameters_mnist_classifier_BK_ratio = "parameters_combinations/mnist_classifier_ratio.txt"
 

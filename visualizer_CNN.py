@@ -41,7 +41,7 @@ def compute_scores_pred(prediction, labels):
     return float(scores)
 
 
-def get_layer_zstruct_num(net, add_layer=1):
+def get_layer_zstruct_num(net, add_layer=3):
     # get layer num for GMP:
     for name, m in net.named_modules():
         if type(m) == nn.AdaptiveMaxPool2d:
@@ -176,11 +176,7 @@ def compute_z_struct(net_trained, exp_name, loader, train_test=None, net_type=No
         return
     else:
         # get layer num for GMP:
-        if bin_after_GMP:
-            z_struct_layer_num = -1
-        else:
-            add_layer = 1
-            z_struct_layer_num = get_layer_zstruct_num(net_trained, add_layer)
+        z_struct_layer_num = get_layer_zstruct_num(net_trained)
 
         labels_list = []
         z_struct_representation = []
@@ -249,11 +245,7 @@ def compute_z_struct_representation_noised(net, exp_name, train_test=None, nb_re
         return
     else:
         # get layer num for GMP:
-        if bin_after_GMP:
-            z_struct_layer_num = -1
-        else:
-            add_layer = 1
-            z_struct_layer_num = get_layer_zstruct_num(net, add_layer)
+        z_struct_layer_num = get_layer_zstruct_num(net)
         z_struct_representation, label_list, _ = load_z_struct_representation(exp_name, train_test=train_test)
 
         z_struct_size = z_struct_representation.shape[-1]
@@ -2916,11 +2908,7 @@ def same_binary_code(net, model_name, loader, nb_class, train_test=None, save=Tr
     :return:
     """
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    if bin_after_GMP:
-        z_struct_layer_num = -1
-    else:
-        add_layer = 1
-        z_struct_layer_num = get_layer_zstruct_num(net, add_layer)
+    z_struct_layer_num = get_layer_zstruct_num(net)
 
     path_model_uniq_code = 'binary_encoder_struct_results/uniq_code/' + model_name + '_' + train_test + '.npy'
     path_model_uniq_code_percent = 'binary_encoder_struct_results/uniq_code/percent_' + model_name + '_' + train_test\
@@ -3171,11 +3159,7 @@ def score_with_best_code_uniq(net, model_name, train_test, loader, z_struct_size
         more_represented_class_code.append(uniq_code[i][index_max])
 
     # score prediction with uniq best binary code:
-    if bin_after_GMP:
-        z_struct_layer_num = -1
-    else:
-        add_layer = 1
-        z_struct_layer_num = get_layer_zstruct_num(net, add_layer)
+    z_struct_layer_num = get_layer_zstruct_num(net)
 
     net.eval()
     print('Compute all binary encoder struct values:')

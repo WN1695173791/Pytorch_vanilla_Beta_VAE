@@ -409,16 +409,8 @@ class SolverClassifier(object):
 
         if self.is_encoder_struct:
             # z_struct_layer_num depend to architecture model:
-            if self.bin_after_GMP and self.L2_dst_loss:
-                # in this case we want to compute dst in continue z_struct so before binarization:
-                add_layer = 1
-                self.z_struct_layer_num = get_layer_zstruct_num(net, add_layer=add_layer)
-            elif self.bin_after_GMP:
-                # We want use binary z_struct:
-                self.z_struct_layer_num = -1
-            else:
-                add_layer = 1
-                self.z_struct_layer_num = get_layer_zstruct_num(net, add_layer=add_layer)
+            add_layer = 3
+            self.z_struct_layer_num = get_layer_zstruct_num(net, add_layer=add_layer)
 
         # experience name:
         self.checkpoint_dir = os.path.join(args.ckpt_dir, args.exp_name)
