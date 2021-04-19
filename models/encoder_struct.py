@@ -128,7 +128,7 @@ class Encoder_struct(nn.Module, ABC):
             ]
 
         # ---------- GMP and final layer for classification:
-        if self.bin_after_GMP:
+        if self.bin_after_GMP and not self.add_dl_class:
             self.encoder_struct += [
                 nn.AdaptiveMaxPool2d((1, 1)),  # B, z_struct_size
                 View((-1, self.z_struct_size)),  # B, z_struct_size
@@ -140,11 +140,11 @@ class Encoder_struct(nn.Module, ABC):
                 View((-1, self.z_struct_size)),  # B, z_struct_size
             ]
 
-        if self.add_dl_class:
+        if self.bin_after_GMP and self.add_dl_class:
             self.encoder_struct += [
                 nn.Linear(self.z_struct_size, self.hidden_dim),  # B, nb_class
                 nn.BatchNorm1d(self.hidden_dim),
-                nn.ReLU(True),
+                DeterministicBinaryActivation(estimator='ST'),
                 nn.Linear(self.hidden_dim, self.n_classes)  # B, nb_class
                 # nn.Softmax()
             ]

@@ -177,10 +177,10 @@ def compute_z_struct(net_trained, exp_name, loader, train_test=None, net_type=No
     else:
         # get layer num for GMP:
         if bin_after_GMP:
-            add_layer = 3
+            z_struct_layer_num = -1
         else:
             add_layer = 1
-        z_struct_layer_num = get_layer_zstruct_num(net_trained, add_layer)
+            z_struct_layer_num = get_layer_zstruct_num(net_trained, add_layer)
 
         labels_list = []
         z_struct_representation = []
@@ -230,7 +230,8 @@ def compute_z_struct(net_trained, exp_name, loader, train_test=None, net_type=No
             return
 
 
-def compute_z_struct_representation_noised(net, exp_name, train_test=None, nb_repeat=100, nb_class=10, net_type=None):
+def compute_z_struct_representation_noised(net, exp_name, train_test=None, nb_repeat=100, nb_class=10, net_type=None,
+                                           bin_after_GMP=False):
     """
     Compute prediction mean for each element of z_struct noised.
     :param train_test:
@@ -248,7 +249,11 @@ def compute_z_struct_representation_noised(net, exp_name, train_test=None, nb_re
         return
     else:
         # get layer num for GMP:
-        z_struct_layer_num = get_layer_zstruct_num(net)
+        if bin_after_GMP:
+            z_struct_layer_num = -1
+        else:
+            add_layer = 1
+            z_struct_layer_num = get_layer_zstruct_num(net, add_layer)
         z_struct_representation, label_list, _ = load_z_struct_representation(exp_name, train_test=train_test)
 
         z_struct_size = z_struct_representation.shape[-1]
@@ -2896,7 +2901,8 @@ def manifold_digit(net, model_name, device, size=(20, 20), component_var=0, comp
     return
 
 
-def same_binary_code(net, model_name, loader, nb_class, train_test=None, save=True, Hmg_dist=True, is_VAE=False):
+def same_binary_code(net, model_name, loader, nb_class, train_test=None, save=True, Hmg_dist=True, is_VAE=False,
+                     bin_after_GMP=False):
     """
     Compute, save and return uniqs code use for each classes, their percentage.
     If Hmg dst compute, save and return Hmg distance for each class.
@@ -2910,7 +2916,11 @@ def same_binary_code(net, model_name, loader, nb_class, train_test=None, save=Tr
     :return:
     """
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    z_struct_layer_num = get_layer_zstruct_num(net)
+    if bin_after_GMP:
+        z_struct_layer_num = -1
+    else:
+        add_layer = 1
+        z_struct_layer_num = get_layer_zstruct_num(net, add_layer)
 
     path_model_uniq_code = 'binary_encoder_struct_results/uniq_code/' + model_name + '_' + train_test + '.npy'
     path_model_uniq_code_percent = 'binary_encoder_struct_results/uniq_code/percent_' + model_name + '_' + train_test\
@@ -2965,7 +2975,9 @@ def same_binary_code(net, model_name, loader, nb_class, train_test=None, save=Tr
             if is_VAE:
                 _, embedding, _, _, _, z = net(data)
             else:
-                _, embedding, _, _, _, _, _, _, _, _, _, _ = net(data, z_struct_out=True, z_struct_layer_num=z_struct_layer_num)
+                _, embedding, _, _, _, _, _, _, _, _, _, _ = net(data,
+                                                                 z_struct_out=True,
+                                                                 z_struct_layer_num=z_struct_layer_num)
 
             if first:
                 labels_list = label.detach()
@@ -2978,7 +2990,7 @@ def same_binary_code(net, model_name, loader, nb_class, train_test=None, save=Tr
         if is_VAE:
             embedding_struct = embedding_struct.cpu().numpy()
         else:
-            embedding_struct = embedding_struct.cpu().numpy()[:, :, 0, 0]
+            embedding_struct = embedding_struct.cpu().numpy()
         labels_list = labels_list.cpu().numpy()
 
         if save:
@@ -3130,7 +3142,7 @@ def z_struct_code_classes(model_name, nb_class, train_test=None):
     return
 
 
-def score_with_best_code_uniq(net, model_name, train_test, loader, z_struct_size, loader_size):
+def score_with_best_code_uniq(net, model_name, train_test, loader, z_struct_size, loader_size, bin_after_GMP=False):
     """
     Use majoritary uniq binary code for each class and compute classification score with this uniq code for each class.
     :param net:
@@ -3159,7 +3171,11 @@ def score_with_best_code_uniq(net, model_name, train_test, loader, z_struct_size
         more_represented_class_code.append(uniq_code[i][index_max])
 
     # score prediction with uniq best binary code:
-    z_struct_layer_num = get_layer_zstruct_num(net)
+    if bin_after_GMP:
+        z_struct_layer_num = -1
+    else:
+        add_layer = 1
+        z_struct_layer_num = get_layer_zstruct_num(net, add_layer)
 
     net.eval()
     print('Compute all binary encoder struct values:')
