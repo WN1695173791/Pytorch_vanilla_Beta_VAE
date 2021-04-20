@@ -346,6 +346,7 @@ def run_VAE(model_name, net, lambda_BCE, beta, z_struct_size, z_var_size, VAE_st
     plot_VAE_resume(net, model_name, z_struct_size, z_var_size, loader, VAE_struct, is_vae_var, train_test, save=True,
                     nb_class=nb_class, nb_img=8, std_var=sigma_var, mu_var=mu_var,
                     mu_struct=encoder_struct_zeros_proportion, index=0)
+    print(wait)
     # ----------------------------------------------------------------------------------------------------------
     # Test vae var classfiier hypothesis: ----------------------------------------------------------------------
     # replace weigths value:
@@ -683,11 +684,11 @@ if __name__ == '__main__':
 
     parameters_mnist_classifier_BK_ratio = "parameters_combinations/mnist_classifier_ratio.txt"
 
-    run_exp_extraction_and_visualization_custom_BK(list_encoder_struct_test,
-                                                   is_ratio=False,
-                                                   is_decoder=False,
-                                                   is_VAE=False,
-                                                   is_encoder_struct=True)
+    # run_exp_extraction_and_visualization_custom_BK(list_encoder_struct_test,
+    #                                                is_ratio=False,
+    #                                                is_decoder=False,
+    #                                                is_VAE=False,
+    #                                                is_encoder_struct=True)
 
     run_exp_extraction_and_visualization_custom_BK(list_exp_VAE_naive,
                                                    is_ratio=False,
