@@ -262,19 +262,19 @@ def run_VAE(model_name, net, lambda_BCE, beta, z_struct_size, z_var_size, VAE_st
 
     # __________-----------Values computing----------_____________
     # save code majoritaire with their percent:
-    # same_binary_code(net, model_name, loader, nb_class, train_test=train_test, save=True, Hmg_dist=False, is_VAE=True)
-    # z_struct_code_classes(model_name, nb_class, train_test=train_test)
+    same_binary_code(net, model_name, loader, nb_class, train_test=train_test, save=True, Hmg_dist=False, is_VAE=True)
+    z_struct_code_classes(model_name, nb_class, train_test=train_test)
 
     # Uc bin maj:
-    # percent_max = histo_count_uniq_code(model_name, train_test, plot_histo=False, return_percent=True)
-    # maj_uc = np.load('binary_encoder_struct_results/uniq_code/uc_maj_class_' + model_name + '_' \
-    #                            + train_test + '.npy', allow_pickle=True)
+    percent_max = histo_count_uniq_code(model_name, train_test, plot_histo=False, return_percent=True)
+    maj_uc = np.load('binary_encoder_struct_results/uniq_code/uc_maj_class_' + model_name + '_' \
+                               + train_test + '.npy', allow_pickle=True)
 
     # first: compute z_struct mean per class:
-    # compute_z_struct_mean_VAE(net, model_name, loader, train_test='test', return_results=False)
+    compute_z_struct_mean_VAE(net, model_name, loader, train_test='test', return_results=False)
 
     # second: get average z_struct per classe:
-    # _, average_z_struct_class = get_z_struct_per_class_VAE(model_name, train_test='test', nb_class=nb_class)
+    _, average_z_struct_class = get_z_struct_per_class_VAE(model_name, train_test='test', nb_class=nb_class)
 
 
     # __________--------------PLOT------------_________________
@@ -282,16 +282,16 @@ def run_VAE(model_name, net, lambda_BCE, beta, z_struct_size, z_var_size, VAE_st
     # plot_loss_results_VAE(path_scores, model_name, beta, lambda_BCE, save=True)
 
     # compute and plot real distribution:
-    # mu_var, sigma_var, encoder_struct_zeros_proportion = real_distribution_model(net,
-    #                                                                      model_name,
-    #                                                                      z_struct_size,
-    #                                                                      z_var_size,
-    #                                                                      loader,
-    #                                                                      'test',
-    #                                                                      plot_gaussian=False,
-    #                                                                      save=True,
-    #                                                                      VAE_struct=VAE_struct,
-    #                                                                      is_vae_var=is_vae_var)
+    mu_var, sigma_var, encoder_struct_zeros_proportion = real_distribution_model(net,
+                                                                         model_name,
+                                                                         z_struct_size,
+                                                                         z_var_size,
+                                                                         loader,
+                                                                         'test',
+                                                                         plot_gaussian=False,
+                                                                         save=True,
+                                                                         VAE_struct=VAE_struct,
+                                                                         is_vae_var=is_vae_var)
 
     # plot reconstruciton with real distribution sample:
     # viz_reconstruction_VAE(net, loader, model_name, z_var_size, z_struct_size, nb_img=10,
@@ -343,10 +343,9 @@ def run_VAE(model_name, net, lambda_BCE, beta, z_struct_size, z_var_size, VAE_st
     #                save=True)
 
     # plot resume VAE:
-    # plot_VAE_resume(net, model_name, z_struct_size, z_var_size, loader, VAE_struct, is_vae_var, train_test, save=True,
-    #                 nb_class=nb_class, nb_img=8, std_var=sigma_var, mu_var=mu_var,
-    #                 mu_struct=encoder_struct_zeros_proportion, index=0)
-
+    plot_VAE_resume(net, model_name, z_struct_size, z_var_size, loader, VAE_struct, is_vae_var, train_test, save=True,
+                    nb_class=nb_class, nb_img=8, std_var=sigma_var, mu_var=mu_var,
+                    mu_struct=encoder_struct_zeros_proportion, index=0)
     # ----------------------------------------------------------------------------------------------------------
     # Test vae var classfiier hypothesis: ----------------------------------------------------------------------
     # replace weigths value:
@@ -460,15 +459,15 @@ def run_viz_expes(model_name, net, is_ratio, is_distance_loss, loss_distance_mea
     # _ = distance_matrix(net, model_name, train_test=train_test, plot_fig=True)
 
     # Plot resume:
-    same_binary_code(net, model_name, loader, nb_class, train_test=train_test, save=True, Hmg_dist=True,
-                     bin_after_GMP=bin_after_GMP)
-    z_struct_code_classes(model_name, nb_class, train_test=train_test)
-    compute_z_struct(net, model_name, loader, train_test=train_test, net_type=net_type)
-    get_z_struct_per_class(model_name, train_test=train_test, nb_class=nb_class)
-    get_average_z_struct_per_classes(exp_name=model_name, train_test=train_test)
-    plot_resume(net, model_name, is_ratio, is_distance_loss, loss_distance_mean, loader, train_loader,
-                device, cat=cat, train_test=train_test, path_scores=path_scores, diff_var=diff_var_loss,
-                contrastive_loss=contrastive_loss, encoder_struct=True, Hmg_dst=True, z_struct_size=z_struct_size)
+    # same_binary_code(net, model_name, loader, nb_class, train_test=train_test, save=True, Hmg_dist=True,
+    #                  bin_after_GMP=bin_after_GMP)
+    # z_struct_code_classes(model_name, nb_class, train_test=train_test)
+    # compute_z_struct(net, model_name, loader, train_test=train_test, net_type=net_type)
+    # get_z_struct_per_class(model_name, train_test=train_test, nb_class=nb_class)
+    # get_average_z_struct_per_classes(exp_name=model_name, train_test=train_test)
+    # plot_resume(net, model_name, is_ratio, is_distance_loss, loss_distance_mean, loader, train_loader,
+    #             device, cat=cat, train_test=train_test, path_scores=path_scores, diff_var=diff_var_loss,
+    #             contrastive_loss=contrastive_loss, encoder_struct=True, Hmg_dst=True, z_struct_size=z_struct_size)
 
     # receptive_field = get_receptive_field_size(net, batch_test)
     # _ = score_with_best_code_uniq(net, model_name, train_test, loader, z_struct_size, loader_size,
@@ -591,134 +590,66 @@ if os.path.exists(path_select_model_analyse_50):
 
 if __name__ == '__main__':
 
-    list_encoder_struct = ['mnist_struct_baseline_scheduler_binary_15_sdl_20_2',
-                           'mnist_struct_baseline_scheduler_binary_15_sdl_30_2',
-                           'mnist_struct_baseline_scheduler_binary_15_sdl_40_2',
-                           'mnist_struct_baseline_scheduler_binary_15_sdl_50_2']
-                           # 'mnist_struct_baseline_scheduler_binary_10']
-                           # 'mnist_struct_baseline_scheduler_binary_15',
-                           # 'mnist_struct_baseline_scheduler_binary_20',
-                           # 'mnist_struct_baseline_scheduler_binary_25',
-                           # 'mnist_struct_baseline_scheduler_binary_30']
-
-    list_encoder_struct_Hmg = ['mnist_struct_baseline_scheduler_binary_10_Hmg_dst_1',
-                               'mnist_struct_baseline_scheduler_binary_15_Hmg_dst_1',
-                               'mnist_struct_baseline_scheduler_binary_20_Hmg_dst_1',
-                               'mnist_struct_baseline_scheduler_binary_25_Hmg_dst_1',
-                               'mnist_struct_baseline_scheduler_binary_30_Hmg_dst_1',
-                               'mnist_struct_baseline_scheduler_binary_10_target_uc_1',
-                               'mnist_struct_baseline_scheduler_binary_15_target_uc_1',
-                               'mnist_struct_baseline_scheduler_binary_20_target_uc_1',
-                               'mnist_struct_baseline_scheduler_binary_25_target_uc_1',
-                               'mnist_struct_baseline_scheduler_binary_30_target_uc_1',
-                               'mnist_struct_baseline_scheduler_binary_10_Hmg_dst_2',
-                               'mnist_struct_baseline_scheduler_binary_15_Hmg_dst_2',
-                               'mnist_struct_baseline_scheduler_binary_20_Hmg_dst_2',
-                               'mnist_struct_baseline_scheduler_binary_25_Hmg_dst_2',
-                               'mnist_struct_baseline_scheduler_binary_30_Hmg_dst_2',
-                               'mnist_struct_baseline_scheduler_binary_10_target_uc_2',
-                               'mnist_struct_baseline_scheduler_binary_15_target_uc_2',
-                               'mnist_struct_baseline_scheduler_binary_20_target_uc_2',
-                               'mnist_struct_baseline_scheduler_binary_25_target_uc_2',
-                               'mnist_struct_baseline_scheduler_binary_30_target_uc_2',
-                               'mnist_struct_baseline_scheduler_binary_10_Hmg_dst_3',
-                               'mnist_struct_baseline_scheduler_binary_15_Hmg_dst_3',
-                               'mnist_struct_baseline_scheduler_binary_20_Hmg_dst_3',
-                               'mnist_struct_baseline_scheduler_binary_25_Hmg_dst_3',
-                               'mnist_struct_baseline_scheduler_binary_30_Hmg_dst_3',
-                               'mnist_struct_baseline_scheduler_binary_10_target_uc_3',
-                               'mnist_struct_baseline_scheduler_binary_15_target_uc_3',
-                               'mnist_struct_baseline_scheduler_binary_20_target_uc_3',
-                               'mnist_struct_baseline_scheduler_binary_25_target_uc_3',
-                               'mnist_struct_baseline_scheduler_binary_30_target_uc_3']
-
     list_exp_VAE_var = ['mnist_vae_var_2cb_15_grad_inv_PT',
                         'mnist_vae_var_2cb_15_grad_inv_FS']
-                        # 'mnist_vae_var_2cb_5',
-                        # 'mnist_vae_var_2cb_10',
-                        # 'mnist_vae_var_2cb_15',
-                        # 'mnist_vae_var_2cb_20',
-                        # 'mnist_vae_var_2cb_25',
-                        # 'mnist_vae_var_2cb_30']
 
-    list_exp_VAE = ['mnist_VAE_s10_v5_SE_beta_3',
-                    'mnist_VAE_s15_v5_SE_beta_3',
-                    'mnist_VAE_s20_v5_SE_beta_3',
-                    'mnist_VAE_s25_v5_SE_beta_3',
-                    'mnist_VAE_s30_v5_SE_beta_3',
-                    'mnist_VAE_s10_v10_SE_beta_3',
-                    'mnist_VAE_s15_v10_SE_beta_3',
-                    'mnist_VAE_s20_v10_SE_beta_3',
-                    'mnist_VAE_s25_v10_SE_beta_3',
-                    'mnist_VAE_s30_v10_SE_beta_3',
-                    'mnist_VAE_s10_v15_SE_beta_3',
-                    'mnist_VAE_s15_v15_SE_beta_3',
-                    'mnist_VAE_s20_v15_SE_beta_3',
-                    'mnist_VAE_s25_v15_SE_beta_3',
-                    'mnist_VAE_s30_v15_SE_beta_3',
-                    'mnist_VAE_s10_v20_SE_beta_3',
-                    'mnist_VAE_s15_v20_SE_beta_3',
-                    'mnist_VAE_s20_v20_SE_beta_3',
-                    'mnist_VAE_s25_v20_SE_beta_3',
-                    'mnist_VAE_s30_v20_SE_beta_3',
-                    'mnist_VAE_s10_v25_SE_beta_3',
-                    'mnist_VAE_s15_v25_SE_beta_3',
-                    'mnist_VAE_s20_v25_SE_beta_3',
-                    'mnist_VAE_s25_v25_SE_beta_3',
-                    'mnist_VAE_s30_v25_SE_beta_3',
-                    'mnist_VAE_s10_v30_SE_beta_3',
-                    'mnist_VAE_s15_v30_SE_beta_3',
-                    'mnist_VAE_s20_v30_SE_beta_3',
-                    'mnist_VAE_s25_v30_SE_beta_3',
-                    'mnist_VAE_s30_v30_SE_beta_3']
+    list_exp_VAE_naive = [# 'mnist_VAE_s10_v2',
+                          # 'mnist_VAE_s10_v3',
+                          # 'mnist_VAE_s10_v5',
+                          # 'mnist_VAE_s10_v8',
+                          # 'mnist_VAE_s10_v10',
+                          # 'mnist_VAE_s10_v13',
+                          # 'mnist_VAE_s10_v15',
+                          # 'mnist_VAE_s10_v17',
+                          # 'mnist_VAE_s10_v20',
+                          'mnist_VAE_s15_v2',
+                          'mnist_VAE_s15_v3',
+                          'mnist_VAE_s15_v5',
+                          'mnist_VAE_s15_v8',
+                          'mnist_VAE_s15_v10',
+                          'mnist_VAE_s15_v13',
+                          'mnist_VAE_s15_v15',
+                          'mnist_VAE_s15_v17',
+                          'mnist_VAE_s15_v20',
+                          'mnist_VAE_s15_v2_beta3',
+                          'mnist_VAE_s15_v3_beta3',
+                          'mnist_VAE_s15_v5_beta3',
+                          'mnist_VAE_s15_v8_beta3',
+                          'mnist_VAE_s15_v10_beta3',
+                          'mnist_VAE_s15_v13_beta3',
+                          'mnist_VAE_s15_v15_beta3',
+                          'mnist_VAE_s15_v17_beta3',
+                          'mnist_VAE_s15_v20_beta3']
 
     list_ES_reconstruction = ['mnist_ES_reconstruction_s10_PT',
-                              'mnist_ES_reconstruction_s10_PT_beta',
                               'mnist_ES_reconstruction_s15_PT',
-                              'mnist_ES_reconstruction_s15_PT_beta',
                               'mnist_ES_reconstruction_s20_PT',
-                              'mnist_ES_reconstruction_s20_PT_beta',
                               'mnist_ES_reconstruction_s25_PT',
-                              'mnist_ES_reconstruction_s25_PT_beta',
                               'mnist_ES_reconstruction_s30_PT',
-                              'mnist_ES_reconstruction_s30_PT_beta',
                               'mnist_ES_reconstruction_s10_SDL_PT',
-                              'mnist_ES_reconstruction_s10_SDL_PT_beta',
                               'mnist_ES_reconstruction_s15_SDL_PT',
-                              'mnist_ES_reconstruction_s15_SDL_PT_beta',
                               'mnist_ES_reconstruction_s20_SDL_PT',
-                              'mnist_ES_reconstruction_s20_SDL_PT_beta',
                               'mnist_ES_reconstruction_s25_SDL_PT',
-                              'mnist_ES_reconstruction_s25_SDL_PT_beta',
                               'mnist_ES_reconstruction_s30_SDL_PT',
-                              'mnist_ES_reconstruction_s30_SDL_PT_beta',
                               'mnist_ES_reconstruction_s10_PT_FS',
-                              'mnist_ES_reconstruction_s10_PT_FS_beta',
                               'mnist_ES_reconstruction_s15_PT_FS',
-                              'mnist_ES_reconstruction_s15_PT_FS_beta',
                               'mnist_ES_reconstruction_s20_PT_FS',
-                              'mnist_ES_reconstruction_s20_PT_FS_beta',
                               'mnist_ES_reconstruction_s25_PT_FS',
-                              'mnist_ES_reconstruction_s25_PT_FS_beta',
                               'mnist_ES_reconstruction_s30_PT_FS',
-                              'mnist_ES_reconstruction_s30_PT_FS_beta',
                               'mnist_ES_reconstruction_s10_SDL_PT_FS',
-                              'mnist_ES_reconstruction_s10_SDL_PT_FS_beta',
                               'mnist_ES_reconstruction_s15_SDL_PT_FS',
-                              'mnist_ES_reconstruction_s15_SDL_PT_FS_beta',
                               'mnist_ES_reconstruction_s20_SDL_PT_FS',
-                              'mnist_ES_reconstruction_s20_SDL_PT_FS_beta',
                               'mnist_ES_reconstruction_s25_SDL_PT_FS',
-                              'mnist_ES_reconstruction_s25_SDL_PT_FS_beta',
-                              'mnist_ES_reconstruction_s30_SDL_PT_FS',
-                              'mnist_ES_reconstruction_s30_SDL_PT_FS_beta']
+                              'mnist_ES_reconstruction_s30_SDL_PT_FS']
 
-    list_VAE_var_classifier = ['mnist_vae_var_2cb_15_classifier_grad_inv_PT_2',
-                               'mnist_vae_var_2cb_15_classifier_grad_inv_FS_2',
-                               'mnist_vae_var_2cb_15_classifier_grad_inv_PT_freeze_EV',
-                               'mnist_vae_var_2cb_15_classifier_grad_inv_FS_freeze_EV']
+    list_VAE_var_classifier = ['mnist_vae_var_2cb_15_classifier_grad_inv_PT_freeze_EV_new',
+                               'mnist_vae_var_2cb_15_classifier_grad_inv_FS_freeze_EV_new']
+    list_VAE_var_reconstruction = ['mnist_vae_var_2cb_15_grad_inv_PT_new_1',
+                                   'mnist_vae_var_2cb_15_grad_inv_FS_new_1']
+    list_VAE_var_inv_grad = ['mnist_vae_var_2cb_15_classifier_grad_inv_PT_new',
+                             'mnist_vae_var_2cb_15_classifier_grad_inv_FS_new']
 
-    list_encoder_struct_test =  [# 'mnist_ES_binary_10',
+    list_encoder_struct_test =  []  # 'mnist_ES_binary_10',
                                  # 'mnist_ES_binary_15',
                                  # 'mnist_ES_binary_20',
                                  # 'mnist_ES_binary_25',
@@ -739,35 +670,23 @@ if __name__ == '__main__':
                                  # 'mnist_ES_binary_SDL_15_Hmg_dst_4',
                                  # 'mnist_ES_binary_SDL_15_Hmg_dst_5',
                                  # 'mnist_ES_binary_15_L2_dst_1',
-                                 'mnist_ES_binary_15_L2_dst_2',
-                                 'mnist_ES_binary_15_L2_dst_3',
-                                 'mnist_ES_binary_15_L2_dst_4',
-                                 'mnist_ES_binary_15_L2_dst_5',
-                                 'mnist_ES_binary_SDL_15_L2_dst_1',
-                                 'mnist_ES_binary_SDL_15_L2_dst_2',
-                                 'mnist_ES_binary_SDL_15_L2_dst_3',
-                                 'mnist_ES_binary_SDL_15_L2_dst_4',
-                                 'mnist_ES_binary_SDL_15_L2_dst_5']
+                                 # 'mnist_ES_binary_15_L2_dst_2',
+                                 # 'mnist_ES_binary_15_L2_dst_3',
+                                 # 'mnist_ES_binary_15_L2_dst_4',
+                                 # 'mnist_ES_binary_15_L2_dst_5',
+                                 # 'mnist_ES_binary_SDL_15_L2_dst_1',
+                                 # 'mnist_ES_binary_SDL_15_L2_dst_2',
+                                 # 'mnist_ES_binary_SDL_15_L2_dst_3',
+                                 # 'mnist_ES_binary_SDL_15_L2_dst_4',
+                                 # 'mnist_ES_binary_SDL_15_L2_dst_5']
 
     parameters_mnist_classifier_BK_ratio = "parameters_combinations/mnist_classifier_ratio.txt"
 
-    run_exp_extraction_and_visualization_custom_BK(list_encoder_struct_test,
+    run_exp_extraction_and_visualization_custom_BK(list_exp_VAE_naive,
                                                    is_ratio=False,
                                                    is_decoder=False,
-                                                   is_VAE=False,
-                                                   is_encoder_struct=True)
-
-    # run_exp_extraction_and_visualization_custom_BK(list_encoder_struct_Hmg,
-    #                                                is_ratio=False,
-    #                                                is_decoder=False,
-    #                                                is_VAE=False,
-    #                                                is_encoder_struct=True)
-
-    # run_exp_extraction_and_visualization_custom_BK(list_exp_VAE,
-    #                                                is_ratio=False,
-    #                                                is_decoder=False,
-    #                                                is_VAE=True,
-    #                                                is_encoder_struct=False)
+                                                   is_VAE=True,
+                                                   is_encoder_struct=False)
 
     # run_exp_extraction_and_visualization_custom_BK(list_ES_reconstruction,
     #                                                is_ratio=False,
@@ -781,7 +700,7 @@ if __name__ == '__main__':
     #                                                is_VAE=True,
     #                                                is_encoder_struct=False)
 
-    # run_exp_extraction_and_visualization_custom_BK(list_exp_VAE_var,
+    # run_exp_extraction_and_visualization_custom_BK(list_VAE_var_reconstruction,
     #                                                is_ratio=False,
     #                                                is_decoder=False,
     #                                                is_VAE=True,
