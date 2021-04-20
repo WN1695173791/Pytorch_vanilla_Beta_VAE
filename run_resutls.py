@@ -622,6 +622,25 @@ if __name__ == '__main__':
                           'mnist_VAE_s15_v17_beta3',
                           'mnist_VAE_s15_v20_beta3']
 
+    list_exp_VAE_inv_grad = ['mnist_VAE_s15_v10_class_inv_grad_1',
+                             'mnist_VAE_s15_v10_class_inv_grad_2',
+                             'mnist_VAE_s15_v10_class_inv_grad_3',
+                             'mnist_VAE_s15_v10_class_inv_grad_4',
+                             'mnist_VAE_s15_v10_class_inv_grad_5',
+                             'mnist_VAE_s15_v10_class_inv_grad_6',
+                             'mnist_VAE_s15_v10_class_inv_grad_7',
+                             'mnist_VAE_s15_v10_class_inv_grad_8',
+                             'mnist_VAE_s15_v10_class_inv_grad_9',
+                             'mnist_VAE_s15_v10_class_inv_grad_1_beta',
+                             'mnist_VAE_s15_v10_class_inv_grad_2_beta',
+                             'mnist_VAE_s15_v10_class_inv_grad_3_beta',
+                             'mnist_VAE_s15_v10_class_inv_grad_4_beta',
+                             'mnist_VAE_s15_v10_class_inv_grad_5_beta',
+                             'mnist_VAE_s15_v10_class_inv_grad_6_beta',
+                             'mnist_VAE_s15_v10_class_inv_grad_7_beta',
+                             'mnist_VAE_s15_v10_class_inv_grad_8_beta',
+                             'mnist_VAE_s15_v10_class_inv_grad_9_beta']
+
     list_ES_reconstruction = ['mnist_ES_reconstruction_s10_PT',
                               'mnist_ES_reconstruction_s15_PT',
                               'mnist_ES_reconstruction_s20_PT',
@@ -684,17 +703,23 @@ if __name__ == '__main__':
 
     parameters_mnist_classifier_BK_ratio = "parameters_combinations/mnist_classifier_ratio.txt"
 
-    # run_exp_extraction_and_visualization_custom_BK(list_encoder_struct_test,
-    #                                                is_ratio=False,
-    #                                                is_decoder=False,
-    #                                                is_VAE=False,
-    #                                                is_encoder_struct=True)
-
-    run_exp_extraction_and_visualization_custom_BK(list_exp_VAE_naive,
+    run_exp_extraction_and_visualization_custom_BK(list_encoder_struct_test,
                                                    is_ratio=False,
                                                    is_decoder=False,
-                                                   is_VAE=True,
-                                                   is_encoder_struct=False)
+                                                   is_VAE=False,
+                                                   is_encoder_struct=True)
+
+    # run_exp_extraction_and_visualization_custom_BK(list_exp_VAE_naive,
+    #                                                is_ratio=False,
+    #                                                is_decoder=False,
+    #                                                is_VAE=True,
+    #                                                is_encoder_struct=False)
+
+    # run_exp_extraction_and_visualization_custom_BK(list_exp_VAE_inv_grad,
+    #                                                is_ratio=False,
+    #                                                is_decoder=False,
+    #                                                is_VAE=True,
+    #                                                is_encoder_struct=False)
 
     # run_exp_extraction_and_visualization_custom_BK(list_ES_reconstruction,
     #                                                is_ratio=False,
@@ -708,10 +733,6 @@ if __name__ == '__main__':
     #                                                is_VAE=True,
     #                                                is_encoder_struct=False)
 
-    # run_exp_extraction_and_visualization_custom_BK(list_VAE_var_reconstruction,
-    #                                                is_ratio=False,
-    #                                                is_decoder=False,
-    #                                                is_VAE=True,
-    #                                                is_encoder_struct=False)
+
 
 

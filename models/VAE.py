@@ -343,17 +343,17 @@ class VAE(nn.Module, ABC):
         # --------------------------------------- end Classifier ____________________________________________ ----
 
         self.encoder_struct = nn.Sequential(*self.encoder_struct)
-        if not self.ES_reconstruction:
-            self.encoder_var = nn.Sequential(*self.encoder_var)
         self.decoder = nn.Sequential(*self.decoder)
 
+        if not self.ES_reconstruction:
+            self.encoder_var = nn.Sequential(*self.encoder_var)
+
         if self.EV_classifier:
-            self.var_classifier = nn.Sequential(*self.var_classifier)
             if self.grad_inv:
-                self.encoder_var = nn.Sequential(*self.encoder_var,
-                                                 RevGrad())
+                self.var_classifier = nn.Sequential(RevGrad(),
+                                                    *self.var_classifier)
             else:
-                self.encoder_var = nn.Sequential(*self.encoder_var)
+                self.var_classifier = nn.Sequential(*self.var_classifier)
 
         self.weight_init()
 

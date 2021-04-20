@@ -63,7 +63,7 @@ def get_lambda_uniq_code_dst(epoch, nb_epoch, lambda_loss):
         x = float(nb_epoch)
     else:
         x = float(epoch)
-    return (torch.exp(torch.tensor(x)) / torch.exp(torch.tensor(nb_epoch-2))) * lambda_loss
+    return (torch.exp(torch.tensor(x)) / torch.exp(torch.tensor(nb_epoch - 2))) * lambda_loss
 
 
 def compute_scores_and_loss(net, train_loader, test_loader, device, train_loader_size, test_loader_size, nb_class,
@@ -295,6 +295,8 @@ class SolverClassifier(object):
         self.use_small_lr_encoder_var = args.use_small_lr_encoder_var
         self.both_decoders_freeze = args.both_decoders_freeze
         self.ES_reconstruction = args.ES_reconstruction
+        self.lambda_EV_class = args.lambda_EV_class
+        self.lambda_recons = args.lambda_recons
 
         self.contrastive_criterion = False
         if self.is_encoder_struct:
@@ -512,90 +514,90 @@ class SolverClassifier(object):
                     self.net, self.device = gpu_config(net)
                     self.load_checkpoint('last')
         elif self.is_VAE:
-                # real checkpoint dir name:
-                self.checkpoint_dir = os.path.join(args.ckpt_dir, args.exp_name)
-                file_path = os.path.join(self.checkpoint_dir, 'last')
-                if os.path.isfile(file_path):
-                    print("VAE already exist load it !")
-                    # config gpu:
-                    self.net, self.device = gpu_config(net)
-                    self.load_checkpoint('last')
-                else:
-                    # If path encoder name exist we load associate weighs:
-                    checkpoint_dir_encoder_var = os.path.join(args.ckpt_dir, self.encoder_var_name)
-                    file_path_encoder_var = os.path.join(checkpoint_dir_encoder_var, 'last')
-                    checkpoint_dir_encoder_struct = os.path.join(args.ckpt_dir, self.encoder_struct_name)
-                    file_path_encoder_struct = os.path.join(checkpoint_dir_encoder_struct, 'last')
+            # real checkpoint dir name:
+            self.checkpoint_dir = os.path.join(args.ckpt_dir, args.exp_name)
+            file_path = os.path.join(self.checkpoint_dir, 'last')
+            if os.path.isfile(file_path):
+                print("VAE already exist load it !")
+                # config gpu:
+                self.net, self.device = gpu_config(net)
+                self.load_checkpoint('last')
+            else:
+                # If path encoder name exist we load associate weighs:
+                checkpoint_dir_encoder_var = os.path.join(args.ckpt_dir, self.encoder_var_name)
+                file_path_encoder_var = os.path.join(checkpoint_dir_encoder_var, 'last')
+                checkpoint_dir_encoder_struct = os.path.join(args.ckpt_dir, self.encoder_struct_name)
+                file_path_encoder_struct = os.path.join(checkpoint_dir_encoder_struct, 'last')
 
-                    if os.path.isfile(file_path_encoder_var):
-                        print("VAE doesn't exist but encoder var yes ! load var encoder weighs !")
-                        # we create and load encoder struct with model name associate:
-                        pre_trained_var_model = VAE_var(z_var_size=self.z_var_size,
-                                                        var_second_cnn_block=self.var_second_cnn_block,
-                                                        var_third_cnn_block=self.var_third_cnn_block,
-                                                        other_architecture=self.other_architecture)
+                if os.path.isfile(file_path_encoder_var):
+                    print("VAE doesn't exist but encoder var yes ! load var encoder weighs !")
+                    # we create and load encoder struct with model name associate:
+                    pre_trained_var_model = VAE_var(z_var_size=self.z_var_size,
+                                                    var_second_cnn_block=self.var_second_cnn_block,
+                                                    var_third_cnn_block=self.var_third_cnn_block,
+                                                    other_architecture=self.other_architecture)
 
-                        # load weighs:
-                        pre_trained_var_model = self.load_pre_trained_checkpoint('last',
-                                                                                 checkpoint_dir_encoder_var,
-                                                                                 pre_trained_var_model)
+                    # load weighs:
+                    pre_trained_var_model = self.load_pre_trained_checkpoint('last',
+                                                                             checkpoint_dir_encoder_var,
+                                                                             pre_trained_var_model)
 
-                        # get weighs dict of pre trained model:
-                        pretrained_dict = pre_trained_var_model.encoder_var.state_dict()
-                        # get dict of weighs for model VAE create (with init weights)
-                        model_dict = net.encoder_var.state_dict()
-                        # copy weighs pre trained in current model for same name layer:
-                        pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict}
-                        model_dict.update(pretrained_dict)
-                        # Load pre trained weighs in net model:
-                        net.encoder_var.load_state_dict(model_dict)
+                    # get weighs dict of pre trained model:
+                    pretrained_dict = pre_trained_var_model.encoder_var.state_dict()
+                    # get dict of weighs for model VAE create (with init weights)
+                    model_dict = net.encoder_var.state_dict()
+                    # copy weighs pre trained in current model for same name layer:
+                    pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict}
+                    model_dict.update(pretrained_dict)
+                    # Load pre trained weighs in net model:
+                    net.encoder_var.load_state_dict(model_dict)
 
-                        print("Weighs loaded for var encoder !")
-                    if os.path.isfile(file_path_encoder_struct):
-                        print("VAE doesn't exist but encoder struct yes ! load struct encoder weighs !")
-                        # we create and load encoder struct with model name associate:
-                        pre_trained_struct_model = Encoder_struct(z_struct_size=self.z_struct_size,
-                                                                  big_kernel_size=self.big_kernel_size,
-                                                                  stride_size=self.stride_size,
-                                                                  kernel_size_1=self.kernel_size_1,
-                                                                  kernel_size_2=self.kernel_size_2,
-                                                                  kernel_size_3=self.kernel_size_3,
-                                                                  hidden_filters_1=self.hidden_filters_1,
-                                                                  hidden_filters_2=self.hidden_filters_2,
-                                                                  hidden_filters_3=self.hidden_filters_3,
-                                                                  BK_in_first_layer=self.BK_in_first_layer,
-                                                                  BK_in_second_layer=self.BK_in_second_layer,
-                                                                  BK_in_third_layer=self.BK_in_third_layer,
-                                                                  two_conv_layer=self.two_conv_layer,
-                                                                  three_conv_layer=self.three_conv_layer,
-                                                                  Binary_z=self.binary_z,
-                                                                  binary_first_conv=self.binary_first_conv,
-                                                                  binary_second_conv=self.binary_second_conv,
-                                                                  binary_third_conv=self.binary_third_conv,
-                                                                  add_dl_class=self.add_dl_class,
-                                                                  hidden_dim=self.hidden_dim,
-                                                                  bin_after_GMP=self.bin_after_GMP)
+                    print("Weighs loaded for var encoder !")
+                if os.path.isfile(file_path_encoder_struct):
+                    print("VAE doesn't exist but encoder struct yes ! load struct encoder weighs !")
+                    # we create and load encoder struct with model name associate:
+                    pre_trained_struct_model = Encoder_struct(z_struct_size=self.z_struct_size,
+                                                              big_kernel_size=self.big_kernel_size,
+                                                              stride_size=self.stride_size,
+                                                              kernel_size_1=self.kernel_size_1,
+                                                              kernel_size_2=self.kernel_size_2,
+                                                              kernel_size_3=self.kernel_size_3,
+                                                              hidden_filters_1=self.hidden_filters_1,
+                                                              hidden_filters_2=self.hidden_filters_2,
+                                                              hidden_filters_3=self.hidden_filters_3,
+                                                              BK_in_first_layer=self.BK_in_first_layer,
+                                                              BK_in_second_layer=self.BK_in_second_layer,
+                                                              BK_in_third_layer=self.BK_in_third_layer,
+                                                              two_conv_layer=self.two_conv_layer,
+                                                              three_conv_layer=self.three_conv_layer,
+                                                              Binary_z=self.binary_z,
+                                                              binary_first_conv=self.binary_first_conv,
+                                                              binary_second_conv=self.binary_second_conv,
+                                                              binary_third_conv=self.binary_third_conv,
+                                                              add_dl_class=self.add_dl_class,
+                                                              hidden_dim=self.hidden_dim,
+                                                              bin_after_GMP=self.bin_after_GMP)
 
-                        # load weighs:
-                        pre_trained_struct_model = self.load_pre_trained_checkpoint('last',
-                                                                                    checkpoint_dir_encoder_struct,
-                                                                                    pre_trained_struct_model)
+                    # load weighs:
+                    pre_trained_struct_model = self.load_pre_trained_checkpoint('last',
+                                                                                checkpoint_dir_encoder_struct,
+                                                                                pre_trained_struct_model)
 
-                        # get weighs dict of pre trained model:
-                        pretrained_dict = pre_trained_struct_model.encoder_struct.state_dict()
-                        # get dict of weighs for model VAE create (with init weights)
-                        model_dict = net.encoder_struct.state_dict()
-                        # copy weighs pre trained in current model for same name layer:
-                        pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict}
-                        model_dict.update(pretrained_dict)
-                        # Load pre trained weighs in net model:
-                        net.encoder_struct.load_state_dict(model_dict)
+                    # get weighs dict of pre trained model:
+                    pretrained_dict = pre_trained_struct_model.encoder_struct.state_dict()
+                    # get dict of weighs for model VAE create (with init weights)
+                    model_dict = net.encoder_struct.state_dict()
+                    # copy weighs pre trained in current model for same name layer:
+                    pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict}
+                    model_dict.update(pretrained_dict)
+                    # Load pre trained weighs in net model:
+                    net.encoder_struct.load_state_dict(model_dict)
 
-                        print("Weighs loaded for struct encoder !")
-                    if (not os.path.isfile(file_path_encoder_var)) and (not os.path.isfile(file_path_encoder_struct)):
-                        print("VAE doesn't exist, create VAE and train it from scratch ! good luck !")
-                    # to device:
-                    self.net, self.device = gpu_config(net)
+                    print("Weighs loaded for struct encoder !")
+                if (not os.path.isfile(file_path_encoder_var)) and (not os.path.isfile(file_path_encoder_struct)):
+                    print("VAE doesn't exist, create VAE and train it from scratch ! good luck !")
+                # to device:
+                self.net, self.device = gpu_config(net)
         else:
             print("Error, not net type exist !")
 
@@ -614,7 +616,7 @@ class SolverClassifier(object):
         if self.use_small_lr_encoder_var:
             print('use smaller lr for encoder var !')
             self.optimizer = optimizer.Adam([{'params': self.net.decoder.parameters()},
-                                            {'params': self.net.encoder_var.parameters(), 'lr': 1e-5}
+                                             {'params': self.net.encoder_var.parameters(), 'lr': 1e-5}
                                              ], lr=self.lr)
         else:
             self.optimizer = optimizer.Adam(self.net.parameters(), lr=self.lr)
@@ -681,7 +683,8 @@ class SolverClassifier(object):
 
                     if self.EV_classifier:
                         classification_loss = F.nll_loss(prediction_var, labels)
-                        loss = classification_loss
+                        loss = classification_loss * self.lambda_EV_class
+
                     if self.ES_reconstruction:
                         BCE_loss = F.mse_loss(x_recons, data, size_average=False)
                         loss = BCE_loss
@@ -696,7 +699,7 @@ class SolverClassifier(object):
                         # KLD tries to push the distributions as close as possible to unit Gaussian:
                         KLD_loss = -0.5 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
 
-                        loss += (self.lambda_BCE * BCE_loss) + (self.beta * KLD_loss)
+                        loss += ((self.lambda_BCE * BCE_loss) + (self.beta * KLD_loss)) * self.lambda_recons
                 else:
                     self.mse_loss = 0
                     loss = 0
@@ -785,6 +788,7 @@ class SolverClassifier(object):
                 self.optimizer.zero_grad()
                 loss.backward()
                 self.optimizer.step()
+                # print(self.net.encoder_var[16].weight.grad[24][12])
 
                 # unfreeze encoder_struct if train decoder:
                 if self.use_VAE and self.freeze_Encoder:

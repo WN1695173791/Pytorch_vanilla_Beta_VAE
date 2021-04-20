@@ -129,7 +129,6 @@ if __name__ == "__main__":
     # ---------- Weights for the loss -----------------
     parser.add_argument('--lambda_zvar_sim', default=1, type=float, help='lambda_zvar_sim_loss parameter for zvar_sim_loss loss')
     parser.add_argument('--lambda_class', default=1, type=float, help='lambda_L3 parameter for classification loss')
-    parser.add_argument('--lambda_recons', default=1, type=float, help='Wreconstruction parameter for reconstruction loss')
     parser.add_argument('--lambda_recon_wt_rand', default=1, type=float,
                         help='lambda_recon_wt_rand parameter for reconstruction loss')
     parser.add_argument('--lambda_Kl_var', default=1, type=float, help='lambda_Kl_cont parameter for Kl_cont loss')
@@ -304,6 +303,8 @@ if __name__ == "__main__":
     parser.add_argument('--use_small_lr_encoder_var', default=False, type=str2bool, help="use_small_lr_encoder_var")
     parser.add_argument('--both_decoders_freeze', default=False, type=str2bool, help="both_decoders_freeze")
     parser.add_argument('--ES_reconstruction', default=False, type=str2bool, help="ES_reconstruction")
+    parser.add_argument('--lambda_EV_class', type=float, default=1, help="lambda_EV_class")
+    parser.add_argument('--lambda_recons', type=float, default=1, help="lambda_recons")
 
     args = parser.parse_args()
 
