@@ -682,11 +682,10 @@ class SolverClassifier(object):
                     if self.EV_classifier:
                         classification_loss = F.nll_loss(prediction_var, labels)
                         loss = classification_loss
-                    else:
-                        if self.ES_reconstruction:
-                            BCE_loss = F.mse_loss(x_recons, data, size_average=False)
-                            loss = BCE_loss
-                    if self.is_VAE and not self.ES_reconstruction:
+                    if self.ES_reconstruction:
+                        BCE_loss = F.mse_loss(x_recons, data, size_average=False)
+                        loss = BCE_loss
+                    if (self.is_VAE and not self.ES_reconstruction) or self.is_VAE_var:
                         mu = latent_representation['mu']
                         log_var = latent_representation['log_var']
 
