@@ -407,10 +407,10 @@ def run_viz_expes(model_name, net, is_ratio, is_distance_loss, loss_distance_mea
     # plot_scores_and_loss_CNN(net, model_name, path_scores, is_ratio=ratio_reg, save=True,
     #                          is_distance_loss=is_distance_loss, loss_distance_mean=loss_distance_mean,
     #                          diff_var=diff_var_loss, contrastive_loss=contrastive_loss)
-    # score_test, _, _, _, _, _, _, \
-    # _, _, _, _ = compute_scores(net, loader, device, loader_size, False, False,
-    #                             False, False, False, False, False, False, False, False,
-    #                             False, False, False, False, False, False, False, False)
+    #  score_test, _, _, _, _, _, _, \
+    #  _, _, _, _ = compute_scores(net, loader, device, loader_size, False, False,
+    #                              False, False, False, False, False, False, False, False,
+    #                              False, False, False, False, False, False, False, False)
     # score_train, _, _, _, _, _, _, \
     # _, _, _, _ = compute_scores(net, train_loader, device, len(train_loader.dataset), False, False,
     #                             False, False, False, False, False, False, False, False,
@@ -459,15 +459,15 @@ def run_viz_expes(model_name, net, is_ratio, is_distance_loss, loss_distance_mea
     # _ = distance_matrix(net, model_name, train_test=train_test, plot_fig=True)
 
     # Plot resume:
-    # same_binary_code(net, model_name, loader, nb_class, train_test=train_test, save=True, Hmg_dist=True,
-    #                  bin_after_GMP=bin_after_GMP)
-    # z_struct_code_classes(model_name, nb_class, train_test=train_test)
-    # compute_z_struct(net, model_name, loader, train_test=train_test, net_type=net_type)
-    # get_z_struct_per_class(model_name, train_test=train_test, nb_class=nb_class)
-    # get_average_z_struct_per_classes(exp_name=model_name, train_test=train_test)
-    # plot_resume(net, model_name, is_ratio, is_distance_loss, loss_distance_mean, loader, train_loader,
-    #             device, cat=cat, train_test=train_test, path_scores=path_scores, diff_var=diff_var_loss,
-    #             contrastive_loss=contrastive_loss, encoder_struct=True, Hmg_dst=True, z_struct_size=z_struct_size)
+    same_binary_code(net, model_name, loader, nb_class, train_test=train_test, save=True, Hmg_dist=True,
+                     bin_after_GMP=bin_after_GMP)
+    z_struct_code_classes(model_name, nb_class, train_test=train_test)
+    compute_z_struct(net, model_name, loader, train_test=train_test, net_type=net_type)
+    get_z_struct_per_class(model_name, train_test=train_test, nb_class=nb_class)
+    get_average_z_struct_per_classes(exp_name=model_name, train_test=train_test)
+    plot_resume(net, model_name, is_ratio, is_distance_loss, loss_distance_mean, loader, train_loader,
+                device, cat=cat, train_test=train_test, path_scores=path_scores, diff_var=diff_var_loss,
+                contrastive_loss=contrastive_loss, encoder_struct=True, Hmg_dst=True, z_struct_size=z_struct_size)
 
     # receptive_field = get_receptive_field_size(net, batch_test)
     # _ = score_with_best_code_uniq(net, model_name, train_test, loader, z_struct_size, loader_size,
@@ -649,7 +649,7 @@ if __name__ == '__main__':
     list_VAE_var_inv_grad = ['mnist_vae_var_2cb_15_classifier_grad_inv_PT_new',
                              'mnist_vae_var_2cb_15_classifier_grad_inv_FS_new']
 
-    list_encoder_struct_test =  []  # 'mnist_ES_binary_10',
+    list_encoder_struct_test =  [# 'mnist_ES_binary_10',
                                  # 'mnist_ES_binary_15',
                                  # 'mnist_ES_binary_20',
                                  # 'mnist_ES_binary_25',
@@ -659,11 +659,12 @@ if __name__ == '__main__':
                                  # 'mnist_ES_binary_SDL_20',
                                  # 'mnist_ES_binary_SDL_25',
                                  # 'mnist_ES_binary_SDL_30',
-                                 # 'mnist_ES_binary_15_Hmg_dst_1',
-                                 # 'mnist_ES_binary_15_Hmg_dst_2',
-                                 # 'mnist_ES_binary_15_Hmg_dst_3',
-                                 # 'mnist_ES_binary_15_Hmg_dst_4',
-                                 # 'mnist_ES_binary_15_Hmg_dst_5',
+                                 'mnist_ES_binary_15_Hmg_dst_1_2nd_test',
+                                 'mnist_ES_binary_15_Hmg_dst_2_2nd_test',
+                                 'mnist_ES_binary_15_Hmg_dst_3_2nd_test',
+                                 'mnist_ES_binary_15_Hmg_dst_4_2nd_test',
+                                 'mnist_ES_binary_15_Hmg_dst_5_2nd_test',
+                                 'mnist_ES_binary_15_Hmg_dst_6_2nd_test']
                                  # 'mnist_ES_binary_SDL_15_Hmg_dst_1',
                                  # 'mnist_ES_binary_SDL_15_Hmg_dst_2',
                                  # 'mnist_ES_binary_SDL_15_Hmg_dst_3',
@@ -681,6 +682,12 @@ if __name__ == '__main__':
                                  # 'mnist_ES_binary_SDL_15_L2_dst_5']
 
     parameters_mnist_classifier_BK_ratio = "parameters_combinations/mnist_classifier_ratio.txt"
+
+    run_exp_extraction_and_visualization_custom_BK(list_encoder_struct_test,
+                                                   is_ratio=False,
+                                                   is_decoder=False,
+                                                   is_VAE=False,
+                                                   is_encoder_struct=True)
 
     run_exp_extraction_and_visualization_custom_BK(list_exp_VAE_naive,
                                                    is_ratio=False,
