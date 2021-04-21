@@ -153,7 +153,7 @@ def compute_scores_VAE(net, loader, loader_size, device, lambda_BCE, beta, is_va
             if is_vae_var:
                 x_recons, latent_representation, prediction_var = net(data)
             else:
-                x_recons, _, _, _, latent_representation, _, prediction_var = net(data)
+                x_recons, _, _, _, latent_representation, _, prediction_var, _ = net(data)
 
             if ES_reconstruction:
                 # BCE loss:

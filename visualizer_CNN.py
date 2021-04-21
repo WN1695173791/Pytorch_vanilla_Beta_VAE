@@ -1931,7 +1931,7 @@ def plot_VAE_resume(net, model_name, z_struct_size, z_var_size, loader, VAE_stru
     plt.axis('off')
 
     # Real distribution:________________________________________________________________________________________________
-    mu_var, sigma_var, encoder_struct_zeros_proportion = real_distribution_model(net,
+    mu_var, sigma_var, encoder_struct_one_proportion = real_distribution_model(net,
                                                                                  model_name,
                                                                                  z_struct_size,
                                                                                  z_var_size,
@@ -1942,10 +1942,10 @@ def plot_VAE_resume(net, model_name, z_struct_size, z_var_size, loader, VAE_stru
                                                                                  VAE_struct=VAE_struct,
                                                                                  is_vae_var=is_vae_var)
     if VAE_struct:
-        axs[0, 1].set(title=('Proportion of zeros: ' + model_name + "_" + train_test))
-        axs[0, 1].bar(np.arange(len(encoder_struct_zeros_proportion)), encoder_struct_zeros_proportion,
-                label='Proportion of zeros for each encoder struct component',
-                color='blue')
+        axs[0, 1].set(title=('Proportion of one: ' + model_name + "_" + train_test))
+        axs[0, 1].bar(np.arange(len(encoder_struct_one_proportion)), encoder_struct_one_proportion,
+                      label='Proportion of one for each encoder struct component',
+                      color='blue')
 
     mu = 0
     variance = 1
@@ -2023,7 +2023,7 @@ def plot_VAE_resume(net, model_name, z_struct_size, z_var_size, loader, VAE_stru
     else:
         z_struct_random = torch.cat((random_var, z_struct), dim=1)
     x_recon_struct = net.decoder(z_struct_random)
-    score_reconstruction_zstruct = F.mse_loss(x_recon_struct, input_data).cpu().item()
+    score_reconstruction_zstruct = F.mse_loss(x_recon_struct, input_data)
     if torch.cuda.is_available():
         score_reconstruction_zstruct = np.around(score_reconstruction_zstruct, 3)
     else:
@@ -2624,20 +2624,20 @@ def real_distribution_model(net, expe_name, z_struct_size, z_var_size, loader, t
         sigma_var = torch.mean(sigma_var, axis=0)
 
         if VAE_struct:
-            zeros_proportion = (np.count_nonzero(z_struct_distribution.detach().cpu() == 0, axis=0) * 100.) / len(z_struct_distribution)
+            one_proportion = (np.count_nonzero(z_struct_distribution.detach().cpu() == 0, axis=0) * 100.) / len(z_struct_distribution)
             # mu_struct = torch.mean(z_struct_distribution, axis=0)
             # sigma_struct = torch.std(z_struct_distribution, axis=0)
         else:
             # mu_struct = 0
             # sigma_struct = 0
-            zeros_proportion = 0
+            one_proportion = 0
 
         np.save('Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test +
                 '_mu_var.npy', mu_var.detach().cpu())
         np.save('Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test +
                 'sigma_var.npy', sigma_var.detach().cpu())
-        np.save('Other_results/real_distribution/binary_zeros_proportion_' + expe_name + '_' + train_test +
-                'sigma_var.npy', zeros_proportion)
+        np.save('Other_results/real_distribution/binary_one_proportion_' + expe_name + '_' + train_test +
+                'sigma_var.npy', one_proportion)
         # np.save('Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test +
         #         'mu_struct.npy', mu_struct)
         # np.save('Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test +
@@ -2647,7 +2647,7 @@ def real_distribution_model(net, expe_name, z_struct_size, z_var_size, loader, t
                      '_mu_var.npy', allow_pickle=True)
     sigma_var = np.load('Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test +
                         'sigma_var.npy', allow_pickle=True)
-    encoder_struct_zeros_proportion = np.load('Other_results/real_distribution/binary_zeros_proportion_' + expe_name + '_' + train_test +
+    encoder_struct_one_proportion = np.load('Other_results/real_distribution/binary_one_proportion_' + expe_name + '_' + train_test +
                 'sigma_var.npy', allow_pickle=True)
     # mu_struct = np.load(
     #     'Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test +
@@ -2658,7 +2658,7 @@ def real_distribution_model(net, expe_name, z_struct_size, z_var_size, loader, t
 
     if plot_gaussian:
         if VAE_struct:
-            plt.bar(np.arange(len(encoder_struct_zeros_proportion)), encoder_struct_zeros_proportion,
+            plt.bar(np.arange(len(encoder_struct_one_proportion)), encoder_struct_one_proportion,
                               label='Propotion of zeros for each encoder struct component',
                               color='blue')
             plt.show()
@@ -2687,7 +2687,7 @@ def real_distribution_model(net, expe_name, z_struct_size, z_var_size, loader, t
         if save:
             fig.savefig("fig_results/plot_distribution/fig_plot_distribution_" + expe_name + "_" + train_test + ".png")
 
-    return torch.tensor(mu_var), torch.tensor(sigma_var), encoder_struct_zeros_proportion
+    return torch.tensor(mu_var), torch.tensor(sigma_var), encoder_struct_one_proportion
 
 
 def switch_img(net, exp_name, loader, z_var_size):

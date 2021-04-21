@@ -297,6 +297,12 @@ class SolverClassifier(object):
         self.ES_reconstruction = args.ES_reconstruction
         self.lambda_EV_class = args.lambda_EV_class
         self.lambda_recons = args.lambda_recons
+        self.lambda_struct_recons_class = args.lambda_struct_recons_class
+        self.loss_struct_recons_class = args.loss_struct_recons_class
+        self.loss_ES_reconstruction = args.loss_ES_reconstruction
+        self.size_average = args.size_average
+        self.fine_tune_decoder = args.fine_tune_decoder
+        self.decoder_name = args.decoder_name
 
         self.contrastive_criterion = False
         if self.is_encoder_struct:
@@ -407,7 +413,9 @@ class SolverClassifier(object):
                       binary_third_conv=self.binary_third_conv,
                       ES_reconstruction=self.ES_reconstruction,
                       EV_classifier=self.EV_classifier,
-                      grad_inv=self.grad_inv)
+                      grad_inv=self.grad_inv,
+                      ES_recons_classifier=self.loss_struct_recons_class,
+                      loss_ES_reconstruction=self.loss_ES_reconstruction)
         # get layer num to extract z_struct:
         self.z_struct_out = True
 
@@ -528,6 +536,8 @@ class SolverClassifier(object):
                 file_path_encoder_var = os.path.join(checkpoint_dir_encoder_var, 'last')
                 checkpoint_dir_encoder_struct = os.path.join(args.ckpt_dir, self.encoder_struct_name)
                 file_path_encoder_struct = os.path.join(checkpoint_dir_encoder_struct, 'last')
+                checkpoint_dir_decoder = os.path.join(args.ckpt_dir, self.decoder_name)
+                file_path_decoder = os.path.join(checkpoint_dir_decoder, 'last')
 
                 if os.path.isfile(file_path_encoder_var):
                     print("VAE doesn't exist but encoder var yes ! load var encoder weighs !")
@@ -594,6 +604,53 @@ class SolverClassifier(object):
                     net.encoder_struct.load_state_dict(model_dict)
 
                     print("Weighs loaded for struct encoder !")
+                if os.path.isfile(file_path_decoder):
+                    print("VAE doesn't exist but decoder yes ! load decoder weighs !")
+                    # we create and load encoder struct with model name associate:
+                    pre_trained_decoder_model = VAE(z_var_size=self.z_var_size,
+                                                    var_second_cnn_block=self.var_second_cnn_block,
+                                                    var_third_cnn_block=self.var_third_cnn_block,
+                                                    other_architecture=self.other_architecture,
+                                                    z_struct_size=self.z_struct_size,
+                                                    big_kernel_size=self.big_kernel_size,
+                                                    stride_size=self.stride_size,
+                                                    kernel_size_1=self.kernel_size_1,
+                                                    kernel_size_2=self.kernel_size_2,
+                                                    kernel_size_3=self.kernel_size_3,
+                                                    hidden_filters_1=self.hidden_filters_1,
+                                                    hidden_filters_2=self.hidden_filters_2,
+                                                    hidden_filters_3=self.hidden_filters_3,
+                                                    BK_in_first_layer=self.BK_in_first_layer,
+                                                    BK_in_second_layer=self.BK_in_second_layer,
+                                                    BK_in_third_layer=self.BK_in_third_layer,
+                                                    two_conv_layer=self.two_conv_layer,
+                                                    three_conv_layer=self.three_conv_layer,
+                                                    Binary_z=self.binary_z,
+                                                    binary_first_conv=self.binary_first_conv,
+                                                    binary_second_conv=self.binary_second_conv,
+                                                    binary_third_conv=self.binary_third_conv,
+                                                    ES_reconstruction=self.ES_reconstruction,
+                                                    EV_classifier=self.EV_classifier,
+                                                    grad_inv=self.grad_inv,
+                                                    ES_recons_classifier=self.loss_struct_recons_class,
+                                                    loss_ES_reconstruction=self.loss_ES_reconstruction)
+
+                    # load weighs:
+                    pre_trained_decoder_model = self.load_pre_trained_checkpoint('last',
+                                                                                 checkpoint_dir_decoder,
+                                                                                 pre_trained_decoder_model)
+
+                    # get weighs dict of pre trained model:
+                    pretrained_dict = pre_trained_decoder_model.decoder.state_dict()
+                    # get dict of weighs for model VAE create (with init weights)
+                    model_dict = net.decoder.state_dict()
+                    # copy weighs pre trained in current model for same name layer:
+                    pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict}
+                    model_dict.update(pretrained_dict)
+                    # Load pre trained weighs in net model:
+                    net.decoder.load_state_dict(model_dict)
+
+                    print("Weighs loaded for decoder !")
                 if (not os.path.isfile(file_path_encoder_var)) and (not os.path.isfile(file_path_encoder_struct)):
                     print("VAE doesn't exist, create VAE and train it from scratch ! good luck !")
                 # to device:
@@ -617,6 +674,12 @@ class SolverClassifier(object):
             print('use smaller lr for encoder var !')
             self.optimizer = optimizer.Adam([{'params': self.net.decoder.parameters()},
                                              {'params': self.net.encoder_var.parameters(), 'lr': 1e-5}
+                                             ], lr=self.lr)
+        elif self.fine_tune_decoder:
+            print('use smaller lr for decoder !')
+            self.optimizer = optimizer.Adam([{'params': self.net.encoder_struct.parameters()},
+                                             {'params': self.net.encoder_var.parameters()},
+                                             {'params': self.net.decoder.parameters(), 'lr': 1e-5}
                                              ], lr=self.lr)
         else:
             self.optimizer = optimizer.Adam(self.net.parameters(), lr=self.lr)
@@ -677,27 +740,36 @@ class SolverClassifier(object):
                     loss = 0
                     if self.is_VAE:
                         x_recons, z_struct, z_var, z_var_sample, latent_representation, z, \
-                        prediction_var = self.net(data)
+                        prediction_var, prediction_struct = self.net(data,
+                                                                     loss_struct_recons_class=self.loss_struct_recons_class)
                     else:
                         x_recons, latent_representation, prediction_var = self.net(data)
 
                     if self.EV_classifier:
                         classification_loss = F.nll_loss(prediction_var, labels)
-                        loss = classification_loss * self.lambda_EV_class
+                        loss += classification_loss * self.lambda_EV_class
+
+                    if self.loss_struct_recons_class:
+                        classification_loss_z_struct = F.nll_loss(prediction_struct, labels,
+                                                                  size_average=self.size_average)
+                        loss += classification_loss_z_struct * self.lambda_struct_recons_class
 
                     if self.ES_reconstruction:
-                        BCE_loss = F.mse_loss(x_recons, data, size_average=False)
-                        loss = BCE_loss
+                        BCE_loss = F.mse_loss(x_recons, data, size_average=self.size_average)
+                        loss += BCE_loss
+
                     if (self.is_VAE and not self.ES_reconstruction) or self.is_VAE_var:
                         mu = latent_representation['mu']
                         log_var = latent_representation['log_var']
 
                         # BCE tries to make our reconstruction as accurate as possible:
                         # BCE_loss = F.binary_cross_entropy(x_recons, data, size_average=False)
-                        BCE_loss = F.mse_loss(x_recons, data, size_average=False)
+                        BCE_loss = F.mse_loss(x_recons, data, size_average=self.size_average)
 
                         # KLD tries to push the distributions as close as possible to unit Gaussian:
                         KLD_loss = -0.5 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
+                        if self.size_average:
+                            KLD_loss = KLD_loss/self.batch_size
 
                         loss += ((self.lambda_BCE * BCE_loss) + (self.beta * KLD_loss)) * self.lambda_recons
                 else:

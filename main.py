@@ -305,6 +305,12 @@ if __name__ == "__main__":
     parser.add_argument('--ES_reconstruction', default=False, type=str2bool, help="ES_reconstruction")
     parser.add_argument('--lambda_EV_class', type=float, default=1, help="lambda_EV_class")
     parser.add_argument('--lambda_recons', type=float, default=1, help="lambda_recons")
+    parser.add_argument('--loss_struct_recons_class', default=False, type=str2bool, help="loss_struct_recons_class")
+    parser.add_argument('--loss_ES_reconstruction', default=False, type=str2bool, help="loss_ES_reconstruction")
+    parser.add_argument('--lambda_struct_recons_class', type=float, default=1, help="lambda_struct_recons_class")
+    parser.add_argument('--size_average', default=False, type=str2bool, help="size_average")
+    parser.add_argument('--fine_tune_decoder', default=False, type=str2bool, help="fine_tune_decoder")
+    parser.add_argument('--decoder_name', default='None', type=str, help='decoder_name')
 
     args = parser.parse_args()
 

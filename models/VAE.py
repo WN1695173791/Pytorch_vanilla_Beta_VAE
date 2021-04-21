@@ -37,7 +37,9 @@ class VAE(nn.Module, ABC):
                  binary_third_conv=False,
                  ES_reconstruction=False,
                  EV_classifier=False,
-                 grad_inv=False):
+                 grad_inv=False,
+                 ES_recons_classifier=False,
+                 loss_ES_reconstruction=False):
         """
         Class which defines model and forward pass.
         """
@@ -46,12 +48,14 @@ class VAE(nn.Module, ABC):
         # parameters:
         self.nc = 1  # number of channels
         self.ES_reconstruction = ES_reconstruction  # if ES_reconstruction model is only encoder struct + decoder
-        if self.ES_reconstruction:
+        if self.ES_reconstruction and not loss_ES_reconstruction:
             self.z_size = z_struct_size
         else:
             self.z_size = z_var_size + z_struct_size
         self.EV_classifier = EV_classifier
         self.grad_inv = grad_inv
+        self.ES_recons_classifier = ES_recons_classifier
+        self.loss_ES_reconstruction = loss_ES_reconstruction
 
         # encoder var parameters:
         self.z_var_size = z_var_size
@@ -167,7 +171,7 @@ class VAE(nn.Module, ABC):
         # -----------_________________ end encoder_struct____________________________________________------------
 
         # -----------_________________ define model: encoder_var____________________________________________--------
-        if not self.ES_reconstruction:
+        if (not self.ES_reconstruction) or self.loss_ES_reconstruction:
             if self.other_architecture:
                 self.encoder_var = [
                     nn.Conv2d(in_channels=self.nc, out_channels=32, kernel_size=3, stride=2, padding=self.padding_size),
@@ -334,10 +338,17 @@ class VAE(nn.Module, ABC):
                 nn.Sigmoid()
             ]
         # --------------------------------------- end decoder ____________________________________________ ----
-        # --------------------------------------- Classifier ____________________________________________ ----
+        # --------------------------------------- Classifier var____________________________________________ ----
         if self.EV_classifier:
             self.var_classifier = [
                 nn.Linear(self.z_var_size, self.n_classes)  # B, nb_class
+                # nn.Softmax()
+            ]
+        # --------------------------------------- end Classifier ____________________________________________ ----
+        # --------------------------------------- Classifier var____________________________________________ ----
+        if self.ES_recons_classifier:
+            self.struct_classifier = [
+                nn.Linear(self.z_struct_size, self.n_classes)  # B, nb_class
                 # nn.Softmax()
             ]
         # --------------------------------------- end Classifier ____________________________________________ ----
@@ -345,8 +356,11 @@ class VAE(nn.Module, ABC):
         self.encoder_struct = nn.Sequential(*self.encoder_struct)
         self.decoder = nn.Sequential(*self.decoder)
 
-        if not self.ES_reconstruction:
+        if (not self.ES_reconstruction) or self.loss_ES_reconstruction:
             self.encoder_var = nn.Sequential(*self.encoder_var)
+
+        if self.ES_recons_classifier:
+            self.struct_classifier = nn.Sequential(*self.struct_classifier)
 
         if self.EV_classifier:
             if self.grad_inv:
@@ -363,7 +377,7 @@ class VAE(nn.Module, ABC):
                 # weight_init(m)
                 kaiming_init(m)
 
-    def forward(self, x):
+    def forward(self, x, loss_struct_recons_class=False):
         """
         Forward pass of model.
         """
@@ -371,7 +385,18 @@ class VAE(nn.Module, ABC):
         # z_struct:
         z_struct = self.encoder_struct(x)
 
-        if not self.ES_reconstruction:
+        # z_struct reconstruction:
+        if loss_struct_recons_class:
+            z_var_rand = torch.randn((x.shape[0], self.z_var_size))
+            z_struct_rand_var = torch.cat((z_var_rand, z_struct), dim=1)
+            z_struct_reconstruction = self.decoder(z_struct_rand_var)
+            z_struct_recons_prediction = self.encoder_struct(z_struct_reconstruction)
+            z_struct_out = self.struct_classifier(z_struct_recons_prediction)
+            z_struct_pred = F.log_softmax(z_struct_out, dim=1)
+        else:
+            z_struct_pred = 0
+
+        if (not self.ES_reconstruction) or self.loss_ES_reconstruction:
             # z_var:
             z_var = self.encoder_var(x)
             latent_representation = self._encode(z_var, self.z_var_size)
@@ -394,7 +419,7 @@ class VAE(nn.Module, ABC):
         else:
             prediction_var = 0
 
-        return x_recons, z_struct, z_var, z_var_sample, latent_representation, z, prediction_var
+        return x_recons, z_struct, z_var, z_var_sample, latent_representation, z, prediction_var, z_struct_pred
 
     def _encode(self, z, z_size):
         """

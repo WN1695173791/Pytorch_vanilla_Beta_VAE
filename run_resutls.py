@@ -101,10 +101,9 @@ def run_exp_extraction_and_visualization_custom_BK(list_model, is_ratio=False, i
         is_VAE_var = str2bool(parameters_dict['is_VAE_var'])
         var_second_cnn_block = str2bool(parameters_dict['var_second_cnn_block'])
         var_third_cnn_block = str2bool(parameters_dict['var_third_cnn_block'])
-        if 'EV_classifier' in parameters_dict.keys():
-            EV_classifier = str2bool(parameters_dict['EV_classifier'])
-        else:
-            EV_classifier = False
+        EV_classifier = str2bool(parameters_dict['EV_classifier'])
+        grad_inv = str2bool(parameters_dict['grad_inv'])
+        EV_classifier = str2bool(parameters_dict['EV_classifier'])
 
         # encoder struct:
         kernel_size_1 = int(parameters_dict['kernel_size_1'])
@@ -147,7 +146,9 @@ def run_exp_extraction_and_visualization_custom_BK(list_model, is_ratio=False, i
                       binary_first_conv=binary_first_conv,
                       binary_second_conv=binary_second_conv,
                       binary_third_conv=binary_third_conv,
-                      ES_reconstruction=ES_reconstruction)
+                      ES_reconstruction=ES_reconstruction,
+                      EV_classifier = EV_classifier,
+                      grad_inv = grad_inv)
         elif is_encoder_struct:
             net_type = 'Encoder_struct'
             net = Encoder_struct(z_struct_size=z_struct_size,
@@ -346,8 +347,6 @@ def run_VAE(model_name, net, lambda_BCE, beta, z_struct_size, z_var_size, VAE_st
     plot_VAE_resume(net, model_name, z_struct_size, z_var_size, loader, VAE_struct, is_vae_var, train_test, save=True,
                     nb_class=nb_class, nb_img=8, std_var=sigma_var, mu_var=mu_var,
                     mu_struct=encoder_struct_zeros_proportion, index=0)
-    print(wait)
-
     # ----------------------------------------------------------------------------------------------------------
     # Test vae var classfiier hypothesis: ----------------------------------------------------------------------
     # replace weigths value:
