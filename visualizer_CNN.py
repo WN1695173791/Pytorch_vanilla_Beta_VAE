@@ -1995,7 +1995,11 @@ def plot_VAE_resume(net, model_name, z_struct_size, z_var_size, loader, VAE_stru
 
     # compute score reconstruction on dataset test:
     score_reconstruction = F.mse_loss(x_recon, input_data)
-    score_reconstruction = np.around(score_reconstruction.detach().numpy(), 3)
+    
+    if torch.cuda.is_available():
+        score_reconstruction = np.around(score_reconstruction.cpu().detach().numpy(), 3)
+    else:
+        score_reconstruction = np.around(score_reconstruction.detach().numpy(), 3)
 
     first = True
     for class_id in range(nb_class):
@@ -2014,10 +2018,16 @@ def plot_VAE_resume(net, model_name, z_struct_size, z_var_size, loader, VAE_stru
 
     # z_struct reconstruction:
     random_var = std_var * torch.randn(x_recon.shape[0], z_var_size) + mu_var
-    z_struct_random = torch.cat((random_var, z_struct), dim=1)
+    if torch.cuda.is_available():
+        z_struct_random = torch.cat((random_var, z_struct.cpu()), dim=1)
+    else:
+        z_struct_random = torch.cat((random_var, z_struct), dim=1)
     x_recon_struct = net.decoder(z_struct_random)
-    score_reconstruction_zstruct = F.mse_loss(x_recon_struct, input_data)
-    score_reconstruction_zstruct = np.around(score_reconstruction_zstruct.detach().numpy(), 3)
+    score_reconstruction_zstruct = F.mse_loss(x_recon_struct, input_data).cpu().item()
+    if torch.cuda.is_available():
+        score_reconstruction_zstruct = np.around(score_reconstruction_zstruct, 3)
+    else:
+        score_reconstruction_zstruct = np.around(score_reconstruction_zstruct.detach().numpy(), 3)
 
     first = True
     for class_id in range(nb_class):

@@ -347,6 +347,7 @@ def run_VAE(model_name, net, lambda_BCE, beta, z_struct_size, z_var_size, VAE_st
                     nb_class=nb_class, nb_img=8, std_var=sigma_var, mu_var=mu_var,
                     mu_struct=encoder_struct_zeros_proportion, index=0)
     print(wait)
+
     # ----------------------------------------------------------------------------------------------------------
     # Test vae var classfiier hypothesis: ----------------------------------------------------------------------
     # replace weigths value:
@@ -703,23 +704,23 @@ if __name__ == '__main__':
 
     parameters_mnist_classifier_BK_ratio = "parameters_combinations/mnist_classifier_ratio.txt"
 
-    run_exp_extraction_and_visualization_custom_BK(list_encoder_struct_test,
+    # run_exp_extraction_and_visualization_custom_BK(list_encoder_struct_test,
+    #                                                is_ratio=False,
+    #                                                is_decoder=False,
+    #                                                is_VAE=False,
+    #                                                is_encoder_struct=True)
+
+    run_exp_extraction_and_visualization_custom_BK(list_exp_VAE_naive,
                                                    is_ratio=False,
                                                    is_decoder=False,
-                                                   is_VAE=False,
-                                                   is_encoder_struct=True)
+                                                   is_VAE=True,
+                                                   is_encoder_struct=False)
 
-    # run_exp_extraction_and_visualization_custom_BK(list_exp_VAE_naive,
-    #                                                is_ratio=False,
-    #                                                is_decoder=False,
-    #                                                is_VAE=True,
-    #                                                is_encoder_struct=False)
-
-    # run_exp_extraction_and_visualization_custom_BK(list_exp_VAE_inv_grad,
-    #                                                is_ratio=False,
-    #                                                is_decoder=False,
-    #                                                is_VAE=True,
-    #                                                is_encoder_struct=False)
+    run_exp_extraction_and_visualization_custom_BK(list_exp_VAE_inv_grad,
+                                                   is_ratio=False,
+                                                   is_decoder=False,
+                                                   is_VAE=True,
+                                                   is_encoder_struct=False)
 
     # run_exp_extraction_and_visualization_custom_BK(list_ES_reconstruction,
     #                                                is_ratio=False,
