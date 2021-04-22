@@ -82,7 +82,7 @@ def compute_z_struct_mean_VAE(net_trained, exp_name, loader, train_test=None, re
             if torch.cuda.is_available():
                 input_data = input_data.cuda()
 
-            x_recons, z_struct, z_var, z_var_sample, latent_representation, z, _ = net_trained(input_data)
+            x_recons, z_struct, z_var, z_var_sample, latent_representation, z, _, _ = net_trained(input_data)
 
             # train mode:
             net_trained.eval()
@@ -1991,7 +1991,7 @@ def plot_VAE_resume(net, model_name, z_struct_size, z_var_size, loader, VAE_stru
     if is_vae_var:
         x_recon, _ = net(input_data)
     else:
-        x_recon, z_struct, z_var, z_var_sample, _, z, _ = net(input_data)
+        x_recon, z_struct, z_var, z_var_sample, _, z, _, _ = net(input_data)
 
     # compute score reconstruction on dataset test:
     score_reconstruction = F.mse_loss(x_recon, input_data)
@@ -2389,7 +2389,7 @@ def viz_reconstruction_VAE(net, loader, exp_name, z_var_size, z_struct_size, nb_
     if is_vae_var:
         x_recon, _, _ = net(input_data)
     else:
-        x_recon, z_struct, z_var, z_var_sample, _, z, _ = net(input_data)
+        x_recon, z_struct, z_var, z_var_sample, _, z, _, _ = net(input_data)
 
     # compute score reconstruction on dataset test:
     score_reconstruction = F.mse_loss(x_recon, input_data)
@@ -2599,7 +2599,7 @@ def real_distribution_model(net, expe_name, z_struct_size, z_var_size, loader, t
                     mu_var_iter = latent_representation['mu']
                     sigma_var_iter = latent_representation['log_var']
                 else:
-                    _, z_struct, z_var, z_var_sample, latent_representation, z, _ = net(data)
+                    _, z_struct, z_var, z_var_sample, latent_representation, z, _, _ = net(data)
 
                     z_struct_distribution_iter = z_struct
                     mu_var_iter = z_var[:, :z_var_size]
@@ -2971,7 +2971,7 @@ def same_binary_code(net, model_name, loader, nb_class, train_test=None, save=Tr
 
             # compute loss:
             if is_VAE:
-                _, embedding, _, _, _, z, _ = net(data)
+                _, embedding, _, _, _, z, _, _ = net(data)
             else:
                 _, embedding, _, _, _, _, _, _, _, _, _, _ = net(data,
                                                                  z_struct_out=True,

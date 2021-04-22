@@ -746,7 +746,7 @@ class SolverClassifier(object):
                         x_recons, latent_representation, prediction_var = self.net(data)
 
                     if self.EV_classifier:
-                        classification_loss = F.nll_loss(prediction_var, labels)
+                        classification_loss = F.nll_loss(prediction_var, labels, size_average=self.size_average)
                         loss += classification_loss * self.lambda_EV_class
 
                     if self.loss_struct_recons_class:
@@ -767,9 +767,10 @@ class SolverClassifier(object):
                         BCE_loss = F.mse_loss(x_recons, data, size_average=self.size_average)
 
                         # KLD tries to push the distributions as close as possible to unit Gaussian:
-                        KLD_loss = -0.5 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
-                        if self.size_average:
-                            KLD_loss = KLD_loss/self.batch_size
+                        # if self.size_average:
+                        KLD_loss = -0.5 * torch.mean(1 + log_var - mu.pow(2) - log_var.exp())
+                        # else:
+                        #     KLD_loss = -0.5 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
 
                         loss += ((self.lambda_BCE * BCE_loss) + (self.beta * KLD_loss)) * self.lambda_recons
                 else:
