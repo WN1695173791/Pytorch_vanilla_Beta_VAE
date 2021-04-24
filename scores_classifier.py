@@ -133,12 +133,17 @@ def compute_scores(net, loader, device, loader_size, nb_class, ratio_reg, z_stru
 
 
 def compute_scores_VAE(net, loader, loader_size, device, lambda_BCE, beta, is_vae_var=False, ES_reconstruction=False,
-                       is_prediction_var=False):
+                       is_prediction_var=False, loss_struct_recons_class=False, size_average=False, is_VAE=False,
+                       lambda_EV_class=None, lambda_struct_recons_class=None, lambda_recons=None):
 
+    classification_loss_EV = 0
+    classification_loss_z_struct = 0
+    classification_ES_score = 0
     BCE_loss = 0
+    BCE_loss_ES = 0
     KLD_loss = 0
     total_loss = 0
-    classification_score = 0
+    classification_score_EV = 0
     nb_data = loader_size
 
     with torch.no_grad():
@@ -149,47 +154,78 @@ def compute_scores_VAE(net, loader, loader_size, device, lambda_BCE, beta, is_va
             labels = x[1]
             labels = labels.to(device)
 
+            # total loss:
+            total_loss_iter = 0
+
             # compute loss:
             if is_vae_var:
                 x_recons, latent_representation, prediction_var = net(data)
             else:
-                x_recons, _, _, _, latent_representation, _, prediction_var, _ = net(data)
+                x_recons, _, _, _, latent_representation, _, \
+                prediction_var, prediction_struct = net(data, loss_struct_recons_class=loss_struct_recons_class)
 
             if ES_reconstruction:
                 # BCE loss:
-                BCE_loss_iter = F.binary_cross_entropy(x_recons, data)
-                BCE_loss += BCE_loss_iter
+                BCE_loss_iter_ES = F.mse_loss(x_recons, data, size_average=size_average)
+                BCE_loss_ES += BCE_loss_iter_ES
 
-                total_loss_iter = BCE_loss
-            else:
+                total_loss_iter += BCE_loss_ES
+
+            if is_prediction_var:
+                classification_loss_EV_iter = F.nll_loss(prediction_var, labels, size_average=size_average)
+                classification_loss_EV += classification_loss_EV_iter
+
+                total_loss_iter += classification_loss_EV * lambda_EV_class
+
+                # classification score:
+                classification_score_EV_iter = compute_scores_prediction(prediction_var, labels)
+                classification_score_EV += classification_score_EV_iter
+
+            if loss_struct_recons_class:
+                classification_loss_z_struct_iter = F.nll_loss(prediction_struct, labels, size_average=size_average)
+                classification_loss_z_struct += classification_loss_z_struct_iter
+
+                total_loss_iter += classification_loss_z_struct * lambda_struct_recons_class
+
+                # classification score:
+                classification_score_ES_iter = compute_scores_prediction(prediction_struct, labels)
+                classification_ES_score += classification_score_ES_iter
+
+            if (is_VAE and not ES_reconstruction) or is_vae_var:
                 mu = latent_representation['mu']
                 logvar = latent_representation['log_var']
 
                 # BCE loss:
-                BCE_loss_iter = F.binary_cross_entropy(x_recons, data)
+                BCE_loss_iter = F.mse_loss(x_recons, data, size_average=size_average)
                 BCE_loss += BCE_loss_iter
                 # KL divergence loss:
-                KLD_loss_iter = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
+                if size_average:
+                    KLD_loss_iter = -0.5 * torch.mean(1 + logvar - mu.pow(2) - logvar.exp())
+                else:
+                    KLD_loss_iter = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
                 KLD_loss += KLD_loss_iter
 
-                total_loss_iter = (lambda_BCE * BCE_loss_iter) + (beta * KLD_loss_iter)
-            if is_prediction_var:
-                # classification score:
-                classification_score_iter = compute_scores_prediction(prediction_var, labels)
-                classification_score += classification_score_iter
+                total_loss_iter += ((lambda_BCE * BCE_loss_iter) + (beta * KLD_loss_iter)) * lambda_recons
 
             total_loss += total_loss_iter
 
     # losses:
+    BCE_loss_ES = BCE_loss_ES / len(loader)
+    classification_loss_EV = classification_loss_EV / len(loader)
+    classification_loss_z_struct = classification_loss_z_struct / len(loader)
+
     BCE_loss = BCE_loss / len(loader)
     KLD_loss = KLD_loss / len(loader)
     total_loss = total_loss / len(loader)
 
     # scores:
-    score = 100. * classification_score / nb_data
-    print("score: ", score)
+    classification_score_EV = 100. * classification_score_EV / nb_data
+    classification_ES_score = 100. * classification_ES_score / nb_data
 
-    return total_loss, BCE_loss, KLD_loss
+    print("score EV: {}. Score ES: {}".format(classification_score_EV, classification_ES_score))
+
+    return total_loss, BCE_loss, KLD_loss, BCE_loss_ES, classification_loss_EV, classification_loss_z_struct, \
+           classification_score_EV, classification_ES_score
 
 
 def compute_scores_prediction(prediction, labels):

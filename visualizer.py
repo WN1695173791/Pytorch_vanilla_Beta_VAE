@@ -33,7 +33,9 @@ def get_checkpoints(net, path, expe_name):
     return net, nb_iter, nb_epochs
 
 
-def get_checkpoints_scores_VAE(path_scores, expe_name):
+def plot_loss_results_VAE(path_scores, expe_name, beta, lambda_BCE, save=True):
+
+    # load values:
     file_path = os.path.join(path_scores, expe_name, 'last')
     checkpoints_scores = torch.load(file_path, map_location=torch.device(device))
 
@@ -46,26 +48,93 @@ def get_checkpoints_scores_VAE(path_scores, expe_name):
     KLD_train = checkpoints_scores['KLD_train']
     KLD_test = checkpoints_scores['KLD_test']
 
-    return global_iter, epochs, train_score, test_score, BCE_train, BCE_test, KLD_train, KLD_test
+    # train:
+    if 'BCE_ES_train' in checkpoints_scores:
+        BCE_ES_train = checkpoints_scores['BCE_ES_train']
+    else:
+        BCE_ES_train = 0
+        BCE_ES_test = 0
+    if 'NLL_loss_EV_train' in checkpoints_scores:
+        NLL_loss_EV_train = checkpoints_scores['NLL_loss_EV_train']
+    else:
+        NLL_loss_EV_train = 0
+        NLL_loss_EV_test = 0
+    if 'NLL_loss_ES_train' in checkpoints_scores:
+        NLL_loss_ES_train = checkpoints_scores['NLL_loss_ES_train']
+    else:
+        NLL_loss_ES_train = 0
+        NLL_loss_ES_test = 0
+    if 'Score_ES_train' in checkpoints_scores:
+        Score_ES_train = checkpoints_scores['Score_ES_train']
+    else:
+        Score_ES_train = 0
+        Score_ES_test = 0
+    if 'Score_EV_train' in checkpoints_scores:
+        Score_EV_train = checkpoints_scores['Score_EV_train']
+    else:
+        Score_EV_train = 0
+        Score_EV_test = 0
+
+    # test:
+    if 'BCE_ES_test' in checkpoints_scores:
+        BCE_ES_test = checkpoints_scores['BCE_ES_test']
+    if 'NLL_loss_EV_test' in checkpoints_scores:
+        NLL_loss_EV_test = checkpoints_scores['NLL_loss_EV_test']
+    if 'NLL_loss_ES_test' in checkpoints_scores:
+        NLL_loss_ES_test = checkpoints_scores['NLL_loss_ES_test']
+    if 'Score_ES_test' in checkpoints_scores:
+        Score_ES_test = checkpoints_scores['Score_ES_test']
+    if 'Score_EV_test' in checkpoints_scores:
+        Score_EV_test = checkpoints_scores['Score_EV_test']
 
 
-def plot_loss_results_VAE(path_scores, expe_name, beta, lambda_BCE, save=True):
-    global_iter, epochs, train_score, test_score, BCE_train, BCE_test, KLD_train, \
-    KLD_test = get_checkpoints_scores_VAE(path_scores, expe_name)
+    # figure:
+    fig, ax = plt.subplots(6,
+                           figsize=(17, 20),
+                           gridspec_kw={'height_ratios': [1, 1, 1, 1, 1, 1]},
+                           facecolor='w',
+                           edgecolor='k')
+    fig.suptitle('VAE losses: {}, with lambda BCE: {} and beta: {} '.format(expe_name, lambda_BCE, beta), fontsize=14)
+    plt.subplots_adjust(left=0.05, bottom=0.035, right=0.99, top=.95, wspace=None, hspace=None)
 
-    fig, ax = plt.subplots(figsize=(15, 10), facecolor='w', edgecolor='k')
+    ax[0].set(xlabel='epochs', ylabel='Loss')
+    ax[1].set(xlabel='epochs', ylabel='Loss')
+    ax[2].set(xlabel='epochs', ylabel='Loss')
+    ax[3].set(xlabel='epochs', ylabel='Loss')
+    ax[4].set(xlabel='epochs', ylabel='Loss')
+    ax[5].set(xlabel='epochs', ylabel='Score')
 
-    ax.set(xlabel='nb_iter', ylabel='loss',
-           title=('VAE losses: {}, with lambda BCE: {} and beta: {} '.format(expe_name, lambda_BCE, beta)))
+    ax[0].set(title='Total (weighted by lambdas)')
+    ax[1].set(title='Reconstruction VAE (MSE)')
+    ax[2].set(title='Reconstruction ES (MSE)')
+    ax[3].set(title='KLD')
+    ax[4].set(title='Classification (NLL)')
+    ax[5].set(title='Score (%)')
 
-    ax.plot(epochs, train_score, label='Total train')
-    ax.plot(epochs, test_score, label='Total test')
-    ax.plot(epochs, BCE_train, label='BCE train')
-    ax.plot(epochs, BCE_test, label='BCE test')
-    ax.plot(epochs, KLD_train, label='KLD train')
-    ax.plot(epochs, KLD_test, label='KLD test')
+    ax[0].plot(epochs, train_score, label='Train')
+    ax[0].plot(epochs, test_score, label='Test')
+    ax[1].plot(epochs, BCE_train, label='Train')
+    ax[1].plot(epochs, BCE_test, label='Test')
+    ax[2].plot(epochs, BCE_ES_train, label='Train')
+    ax[2].plot(epochs, BCE_ES_test, label='Test')
+    ax[3].plot(epochs, KLD_train, label='Train')
+    ax[3].plot(epochs, KLD_test, label='Test')
+    ax[4].plot(epochs, NLL_loss_EV_train, label='EV train')
+    ax[4].plot(epochs, NLL_loss_EV_test, label='EV test')
+    ax[4].plot(epochs, NLL_loss_ES_train, label='ES train')
+    ax[4].plot(epochs, NLL_loss_ES_test, label='ES test')
+    ax[5].plot(epochs, Score_EV_train, label='EV train')
+    ax[5].plot(epochs, Score_EV_test, label='EV test')
+    ax[5].plot(epochs, Score_ES_train, label='ES train')
+    ax[5].plot(epochs, Score_ES_test, label='ES test')
 
-    ax.legend(loc=1)
+    ax[0].legend(loc=1)
+    ax[1].legend(loc=1)
+    ax[2].legend(loc=1)
+    ax[3].legend(loc=1)
+    ax[4].legend(loc=1)
+    ax[5].legend(loc=1)
+
     plt.show()
 
     if save:

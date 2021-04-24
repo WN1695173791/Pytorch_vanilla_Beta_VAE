@@ -191,8 +191,8 @@ def compute_z_struct(net_trained, exp_name, loader, train_test=None, net_type=No
                 input_data = input_data.cuda()
 
             _, z_struct, _, _, _, _, _, _, _, _, _, _ = net_trained(input_data,
-                                                           z_struct_out=True,
-                                                           z_struct_layer_num=z_struct_layer_num)
+                                                                    z_struct_out=True,
+                                                                    z_struct_layer_num=z_struct_layer_num)
             pred, _, _, _, _, _, _, _, _, _, _, _ = net_trained(input_data)
 
             # train mode:
@@ -265,7 +265,7 @@ def compute_z_struct_representation_noised(net, exp_name, train_test=None, nb_re
                     (z_struct_representation.shape[0])) \
                                                        + mean_z_struct[i]
                 pred, _, _, _, _, _, _, _ = net(z_struct_representation_noised, z_struct_prediction=True,
-                                             z_struct_layer_num=z_struct_layer_num)
+                                                z_struct_layer_num=z_struct_layer_num)
                 prediction.append(pred.detach().numpy())
             prediction_noised.append(np.mean(np.array(prediction), axis=0))
 
@@ -1852,7 +1852,7 @@ def plot_resume(net, exp_name, is_ratio, is_distance_loss, loss_distance_mean, l
                                                                     Hmg_dist=Hmg_dst)
         Hmg_dst = np.round(Hmg_dst, 2)
         avg_hmg_dst = round(np.mean(Hmg_dst), 2)
-        percentage_uniq_code = np.round(percentage_uniq_code*100., 2)
+        percentage_uniq_code = np.round(percentage_uniq_code * 100., 2)
         avg_perc_uniq_code = round(np.mean(percentage_uniq_code), 2)
 
         sc = score_with_best_code_uniq(net, exp_name, train_test, loader, z_struct_size, len(loader.dataset))
@@ -1932,15 +1932,15 @@ def plot_VAE_resume(net, model_name, z_struct_size, z_var_size, loader, VAE_stru
 
     # Real distribution:________________________________________________________________________________________________
     mu_var, sigma_var, encoder_struct_one_proportion = real_distribution_model(net,
-                                                                                 model_name,
-                                                                                 z_struct_size,
-                                                                                 z_var_size,
-                                                                                 loader,
-                                                                                 'test',
-                                                                                 plot_gaussian=False,
-                                                                                 save=True,
-                                                                                 VAE_struct=VAE_struct,
-                                                                                 is_vae_var=is_vae_var)
+                                                                               model_name,
+                                                                               z_struct_size,
+                                                                               z_var_size,
+                                                                               loader,
+                                                                               'test',
+                                                                               plot_gaussian=False,
+                                                                               save=True,
+                                                                               VAE_struct=VAE_struct,
+                                                                               is_vae_var=is_vae_var)
     if VAE_struct:
         axs[0, 1].set(title=('Proportion of one: ' + model_name + "_" + train_test))
         axs[0, 1].bar(np.arange(len(encoder_struct_one_proportion)), encoder_struct_one_proportion,
@@ -1962,7 +1962,7 @@ def plot_VAE_resume(net, model_name, z_struct_size, z_var_size, loader, VAE_stru
         sigma_var_iter = math.sqrt(variance_var_iter)
         x_var = np.linspace(mu_var_iter - 3 * sigma_var_iter, mu_var_iter + 3 * sigma_var_iter, 100)
         axs[0, 0].plot(x_var, stats.norm.pdf(x_var, mu_var_iter, sigma_var_iter), label='real data gaussian ' + str(i),
-                  color='blue')
+                       color='blue')
 
     axs[0, 0].legend(loc=1)
 
@@ -1995,7 +1995,7 @@ def plot_VAE_resume(net, model_name, z_struct_size, z_var_size, loader, VAE_stru
 
     # compute score reconstruction on dataset test:
     score_reconstruction = F.mse_loss(x_recon, input_data)
-    
+
     if torch.cuda.is_available():
         score_reconstruction = np.around(score_reconstruction.cpu().detach().numpy(), 3)
     else:
@@ -2017,7 +2017,8 @@ def plot_VAE_resume(net, model_name, z_struct_size, z_var_size, loader, VAE_stru
     recon_grid = reconstructions.permute(1, 2, 0)
 
     # z_struct reconstruction:
-    random_var = std_var * torch.randn(x_recon.shape[0], z_var_size) + mu_var
+    # random_var = std_var * torch.randn(x_recon.shape[0], z_var_size) + mu_var
+    random_var = torch.zeros(x_recon.shape[0], z_var_size)
     if torch.cuda.is_available():
         z_struct_random = torch.cat((random_var, z_struct.cpu()), dim=1)
     else:
@@ -2045,9 +2046,14 @@ def plot_VAE_resume(net, model_name, z_struct_size, z_var_size, loader, VAE_stru
     recon_grid_struct = reconstructions_struct.permute(1, 2, 0)
 
     # z_var reconstruction:
-    mu_struct = torch.tensor(1 - (mu_struct / 100))
-    proba_struct = mu_struct.repeat(x_recon.shape[0], 1)
-    random_struct = torch.Tensor.float(torch.bernoulli(proba_struct))
+    maj_uc_base = torch.tensor(np.load('binary_encoder_struct_results/uniq_code/uc_maj_class_' + model_name + '_' \
+                                       + train_test + '.npy', allow_pickle=True)).unsqueeze(dim=0)
+    # mu_struct = torch.tensor(1 - (mu_struct / 100))
+    # proba_struct = mu_struct.repeat(x_recon.shape[0], 1)
+    # random_struct = torch.Tensor.float(torch.bernoulli(proba_struct))
+    # random_struct = torch.zeros(x_recon.shape[0], z_struct_size)
+    random_struct = torch.repeat_interleave(torch.Tensor(maj_uc_base[0][4]).unsqueeze(dim=0), z_var_sample.shape[0],
+                                            dim=0)
     z_var_random = torch.cat((z_var_sample, random_struct), dim=1)
     x_recon_var = net.decoder(z_var_random)
     score_reconstruction_zvar = F.mse_loss(x_recon_var, input_data)
@@ -2082,10 +2088,46 @@ def plot_VAE_resume(net, model_name, z_struct_size, z_var_size, loader, VAE_stru
     # load both prototype:
     traversal_size = 8
     maj_uc_base = torch.tensor(np.load('binary_encoder_struct_results/uniq_code/uc_maj_class_' + model_name + '_' \
-                                       + train_test + '.npy', allow_pickle=True)).unsqueeze(dim=0)
-    maj_uc = torch.repeat_interleave(maj_uc_base, traversal_size, dim=0)
-    z_var_zeros = torch.zeros((traversal_size, nb_class, z_var_size))
-    maj_uc_proto = torch.cat((z_var_zeros, maj_uc), dim=2)  # shape: size, nb_class, embedding_size
+                                       + train_test + '.npy', allow_pickle=True)).unsqueeze(
+        dim=0)  # shape: 1, nb_class, struct_size
+    maj_uc = torch.repeat_interleave(maj_uc_base, traversal_size, dim=0)  # shape: traversal_size, nb_class, struct_size
+    z_var_zeros = torch.zeros((traversal_size, nb_class, z_var_size))  # shape: (traversal_size, nb_class, z_var_size)
+    maj_uc_proto = torch.cat((z_var_zeros, maj_uc), dim=2)  # shape: traversal_size, nb_class, embedding_size
+
+    # get proto for 3 classes: 2, 4 and 6:
+    # 2:
+    maj_uc_base_data_2 = maj_uc_base[0][2].unsqueeze(dim=0).unsqueeze(dim=0)  # shape: 1, 1, zstruct_size
+    maj_uc_2_inter = torch.repeat_interleave(maj_uc_base_data_2, z_var_size,
+                                             dim=1)  # shape: 1, z_var_size, zstruct_size
+    maj_uc_2 = torch.repeat_interleave(maj_uc_2_inter, traversal_size,
+                                       dim=0)  # shape: traversal_size, z_var_size, zstruct_size
+    z_var_zeros_2 = torch.zeros(
+        (traversal_size, z_var_size, z_var_size))  # shape: (traversal_size, z_var_size, z_var_size)
+    maj_uc_proto_2 = torch.cat((z_var_zeros_2, maj_uc_2), dim=2)  # shape: traversal_size, z_var_size, embedding_size
+    base_prototype_maj_uc_data2 = torch.cat((torch.zeros(1, z_var_size, z_var_size), maj_uc_2_inter),
+                                            dim=2)  # shape: 1, zvar_size, zvar_size
+    # 4:
+    maj_uc_base_data_4 = maj_uc_base[0][4].unsqueeze(dim=0).unsqueeze(dim=0)  # shape: 1, 1, zstruct_size
+    maj_uc_4_inter = torch.repeat_interleave(maj_uc_base_data_4, z_var_size,
+                                             dim=1)  # shape: 1, z_var_size, zstruct_size
+    maj_uc_4 = torch.repeat_interleave(maj_uc_4_inter, traversal_size,
+                                       dim=0)  # shape: traversal_size, z_var_size, zstruct_size
+    z_var_zeros_4 = torch.zeros(
+        (traversal_size, z_var_size, z_var_size))  # shape: (traversal_size, z_var_size, z_var_size)
+    maj_uc_proto_4 = torch.cat((z_var_zeros_4, maj_uc_4), dim=2)  # shape: traversal_size, z_var_size, embedding_size
+    base_prototype_maj_uc_data4 = torch.cat((torch.zeros(1, z_var_size, z_var_size), maj_uc_4_inter),
+                                            dim=2)  # shape: 1, zvar_size, zvar_size
+    # 6:
+    maj_uc_base_data_6 = maj_uc_base[0][6].unsqueeze(dim=0).unsqueeze(dim=0)  # shape: 1, 1, zstruct_size
+    maj_uc_6_inter = torch.repeat_interleave(maj_uc_base_data_6, z_var_size,
+                                             dim=1)  # shape: 1, z_var_size, zstruct_size
+    maj_uc_6 = torch.repeat_interleave(maj_uc_6_inter, traversal_size,
+                                       dim=0)  # shape: traversal_size, z_var_size, zstruct_size
+    z_var_zeros_6 = torch.zeros(
+        (traversal_size, z_var_size, z_var_size))  # shape: (traversal_size, z_var_size, z_var_size)
+    maj_uc_proto_6 = torch.cat((z_var_zeros_6, maj_uc_6), dim=2)  # shape: traversal_size, z_var_size, embedding_size
+    base_prototype_maj_uc_data6 = torch.cat((torch.zeros(1, z_var_size, z_var_size), maj_uc_6_inter),
+                                            dim=2)  # shape: 1, zvar_size, zvar_size
 
     base_prototype_maj_uc = torch.cat((torch.zeros(1, nb_class, z_var_size), maj_uc_base), dim=2)
 
@@ -2097,6 +2139,11 @@ def plot_VAE_resume(net, model_name, z_struct_size, z_var_size, loader, VAE_stru
         # cont_traversal = stats.norm.ppf(cdf_traversal)
         max_value = np.abs(sigma_var.mean())
         cont_traversal = np.linspace(-max_value, max_value, traversal_size)
+        for idx in range(z_var_size):
+            for column in range(traversal_size):
+                maj_uc_proto_2[column][idx][idx] = cont_traversal[column]
+                maj_uc_proto_4[column][idx][idx] = cont_traversal[column]
+                maj_uc_proto_6[column][idx][idx] = cont_traversal[column]
         for class_id in range(nb_class):
             for column in range(traversal_size):
                 maj_uc_proto[column][class_id][index] = cont_traversal[column]
@@ -2104,11 +2151,39 @@ def plot_VAE_resume(net, model_name, z_struct_size, z_var_size, loader, VAE_stru
     maj_uc_proto = torch.cat((base_prototype_maj_uc, maj_uc_proto), dim=0)
     maj_uc_proto = maj_uc_proto.permute(1, 0, 2)
     latent_samples = maj_uc_proto
+    # datas:
+    # 2:
+    maj_uc_proto_data_2 = torch.cat((base_prototype_maj_uc_data2, maj_uc_proto_2), dim=0)
+    maj_uc_proto_data_2 = maj_uc_proto_data_2.permute(1, 0, 2)
+    latent_samples_data_2 = maj_uc_proto_data_2
+    # 4:
+    maj_uc_proto_data_4 = torch.cat((base_prototype_maj_uc_data4, maj_uc_proto_4), dim=0)
+    maj_uc_proto_data_4 = maj_uc_proto_data_4.permute(1, 0, 2)
+    latent_samples_data_4 = maj_uc_proto_data_4
+    # 6:
+    maj_uc_proto_data_6 = torch.cat((base_prototype_maj_uc_data6, maj_uc_proto_6), dim=0)
+    maj_uc_proto_data_6 = maj_uc_proto_data_6.permute(1, 0, 2)
+    latent_samples_data_6 = maj_uc_proto_data_6
+
     # Map samples through decoder
     generated_maj_uc = net.decoder(latent_samples)
     traversals_maj_uc = make_grid(generated_maj_uc.data, nrow=traversal_size + 1)
     traversals_maj_uc = traversals_maj_uc.permute(1, 2, 0)
+    # for datas:
+    # 2:
+    generated_maj_uc_data2 = net.decoder(latent_samples_data_2)
+    traversals_maj_uc_data2 = make_grid(generated_maj_uc_data2.data, nrow=traversal_size + 1)
+    traversals_maj_uc_data2 = traversals_maj_uc_data2.permute(1, 2, 0)
+    # 4:
+    generated_maj_uc_data4 = net.decoder(latent_samples_data_4)
+    traversals_maj_uc_data4 = make_grid(generated_maj_uc_data4.data, nrow=traversal_size + 1)
+    traversals_maj_uc_data4 = traversals_maj_uc_data4.permute(1, 2, 0)
+    # 6:
+    generated_maj_uc_data6 = net.decoder(latent_samples_data_6)
+    traversals_maj_uc_data6 = make_grid(generated_maj_uc_data6.data, nrow=traversal_size + 1)
+    traversals_maj_uc_data6 = traversals_maj_uc_data6.permute(1, 2, 0)
 
+    """
     _, avg_z_struct_base = get_z_struct_per_class_VAE(model_name, train_test='test', nb_class=nb_class)
     avg_z_struct_base = torch.tensor(avg_z_struct_base).unsqueeze(dim=0)
     avg_z_struct = torch.repeat_interleave(avg_z_struct_base, traversal_size, dim=0)
@@ -2136,15 +2211,24 @@ def plot_VAE_resume(net, model_name, z_struct_size, z_var_size, loader, VAE_stru
     generated_avg_struct = net.decoder(latent_samples)
     traversals_avg_struct = make_grid(generated_avg_struct.data, nrow=traversal_size + 1)
     traversals_avg_struct = traversals_avg_struct.permute(1, 2, 0)
+    """
 
     # figure:
-    axs[3, 0].set(title=('Latent traversal with z_struct maj uc prototype: {}'.format(model_name)))
-    axs[3, 0].imshow(traversals_maj_uc.numpy())
+    axs[2, 2].set(title=('Latent traversal with z_struct maj uc prototype: {}'.format(model_name)))
+    axs[2, 2].imshow(traversals_maj_uc.numpy())
+    axs[2, 2].axvline(32, linewidth=5, color='orange')
+
+    axs[3, 0].set(title=('Latent traversal data 2: {}'.format(model_name)))
+    axs[3, 0].imshow(traversals_maj_uc_data2.numpy())
     axs[3, 0].axvline(32, linewidth=5, color='orange')
 
-    axs[3, 1].set(title=('Latent traversal with avg z_struct prototype: {}'.format(model_name)))
-    axs[3, 1].imshow(traversals_avg_struct.numpy())
+    axs[3, 1].set(title=('Latent traversal data 4: {}'.format(model_name)))
+    axs[3, 1].imshow(traversals_maj_uc_data4.numpy())
     axs[3, 1].axvline(32, linewidth=5, color='orange')
+
+    axs[3, 2].set(title=('Latent traversal data 6: {}'.format(model_name)))
+    axs[3, 2].imshow(traversals_maj_uc_data6.numpy())
+    axs[3, 2].axvline(32, linewidth=5, color='orange')
 
     # Generation random:________________________________________________________________________________________________
     # generate random sample from real distribution:
@@ -2154,16 +2238,20 @@ def plot_VAE_resume(net, model_name, z_struct_size, z_var_size, loader, VAE_stru
     # maj uc:
     maj_uc = torch.tensor(np.load('binary_encoder_struct_results/uniq_code/uc_maj_class_' + model_name + '_' \
                                   + train_test + '.npy', allow_pickle=True))
-
     # z_var random sample:
-    sample_var = std_var * torch.randn(nb_samples, z_var_size) + mu_var
+    sample_var = torch.randn(nb_samples, z_var_size)
+    # sample_var = std_var * torch.randn(nb_samples, z_var_size) + mu_var
 
     # z_struct random maj uc:
     sample_struct_maj_uc = torch.zeros(nb_samples, z_struct_size)
+    sample_struct_maj_uc_same_data = torch.zeros(nb_samples, z_struct_size)
     for i in range(len(sample_struct_maj_uc)):
-        sample_struct_maj_uc[i] = maj_uc[np.random.randint(len(maj_uc))]
+        index = np.random.randint(len(maj_uc))
+        sample_struct_maj_uc[i] = maj_uc[index]
+        sample_struct_maj_uc_same_data[i] = maj_uc[3]
     # z random:
     sample_maj_uc = torch.cat((sample_var, sample_struct_maj_uc), dim=1)
+    sample_maj_uc_same_data = torch.cat((sample_var, sample_struct_maj_uc_same_data), dim=1)
 
     # z_struct random:
     mu_struct = torch.tensor(1 - (mu_struct / 100))
@@ -2175,6 +2263,9 @@ def plot_VAE_resume(net, model_name, z_struct_size, z_var_size, loader, VAE_stru
     # generate:
     generated_maj_uc = net.decoder(sample_maj_uc)
     grid_generation_maj_uc = make_grid(generated_maj_uc.data, nrow=generation_size[1])
+
+    generated_maj_uc_same_data = net.decoder(sample_maj_uc_same_data)
+    grid_generation_maj_uc_same_data = make_grid(generated_maj_uc_same_data.data, nrow=generation_size[1])
 
     generated_avg_struct = net.decoder(sample_avg_struct)
     grid_generation_avg_struct = make_grid(generated_avg_struct.data, nrow=generation_size[1])
@@ -2235,20 +2326,21 @@ def plot_VAE_resume(net, model_name, z_struct_size, z_var_size, loader, VAE_stru
 
     # plot:
     samples_maj_uc = grid_generation_maj_uc.permute(1, 2, 0)
+    samples_maj_uc_same_data = grid_generation_maj_uc_same_data.permute(1, 2, 0)
     samples_avg_struct = grid_generation_avg_struct.permute(1, 2, 0)
 
-    axs[2, 0].set(title=('Maj uc random. Scores: FID(\u2193): {}, IS(\u2191): {},'
-                  ' LPIPS (alex) (\u2191): {}, LPIPS (vgg) (\u2191): {}'.format(FID_score_maj_uc,
-                                                                                IS_score_maj_uc,
-                                                                                LPIPS_score_alex_maj_uc,
-                                                                                LPIPS_score_vgg_maj_uc)))
-    axs[2, 1].set(title=('Avg struct random. Scores: FID(\u2193): {}, IS(\u2191): {},'
+    axs[2, 0].set(title=('Maj uc random + random var. Scores: FID(\u2193): {}, IS(\u2191): {},'
+                         ' LPIPS (alex) (\u2191): {}, LPIPS (vgg) (\u2191): {}'.format(FID_score_maj_uc,
+                                                                                       IS_score_maj_uc,
+                                                                                       LPIPS_score_alex_maj_uc,
+                                                                                       LPIPS_score_vgg_maj_uc)))
+    axs[2, 1].set(title=('Data 3 with random normal var. Scores: FID(\u2193): {}, IS(\u2191): {},'
                          ' LPIPS (alex) (\u2191): {}, LPIPS (vgg) (\u2191): {}'.format(FID_score_avg_struct,
                                                                                        IS_score_avg_struct,
                                                                                        LPIPS_score_alex_avg_struct,
                                                                                        LPIPS_score_vgg_avg_struct)))
     axs[2, 0].imshow(samples_maj_uc.numpy())
-    axs[2, 1].imshow(samples_avg_struct.numpy())
+    axs[2, 1].imshow(samples_maj_uc_same_data.numpy())
     # End plot:________________________________________________________________________________________________
 
     plt.show()
@@ -2412,7 +2504,7 @@ def viz_reconstruction_VAE(net, loader, exp_name, z_var_size, z_struct_size, nb_
     if z_var_reconstruction:
         # z_var reconstruction:
         if real_distribution:
-            mu_struct = torch.tensor(1-(mu_struct/100))
+            mu_struct = torch.tensor(1 - (mu_struct / 100))
             proba_struct = mu_struct.repeat(x_recon.shape[0], 1)
             random_struct = torch.Tensor.float(torch.bernoulli(proba_struct))
             # random_struct = torch.zeros((x_recon.shape[0], z_var_size))
@@ -2492,7 +2584,6 @@ def traversal_values_min_max(min, max, size):
 def traversal_latent_prototype(net, model_name, train_test, device, z_var_size, sigma_var=None, nb_class=10, size=8,
                                avg_prototype=True, maj_uc_prototype=True, random=False, batch=None, index=None,
                                save=True):
-
     """
     Plot traversal latent z_var for one index with z_struct prototype: either with mean prototype or with maj uc.
     :param net:
@@ -2526,7 +2617,7 @@ def traversal_latent_prototype(net, model_name, train_test, device, z_var_size, 
         latent_samples = maj_uc_proto
         # Map samples through decoder
         generated_maj_uc = net.decoder(latent_samples)
-        traversals_maj_uc = make_grid(generated_maj_uc.data, nrow=size+1)
+        traversals_maj_uc = make_grid(generated_maj_uc.data, nrow=size + 1)
         traversals_maj_uc = traversals_maj_uc.permute(1, 2, 0)
 
     if avg_prototype:
@@ -2534,7 +2625,7 @@ def traversal_latent_prototype(net, model_name, train_test, device, z_var_size, 
         avg_z_struct_base = torch.tensor(avg_z_struct_base).unsqueeze(dim=0)
         avg_z_struct = torch.repeat_interleave(avg_z_struct_base, size, dim=0)
         z_var_zeros = torch.zeros((size, nb_class, z_var_size))
-        avg_struct_proto = torch.cat((z_var_zeros, avg_z_struct), dim=2)    # shape: size, nb_class, embedding_size
+        avg_struct_proto = torch.cat((z_var_zeros, avg_z_struct), dim=2)  # shape: size, nb_class, embedding_size
 
         base_prototype_avg_struct = torch.cat((torch.zeros(1, nb_class, z_var_size), avg_z_struct_base), dim=2)
 
@@ -2555,7 +2646,7 @@ def traversal_latent_prototype(net, model_name, train_test, device, z_var_size, 
         latent_samples = avg_struct_proto
         # Map samples through decoder
         generated_avg_struct = net.decoder(latent_samples)
-        traversals_avg_struct = make_grid(generated_avg_struct.data, nrow=size+1)
+        traversals_avg_struct = make_grid(generated_avg_struct.data, nrow=size + 1)
         traversals_avg_struct = traversals_avg_struct.permute(1, 2, 0)
 
     # figure:
@@ -2624,7 +2715,8 @@ def real_distribution_model(net, expe_name, z_struct_size, z_var_size, loader, t
         sigma_var = torch.mean(sigma_var, axis=0)
 
         if VAE_struct:
-            one_proportion = (np.count_nonzero(z_struct_distribution.detach().cpu() == 0, axis=0) * 100.) / len(z_struct_distribution)
+            one_proportion = (np.count_nonzero(z_struct_distribution.detach().cpu() == 0, axis=0) * 100.) / len(
+                z_struct_distribution)
             # mu_struct = torch.mean(z_struct_distribution, axis=0)
             # sigma_struct = torch.std(z_struct_distribution, axis=0)
         else:
@@ -2647,8 +2739,9 @@ def real_distribution_model(net, expe_name, z_struct_size, z_var_size, loader, t
                      '_mu_var.npy', allow_pickle=True)
     sigma_var = np.load('Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test +
                         'sigma_var.npy', allow_pickle=True)
-    encoder_struct_one_proportion = np.load('Other_results/real_distribution/binary_one_proportion_' + expe_name + '_' + train_test +
-                'sigma_var.npy', allow_pickle=True)
+    encoder_struct_one_proportion = np.load(
+        'Other_results/real_distribution/binary_one_proportion_' + expe_name + '_' + train_test +
+        'sigma_var.npy', allow_pickle=True)
     # mu_struct = np.load(
     #     'Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test +
     #     'mu_struct.npy', allow_pickle=True)
@@ -2659,8 +2752,8 @@ def real_distribution_model(net, expe_name, z_struct_size, z_var_size, loader, t
     if plot_gaussian:
         if VAE_struct:
             plt.bar(np.arange(len(encoder_struct_one_proportion)), encoder_struct_one_proportion,
-                              label='Propotion of zeros for each encoder struct component',
-                              color='blue')
+                    label='Propotion of zeros for each encoder struct component',
+                    color='blue')
             plt.show()
 
         mu = 0
@@ -2767,7 +2860,7 @@ def images_generation(net, model_name, batch, train_test, size=(8, 8), mu_var=No
         sample_var = std_var * torch.randn(nb_samples, z_var_size) + mu_var
         if use_maj_uc:
             maj_uc = torch.tensor(np.load('binary_encoder_struct_results/uniq_code/uc_maj_class_' + model_name + '_' \
-                              + train_test + '.npy', allow_pickle=True))
+                                          + train_test + '.npy', allow_pickle=True))
             # z_struct random:
             sample_struct = torch.zeros(nb_samples, z_struct_size)
             for i in range(len(sample_struct)):
@@ -2921,19 +3014,19 @@ def same_binary_code(net, model_name, loader, nb_class, train_test=None, save=Tr
     z_struct_layer_num = get_layer_zstruct_num(net)
 
     path_model_uniq_code = 'binary_encoder_struct_results/uniq_code/' + model_name + '_' + train_test + '.npy'
-    path_model_uniq_code_percent = 'binary_encoder_struct_results/uniq_code/percent_' + model_name + '_' + train_test\
+    path_model_uniq_code_percent = 'binary_encoder_struct_results/uniq_code/percent_' + model_name + '_' + train_test \
                                    + '.npy'
     path_model_Hmg_dst = 'binary_encoder_struct_results/Hamming_dst/' + model_name + '_' + train_test + '.npy'
-    path_model_encoder_struct_embedding = 'binary_encoder_struct_results/encoder_struct_embedding/' + model_name +\
+    path_model_encoder_struct_embedding = 'binary_encoder_struct_results/encoder_struct_embedding/' + model_name + \
                                           '_' + train_test + '.npy'
     path_model_list_labels_encoder_struct_embedding = 'binary_encoder_struct_results/encoder_struct_embedding' \
                                                       '/labels_list_' + model_name + '_' + train_test + '.npy'
 
     if os.path.exists(path_model_uniq_code) and \
-       os.path.exists(path_model_uniq_code_percent) and \
-       os.path.exists(path_model_Hmg_dst) and \
-       os.path.exists(path_model_encoder_struct_embedding) and \
-       os.path.exists(path_model_list_labels_encoder_struct_embedding):
+            os.path.exists(path_model_uniq_code_percent) and \
+            os.path.exists(path_model_Hmg_dst) and \
+            os.path.exists(path_model_encoder_struct_embedding) and \
+            os.path.exists(path_model_list_labels_encoder_struct_embedding):
 
         print('Load all binary encoder struct values:')
         uniq_code = np.load(path_model_uniq_code, allow_pickle=True)
@@ -3008,7 +3101,7 @@ def same_binary_code(net, model_name, loader, nb_class, train_test=None, save=Tr
         percentage_uniq_code = []
         for class_id in range(nb_class):
             uniq_code.append(np.unique(embedding_class[class_id], axis=0))
-            percentage_uniq_code.append(len(uniq_code[class_id])/len(embedding_class[class_id]))
+            percentage_uniq_code.append(len(uniq_code[class_id]) / len(embedding_class[class_id]))
             print('class {}: unique code: {}/{}. In percent: {}'.format(class_id,
                                                                         len(uniq_code[class_id]),
                                                                         len(embedding_class[class_id]),
@@ -3034,10 +3127,11 @@ def same_binary_code(net, model_name, loader, nb_class, train_test=None, save=Tr
                             pass
                         else:
                             nb_distance += 1
-                            distance_hamming_class = hamming_distance(torch.tensor(embedding_class[class_id][i]).unsqueeze(0),
-                                                                      torch.tensor(embedding_class[class_id][j]).unsqueeze(0))
+                            distance_hamming_class = hamming_distance(
+                                torch.tensor(embedding_class[class_id][i]).unsqueeze(0),
+                                torch.tensor(embedding_class[class_id][j]).unsqueeze(0))
                             dist += distance_hamming_class
-                Hmg_dst.append((dist/nb_distance))
+                Hmg_dst.append((dist / nb_distance))
                 print('class {}: Average distance Hamming: {}'.format(class_id, Hmg_dst[class_id]))
         else:
             Hmg_dst = np.zeros(nb_class)
@@ -3071,7 +3165,7 @@ def get_receptive_field_size(net, images):
             m.register_forward_hook(partial(save_activations, name))
 
     out, _, _, _, _, _, _, _, _, _ = net(image)
-     # concatenate all the outputs we saved to get the the activations for each layer for the whole dataset
+    # concatenate all the outputs we saved to get the the activations for each layer for the whole dataset
     activations = {name: torch.cat(outputs, 0) for name, outputs in activations.items()}
 
     jump = [1]
@@ -3102,7 +3196,7 @@ def z_struct_code_classes(model_name, nb_class, train_test=None):
     """
 
     path_model_uniq_code = 'binary_encoder_struct_results/uniq_code/' + model_name + '_' + train_test + '.npy'
-    path_model_encoder_struct_embedding = 'binary_encoder_struct_results/encoder_struct_embedding/' + model_name +\
+    path_model_encoder_struct_embedding = 'binary_encoder_struct_results/encoder_struct_embedding/' + model_name + \
                                           '_' + train_test + '.npy'
     path_model_list_labels_encoder_struct_embedding = 'binary_encoder_struct_results/encoder_struct_embedding' \
                                                       '/labels_list_' + model_name + '_' + train_test + '.npy'
@@ -3163,7 +3257,7 @@ def score_with_best_code_uniq(net, model_name, train_test, loader, z_struct_size
     for i in range(len(global_count)):
         index_max = np.argmax(global_count[i])
         nb_code = global_count[i][index_max]
-        percent_code = np.round(nb_code/len(embedding_class[i])*100, 3)
+        percent_code = np.round(nb_code / len(embedding_class[i]) * 100, 3)
         print("for class {}, we have {} z_struct with code {}. It represent {}% "
               "of total z_struct class".format(i, nb_code, uniq_code[i][index_max], percent_code))
         more_represented_class_code.append(uniq_code[i][index_max])
@@ -3267,7 +3361,7 @@ def histo_count_uniq_code(model_name, train_test, plot_histo=True, return_percen
         for i in range(len(code_class_global)):
             row = i // ncols
             col = i % ncols
-            axs[row, col].hist(code_class_global[i], bins=100, alpha=0.75, label="class "+str(i))
+            axs[row, col].hist(code_class_global[i], bins=100, alpha=0.75, label="class " + str(i))
             axs[row, col].set_title("Class: {}: [{} %] ".format(i, percent_max[i]), fontsize=12)
         plt.show()
 
@@ -3390,7 +3484,6 @@ def score_uniq_code(net, loader, device, z_struct_layer_num, nb_class, z_struct_
 
 
 def maj_uc_prototype(net, model_name, train_test, z_var_size=None, ES_reconstruction=False):
-
     maj_uc = np.load('binary_encoder_struct_results/uniq_code/uc_maj_class_' + model_name + '_' \
                      + train_test + '.npy', allow_pickle=True)
     nb_class = 10
@@ -3417,11 +3510,10 @@ def maj_uc_prototype(net, model_name, train_test, z_var_size=None, ES_reconstruc
 
 def plot_prototype(net, model_name, train_test, z_var_size, nb_class=None, avg_zstruct=True, maj_uc_prototype=True,
                    save=True):
-
     # load both prototype:
     if maj_uc_prototype:
         maj_uc = torch.tensor(np.load('binary_encoder_struct_results/uniq_code/uc_maj_class_' + model_name + '_' \
-                         + train_test + '.npy', allow_pickle=True))
+                                      + train_test + '.npy', allow_pickle=True))
         z_var_zeros = torch.zeros((nb_class, z_var_size))
         maj_uc_proto = torch.cat((z_var_zeros, maj_uc), dim=1)
         recons_maj_uc_proto = net.decoder(maj_uc_proto).detach().numpy()
@@ -3468,12 +3560,10 @@ def plot_prototype(net, model_name, train_test, z_var_size, nb_class=None, avg_z
 
 # __________Test for VAE var classifier:
 def VAE_var_classifier_score(net, loader):
-
     nb_data = len(loader.dataset)
     classification_score = 0
     with torch.no_grad():
         for x in loader:
-
             data = x[0]
             data = data.to(device)  # Variable(data.to(device))
             labels = x[1]
@@ -3493,7 +3583,6 @@ def VAE_var_classifier_score(net, loader):
 
 
 def get_activation_values_VAE_var(net, exp_name, image):
-
     activations_path = 'regions_of_interest/activations/activations_' + exp_name + '.npy'
 
     if os.path.exists(activations_path):
@@ -3523,7 +3612,6 @@ def get_activation_values_VAE_var(net, exp_name, image):
 
 
 def load_plot_histo_activations(model_name):
-
     activations = np.load('regions_of_interest/activations/activations_' + model_name + '.npy', allow_pickle=True)
     print(activations.shape)
 

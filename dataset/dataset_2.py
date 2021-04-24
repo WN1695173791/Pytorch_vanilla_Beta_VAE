@@ -410,13 +410,43 @@ def preprocess(root, size=(64, 64), img_format='JPEG', center_crop=None):
         img.save(img_path, img_format)
 
 
-def get_mnist_dataset(batch_size=64, return_Dataloader=True):
-    mnist_trainset = datasets.MNIST(root='data/mnist/',
-                                    train=True,
-                                    download=True,
-                                    transform=transforms.Compose([transforms.Resize(32),
-                                                                  transforms.ToTensor(),
-                                                                  transforms.Normalize((0.1307,), (0.3081,))]))
+def get_mnist_dataset(batch_size=64, return_Dataloader=True, transformation=None):
+    """
+    for dataset with few classes missing:
+        dataset = datasets.MNIST(root='./data')
+        idx = dataset.targets==1
+        dataset.targets = dataset.targets[idx]
+        dataset.data = dataset.data[idx]
+    or:
+        idx = dataset.targets != 1
+        dataset.train_labels[idx] = 0
+    or:
+        dataset = datasets.MNIST(root='./data')
+        idx = (dataset.targets==0) | (dataset.targets==1)
+        dataset.targets = dataset.targets[idx]
+        dataset.data = dataset.data[idx]
+    :param batch_size:
+    :param return_Dataloader:
+    :param uniq_data:
+    :return:
+    """
+    if transformation is not None:
+        transformation = \
+            transforms.Compose([transforms.CenterCrop(100),
+                                transforms.ToTensor()])
+
+        mnist_trainset = datasets.MNIST(root='data/mnist/',
+                                        train=True,
+                                        download=True,
+                                        transform=transformation)
+    else:
+        mnist_trainset = datasets.MNIST(root='data/mnist/',
+                                        train=True,
+                                        download=True,
+                                        transform=transforms.Compose([transforms.Resize(32),
+                                                                      transforms.ToTensor(),
+                                                                      transforms.Normalize((0.1307,), (0.3081,))]))
+
     mnist_testset = datasets.MNIST(root='data/mnist/',
                                    train=False,
                                    download=True,
@@ -424,13 +454,15 @@ def get_mnist_dataset(batch_size=64, return_Dataloader=True):
                                                                  transforms.ToTensor(),
                                                                  transforms.Normalize((0.1307,), (0.3081,))]))
 
+    test_loader = torch.utils.data.DataLoader(dataset=mnist_testset,
+                                              batch_size=1000,
+                                              shuffle=False)
+
+
     if return_Dataloader:
         train_loader = torch.utils.data.DataLoader(dataset=mnist_trainset,
                                                    batch_size=batch_size,
                                                    shuffle=True)
-        test_loader = torch.utils.data.DataLoader(dataset=mnist_testset,
-                                                  batch_size=1000,
-                                                  shuffle=False)
     else:
         train_loader = mnist_trainset
         test_loader = mnist_testset

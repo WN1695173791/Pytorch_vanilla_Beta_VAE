@@ -13,7 +13,7 @@ from pytorchtools import EarlyStopping
 from scores_classifier import compute_scores, compute_scores_VAE
 from solver import gpu_config
 from visualizer_CNN import get_layer_zstruct_num, score_uniq_code
-from dataset.sampler import BalancedBatchSampler
+from dataset.sampler import BalancedBatchSampler, OneDataClassSampler
 import random
 from models.VAE import VAE
 import torch.nn as nn
@@ -71,54 +71,55 @@ def compute_scores_and_loss(net, train_loader, test_loader, device, train_loader
                             without_acc, lambda_classification,
                             lambda_contrastive, lambda_ratio_reg, diff_var, lambda_var_intra, lambda_var_inter,
                             lambda_var_distance, lambda_distance_mean, z_struct_out, Hmg_dst_loss, lambda_hmg_dst):
+
     score_train, classification_loss_train, total_loss_iter_train, ratio_loss_train, contrastive_loss_train, \
-    diff_var_loss_train, variance_intra_train, \
-    variance_inter_train, loss_distance_cl_train, loss_distance_mean_train, total_loss_train = compute_scores(net,
-                                                                                                              train_loader,
-                                                                                                              device,
-                                                                                                              train_loader_size,
-                                                                                                              nb_class,
-                                                                                                              ratio_reg,
-                                                                                                              z_struct_layer_num,
-                                                                                                              other_ratio,
-                                                                                                              loss_min_distance_cl,
-                                                                                                              contrastive_criterion,
-                                                                                                              without_acc,
-                                                                                                              lambda_classification,
-                                                                                                              lambda_contrastive,
-                                                                                                              lambda_ratio_reg,
-                                                                                                              diff_var,
-                                                                                                              lambda_var_intra,
-                                                                                                              lambda_var_inter,
-                                                                                                              lambda_var_distance,
-                                                                                                              lambda_distance_mean,
-                                                                                                              z_struct_out,
-                                                                                                              Hmg_dst_loss,
-                                                                                                              lambda_hmg_dst)
+    diff_var_loss_train, variance_intra_train, variance_inter_train, loss_distance_cl_train, \
+    loss_distance_mean_train, total_loss_train = compute_scores(net,
+                                                                train_loader,
+                                                                device,
+                                                                train_loader_size,
+                                                                nb_class,
+                                                                ratio_reg,
+                                                                z_struct_layer_num,
+                                                                other_ratio,
+                                                                loss_min_distance_cl,
+                                                                contrastive_criterion,
+                                                                without_acc,
+                                                                lambda_classification,
+                                                                lambda_contrastive,
+                                                                lambda_ratio_reg,
+                                                                diff_var,
+                                                                lambda_var_intra,
+                                                                lambda_var_inter,
+                                                                lambda_var_distance,
+                                                                lambda_distance_mean,
+                                                                z_struct_out,
+                                                                Hmg_dst_loss,
+                                                                lambda_hmg_dst)
     score_test, classification_loss_test, total_loss_iter_test, ratio_loss_test, contrastive_loss_test, \
-    diff_var_loss_test, variance_intra_test, \
-    variance_inter_test, loss_distance_cl_test, loss_distance_mean_test, total_loss_test = compute_scores(net,
-                                                                                                          test_loader,
-                                                                                                          device,
-                                                                                                          test_loader_size,
-                                                                                                          nb_class,
-                                                                                                          ratio_reg,
-                                                                                                          z_struct_layer_num,
-                                                                                                          other_ratio,
-                                                                                                          loss_min_distance_cl,
-                                                                                                          contrastive_criterion,
-                                                                                                          without_acc,
-                                                                                                          lambda_classification,
-                                                                                                          lambda_contrastive,
-                                                                                                          lambda_ratio_reg,
-                                                                                                          diff_var,
-                                                                                                          lambda_var_intra,
-                                                                                                          lambda_var_inter,
-                                                                                                          lambda_var_distance,
-                                                                                                          lambda_distance_mean,
-                                                                                                          z_struct_out,
-                                                                                                          Hmg_dst_loss,
-                                                                                                          lambda_hmg_dst)
+    diff_var_loss_test, variance_intra_test, variance_inter_test, loss_distance_cl_test, loss_distance_mean_test, \
+    total_loss_test = compute_scores(net,
+                                     test_loader,
+                                     device,
+                                     test_loader_size,
+                                     nb_class,
+                                     ratio_reg,
+                                     z_struct_layer_num,
+                                     other_ratio,
+                                     loss_min_distance_cl,
+                                     contrastive_criterion,
+                                     without_acc,
+                                     lambda_classification,
+                                     lambda_contrastive,
+                                     lambda_ratio_reg,
+                                     diff_var,
+                                     lambda_var_intra,
+                                     lambda_var_inter,
+                                     lambda_var_distance,
+                                     lambda_distance_mean,
+                                     z_struct_out,
+                                     Hmg_dst_loss,
+                                     lambda_hmg_dst)
 
     scores = {'train': score_train, 'test': score_test}
     losses = {'total_train': total_loss_train,
@@ -144,31 +145,59 @@ def compute_scores_and_loss(net, train_loader, test_loader, device, train_loader
 
 
 def compute_scores_and_loss_VAE(net, train_loader, test_loader, train_loader_size, test_loader_size, device,
-                                lambda_BCE, beta, is_vae_var, ES_reconstruction, EV_classifier):
-    Total_loss_train, BCE_train, KLD_train = compute_scores_VAE(net,
-                                                                train_loader,
-                                                                train_loader_size,
-                                                                device,
-                                                                lambda_BCE,
-                                                                beta,
-                                                                is_vae_var,
-                                                                ES_reconstruction,
-                                                                EV_classifier)
-    Total_loss_test, BCE_test, KLD_test = compute_scores_VAE(net,
-                                                             test_loader,
-                                                             test_loader_size,
-                                                             device,
-                                                             lambda_BCE,
-                                                             beta,
-                                                             is_vae_var,
-                                                             ES_reconstruction,
-                                                             EV_classifier)
+                                lambda_BCE, beta, is_vae_var, ES_reconstruction, EV_classifier,
+                                loss_struct_recons_class, size_average, is_VAE, lambda_EV_class,
+                                lambda_struct_recons_class, lambda_recons):
+    Total_loss_train, BCE_train, KLD_train, BCE_loss_ES_train, classification_loss_EV_train, \
+    classification_loss_z_struct_train, classification_score_EV_train, \
+    classification_ES_score_train = compute_scores_VAE(net,
+                                                       train_loader,
+                                                       train_loader_size,
+                                                       device,
+                                                       lambda_BCE,
+                                                       beta,
+                                                       is_vae_var,
+                                                       ES_reconstruction,
+                                                       EV_classifier,
+                                                       loss_struct_recons_class,
+                                                       size_average,
+                                                       is_VAE,
+                                                       lambda_EV_class,
+                                                       lambda_struct_recons_class,
+                                                       lambda_recons)
+    Total_loss_test, BCE_test, KLD_test, BCE_loss_ES_test, classification_loss_EV_test, \
+    classification_loss_z_struct_test, classification_score_EV_test, \
+    classification_ES_score_test = compute_scores_VAE(net,
+                                                      test_loader,
+                                                      test_loader_size,
+                                                      device,
+                                                      lambda_BCE,
+                                                      beta,
+                                                      is_vae_var,
+                                                      ES_reconstruction,
+                                                      EV_classifier,
+                                                      loss_struct_recons_class,
+                                                      size_average,
+                                                      is_VAE,
+                                                      lambda_EV_class,
+                                                      lambda_struct_recons_class,
+                                                      lambda_recons)
     losses = {'Total_loss_train': Total_loss_train,
               'BCE_train': BCE_train,
               'KLD_train': KLD_train,
               'Total_loss_test': Total_loss_test,
               'BCE_test': BCE_test,
-              'KLD_test': KLD_test}
+              'KLD_test': KLD_test,
+              'BCE_ES_train': BCE_loss_ES_train,
+              'BCE_ES_test': BCE_loss_ES_test,
+              'NLL_loss_EV_train': classification_loss_EV_train,
+              'NLL_loss_EV_test': classification_loss_EV_test,
+              'NLL_loss_ES_train': classification_loss_z_struct_train,
+              'NLL_loss_ES_test': classification_loss_z_struct_test,
+              'Score_ES_train': classification_ES_score_train,
+              'Score_ES_test': classification_ES_score_test,
+              'Score_EV_train': classification_score_EV_train,
+              'Score_EV_test': classification_score_EV_test}
 
     return losses
 
@@ -177,6 +206,7 @@ class SolverClassifier(object):
     def __init__(self, args):
 
         # parameters:
+        global net
         self.is_default_model = args.is_default_model
         self.is_custom_model = args.is_custom_model
         self.is_custom_model_BK = args.is_custom_model_BK
@@ -303,6 +333,11 @@ class SolverClassifier(object):
         self.size_average = args.size_average
         self.fine_tune_decoder = args.fine_tune_decoder
         self.decoder_name = args.decoder_name
+        self.div_loss_per_batch = args.div_loss_per_batch
+        # dataset with uniq image:
+        self.uniq_data_dataset = args.uniq_data_dataset
+        self.n_samples = args.n_samples
+        self.transforms = args.transforms
 
         self.contrastive_criterion = False
         if self.is_encoder_struct:
@@ -343,6 +378,17 @@ class SolverClassifier(object):
                                                                 batch_size=self.batch_size)
                 _, self.test_loader = get_mnist_dataset(batch_size=self.batch_size)
                 print('Balanced dataset loaded')
+            elif self.uniq_data_dataset:
+                self.train_loader_bf, _ = get_mnist_dataset(batch_size=self.batch_size,
+                                                            return_Dataloader=False,
+                                                            transformation=self.transforms)
+
+                self.train_loader = torch.utils.data.DataLoader(self.train_loader_bf,
+                                                                batch_sampler=OneDataClassSampler(self.train_loader_bf,
+                                                                                                  self.nb_class,
+                                                                                                  self.n_samples))
+                _, self.test_loader = get_mnist_dataset(batch_size=self.batch_size)
+                print('Uniq data per class dataset loaded')
             else:
                 # load mnist dataset without balanced data
                 self.train_loader, self.test_loader = get_mnist_dataset(batch_size=self.batch_size)
@@ -350,6 +396,26 @@ class SolverClassifier(object):
         self.train_loader_size = len(self.train_loader.dataset)
         self.test_loader_size = len(self.test_loader.dataset)
 
+        """
+        print("Dataset {}: train with {} samples and {} test samples".format(args.dataset,
+                                                                             self.train_loader_size,
+                                                                             self.test_loader_size))
+        # my_testiter = iter(self.train_loader)
+        # images, target = my_testiter.next()
+        # print(images.shape)
+        # print(target)
+        print(len(self.train_loader))
+        for batch_idx, (data, labels) in enumerate(self.train_loader):
+
+            data = data
+            labels = labels
+
+            for i in range(len(data)):
+                print(labels[i])
+                plt.imshow(data[i][0], cmap='gray')
+                plt.show()
+        print(wait)
+        """
         # ___________________________________________ end dataset:___________________________________________________
         logger.info("Dataset {}: train with {} samples and {} test samples".format(args.dataset,
                                                                                    self.train_loader_size,
@@ -444,7 +510,17 @@ class SolverClassifier(object):
                                           'Total_loss_train': [],
                                           'BCE_test': [],
                                           'KLD_test': [],
-                                          'Total_loss_test': []}
+                                          'Total_loss_test': [],
+                                          'BCE_ES_train': [],
+                                          'NLL_loss_EV_train': [],
+                                          'NLL_loss_ES_train': [],
+                                          'Score_ES_train': [],
+                                          'Score_EV_train': [],
+                                          'BCE_ES_test': [],
+                                          'NLL_loss_EV_test': [],
+                                          'NLL_loss_ES_test': [],
+                                          'Score_ES_test': [],
+                                          'Score_EV_test': []}
             else:
                 self.checkpoint_scores = {'iter': [],
                                           'epochs': [],
@@ -741,21 +817,37 @@ class SolverClassifier(object):
                     if self.is_VAE:
                         x_recons, z_struct, z_var, z_var_sample, latent_representation, z, \
                         prediction_var, prediction_struct = self.net(data,
-                                                                     loss_struct_recons_class=self.loss_struct_recons_class)
+                                                                     loss_struct_recons_class=self.loss_struct_recons_class,
+                                                                     device=self.device)
                     else:
                         x_recons, latent_representation, prediction_var = self.net(data)
 
                     if self.EV_classifier:
-                        classification_loss = F.nll_loss(prediction_var, labels, size_average=self.size_average)
+                        if self.div_loss_per_batch:
+                            classification_loss = F.nll_loss(prediction_var,
+                                                             labels,
+                                                             size_average=self.size_average).div(self.batch_size)
+                        else:
+                            classification_loss = F.nll_loss(prediction_var,
+                                                             labels,
+                                                             size_average=self.size_average)
                         loss += classification_loss * self.lambda_EV_class
 
                     if self.loss_struct_recons_class:
-                        classification_loss_z_struct = F.nll_loss(prediction_struct, labels,
-                                                                  size_average=self.size_average)
+                        if self.div_loss_per_batch:
+                            classification_loss_z_struct = F.nll_loss(prediction_struct,
+                                                                      labels,
+                                                                      size_average=self.size_average).div(self.batch_size)
+                        else:
+                            classification_loss_z_struct = F.nll_loss(prediction_struct, labels,
+                                                                      size_average=self.size_average)
                         loss += classification_loss_z_struct * self.lambda_struct_recons_class
 
                     if self.ES_reconstruction:
-                        BCE_loss = F.mse_loss(x_recons, data, size_average=self.size_average)
+                        if self.div_loss_per_batch:
+                            BCE_loss = F.mse_loss(x_recons, data, size_average=self.size_average).div(self.batch_size)
+                        else:
+                            BCE_loss = F.mse_loss(x_recons, data, size_average=self.size_average)
                         loss += BCE_loss
 
                     if (self.is_VAE and not self.ES_reconstruction) or self.is_VAE_var:
@@ -764,13 +856,18 @@ class SolverClassifier(object):
 
                         # BCE tries to make our reconstruction as accurate as possible:
                         # BCE_loss = F.binary_cross_entropy(x_recons, data, size_average=False)
-                        BCE_loss = F.mse_loss(x_recons, data, size_average=self.size_average)
+                        if self.div_loss_per_batch:
+                            BCE_loss = F.mse_loss(x_recons, data, size_average=self.size_average).div(self.batch_size)
+                        else:
+                            BCE_loss = F.mse_loss(x_recons, data, size_average=self.size_average)
 
                         # KLD tries to push the distributions as close as possible to unit Gaussian:
-                        # if self.size_average:
-                        KLD_loss = -0.5 * torch.mean(1 + log_var - mu.pow(2) - log_var.exp())
-                        # else:
-                        #     KLD_loss = -0.5 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
+                        if self.size_average:
+                            KLD_loss = -0.5 * torch.mean(1 + log_var - mu.pow(2) - log_var.exp())
+                        else:
+                            KLD_loss = -0.5 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
+                        if self.div_loss_per_batch:
+                            KLD_loss /= self.batch_size
 
                         loss += ((self.lambda_BCE * BCE_loss) + (self.beta * KLD_loss)) * self.lambda_recons
                 else:
@@ -921,7 +1018,13 @@ class SolverClassifier(object):
                                                           self.beta,
                                                           self.is_VAE_var,
                                                           self.ES_reconstruction,
-                                                          self.EV_classifier)
+                                                          self.EV_classifier,
+                                                          self.loss_struct_recons_class,
+                                                          self.size_average,
+                                                          self.is_VAE,
+                                                          self.lambda_EV_class,
+                                                          self.lambda_struct_recons_class,
+                                                          self.lambda_recons)
             elif self.is_encoder_struct:
                 self.scores, self.losses = compute_scores_and_loss(self.net,
                                                                    self.train_loader,
@@ -958,14 +1061,30 @@ class SolverClassifier(object):
 
             if self.use_VAE:
                 print_bar.write(
-                    '[Save Checkpoint] epoch: [{:.1f}], Train: total:{:.5f}, BCE:{:.5f}, KLD:{:.5f},'
-                    'Test: total:{:.5f}, BCE:{:.5f}, KLD:{:.5f}'.format(self.epochs,
-                                                                        self.losses['Total_loss_train'],
-                                                                        self.losses['BCE_train'],
-                                                                        self.losses['KLD_train'],
-                                                                        self.losses['Total_loss_test'],
-                                                                        self.losses['BCE_test'],
-                                                                        self.losses['KLD_test']))
+                    '[Save Checkpoint] epoch: [{:.1f}], Train set: total:{:.5f}, BCE:{:.5f}, KLD:{:.5f}, '
+                    'BCE_ES:{:.5f}, NLL_loss_EV:{:.5f}, NLL_loss_ES:{:.5f}, Score_ES:{:.5f}, '
+                    'Score_EV:{:.5f}'.format(self.epochs,
+                                             self.losses['Total_loss_train'],
+                                             self.losses['BCE_train'],
+                                             self.losses['KLD_train'],
+                                             self.losses['BCE_ES_train'],
+                                             self.losses['NLL_loss_EV_train'],
+                                             self.losses['NLL_loss_ES_train'],
+                                             self.losses['Score_ES_train'],
+                                             self.losses['Score_EV_train']))
+
+                print_bar.write(
+                    '[Save Checkpoint] epoch: [{:.1f}], Test set: total:{:.5f}, BCE:{:.5f}, KLD:{:.5f}, '
+                    'BCE_ES:{:.5f}, NLL_loss_EV:{:.5f}, NLL_loss_ES:{:.5f}, Score_ES:{:.5f}, '
+                    'Score_EV:{:.5f}'.format(self.epochs,
+                                             self.losses['Total_loss_test'],
+                                             self.losses['BCE_test'],
+                                             self.losses['KLD_test'],
+                                             self.losses['BCE_ES_test'],
+                                             self.losses['NLL_loss_EV_test'],
+                                             self.losses['NLL_loss_ES_test'],
+                                             self.losses['Score_ES_test'],
+                                             self.losses['Score_EV_test']))
             else:
                 print_bar.write('[Save Checkpoint] epoch: [{:.1f}], Train score:{:.5f}, Test score:{:.5f}, '
                                 'train loss:{:.5f}, test loss:{:.5f}, ratio_train_loss:{:.5f},'
@@ -1038,6 +1157,16 @@ class SolverClassifier(object):
             self.checkpoint_scores['Total_loss_test'].append(self.losses['Total_loss_test'])
             self.checkpoint_scores['BCE_test'].append(self.losses['BCE_test'])
             self.checkpoint_scores['KLD_test'].append(self.losses['KLD_test'])
+            self.checkpoint_scores['BCE_ES_train'].append(self.losses['BCE_ES_train'])
+            self.checkpoint_scores['NLL_loss_EV_train'].append(self.losses['NLL_loss_EV_train'])
+            self.checkpoint_scores['NLL_loss_ES_train'].append(self.losses['NLL_loss_ES_train'])
+            self.checkpoint_scores['Score_ES_train'].append(self.losses['NLL_loss_ES_train'])
+            self.checkpoint_scores['Score_EV_train'].append(self.losses['Score_EV_train'])
+            self.checkpoint_scores['BCE_ES_test'].append(self.losses['BCE_ES_test'])
+            self.checkpoint_scores['NLL_loss_EV_test'].append(self.losses['NLL_loss_EV_test'])
+            self.checkpoint_scores['NLL_loss_ES_test'].append(self.losses['NLL_loss_ES_test'])
+            self.checkpoint_scores['Score_ES_test'].append(self.losses['Score_ES_test'])
+            self.checkpoint_scores['Score_EV_test'].append(self.losses['Score_EV_test'])
 
         with open(self.file_path_checkpoint_scores, mode='wb+') as f:
             torch.save(self.checkpoint_scores, f)

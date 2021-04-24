@@ -377,7 +377,7 @@ class VAE(nn.Module, ABC):
                 # weight_init(m)
                 kaiming_init(m)
 
-    def forward(self, x, loss_struct_recons_class=False):
+    def forward(self, x, loss_struct_recons_class=False, device=None):
         """
         Forward pass of model.
         """
@@ -387,7 +387,10 @@ class VAE(nn.Module, ABC):
 
         # z_struct reconstruction:
         if loss_struct_recons_class:
-            z_var_rand = torch.randn((x.shape[0], self.z_var_size)).to('cuda')
+            if device is None:
+                z_var_rand = torch.randn((x.shape[0], self.z_var_size))
+            else:
+                z_var_rand = torch.randn((x.shape[0], self.z_var_size)).to(device)
             z_struct_rand_var = torch.cat((z_var_rand, z_struct), dim=1)
             z_struct_reconstruction = self.decoder(z_struct_rand_var)
             z_struct_recons_prediction = self.encoder_struct(z_struct_reconstruction)

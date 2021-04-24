@@ -309,8 +309,13 @@ if __name__ == "__main__":
     parser.add_argument('--loss_ES_reconstruction', default=False, type=str2bool, help="loss_ES_reconstruction")
     parser.add_argument('--lambda_struct_recons_class', type=float, default=1, help="lambda_struct_recons_class")
     parser.add_argument('--size_average', default=False, type=str2bool, help="size_average")
+    parser.add_argument('--div_loss_per_batch', default=False, type=str2bool, help="div_loss_per_batch")
     parser.add_argument('--fine_tune_decoder', default=False, type=str2bool, help="fine_tune_decoder")
     parser.add_argument('--decoder_name', default='None', type=str, help='decoder_name')
+    # dataset with uniq image per class:
+    parser.add_argument('--uniq_data_dataset', default=False, type=str2bool, help="uniq_data_dataset")
+    parser.add_argument('--n_samples', type=int, default=1, metavar='integer value', help="n_samples")
+    parser.add_argument('--transforms', default=False, type=str2bool, help="transforms")
 
     args = parser.parse_args()
 
