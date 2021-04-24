@@ -1914,7 +1914,7 @@ def plot_resume(net, exp_name, is_ratio, is_distance_loss, loss_distance_mean, l
 
 
 def plot_VAE_resume(net, model_name, z_struct_size, z_var_size, loader, VAE_struct, is_vae_var, train_test, save=True,
-                    nb_class=10, nb_img=8, std_var=None, mu_var=None, mu_struct=None, index=0):
+                    nb_class=10, nb_img=8, index=0):
     """
     plot interesting values to resume experiementation behavior for VAE.
     :param net:
@@ -1931,16 +1931,17 @@ def plot_VAE_resume(net, model_name, z_struct_size, z_var_size, loader, VAE_stru
     plt.axis('off')
 
     # Real distribution:________________________________________________________________________________________________
-    mu_var, sigma_var, encoder_struct_one_proportion = real_distribution_model(net,
-                                                                               model_name,
-                                                                               z_struct_size,
-                                                                               z_var_size,
-                                                                               loader,
-                                                                               'test',
-                                                                               plot_gaussian=False,
-                                                                               save=True,
-                                                                               VAE_struct=VAE_struct,
-                                                                               is_vae_var=is_vae_var)
+    mu_var, sigma_var, encoder_struct_one_proportion, \
+    mu_var_avg, sigma_var_avg, mu_var_per_class, sigma_var_per_class = real_distribution_model(net,
+                                                                                               model_name,
+                                                                                               z_struct_size,
+                                                                                               z_var_size,
+                                                                                               loader,
+                                                                                               'test',
+                                                                                               plot_gaussian=False,
+                                                                                               save=True,
+                                                                                               VAE_struct=VAE_struct,
+                                                                                               is_vae_var=is_vae_var)
     if VAE_struct:
         axs[0, 1].set(title=('Proportion of one: ' + model_name + "_" + train_test))
         axs[0, 1].bar(np.arange(len(encoder_struct_one_proportion)), encoder_struct_one_proportion,
@@ -1962,7 +1963,25 @@ def plot_VAE_resume(net, model_name, z_struct_size, z_var_size, loader, VAE_stru
         sigma_var_iter = math.sqrt(variance_var_iter)
         x_var = np.linspace(mu_var_iter - 3 * sigma_var_iter, mu_var_iter + 3 * sigma_var_iter, 100)
         axs[0, 0].plot(x_var, stats.norm.pdf(x_var, mu_var_iter, sigma_var_iter), label='real data gaussian ' + str(i),
-                       color='blue')
+                color='c')
+
+    for i in range(len(mu_var_per_class)):
+        mu_var_class_iter = torch.mean((mu_var_per_class[i]), axis=0)
+        variance_var_class_iter = torch.mean(np.abs(sigma_var_per_class[i]), axis=0)
+        sigma_var_class_iter = math.sqrt(variance_var_class_iter)
+        x_var = np.linspace(mu_var_class_iter - 3 * sigma_var_class_iter,
+                            mu_var_class_iter + 3 * sigma_var_class_iter, 100)
+        axs[0, 0].plot(x_var, stats.norm.pdf(x_var, mu_var_class_iter, sigma_var_class_iter),
+                label='real data class ' + str(i),
+                color='orange')
+
+    # avg distribution:
+    mu_var_avg = mu_var_avg
+    variance_var_avg = np.abs(sigma_var_avg)
+    sigma_var_avg = math.sqrt(variance_var_avg)
+    x_var = np.linspace(mu_var_avg - 3 * sigma_var_avg, mu_var_avg + 3 * sigma_var_avg, 100)
+    axs[0, 0].plot(x_var, stats.norm.pdf(x_var, mu_var_avg, sigma_var_avg), label='real data gaussian avg' + str(i),
+            color='blue')
 
     axs[0, 0].legend(loc=1)
 
@@ -2234,6 +2253,7 @@ def plot_VAE_resume(net, model_name, z_struct_size, z_var_size, loader, VAE_stru
     # generate random sample from real distribution:
     generation_size = (8, 8)
     nb_samples = generation_size[0] * generation_size[1]
+    mu_struct = encoder_struct_one_proportion
 
     # maj uc:
     maj_uc = torch.tensor(np.load('binary_encoder_struct_results/uniq_code/uc_maj_class_' + model_name + '_' \
@@ -2671,6 +2691,7 @@ def traversal_latent_prototype(net, model_name, train_test, device, z_var_size, 
 def real_distribution_model(net, expe_name, z_struct_size, z_var_size, loader, train_test, plot_gaussian=False,
                             save=False, VAE_struct=False, is_vae_var=False):
     path = 'Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test + '_mu_var.npy'
+    nb_class = 10
 
     if not os.path.exists(path):
 
@@ -2699,9 +2720,11 @@ def real_distribution_model(net, expe_name, z_struct_size, z_var_size, loader, t
                 if first:
                     mu_var = mu_var_iter
                     sigma_var = sigma_var_iter
+                    label_list = label
                 else:
                     mu_var = torch.cat((mu_var, mu_var_iter), 0)
                     sigma_var = torch.cat((sigma_var, sigma_var_iter), 0)
+                    label_list = torch.cat((label_list, label), 0)
 
                 if VAE_struct:
                     if first:
@@ -2711,8 +2734,23 @@ def real_distribution_model(net, expe_name, z_struct_size, z_var_size, loader, t
                         z_struct_distribution = torch.cat((z_struct_distribution, z_struct_distribution_iter), 0)
         net.train()
 
+        # real distribution per class:
+        first_class = True
+        for class_id in range(nb_class):
+            mu_var_class_iter = torch.mean(mu_var[torch.where(label_list == class_id)], axis=0)
+            sigma_var_class_iter = torch.mean(sigma_var[np.where(label_list == class_id)], axis=0)
+            if first_class:
+                mu_var_class = mu_var_class_iter
+                sigma_var_class = sigma_var_class_iter
+            else:
+                mu_var_class = torch.cat((mu_var_class, mu_var_class_iter), 0)
+                sigma_var_class = torch.cat((sigma_var_class, sigma_var_class_iter), 0)
+
         mu_var = torch.mean(mu_var, axis=0)
         sigma_var = torch.mean(sigma_var, axis=0)
+
+        mu_var_avg = torch.mean(mu_var)
+        sigma_var_avg = torch.mean(sigma_var, axis=0)
 
         if VAE_struct:
             one_proportion = (np.count_nonzero(z_struct_distribution.detach().cpu() == 0, axis=0) * 100.) / len(
@@ -2728,26 +2766,36 @@ def real_distribution_model(net, expe_name, z_struct_size, z_var_size, loader, t
                 '_mu_var.npy', mu_var.detach().cpu())
         np.save('Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test +
                 'sigma_var.npy', sigma_var.detach().cpu())
+        np.save('Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test +
+                '_mu_var_avg.npy', mu_var_avg.detach().cpu())
+        np.save('Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test +
+                'sigma_var_avg.npy', sigma_var_avg.detach().cpu())
+        np.save('Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test +
+                '_mu_var_per_class.npy', mu_var_class.detach().cpu())
+        np.save('Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test +
+                'sigma_var_class.npy', sigma_var_class.detach().cpu())
         np.save('Other_results/real_distribution/binary_one_proportion_' + expe_name + '_' + train_test +
                 'sigma_var.npy', one_proportion)
-        # np.save('Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test +
-        #         'mu_struct.npy', mu_struct)
-        # np.save('Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test +
-        #         'sigma_struct.npy', sigma_struct)
 
+    # load
     mu_var = np.load('Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test +
                      '_mu_var.npy', allow_pickle=True)
     sigma_var = np.load('Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test +
                         'sigma_var.npy', allow_pickle=True)
+    mu_var_avg = np.load('Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test +
+                         '_mu_var_avg.npy', allow_pickle=True)
+    sigma_var_avg = np.load(
+        'Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test +
+        'sigma_var_avg.npy', allow_pickle=True)
+    mu_var_per_class = np.load(
+        'Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test +
+        '_mu_var_per_class.npy', allow_pickle=True)
+    sigma_var_per_class = np.load(
+        'Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test +
+        'sigma_var_class.npy', allow_pickle=True)
     encoder_struct_one_proportion = np.load(
         'Other_results/real_distribution/binary_one_proportion_' + expe_name + '_' + train_test +
         'sigma_var.npy', allow_pickle=True)
-    # mu_struct = np.load(
-    #     'Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test +
-    #     'mu_struct.npy', allow_pickle=True)
-    # sigma_struct = np.load(
-    #     'Other_results/real_distribution/gaussian_real_distribution_' + expe_name + '_' + train_test +
-    #     'sigma_struct.npy', allow_pickle=True)
 
     if plot_gaussian:
         if VAE_struct:
@@ -2772,7 +2820,25 @@ def real_distribution_model(net, expe_name, z_struct_size, z_var_size, loader, t
             sigma_var_iter = math.sqrt(variance_var_iter)
             x_var = np.linspace(mu_var_iter - 3 * sigma_var_iter, mu_var_iter + 3 * sigma_var_iter, 100)
             ax.plot(x_var, stats.norm.pdf(x_var, mu_var_iter, sigma_var_iter), label='real data gaussian ' + str(i),
-                    color='blue')
+                    color='c')
+
+        for i in range(len(mu_var_per_class)):
+            mu_var_class_iter = np.mean((mu_var_per_class[i]))
+            variance_var_class_iter = np.mean(np.abs(sigma_var_per_class[i]))
+            sigma_var_class_iter = math.sqrt(variance_var_class_iter)
+            x_var = np.linspace(mu_var_class_iter - 3 * sigma_var_class_iter,
+                                mu_var_class_iter + 3 * sigma_var_class_iter, 100)
+            ax.plot(x_var, stats.norm.pdf(x_var, mu_var_class_iter, sigma_var_class_iter),
+                    label='real data class ' + str(i),
+                    color='orange')
+
+        # avg distribution:
+        mu_var_avg = mu_var_avg
+        variance_var_avg = np.abs(sigma_var_avg)
+        sigma_var_avg = math.sqrt(variance_var_avg)
+        x_var = np.linspace(mu_var_avg - 3 * sigma_var_avg, mu_var_avg + 3 * sigma_var_avg, 100)
+        ax.plot(x_var, stats.norm.pdf(x_var, mu_var_avg, sigma_var_avg), label='real data gaussian avg' + str(i),
+                color='blue')
 
         ax.legend(loc=1)
         plt.show()
@@ -2780,7 +2846,8 @@ def real_distribution_model(net, expe_name, z_struct_size, z_var_size, loader, t
         if save:
             fig.savefig("fig_results/plot_distribution/fig_plot_distribution_" + expe_name + "_" + train_test + ".png")
 
-    return torch.tensor(mu_var), torch.tensor(sigma_var), encoder_struct_one_proportion
+    return torch.tensor(mu_var), torch.tensor(sigma_var), encoder_struct_one_proportion, torch.tensor(mu_var_avg), \
+           torch.tensor(sigma_var_avg), torch.tensor(mu_var_per_class), torch.tensor(sigma_var_per_class)
 
 
 def switch_img(net, exp_name, loader, z_var_size):

@@ -271,7 +271,6 @@ def run_VAE(model_name, net, lambda_BCE, beta, z_struct_size, z_var_size, VAE_st
     embedding_size = z_struct_size + z_var_size
     net.eval()
 
-    """
     # __________-----------Values computing----------_____________
     # save code majoritaire with their percent:
     same_binary_code(net, model_name, loader, nb_class, train_test=train_test, save=True, Hmg_dist=False, is_VAE=True)
@@ -287,7 +286,7 @@ def run_VAE(model_name, net, lambda_BCE, beta, z_struct_size, z_var_size, VAE_st
 
     # second: get average z_struct per classe:
     _, average_z_struct_class = get_z_struct_per_class_VAE(model_name, train_test='test', nb_class=nb_class)
-    """
+
     # __________--------------PLOT------------_________________
     # losses:
     plot_loss_results_VAE(path_scores, model_name, beta, lambda_BCE, save=True)
@@ -299,10 +298,11 @@ def run_VAE(model_name, net, lambda_BCE, beta, z_struct_size, z_var_size, VAE_st
     #                                                                      z_var_size,
     #                                                                      loader,
     #                                                                      'test',
-    #                                                                      plot_gaussian=False,
+    #                                                                      plot_gaussian=True,
     #                                                                      save=True,
     #                                                                      VAE_struct=VAE_struct,
     #                                                                      is_vae_var=is_vae_var)
+
     # mu_var, sigma_var, encoder_struct_zeros_proportion = 0, 0, 0
     # plot reconstruciton with real distribution sample:
     # viz_reconstruction_VAE(net, loader, model_name, z_var_size, z_struct_size, nb_img=10,
@@ -354,9 +354,8 @@ def run_VAE(model_name, net, lambda_BCE, beta, z_struct_size, z_var_size, VAE_st
     #                save=True)
 
     # plot resume VAE:
-    # plot_VAE_resume(net, model_name, z_struct_size, z_var_size, loader, VAE_struct, is_vae_var, train_test, save=True,
-    #                 nb_class=nb_class, nb_img=8, std_var=sigma_var, mu_var=mu_var,
-    #                 mu_struct=encoder_struct_zeros_proportion, index=0)
+    plot_VAE_resume(net, model_name, z_struct_size, z_var_size, loader, VAE_struct, is_vae_var, train_test, save=True,
+                    nb_class=nb_class, nb_img=8, index=0)
     # ----------------------------------------------------------------------------------------------------------
     # Test vae var classfiier hypothesis: ----------------------------------------------------------------------
     # replace weigths value:
@@ -604,13 +603,19 @@ if __name__ == '__main__':
     list_exp_VAE_var = ['mnist_vae_var_2cb_15_grad_inv_PT',
                         'mnist_vae_var_2cb_15_grad_inv_FS']
 
-    list_exp_VAE_naive = [# 'mnist_VAE_s15Hmg4_v3',
+    list_exp_VAE_naive = ['mnist_VAE_s15Hmg4_v8_mon_loss_sz_avg',
+                          'mnist_VAE_s15Hmg4_v8_beta3_mon_loss_sz_avg',
+                          'mnist_VAE_s15Hmg4_v8_mon_loss_divL',
+                          'mnist_VAE_s15Hmg4_v8_beta3_mon_loss_divL',
+                          'mnist_VAE_s15Hmg4_v8_mon_loss',
+                          'mnist_VAE_s15Hmg4_v8_beta3_mon_loss']#
+                          # 'mnist_VAE_s15Hmg4_v3',
                           # 'mnist_VAE_s15Hmg4_v5',
                           # 'mnist_VAE_s15Hmg4_v8',
                           # 'mnist_VAE_s15Hmg4_v10',
                           # 'mnist_VAE_s15Hmg4_v3_beta3',
                           # 'mnist_VAE_s15Hmg4_v5_beta3',
-                          'mnist_VAE_s15Hmg4_v8_beta3',
+                          # 'mnist_VAE_s15Hmg4_v8_beta3']
                           # 'mnist_VAE_s15Hmg4_v10_beta3']
                           # 'mnist_VAE_s15Hmg4_v3_size_avg',
                           # 'mnist_VAE_s15Hmg4_v5_size_avg',
@@ -641,18 +646,36 @@ if __name__ == '__main__':
                           # 'mnist_VAE_s15_v2_beta3',
                           # 'mnist_VAE_s15_v3_beta3',
                           # 'mnist_VAE_s15_v5_beta3',
-                          'mnist_VAE_s15_v8_beta3']
+                          # 'mnist_VAE_s15_v8_beta3']
                           # 'mnist_VAE_s15_v10_beta3',
                           # 'mnist_VAE_s15_v13_beta3',
                           # 'mnist_VAE_s15_v15_beta3',
                           # 'mnist_VAE_s15_v17_beta3',
                           # 'mnist_VAE_s15_v20_beta3']
 
-    list_exp_VAE_inv_grad = [# 'mnist_VAE_s15Hmg4_v6_class_inv_grad_1',
+    list_exp_VAE_inv_grad = ['mnist_VAE_s15Hmg4_v8_class_inv_grad_1_mon_loss_sz_avg',
+                             'mnist_VAE_s15Hmg4_v8_class_inv_grad_2_mon_loss_sz_avg',
+                             'mnist_VAE_s15Hmg4_v8_class_inv_grad_3_mon_loss_sz_avg',
+                             'mnist_VAE_s15Hmg4_v8_class_inv_grad_4_mon_loss_sz_avg',
+                             'mnist_VAE_s15Hmg4_v8_class_inv_grad_5_mon_loss_sz_avg',
+                             'mnist_VAE_s15Hmg4_v8_class_inv_grad_6_mon_loss_sz_avg',
+                             'mnist_VAE_s15Hmg4_v8_class_inv_grad_1_mon_loss_divL',
+                             'mnist_VAE_s15Hmg4_v8_class_inv_grad_2_mon_loss_divL',
+                             'mnist_VAE_s15Hmg4_v8_class_inv_grad_3_mon_loss_divL',
+                             'mnist_VAE_s15Hmg4_v8_class_inv_grad_4_mon_loss_divL',
+                             'mnist_VAE_s15Hmg4_v8_class_inv_grad_5_mon_loss_divL',
+                             'mnist_VAE_s15Hmg4_v8_class_inv_grad_6_mon_loss_divL',
+                             'mnist_VAE_s15Hmg4_v8_class_inv_grad_1_mon_loss',
+                             'mnist_VAE_s15Hmg4_v8_class_inv_grad_2_mon_loss',
+                             'mnist_VAE_s15Hmg4_v8_class_inv_grad_3_mon_loss',
+                             'mnist_VAE_s15Hmg4_v8_class_inv_grad_4_mon_loss',
+                             'mnist_VAE_s15Hmg4_v8_class_inv_grad_5_mon_loss',
+                             'mnist_VAE_s15Hmg4_v8_class_inv_grad_6_mon_loss']
+                             # 'mnist_VAE_s15Hmg4_v6_class_inv_grad_1',
                              # 'mnist_VAE_s15Hmg4_v6_class_inv_grad_2',
                              # 'mnist_VAE_s15Hmg4_v6_class_inv_grad_3',
                              # 'mnist_VAE_s15Hmg4_v6_class_inv_grad_4',
-                             'mnist_VAE_s15Hmg4_v6_class_inv_grad_5_test_loss']
+                             # 'mnist_VAE_s15Hmg4_v6_class_inv_grad_5_test_loss']
                              # 'mnist_VAE_s15Hmg4_v6_class_inv_grad_6']
                              # 'mnist_VAE_s15Hmg4_v6_class_inv_grad_1_size_avg',
                              # 'mnist_VAE_s15Hmg4_v6_class_inv_grad_2_size_avg',
@@ -709,7 +732,7 @@ if __name__ == '__main__':
     list_VAE_var_inv_grad = ['mnist_vae_var_2cb_15_classifier_grad_inv_PT_new',
                              'mnist_vae_var_2cb_15_classifier_grad_inv_FS_new']
 
-    list_encoder_struct_test =  [# 'mnist_ES_binary_10',
+    list_encoder_struct_test =  []# 'mnist_ES_binary_10',
                                  # 'mnist_ES_binary_15',
                                  # 'mnist_ES_binary_20',
                                  # 'mnist_ES_binary_25',
@@ -719,12 +742,12 @@ if __name__ == '__main__':
                                  # 'mnist_ES_binary_SDL_20',
                                  # 'mnist_ES_binary_SDL_25',
                                  # 'mnist_ES_binary_SDL_30',
-                                 'mnist_ES_binary_15_Hmg_dst_1_2nd_test',
-                                 'mnist_ES_binary_15_Hmg_dst_2_2nd_test',
-                                 'mnist_ES_binary_15_Hmg_dst_3_2nd_test',
-                                 'mnist_ES_binary_15_Hmg_dst_4_2nd_test',
-                                 'mnist_ES_binary_15_Hmg_dst_5_2nd_test',
-                                 'mnist_ES_binary_15_Hmg_dst_6_2nd_test']
+                                 # 'mnist_ES_binary_15_Hmg_dst_1_2nd_test',
+                                 # 'mnist_ES_binary_15_Hmg_dst_2_2nd_test',
+                                 # 'mnist_ES_binary_15_Hmg_dst_3_2nd_test',
+                                 # 'mnist_ES_binary_15_Hmg_dst_4_2nd_test',
+                                 # 'mnist_ES_binary_15_Hmg_dst_5_2nd_test',
+                                 # 'mnist_ES_binary_15_Hmg_dst_6_2nd_test']
                                  # 'mnist_ES_binary_SDL_15_Hmg_dst_1',
                                  # 'mnist_ES_binary_SDL_15_Hmg_dst_2',
                                  # 'mnist_ES_binary_SDL_15_Hmg_dst_3',
@@ -741,12 +764,30 @@ if __name__ == '__main__':
                                  # 'mnist_ES_binary_SDL_15_L2_dst_4',
                                  # 'mnist_ES_binary_SDL_15_L2_dst_5']
 
-    list_exp_z_struct_recons = ['mnist_VAE_s15Hmg4_v6_zstruct_class_1',
-                                'mnist_VAE_s15Hmg4_v6_zstruct_class_2',
-                                'mnist_VAE_s15Hmg4_v6_zstruct_class_3',
-                                'mnist_VAE_s15Hmg4_v6_zstruct_class_4',
-                                'mnist_VAE_s15Hmg4_v6_zstruct_class_5',
-                                'mnist_VAE_s15Hmg4_v6_zstruct_class_6']
+    list_exp_z_struct_recons = ['mnist_VAE_s15Hmg4_v8_zstruct_class_1_mon_loss_sz_avg',
+                                'mnist_VAE_s15Hmg4_v8_zstruct_class_2_mon_loss_sz_avg',
+                                'mnist_VAE_s15Hmg4_v8_zstruct_class_3_mon_loss_sz_avg',
+                                'mnist_VAE_s15Hmg4_v8_zstruct_class_4_mon_loss_sz_avg',
+                                'mnist_VAE_s15Hmg4_v8_zstruct_class_5_mon_loss_sz_avg',
+                                'mnist_VAE_s15Hmg4_v8_zstruct_class_6_mon_loss_sz_avg',
+                                'mnist_VAE_s15Hmg4_v8_zstruct_class_1_mon_loss_divL',
+                                'mnist_VAE_s15Hmg4_v8_zstruct_class_2_mon_loss_divL',
+                                'mnist_VAE_s15Hmg4_v8_zstruct_class_3_mon_loss_divL',
+                                'mnist_VAE_s15Hmg4_v8_zstruct_class_4_mon_loss_divL',
+                                'mnist_VAE_s15Hmg4_v8_zstruct_class_5_mon_loss_divL',
+                                'mnist_VAE_s15Hmg4_v8_zstruct_class_6_mon_loss_divL',
+                                'mnist_VAE_s15Hmg4_v8_zstruct_class_1_mon_loss',
+                                'mnist_VAE_s15Hmg4_v8_zstruct_class_2_mon_loss',
+                                'mnist_VAE_s15Hmg4_v8_zstruct_class_3_mon_loss',
+                                'mnist_VAE_s15Hmg4_v8_zstruct_class_4_mon_loss',
+                                'mnist_VAE_s15Hmg4_v8_zstruct_class_5_mon_loss',
+                                'mnist_VAE_s15Hmg4_v8_zstruct_class_6_mon_loss']
+                                # 'mnist_VAE_s15Hmg4_v6_zstruct_class_1',
+                                # 'mnist_VAE_s15Hmg4_v6_zstruct_class_2',
+                                # 'mnist_VAE_s15Hmg4_v6_zstruct_class_3',
+                                # 'mnist_VAE_s15Hmg4_v6_zstruct_class_4',
+                                # 'mnist_VAE_s15Hmg4_v6_zstruct_class_5',
+                                # 'mnist_VAE_s15Hmg4_v6_zstruct_class_6']
                                 # 'mnist_VAE_s15Hmg4_v6_zstruct_class_1_size_avg',
                                 # 'mnist_VAE_s15Hmg4_v6_zstruct_class_2_size_avg',
                                 # 'mnist_VAE_s15Hmg4_v6_zstruct_class_3_size_avg',
@@ -768,23 +809,23 @@ if __name__ == '__main__':
     #                                                is_VAE=False,
     #                                                is_encoder_struct=True)
 
-    run_exp_extraction_and_visualization_custom_BK(list_exp_VAE_naive,
-                                                   is_ratio=False,
-                                                   is_decoder=False,
-                                                   is_VAE=True,
-                                                   is_encoder_struct=False)
-
-    run_exp_extraction_and_visualization_custom_BK(list_exp_VAE_inv_grad,
-                                                   is_ratio=False,
-                                                   is_decoder=False,
-                                                   is_VAE=True,
-                                                   is_encoder_struct=False)
-
-    # run_exp_extraction_and_visualization_custom_BK(list_exp_z_struct_recons,
+    # run_exp_extraction_and_visualization_custom_BK(list_exp_VAE_naive,
     #                                                is_ratio=False,
     #                                                is_decoder=False,
     #                                                is_VAE=True,
     #                                                is_encoder_struct=False)
+
+    # run_exp_extraction_and_visualization_custom_BK(list_exp_VAE_inv_grad,
+    #                                                is_ratio=False,
+    #                                                is_decoder=False,
+    #                                                is_VAE=True,
+    #                                                is_encoder_struct=False)
+
+    run_exp_extraction_and_visualization_custom_BK(list_exp_z_struct_recons,
+                                                   is_ratio=False,
+                                                   is_decoder=False,
+                                                   is_VAE=True,
+                                                   is_encoder_struct=False)
 
     # run_exp_extraction_and_visualization_custom_BK(list_exp_ES_recons_part1,
     #                                                is_ratio=False,
