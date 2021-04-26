@@ -147,7 +147,7 @@ def compute_scores_and_loss(net, train_loader, test_loader, device, train_loader
 def compute_scores_and_loss_VAE(net, train_loader, test_loader, train_loader_size, test_loader_size, device,
                                 lambda_BCE, beta, is_vae_var, ES_reconstruction, EV_classifier,
                                 loss_struct_recons_class, size_average, is_VAE, lambda_EV_class,
-                                lambda_struct_recons_class, lambda_recons):
+                                lambda_struct_recons_class, lambda_recons, loss_z_struct_class):
     Total_loss_train, BCE_train, KLD_train, BCE_loss_ES_train, classification_loss_EV_train, \
     classification_loss_z_struct_train, classification_score_EV_train, \
     classification_ES_score_train = compute_scores_VAE(net,
@@ -164,7 +164,8 @@ def compute_scores_and_loss_VAE(net, train_loader, test_loader, train_loader_siz
                                                        is_VAE,
                                                        lambda_EV_class,
                                                        lambda_struct_recons_class,
-                                                       lambda_recons)
+                                                       lambda_recons,
+                                                       loss_z_struct_class)
     Total_loss_test, BCE_test, KLD_test, BCE_loss_ES_test, classification_loss_EV_test, \
     classification_loss_z_struct_test, classification_score_EV_test, \
     classification_ES_score_test = compute_scores_VAE(net,
@@ -181,7 +182,8 @@ def compute_scores_and_loss_VAE(net, train_loader, test_loader, train_loader_siz
                                                       is_VAE,
                                                       lambda_EV_class,
                                                       lambda_struct_recons_class,
-                                                      lambda_recons)
+                                                      lambda_recons,
+                                                      loss_z_struct_class)
     losses = {'Total_loss_train': Total_loss_train,
               'BCE_train': BCE_train,
               'KLD_train': KLD_train,
@@ -338,6 +340,8 @@ class SolverClassifier(object):
         self.uniq_data_dataset = args.uniq_data_dataset
         self.n_samples = args.n_samples
         self.transforms = args.transforms
+        self.lambda_z_struct_class = args.lambda_z_struct_class
+        self.loss_z_struct_class = args.loss_z_struct_class
 
         self.contrastive_criterion = False
         if self.is_encoder_struct:
@@ -481,7 +485,8 @@ class SolverClassifier(object):
                       EV_classifier=self.EV_classifier,
                       grad_inv=self.grad_inv,
                       ES_recons_classifier=self.loss_struct_recons_class,
-                      loss_ES_reconstruction=self.loss_ES_reconstruction)
+                      loss_ES_reconstruction=self.loss_ES_reconstruction,
+                      loss_z_struct_class=self.loss_z_struct_class)
         # get layer num to extract z_struct:
         self.z_struct_out = True
 
@@ -709,7 +714,8 @@ class SolverClassifier(object):
                                                     EV_classifier=self.EV_classifier,
                                                     grad_inv=self.grad_inv,
                                                     ES_recons_classifier=self.loss_struct_recons_class,
-                                                    loss_ES_reconstruction=self.loss_ES_reconstruction)
+                                                    loss_ES_reconstruction=self.loss_ES_reconstruction,
+                                                    loss_z_struct_class=self.loss_z_struct_class)
 
                     # load weighs:
                     pre_trained_decoder_model = self.load_pre_trained_checkpoint('last',
@@ -816,9 +822,14 @@ class SolverClassifier(object):
                     loss = 0
                     if self.is_VAE:
                         x_recons, z_struct, z_var, z_var_sample, latent_representation, z, \
-                        prediction_var, prediction_struct = self.net(data,
-                                                                     loss_struct_recons_class=self.loss_struct_recons_class,
-                                                                     device=self.device)
+                        prediction_var, prediction_struct,\
+                        global_avg_Hmg_dst = self.net(data,
+                                                      loss_struct_recons_class=self.loss_struct_recons_class,
+                                                      device=self.device,
+                                                      loss_z_struct_class=self.loss_z_struct_class,
+                                                      Hmg_dst_loss=self.Hmg_dst_loss,
+                                                      nb_class=self.nb_class,
+                                                      labels=labels)
                     else:
                         x_recons, latent_representation, prediction_var = self.net(data)
 
@@ -833,7 +844,7 @@ class SolverClassifier(object):
                                                              size_average=self.size_average)
                         loss += classification_loss * self.lambda_EV_class
 
-                    if self.loss_struct_recons_class:
+                    if self.loss_struct_recons_class or self.loss_z_struct_class:
                         if self.div_loss_per_batch:
                             classification_loss_z_struct = F.nll_loss(prediction_struct,
                                                                       labels,
@@ -841,7 +852,13 @@ class SolverClassifier(object):
                         else:
                             classification_loss_z_struct = F.nll_loss(prediction_struct, labels,
                                                                       size_average=self.size_average)
-                        loss += classification_loss_z_struct * self.lambda_struct_recons_class
+                        loss += classification_loss_z_struct * self.lambda_z_struct_class  # self.lambda_struct_recons_class
+
+                    if self.Hmg_dst_loss:
+                        # Hamming distance is not differentiable
+                        # global_avg_Hmg_dst = Variable(global_avg_Hmg_dst, requires_grad=True)
+                        # global_avg_Hmg_dst.requires_grad_(True)
+                        loss += global_avg_Hmg_dst * self.lambda_hmg_dst
 
                     if self.ES_reconstruction:
                         if self.div_loss_per_batch:
@@ -870,6 +887,7 @@ class SolverClassifier(object):
                             KLD_loss /= self.batch_size
 
                         loss += ((self.lambda_BCE * BCE_loss) + (self.beta * KLD_loss)) * self.lambda_recons
+
                 else:
                     self.mse_loss = 0
                     loss = 0
@@ -1001,7 +1019,6 @@ class SolverClassifier(object):
             # backpropagation loss
             if self.use_scheduler:
                 self.scheduler.step(loss)
-                # print('Epoch:', self.epochs, 'LR:', self.scheduler.get_lr())
 
             # save step
             self.save_checkpoint('last')
@@ -1024,7 +1041,8 @@ class SolverClassifier(object):
                                                           self.is_VAE,
                                                           self.lambda_EV_class,
                                                           self.lambda_struct_recons_class,
-                                                          self.lambda_recons)
+                                                          self.lambda_recons,
+                                                          self.loss_z_struct_class)
             elif self.is_encoder_struct:
                 self.scores, self.losses = compute_scores_and_loss(self.net,
                                                                    self.train_loader,

@@ -134,7 +134,8 @@ def compute_scores(net, loader, device, loader_size, nb_class, ratio_reg, z_stru
 
 def compute_scores_VAE(net, loader, loader_size, device, lambda_BCE, beta, is_vae_var=False, ES_reconstruction=False,
                        is_prediction_var=False, loss_struct_recons_class=False, size_average=False, is_VAE=False,
-                       lambda_EV_class=None, lambda_struct_recons_class=None, lambda_recons=None):
+                       lambda_EV_class=None, lambda_struct_recons_class=None, lambda_recons=None,
+                       loss_z_struct_class=False):
 
     classification_loss_EV = 0
     classification_loss_z_struct = 0
@@ -161,8 +162,12 @@ def compute_scores_VAE(net, loader, loader_size, device, lambda_BCE, beta, is_va
             if is_vae_var:
                 x_recons, latent_representation, prediction_var = net(data)
             else:
-                x_recons, _, _, _, latent_representation, _, \
-                prediction_var, prediction_struct = net(data, loss_struct_recons_class=loss_struct_recons_class)
+                x_recons, z_struct, z_var, z_var_sample, latent_representation, z, \
+                prediction_var, prediction_struct, \
+                global_avg_Hmg_dst = net(data,
+                                         loss_struct_recons_class=loss_struct_recons_class,
+                                         device=device,
+                                         loss_z_struct_class=loss_z_struct_class)
 
             if ES_reconstruction:
                 # BCE loss:
@@ -181,7 +186,7 @@ def compute_scores_VAE(net, loader, loader_size, device, lambda_BCE, beta, is_va
                 classification_score_EV_iter = compute_scores_prediction(prediction_var, labels)
                 classification_score_EV += classification_score_EV_iter
 
-            if loss_struct_recons_class:
+            if loss_struct_recons_class or loss_z_struct_class:
                 classification_loss_z_struct_iter = F.nll_loss(prediction_struct, labels, size_average=size_average)
                 classification_loss_z_struct += classification_loss_z_struct_iter
 

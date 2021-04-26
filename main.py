@@ -316,6 +316,8 @@ if __name__ == "__main__":
     parser.add_argument('--uniq_data_dataset', default=False, type=str2bool, help="uniq_data_dataset")
     parser.add_argument('--n_samples', type=int, default=1, metavar='integer value', help="n_samples")
     parser.add_argument('--transforms', default=False, type=str2bool, help="transforms")
+    parser.add_argument('--loss_z_struct_class', default=False, type=str2bool, help="loss_z_struct_class")
+    parser.add_argument('--lambda_z_struct_class', type=float, default=1, help="lambda_z_struct_class")
 
     args = parser.parse_args()
 

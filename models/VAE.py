@@ -7,6 +7,8 @@ from binary_tools.activations import DeterministicBinaryActivation
 import torch.nn.functional as F
 from pytorch_revgrad import RevGrad
 
+hamming_distance = nn.PairwiseDistance(p=0, eps=0.0)
+L2_distance = nn.PairwiseDistance(p=2, eps=0.0)
 EPS = 1e-12
 
 
@@ -39,7 +41,8 @@ class VAE(nn.Module, ABC):
                  EV_classifier=False,
                  grad_inv=False,
                  ES_recons_classifier=False,
-                 loss_ES_reconstruction=False):
+                 loss_ES_reconstruction=False,
+                 loss_z_struct_class=False):
         """
         Class which defines model and forward pass.
         """
@@ -56,6 +59,7 @@ class VAE(nn.Module, ABC):
         self.grad_inv = grad_inv
         self.ES_recons_classifier = ES_recons_classifier
         self.loss_ES_reconstruction = loss_ES_reconstruction
+        self.loss_z_struct_class = loss_z_struct_class
 
         # encoder var parameters:
         self.z_var_size = z_var_size
@@ -345,8 +349,8 @@ class VAE(nn.Module, ABC):
                 # nn.Softmax()
             ]
         # --------------------------------------- end Classifier ____________________________________________ ----
-        # --------------------------------------- Classifier var____________________________________________ ----
-        if self.ES_recons_classifier:
+        # --------------------------------------- Classifier strut ____________________________________________ ----
+        if self.ES_recons_classifier or self.loss_z_struct_class:
             self.struct_classifier = [
                 nn.Linear(self.z_struct_size, self.n_classes)  # B, nb_class
                 # nn.Softmax()
@@ -359,7 +363,7 @@ class VAE(nn.Module, ABC):
         if (not self.ES_reconstruction) or self.loss_ES_reconstruction:
             self.encoder_var = nn.Sequential(*self.encoder_var)
 
-        if self.ES_recons_classifier:
+        if self.ES_recons_classifier or self.loss_z_struct_class:
             self.struct_classifier = nn.Sequential(*self.struct_classifier)
 
         if self.EV_classifier:
@@ -377,7 +381,8 @@ class VAE(nn.Module, ABC):
                 # weight_init(m)
                 kaiming_init(m)
 
-    def forward(self, x, loss_struct_recons_class=False, device=None):
+    def forward(self, x, loss_struct_recons_class=False, device=None,  loss_z_struct_class=False, Hmg_dst_loss=False,
+                nb_class=None, labels=None):
         """
         Forward pass of model.
         """
@@ -386,15 +391,15 @@ class VAE(nn.Module, ABC):
         z_struct = self.encoder_struct(x)
 
         # z_struct reconstruction:
-        if loss_struct_recons_class:
-            if device is None:
-                z_var_rand = torch.randn((x.shape[0], self.z_var_size))
+        if loss_struct_recons_class or loss_z_struct_class:
+            if loss_z_struct_class:
+                z_struct_out = z_struct
             else:
-                z_var_rand = torch.randn((x.shape[0], self.z_var_size)).to('cuda')
-            z_struct_rand_var = torch.cat((z_var_rand, z_struct), dim=1)
-            z_struct_reconstruction = self.decoder(z_struct_rand_var)
-            z_struct_recons_prediction = self.encoder_struct(z_struct_reconstruction)
-            z_struct_out = self.struct_classifier(z_struct_recons_prediction)
+                z_var_rand = torch.randn((x.shape[0], self.z_var_size)).to(device)
+                z_struct_rand_var = torch.cat((z_var_rand, z_struct), dim=1)
+                z_struct_reconstruction = self.decoder(z_struct_rand_var)
+                z_struct_recons_prediction = self.encoder_struct(z_struct_reconstruction)
+                z_struct_out = self.struct_classifier(z_struct_recons_prediction)
             z_struct_pred = F.log_softmax(z_struct_out, dim=1)
         else:
             z_struct_pred = 0
@@ -422,7 +427,15 @@ class VAE(nn.Module, ABC):
         else:
             prediction_var = 0
 
-        return x_recons, z_struct, z_var, z_var_sample, latent_representation, z, prediction_var, z_struct_pred
+        if Hmg_dst_loss:
+            assert nb_class is not None, "Warning ! you use Hmg dst loss without precise class number !"
+            assert labels is not None, "Warning ! you use Hmg dst loss without get labels !"
+            global_avg_Hmg_dst, avg_dst_classes = self.hamming_distance_loss(z_struct, nb_class, labels)
+        else:
+            global_avg_Hmg_dst = 0
+
+        return x_recons, z_struct, z_var, z_var_sample, latent_representation, z, prediction_var, z_struct_pred,\
+               global_avg_Hmg_dst
 
     def _encode(self, z, z_size):
         """
@@ -462,3 +475,41 @@ class VAE(nn.Module, ABC):
         sample = mu + (std * eps)
 
         return sample
+
+    def hamming_distance_loss(self, batch_z_struct, nb_class, labels_batch):
+        """
+        computing hamming distance between z_struct in the same class
+        :param z_struct:
+        :return:
+        """
+        assert batch_z_struct is not None, "z_struct mustn't be None to compute Hamming distance"
+        assert labels_batch is not None, "labels_batch mustn't be None to compute Hamming distance"
+
+        z_struct_size = batch_z_struct[0].shape[0]
+        global_first = True
+        for class_id in range(nb_class):
+            first = True
+            z_struct_class_iter = batch_z_struct[torch.where(labels_batch == class_id)]
+            # computing distance:
+            for i in range(len(z_struct_class_iter)):
+                for j in range(len(z_struct_class_iter)):
+                    if i == j:
+                        pass
+                    else:
+                        z1 = z_struct_class_iter[i].reshape(1, z_struct_size)
+                        z2 = z_struct_class_iter[j].reshape(1, z_struct_size)
+                        Hmg_dist = hamming_distance(z1, z2)
+                        Hmg_dist = torch.unsqueeze(Hmg_dist, 0)
+                        if first:
+                            avg_dst_class_id = Hmg_dist
+                            first = False
+                        else:
+                            avg_dst_class_id = torch.cat((avg_dst_class_id, Hmg_dist), dim=0)
+            if global_first:
+                avg_dst_classes = torch.mean(avg_dst_class_id)
+            else:
+                avg_dst_classes = torch.cat((avg_dst_classes, torch.mean(avg_dst_class_id)), dim=0)
+
+        global_avg_Hmg_dst = torch.mean(avg_dst_classes)
+
+        return global_avg_Hmg_dst, avg_dst_classes
